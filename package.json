@@ -9,14 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "latest",
     "@vitejs/plugin-react": "latest",
     "vite": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "tailwindcss": "latest"
   },
-  "devDependencies": {
-    "tailwindcss": "latest",
-    "postcss": "latest",
-    "autoprefixer": "latest"
-  }
+  "devDependencies": {}
 }

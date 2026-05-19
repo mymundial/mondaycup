@@ -1,5 +1,7 @@
 # MONDAY CUP Vite app
 
+Updated for Tailwind CSS v4 / Vercel builds.
+
 ## Run locally
 
 ```bash
@@ -10,27 +12,22 @@ npm run dev
 ## Deploy on Vercel
 
 1. Push this folder to GitHub.
-2. In Vercel, choose **Add New Project**.
-3. Import the GitHub repo.
-4. Framework preset should auto-detect as **Vite**.
-5. Build command: `npm run build`.
-6. Output directory: `dist`.
+2. In Vercel, choose **Add New Project** or redeploy the existing project.
+3. Framework preset: **Vite**.
+4. Build command: `npm run build`.
+5. Output directory: `dist`.
 
-## Structure
+## Tailwind v4 config
+
+This package uses:
 
 ```txt
-src/
-  App.jsx
-  data/
-    assets.js
-    teams.js
-    tournament.js
-  logic/
-    tournament.js
-  components/
-    layout/
-    selection/
-    match/
-    schedule/
-    standings/
+@tailwindcss/postcss
+tailwindcss
+```
+
+`postcss.config.js` uses `@tailwindcss/postcss`, and `src/index.css` uses:
+
+```css
+@import "tailwindcss";
 ```
