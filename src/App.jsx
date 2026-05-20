@@ -11,7 +11,7 @@ import {
   didTeamQualify,
   findTeamKnockoutFixture,
   getFixtureOpponent,
-  createNextKnockoutFixture,
+  completeKnockoutRound,
   knockoutStageLabel,
   runSelfTests,
 } from "./logic/tournament.js";
@@ -39,6 +39,7 @@ export default function App() {
   const [knockoutFixtures, setKnockoutFixtures] = useState([]);
   const [currentKnockoutMatch, setCurrentKnockoutMatch] = useState(null);
   const [matchStage, setMatchStage] = useState("GROUP STAGE");
+  const [podium, setPodium] = useState({});
 
   const groupStageComplete = schedule.every((fixture) => fixture.played);
   const visibleKnockoutFixtures = groupStageComplete && !knockoutFixtures.length ? buildRound32Fixtures(table) : knockoutFixtures;
@@ -67,6 +68,7 @@ export default function App() {
     setKnockoutFixtures([]);
     setCurrentKnockoutMatch(null);
     setMatchStage("GROUP STAGE");
+    setPodium({});
   };
   const openMatch = () => { closeMenu(); setDrawer(null); };
   const openFixtures = () => { closeMenu(); setFixtureView(groupStageComplete ? "knockout" : "group"); setDrawer("fixtures"); };
@@ -91,25 +93,26 @@ export default function App() {
     if (!team || !opponent) return;
 
     if (currentKnockoutMatch) {
-      const match = currentKnockoutMatch;
-      const homeGoals = match.home === team ? 1 : 0;
-      const awayGoals = match.away === team ? 1 : 0;
-      const playedMatch = { ...match, played: true, homeGoals, awayGoals };
+      const { updatedFixtures, playedUserMatch, podium: completedPodium } = completeKnockoutRound({
+        fixtures: knockoutFixtures,
+        currentMatch: currentKnockoutMatch,
+        userTeam: team,
+      });
+      const homeGoals = playedUserMatch.homeGoals;
+      const awayGoals = playedUserMatch.awayGoals;
 
       setScore([1, 0]);
-      setKnockoutFixtures((current) => current.some((fixture) => fixture.matchNo === match.matchNo)
-        ? current.map((fixture) => fixture.matchNo === match.matchNo ? playedMatch : fixture)
-        : [...current, playedMatch]
-      );
+      setKnockoutFixtures(updatedFixtures);
+      if (completedPodium) setPodium(completedPodium);
       setMatchResult({
-        home: match.home,
-        away: match.away,
+        home: playedUserMatch.home,
+        away: playedUserMatch.away,
         homeGoals,
         awayGoals,
         won: true,
         week: null,
-        matchNo: match.matchNo,
-        status: match.matchNo === 104 ? "champion" : "knockoutWin",
+        matchNo: playedUserMatch.matchNo,
+        status: playedUserMatch.matchNo === 104 ? "champion" : "knockoutWin",
       });
       return;
     }
@@ -163,14 +166,8 @@ export default function App() {
     }
 
     if (matchResult.status === "knockoutWin") {
-      const playedCurrent = knockoutFixtures.find((fixture) => fixture.matchNo === matchResult.matchNo && fixture.played)
-        || (currentKnockoutMatch ? { ...currentKnockoutMatch, played: true, homeGoals: matchResult.homeGoals, awayGoals: matchResult.awayGoals } : null);
-      const fixturesForNext = playedCurrent && !knockoutFixtures.some((fixture) => fixture.matchNo === playedCurrent.matchNo)
-        ? [...knockoutFixtures, playedCurrent]
-        : knockoutFixtures;
-      const nextFixture = createNextKnockoutFixture({ previousMatchNo: matchResult.matchNo, team, fixtures: fixturesForNext });
+      const nextFixture = knockoutFixtures.find((fixture) => !fixture.played && (fixture.home === team || fixture.away === team));
       if (nextFixture) {
-        setKnockoutFixtures((current) => current.some((fixture) => fixture.matchNo === nextFixture.matchNo && (fixture.home === team || fixture.away === team)) ? current : [...current, nextFixture]);
         setCurrentKnockoutMatch(nextFixture);
         setOpponent(getFixtureOpponent(team, nextFixture));
         setScore([0, 0]);
@@ -214,7 +211,7 @@ export default function App() {
 
   if (screen === "home") return <HomeScreen onSelectGroup={selectGroup} onSelectTeam={startTeam} />;
   if (screen === "teams") return <TeamSelectScreen selectedGroup={selectedGroup} onSelectGroup={setSelectedGroup} onSelectTeam={startTeam} />;
-  if (drawer === "groups") return <DrawerShell><GroupsScreen allGroups={allGroups} qualifiers={qualifiers} menuProps={menuProps} standingsView={standingsView} onStandingsViewChange={setStandingsView} knockoutFixtures={visibleKnockoutFixtures} qualifiedTeams={qualifiedTeams} userTeam={team} /></DrawerShell>;
+  if (drawer === "groups") return <DrawerShell><GroupsScreen allGroups={allGroups} qualifiers={qualifiers} menuProps={menuProps} standingsView={standingsView} onStandingsViewChange={setStandingsView} knockoutFixtures={visibleKnockoutFixtures} qualifiedTeams={qualifiedTeams} userTeam={team} podium={podium} /></DrawerShell>;
   if (drawer === "fixtures") return <DrawerShell><FixturesScreen fixtureView={fixtureView} onFixtureViewChange={setFixtureView} schedule={schedule} menuProps={menuProps} knockoutFixtures={visibleKnockoutFixtures} userTeam={team} /></DrawerShell>;
   return <MatchScreen team={team} opponent={opponent} score={score} matchResult={matchResult} onQuickWin={quickWin} onNextMatch={nextMatch} menuProps={menuProps} stageLabel={matchStage} />;
 }

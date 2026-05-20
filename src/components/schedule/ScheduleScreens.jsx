@@ -1,5 +1,5 @@
 import { KO_ROUNDS, KNOCKOUT_PLACEHOLDER_SLOTS } from "../../data/tournament.js";
-import { buildRound32Placeholders } from "../../logic/tournament.js";
+import { buildRound32Placeholders, mergeKnockoutFixtures } from "../../logic/tournament.js";
 import { Flag } from "../shared.jsx";
 import { ScreenTitle } from "../layout/Menu.jsx";
 

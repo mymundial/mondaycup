@@ -1,5 +1,5 @@
 import { KNOCKOUT_PLACEHOLDER_SLOTS } from "../../data/tournament.js";
-import { buildRound32Placeholders } from "../../logic/tournament.js";
+import { buildRound32Placeholders, mergeKnockoutFixtures } from "../../logic/tournament.js";
 import { Flag } from "../shared.jsx";
 import { ScreenTitle } from "../layout/Menu.jsx";
 import { FixturesToggle } from "../schedule/ScheduleScreens.jsx";
@@ -13,7 +13,7 @@ const rowClass = ({ isQualified, isUserTeam }) => [
 ].join(" ");
 
 function PlaceholderSlot({ value, size = "sm" }) {
-  const sizeClass = size === "lg" ? "h-6 w-10 text-[6px]" : size === "md" ? "h-5 w-8 text-[5px]" : "h-[18px] w-[26px] text-[5px]";
+  const sizeClass = "h-[18px] w-[26px] text-[5px]";
   return <span className={`relative flex ${sizeClass} shrink-0 items-center justify-center overflow-hidden rounded bg-[#DCE9DE] font-black uppercase tracking-[0.035em] text-[#0B5F35]/55 ring-1 ring-[#0B5F35]/10`}>{value || "TBC"}</span>;
 }
 
@@ -25,7 +25,7 @@ const medalRing = (medal) => {
 };
 
 function BracketSlot({ value, size = "sm", medalTeams = {} }) {
-  const sizeClass = size === "lg" ? "h-6 w-10" : size === "md" ? "h-5 w-8" : "h-[18px] w-[26px]";
+  const sizeClass = "h-[18px] w-[26px]";
   const medal = isRealTeam(value) ? medalTeams[value] : null;
   return isRealTeam(value)
     ? <span className={`inline-flex rounded ${medalRing(medal)}`}><Flag team={value} className={`${sizeClass} rounded`} /></span>
@@ -33,11 +33,11 @@ function BracketSlot({ value, size = "sm", medalTeams = {} }) {
 }
 
 function BracketFixture({ fixture, size = "sm", layout = "vertical", medalTeams = {} }) {
-  const widthClass = layout === "horizontal" ? (size === "lg" ? "w-[102px]" : "w-[86px]") : size === "lg" ? "w-[56px]" : size === "md" ? "w-[46px]" : "w-[32px]";
+  const widthClass = layout === "horizontal" ? "w-[70px]" : "w-[32px]";
   const slotDirection = layout === "horizontal" ? "flex-row" : "flex-col";
-  return <div className={`mx-auto flex ${widthClass} flex-col items-center rounded-[0.55rem] bg-[#F8F4EC] px-[3px] py-[3px] ring-1 ring-[#0B5F35]/8`}>
+  return <div className={`mx-auto flex ${widthClass} flex-col items-center rounded-[0.5rem] bg-[#F8F4EC] px-[2px] py-[2px] ring-1 ring-[#0B5F35]/8`}>
     <div className="mb-[2px] text-[5.5px] font-black uppercase tracking-[0.05em] text-[#0B5F35]/50">M{fixture?.matchNo || ""}</div>
-    <div className={`flex ${slotDirection} items-center gap-[2px]`}>
+    <div className={`flex ${slotDirection} items-center gap-[1px]`}>
       <BracketSlot value={fixture?.home || fixture?.homeSeed || "TBC"} size={size} medalTeams={medalTeams} />
       <BracketSlot value={fixture?.away || fixture?.awaySeed || "TBC"} size={size} medalTeams={medalTeams} />
     </div>
@@ -84,17 +84,13 @@ export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam =
   </div>;
 }
 
-function mergeActualFixtures(placeholders, actualFixtures) {
-  const actualByMatchNo = new Map(actualFixtures.map((fixture) => [fixture.matchNo, fixture]));
-  return placeholders.map((placeholder) => actualByMatchNo.get(placeholder.matchNo) || placeholder);
-}
-
 function KnockoutBracket({ round32 = [], podium = {} }) {
-  const r32 = mergeActualFixtures(buildRound32Placeholders(), round32);
-  const r16 = mergeActualFixtures(placeholderFixtures("Round of 16"), round32);
-  const qf = mergeActualFixtures(placeholderFixtures("Quarter-finals"), round32);
-  const sf = mergeActualFixtures(placeholderFixtures("Semi-finals"), round32);
-  const final = mergeActualFixtures(placeholderFixtures("Final"), round32);
+  const allFixtures = round32 || [];
+  const r32 = mergeKnockoutFixtures(buildRound32Placeholders(), allFixtures);
+  const r16 = mergeKnockoutFixtures(placeholderFixtures("Round of 16"), allFixtures);
+  const qf = mergeKnockoutFixtures(placeholderFixtures("Quarter-finals"), allFixtures);
+  const sf = mergeKnockoutFixtures(placeholderFixtures("Semi-finals"), allFixtures);
+  const final = mergeKnockoutFixtures(placeholderFixtures("Final"), allFixtures);
   const medalTeams = {
     ...(podium.winner ? { [podium.winner]: "gold" } : {}),
     ...(podium.runnerUp ? { [podium.runnerUp]: "silver" } : {}),
@@ -108,20 +104,20 @@ function KnockoutBracket({ round32 = [], podium = {} }) {
       <div className="mt-1.5"><BracketRow count={8} fixtures={r32.slice(0, 8)} size="sm" gap="gap-[1px]" layout="vertical" medalTeams={medalTeams} /></div>
 
       <div className="mt-3"><StageLabel>ROUND OF 16</StageLabel><div className="mt-1.5"><BracketRow count={4} fixtures={r16.slice(0, 4)} size="sm" gap="gap-3" layout="horizontal" medalTeams={medalTeams} /></div></div>
-      <div className="mt-4"><StageLabel>QUARTER-FINALS</StageLabel><div className="mt-1.5"><BracketRow count={2} fixtures={qf.slice(0, 2)} size="md" gap="gap-8" layout="horizontal" medalTeams={medalTeams} /></div></div>
-      <div className="mt-4"><StageLabel>SEMI-FINAL</StageLabel><div className="mt-1.5"><BracketRow count={1} fixtures={sf.slice(0, 1)} size="lg" layout="horizontal" medalTeams={medalTeams} /></div></div>
-      <div className="mt-5"><StageLabel>FINAL</StageLabel><div className="mt-1.5"><BracketRow count={1} fixtures={final} size="lg" layout="vertical" medalTeams={medalTeams} /></div></div>
-      <div className="mt-4"><StageLabel>SEMI-FINAL</StageLabel><div className="mt-1.5"><BracketRow count={1} fixtures={sf.slice(1, 2)} size="lg" layout="horizontal" medalTeams={medalTeams} /></div></div>
-      <div className="mt-4"><StageLabel>QUARTER-FINALS</StageLabel><div className="mt-1.5"><BracketRow count={2} fixtures={qf.slice(2, 4)} size="md" gap="gap-8" layout="horizontal" medalTeams={medalTeams} /></div></div>
+      <div className="mt-4"><StageLabel>QUARTER-FINALS</StageLabel><div className="mt-1.5"><BracketRow count={2} fixtures={qf.slice(0, 2)} size="sm" gap="gap-6" layout="horizontal" medalTeams={medalTeams} /></div></div>
+      <div className="mt-4"><StageLabel>SEMI-FINAL</StageLabel><div className="mt-1.5"><BracketRow count={1} fixtures={sf.slice(0, 1)} size="sm" layout="horizontal" medalTeams={medalTeams} /></div></div>
+      <div className="mt-5"><StageLabel>FINAL</StageLabel><div className="mt-1.5"><BracketRow count={1} fixtures={final} size="sm" layout="vertical" medalTeams={medalTeams} /></div></div>
+      <div className="mt-4"><StageLabel>SEMI-FINAL</StageLabel><div className="mt-1.5"><BracketRow count={1} fixtures={sf.slice(1, 2)} size="sm" layout="horizontal" medalTeams={medalTeams} /></div></div>
+      <div className="mt-4"><StageLabel>QUARTER-FINALS</StageLabel><div className="mt-1.5"><BracketRow count={2} fixtures={qf.slice(2, 4)} size="sm" gap="gap-6" layout="horizontal" medalTeams={medalTeams} /></div></div>
       <div className="mt-3"><StageLabel>ROUND OF 16</StageLabel><div className="mt-1.5"><BracketRow count={4} fixtures={r16.slice(4, 8)} size="sm" gap="gap-3" layout="horizontal" medalTeams={medalTeams} /></div></div>
       <div className="mt-3"><StageLabel>ROUND OF 32</StageLabel><div className="mt-1.5"><BracketRow count={8} fixtures={r32.slice(8, 16)} size="sm" gap="gap-[1px]" layout="vertical" medalTeams={medalTeams} /></div></div>
     </div>
   </div>;
 }
 
-export function GroupsScreen({ allGroups, menuProps, standingsView, onStandingsViewChange, knockoutFixtures, qualifiedTeams = new Set(), userTeam = null }) {
+export function GroupsScreen({ allGroups, menuProps, standingsView, onStandingsViewChange, knockoutFixtures, qualifiedTeams = new Set(), userTeam = null, podium = {} }) {
   return <main className="flex min-h-0 flex-1 flex-col gap-2"><ScreenTitle {...menuProps}>STANDINGS</ScreenTitle><FixturesToggle value={standingsView} onChange={onStandingsViewChange} /><section className="min-h-0 flex-1 overflow-auto py-1"><div className="space-y-2">
     {standingsView === "group" && allGroups.map(({ group, rows }) => <GroupTable key={group} title={`GROUP ${group}`} rows={rows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />)}
-    {standingsView === "knockout" && <KnockoutBracket round32={knockoutFixtures} />}
+    {standingsView === "knockout" && <KnockoutBracket round32={knockoutFixtures} podium={podium} />}
   </div></section></main>;
 }
