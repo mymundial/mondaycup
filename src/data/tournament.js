@@ -4,7 +4,7 @@ export const MATCHDAY_PAIRINGS = [
   { week: 3, pairings: [[3, 0], [1, 2]] },
 ];
 
-// Round of 32 slots in the visual bracket order shown on FIFA's knockout bracket.
+// Round of 32 slots in the visual bracket order shown on the FIFA knockout bracket.
 // Third-place labels mean: use the best available third-place team from one of those groups.
 export const ROUND_OF_32_SLOTS = [
   { matchNo: 74, homeSeed: "1E", awaySeed: "3ABCDF" },
@@ -25,11 +25,42 @@ export const ROUND_OF_32_SLOTS = [
   { matchNo: 87, homeSeed: "1K", awaySeed: "3DEIJL" },
 ];
 
+// Placeholder paths for unpopulated knockout rounds after R32.
+// These should be shown as fixture information until winners/runners-up are known.
+export const KNOCKOUT_PLACEHOLDER_SLOTS = {
+  "Round of 16": [
+    { matchNo: 89, homeSeed: "W74", awaySeed: "W77" },
+    { matchNo: 90, homeSeed: "W73", awaySeed: "W75" },
+    { matchNo: 93, homeSeed: "W83", awaySeed: "W84" },
+    { matchNo: 94, homeSeed: "W81", awaySeed: "W82" },
+    { matchNo: 91, homeSeed: "W76", awaySeed: "W78" },
+    { matchNo: 92, homeSeed: "W79", awaySeed: "W80" },
+    { matchNo: 95, homeSeed: "W86", awaySeed: "W88" },
+    { matchNo: 96, homeSeed: "W85", awaySeed: "W87" },
+  ],
+  "Quarter-finals": [
+    { matchNo: 97, homeSeed: "W89", awaySeed: "W90" },
+    { matchNo: 98, homeSeed: "W93", awaySeed: "W94" },
+    { matchNo: 99, homeSeed: "W91", awaySeed: "W92" },
+    { matchNo: 100, homeSeed: "W95", awaySeed: "W96" },
+  ],
+  "Semi-finals": [
+    { matchNo: 101, homeSeed: "W97", awaySeed: "W98" },
+    { matchNo: 102, homeSeed: "W99", awaySeed: "W100" },
+  ],
+  "3RD PLACE PLAY-OFF": [
+    { matchNo: 103, homeSeed: "RU101", awaySeed: "RU102" },
+  ],
+  "Final": [
+    { matchNo: 104, homeSeed: "W101", awaySeed: "W102" },
+  ],
+};
+
 export const KO_ROUNDS = [
   ["Round of 32", ROUND_OF_32_SLOTS.map((slot) => slot.matchNo)],
-  ["Round of 16", Array.from({ length: 8 }, (_, i) => 89 + i)],
-  ["Quarter-finals", Array.from({ length: 4 }, (_, i) => 97 + i)],
-  ["Semi-finals", [101, 102]],
-  ["3RD PLACE PLAY-OFF", [103]],
-  ["Final", [104]],
+  ["Round of 16", KNOCKOUT_PLACEHOLDER_SLOTS["Round of 16"].map((slot) => slot.matchNo)],
+  ["Quarter-finals", KNOCKOUT_PLACEHOLDER_SLOTS["Quarter-finals"].map((slot) => slot.matchNo)],
+  ["Semi-finals", KNOCKOUT_PLACEHOLDER_SLOTS["Semi-finals"].map((slot) => slot.matchNo)],
+  ["3RD PLACE PLAY-OFF", KNOCKOUT_PLACEHOLDER_SLOTS["3RD PLACE PLAY-OFF"].map((slot) => slot.matchNo)],
+  ["Final", KNOCKOUT_PLACEHOLDER_SLOTS.Final.map((slot) => slot.matchNo)],
 ];

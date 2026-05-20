@@ -1,26 +1,60 @@
-import { KO_ROUNDS } from "../../data/tournament.js";
+import { KO_ROUNDS, KNOCKOUT_PLACEHOLDER_SLOTS } from "../../data/tournament.js";
 import { buildRound32Placeholders } from "../../logic/tournament.js";
 import { Flag } from "../shared.jsx";
 import { ScreenTitle } from "../layout/Menu.jsx";
 
 const isSeedLabel = (value) => /^[123][A-L]+$/.test(String(value || ""));
+const isProgressionLabel = (value) => /^(W|RU)\d+$/.test(String(value || ""));
+const isPlaceholderLabel = (value) => !value || value === "TBC" || isSeedLabel(value) || isProgressionLabel(value);
 const displayTeam = (value) => value || "TBC";
 
-export function FixtureCard({ home = "TBC", away = "TBC", group, played = false, homeGoals = null, awayGoals = null, matchNo = null, homeSeed = null, awaySeed = null }) {
-  const showHomeFlag = home !== "TBC" && !isSeedLabel(home);
-  const showAwayFlag = away !== "TBC" && !isSeedLabel(away);
+function PlaceholderFlag({ className = "h-4 w-6" }) {
+  return <span className={`relative flex ${className} shrink-0 items-center justify-center overflow-hidden rounded bg-[#DCE9DE] text-[6px] font-black tracking-[0.04em] text-[#0B5F35]/55 ring-1 ring-[#0B5F35]/10`}>TBC</span>;
+}
+
+function FlagSlot({ value }) {
+  return isPlaceholderLabel(value) ? <PlaceholderFlag /> : <Flag team={value} />;
+}
+
+function buildPlaceholderFixtures(label, nums) {
+  const configuredSlots = KNOCKOUT_PLACEHOLDER_SLOTS[label];
+  if (configuredSlots) {
+    return configuredSlots.map((slot) => ({
+      id: `M${slot.matchNo}`,
+      matchNo: slot.matchNo,
+      home: slot.homeSeed,
+      away: slot.awaySeed,
+      homeSeed: slot.homeSeed,
+      awaySeed: slot.awaySeed,
+      played: false,
+      homeGoals: null,
+      awayGoals: null,
+    }));
+  }
+
+  return nums.map((num) => ({
+    id: `M${num}`,
+    matchNo: num,
+    home: "TBC",
+    away: "TBC",
+    played: false,
+    homeGoals: null,
+    awayGoals: null,
+  }));
+}
+
+export function FixtureCard({ home = "TBC", away = "TBC", group, played = false, homeGoals = null, awayGoals = null, matchNo = null }) {
   return <div className="mb-2 rounded-2xl bg-[#F8F4EC] px-3 py-3 text-center text-[11px] font-semibold text-[#072D1D]/80 ring-1 ring-[#0B5F35]/6 last:mb-0">
     <div className="mb-2 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#0B5F35]/60">
       {matchNo && <span>M{matchNo}</span>}
       {group && <span>Group {group}</span>}
-      {homeSeed && awaySeed && <span>{homeSeed} v {awaySeed}</span>}
     </div>
     <div className="grid grid-cols-[24px_minmax(0,1fr)_34px_minmax(0,1fr)_24px] items-center gap-2 text-[10px] font-black text-[#072D1D]">
-      <div className="flex items-center justify-start">{showHomeFlag && <Flag team={home} />}</div>
+      <div className="flex items-center justify-start"><FlagSlot value={home} /></div>
       <span className="min-w-0 truncate text-right font-semibold uppercase tracking-[0.005em]">{displayTeam(home)}</span>
       <span className="text-center text-[#0B5F35]">{played ? `${homeGoals}-${awayGoals}` : "v"}</span>
       <span className="min-w-0 truncate text-left font-semibold uppercase tracking-[0.005em]">{displayTeam(away)}</span>
-      <div className="flex items-center justify-end">{showAwayFlag && <Flag team={away} />}</div>
+      <div className="flex items-center justify-end"><FlagSlot value={away} /></div>
     </div>
   </div>;
 }
@@ -39,7 +73,7 @@ export function FixturesScreen({ fixtureView, onFixtureViewChange, schedule, men
   return <main className="flex min-h-0 flex-1 flex-col gap-2"><ScreenTitle {...menuProps}>SCHEDULE</ScreenTitle><FixturesToggle value={fixtureView} onChange={onFixtureViewChange} /><section className="min-h-0 flex-1 overflow-auto py-1"><div className="space-y-3">
     {fixtureView === "group" && [1, 2, 3].map((round) => <FixtureSection key={round} title={`MATCHDAY ${round}`}>{schedule.filter((fixture) => fixture.week === round).map((fixture) => <FixtureCard key={fixture.id} {...fixture} />)}</FixtureSection>)}
     {fixtureView === "knockout" && KO_ROUNDS.map(([label, nums]) => {
-      const fixtures = label === "Round of 32" ? round32 : nums.map((num) => ({ id: `M${num}`, matchNo: num, home: "TBC", away: "TBC" }));
+      const fixtures = label === "Round of 32" ? round32 : buildPlaceholderFixtures(label, nums);
       return <FixtureSection key={label} title={label}>{fixtures.map((fixture) => <FixtureCard key={fixture.id || fixture.matchNo} {...fixture} />)}</FixtureSection>;
     })}
   </div></section></main>;
