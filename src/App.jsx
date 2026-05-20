@@ -168,7 +168,7 @@ export default function App() {
         awayGoals: result.awayGoals,
       };
 
-      const { updatedFixtures, playedUserMatch, podium: completedPodium } = completeKnockoutRound({
+      const { updatedFixtures, playedUserMatch, nextUserFixture, podium: completedPodium } = completeKnockoutRound({
         fixtures: knockoutFixtures,
         currentMatch: currentKnockoutMatch,
         userTeam: team,
@@ -194,6 +194,7 @@ export default function App() {
         week: null,
         matchNo: playedUserMatch.matchNo,
         status: result.userWon ? (playedUserMatch.matchNo === 104 ? "champion" : "knockoutWin") : "eliminated",
+        nextFixture: nextUserFixture,
       });
       return;
     }
@@ -253,7 +254,7 @@ export default function App() {
     }
 
     if (matchResult.status === "knockoutWin") {
-      const nextFixture = knockoutFixtures.find((fixture) => !fixture.played && (fixture.home === team || fixture.away === team));
+      const nextFixture = matchResult.nextFixture || knockoutFixtures.find((fixture) => !fixture.played && (fixture.home === team || fixture.away === team));
       if (nextFixture) {
         setCurrentKnockoutMatch(nextFixture);
         setOpponent(getFixtureOpponent(team, nextFixture));

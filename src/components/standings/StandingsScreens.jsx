@@ -26,11 +26,11 @@ function BracketSlot({ value, userTeam = null }) {
 }
 
 function BracketFixture({ fixture, layout = "vertical", userTeam = null }) {
-  const widthClass = layout === "horizontal" ? "w-[72px]" : "w-[40px]";
+  const widthClass = layout === "horizontal" ? "w-[76px]" : "w-[42px]";
   const slotDirection = layout === "horizontal" ? "flex-row" : "flex-col";
-  return <div className={`mx-auto flex ${widthClass} flex-col items-center rounded-[0.55rem] bg-[#F8F4EC] px-[3px] py-[3px] ring-1 ring-[#0B5F35]/8`}>
+  return <div className={`mx-auto flex ${widthClass} flex-col items-center rounded-[0.55rem] bg-[#F8F4EC] px-[4px] py-[3px] ring-1 ring-[#0B5F35]/8`}>
     <div className="mb-[2px] text-[5.5px] font-black uppercase tracking-[0.05em] text-[#0B5F35]/50">M{fixture?.matchNo || ""}</div>
-    <div className={`flex ${slotDirection} items-center gap-[3px]`}>
+    <div className={`flex ${slotDirection} items-center gap-[4px]`}>
       <BracketSlot value={fixture?.home || fixture?.homeSeed || "TBC"} userTeam={userTeam} />
       <BracketSlot value={fixture?.away || fixture?.awaySeed || "TBC"} userTeam={userTeam} />
     </div>
@@ -82,8 +82,8 @@ function runnerUpOf(fixture) {
 }
 
 function PodiumBox({ title, team, className }) {
-  return <div className={`flex h-[54px] w-[92px] flex-col items-center justify-center rounded-[0.9rem] ${className}`}>
-    <div className="mb-1 text-[6px] font-black uppercase tracking-[0.16em] text-[#072D1D]/70">{title}</div>
+  return <div className={`flex h-[48px] w-[82px] flex-col items-center justify-center rounded-[0.9rem] ${className}`}>
+    <div className="mb-[3px] text-[5.5px] font-black uppercase tracking-[0.16em] text-[#072D1D]/70">{title}</div>
     <BracketSlot value={team || "TBC"} />
   </div>;
 }
@@ -110,8 +110,8 @@ export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam =
 }
 
 function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
-  const r32 = round32.length ? round32 : buildRound32Placeholders();
-  const allFixtures = r32;
+  const allFixtures = round32 || [];
+  const r32 = mergeByMatchNo(buildRound32Placeholders(), allFixtures);
   const r16 = mergeByMatchNo(placeholderFixtures("Round of 16"), allFixtures);
   const qf = mergeByMatchNo(placeholderFixtures("Quarter-finals"), allFixtures);
   const sf = mergeByMatchNo(placeholderFixtures("Semi-finals"), allFixtures);
@@ -127,26 +127,26 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
     <div className="bg-[#0B5F35] px-3 py-2.5 text-center text-[17px] font-black tracking-[-0.025em] text-[#F5F0E6]">TOURNAMENT BRACKET</div>
     <div className="origin-top scale-[0.86] px-2 py-3">
       <StageLabel>ROUND OF 32</StageLabel>
-      <div className="mt-1.5"><BracketRow count={8} fixtures={r32.slice(0, 8)} gap="gap-[1px]" layout="vertical" userTeam={userTeam} /></div>
+      <div className="mt-1.5"><BracketRow count={8} fixtures={r32.slice(0, 8)} gap="gap-[3px]" layout="vertical" userTeam={userTeam} /></div>
 
-      <div className="mt-3"><StageLabel>ROUND OF 16</StageLabel><div className="mt-1.5"><BracketRow count={4} fixtures={r16.slice(0, 4)} gap="gap-3" layout="horizontal" userTeam={userTeam} /></div></div>
+      <div className="mt-3"><StageLabel>ROUND OF 16</StageLabel><div className="mt-1.5"><BracketRow count={4} fixtures={r16.slice(0, 4)} gap="gap-4" layout="horizontal" userTeam={userTeam} /></div></div>
       <div className="mt-4"><StageLabel>QUARTER-FINALS</StageLabel><div className="mt-1.5"><BracketRow count={2} fixtures={qf.slice(0, 2)} gap="gap-8" layout="horizontal" userTeam={userTeam} /></div></div>
       <div className="mt-4"><StageLabel>SEMI-FINALS</StageLabel><div className="mt-1.5"><BracketRow count={1} fixtures={sf.slice(0, 1)} layout="horizontal" userTeam={userTeam} /></div></div>
 
-      <div className="mt-5 grid grid-cols-3 items-center gap-2">
-        <div><StageLabel>3RD PLACE PLAY-OFF</StageLabel><div className="mt-1.5"><BracketFixture fixture={thirdFixture} layout="vertical" userTeam={userTeam} /></div></div>
-        <div className="flex flex-col items-center gap-2">
+      <div className="mt-5 grid grid-cols-3 items-center gap-3">
+        <div className="flex flex-col items-center"><StageLabel><span>3RD PLACE</span><span className="block">PLAY-OFF</span></StageLabel><div className="mt-1.5"><BracketFixture fixture={thirdFixture} layout="vertical" userTeam={userTeam} /></div></div>
+        <div className="flex flex-col items-center gap-1.5">
           <PodiumBox title="CHAMPIONS" team={winner} className="bg-[#D8B62F]" />
           <PodiumBox title="RUNNER-UP" team={runnerUp} className="bg-[#C8C8C8]" />
           <PodiumBox title="THIRD" team={thirdPlace} className="bg-[#D9822B]" />
         </div>
-        <div><StageLabel>FINAL</StageLabel><div className="mt-1.5"><BracketFixture fixture={finalFixture} layout="vertical" userTeam={userTeam} /></div></div>
+        <div className="flex flex-col items-center"><StageLabel><span>MONDAY CUP</span><span className="block">FINAL</span></StageLabel><div className="mt-1.5"><BracketFixture fixture={finalFixture} layout="vertical" userTeam={userTeam} /></div></div>
       </div>
 
       <div className="mt-4"><StageLabel>SEMI-FINALS</StageLabel><div className="mt-1.5"><BracketRow count={1} fixtures={sf.slice(1, 2)} layout="horizontal" userTeam={userTeam} /></div></div>
       <div className="mt-4"><StageLabel>QUARTER-FINALS</StageLabel><div className="mt-1.5"><BracketRow count={2} fixtures={qf.slice(2, 4)} gap="gap-8" layout="horizontal" userTeam={userTeam} /></div></div>
-      <div className="mt-3"><StageLabel>ROUND OF 16</StageLabel><div className="mt-1.5"><BracketRow count={4} fixtures={r16.slice(4, 8)} gap="gap-3" layout="horizontal" userTeam={userTeam} /></div></div>
-      <div className="mt-3"><StageLabel>ROUND OF 32</StageLabel><div className="mt-1.5"><BracketRow count={8} fixtures={r32.slice(8, 16)} gap="gap-[1px]" layout="vertical" userTeam={userTeam} /></div></div>
+      <div className="mt-3"><StageLabel>ROUND OF 16</StageLabel><div className="mt-1.5"><BracketRow count={4} fixtures={r16.slice(4, 8)} gap="gap-4" layout="horizontal" userTeam={userTeam} /></div></div>
+      <div className="mt-3"><StageLabel>ROUND OF 32</StageLabel><div className="mt-1.5"><BracketRow count={8} fixtures={r32.slice(8, 16)} gap="gap-[3px]" layout="vertical" userTeam={userTeam} /></div></div>
     </div>
   </div>;
 }

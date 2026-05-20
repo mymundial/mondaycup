@@ -521,7 +521,7 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
       <LedAdvertisingHoard logo={assets.logo} />
       <div className="absolute bottom-0 left-0 right-0" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
-      <div className="pointer-events-none absolute left-1/2 z-[3] h-[31%] w-[88%] -translate-x-1/2 rounded-b-full border-b-[8px] border-l-[8px] border-r-[8px] border-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
+      <div className="pointer-events-none absolute left-1/2 z-[3] h-[22%] w-[88%] -translate-x-1/2 rounded-b-full border-b-[8px] border-l-[8px] border-r-[8px] border-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
       <GoalFrame showAim={showAim} aimDirection={aimDirection} />
       <div className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f1e8]" style={{ left: `${GAME.spot.x}%`, top: `${GAME.spot.y}%` }} />
       <div className="absolute z-[4] grid h-12 w-12 place-items-center rounded-full border-2 will-change-transform" style={{ left: `${keeperPoint.x}%`, top: `${keeperPoint.y}%`, background: defenderTeam.primaryColour, borderColor: defenderTeam.textColour, transform: keeperTransform(shot?.keeperDirection ?? getDirection("CM"), shotActive), transitionProperty: "left, top, transform", transitionDuration: `${keeperTravelMs(shot)}ms`, transitionTimingFunction: shotActive ? "cubic-bezier(0.18, 0.82, 0.24, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)" }}>
