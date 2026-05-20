@@ -24,14 +24,14 @@ function BracketSlot({ value }) {
 }
 
 function BracketFixture({ fixture, layout = "vertical", userTeam = null }) {
-  const widthClass = layout === "horizontal" ? "w-[78px]" : "w-[44px]";
+  const widthClass = layout === "horizontal" ? "w-[84px]" : "w-[48px]";
   const slotDirection = layout === "horizontal" ? "flex-row" : "flex-col";
   const isUserFixture = userTeam && (fixture?.home === userTeam || fixture?.away === userTeam);
   const cardClass = isUserFixture ? "bg-[#7DAA8F] text-[#F5F0E6] ring-[#F5F0E6]/50" : "bg-[#F8F4EC] text-[#072D1D] ring-[#0B5F35]/8";
   const labelClass = isUserFixture ? "text-[#F5F0E6]" : "text-[#0B5F35]/50";
-  return <div className={`mx-auto flex ${widthClass} flex-col items-center rounded-[0.55rem] ${cardClass} px-[4px] py-[3px] ring-1`}>
+  return <div className={`mx-auto flex ${widthClass} flex-col items-center rounded-[0.55rem] ${cardClass} px-[5px] py-[4px] ring-1`}>
     <div className={`mb-[2px] text-[5.5px] font-black uppercase tracking-[0.05em] ${labelClass}`}>M{fixture?.matchNo || ""}</div>
-    <div className={`flex ${slotDirection} items-center gap-[5px]`}>
+    <div className={`flex ${slotDirection} items-center gap-[6px]`}>
       <BracketSlot value={fixture?.home || fixture?.homeSeed || "TBC"} />
       <BracketSlot value={fixture?.away || fixture?.awaySeed || "TBC"} />
     </div>
@@ -83,7 +83,7 @@ function runnerUpOf(fixture) {
 }
 
 function PodiumBox({ title, team, className }) {
-  return <div className={`flex h-[46px] w-[80px] flex-col items-center justify-center rounded-[0.9rem] ${className}`}>
+  return <div className={`flex h-[42px] w-[76px] flex-col items-center justify-center rounded-[0.85rem] ${className}`}>
     <div className="mb-1 text-[6px] font-black uppercase tracking-[0.16em] text-[#072D1D]/70">{title}</div>
     <BracketSlot value={team || "TBC"} />
   </div>;
@@ -111,8 +111,8 @@ export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam =
 }
 
 function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
-  const r32 = round32.length ? round32 : buildRound32Placeholders();
-  const allFixtures = r32;
+  const allFixtures = round32;
+  const r32 = mergeByMatchNo(buildRound32Placeholders(), allFixtures);
   const r16 = mergeByMatchNo(placeholderFixtures("Round of 16"), allFixtures);
   const qf = mergeByMatchNo(placeholderFixtures("Quarter-finals"), allFixtures);
   const sf = mergeByMatchNo(placeholderFixtures("Semi-finals"), allFixtures);
@@ -126,7 +126,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
 
   return <div className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.04)]">
     <div className="bg-[#0B5F35] px-3 py-2.5 text-center text-[17px] font-black tracking-[-0.025em] text-[#F5F0E6]">TOURNAMENT BRACKET</div>
-    <div className="px-2 py-2" style={{ zoom: 0.86 }}>
+    <div className="px-2 pb-2 pt-2" style={{ zoom: 0.86 }}>
       <StageLabel>ROUND OF 32</StageLabel>
       <div className="mt-1.5"><BracketRow count={8} fixtures={r32.slice(0, 8)} gap="gap-[1px]" layout="vertical" userTeam={userTeam} /></div>
 

@@ -78,7 +78,7 @@ export function FixtureSection({ title, children }) {
 }
 
 export function FixturesScreen({ fixtureView, onFixtureViewChange, schedule, menuProps, knockoutFixtures, userTeam = null }) {
-  const round32 = knockoutFixtures.length ? knockoutFixtures : buildRound32Placeholders();
+  const round32 = mergeFixtures(buildRound32Placeholders(), knockoutFixtures);
   return <main className="flex min-h-0 flex-1 flex-col gap-2"><ScreenTitle {...menuProps}>SCHEDULE</ScreenTitle><FixturesToggle value={fixtureView} onChange={onFixtureViewChange} /><section className="min-h-0 flex-1 overflow-auto py-1"><div className="space-y-3">
     {fixtureView === "group" && [1, 2, 3].map((round) => <FixtureSection key={round} title={`MATCHDAY ${round}`}>{schedule.filter((fixture) => fixture.week === round).map((fixture) => <FixtureCard key={fixture.id} {...fixture} userTeam={userTeam} />)}</FixtureSection>)}
     {fixtureView === "knockout" && KO_ROUNDS.map(([label, nums]) => {

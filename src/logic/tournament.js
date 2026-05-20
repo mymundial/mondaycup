@@ -209,6 +209,7 @@ function roundNameForMatchNo(matchNo) {
   if (matchNo >= 89 && matchNo <= 96) return "ROUND OF 16";
   if (matchNo >= 97 && matchNo <= 100) return "QUARTER-FINAL";
   if (matchNo === 101 || matchNo === 102) return "SEMI-FINALS";
+  if (matchNo === 103) return "3RD PLACE PLAY-OFF";
   if (matchNo === 104) return "FINAL";
   return "KNOCKOUT";
 }
@@ -277,9 +278,6 @@ export function createNextKnockoutFixture({ previousMatchNo, team, fixtures }) {
   const slot = nextSlots.find((candidate) => candidate.homeSeed === winnerSeed || candidate.awaySeed === winnerSeed);
   if (!slot) return null;
 
-  const existing = fixtures.find((fixture) => fixture.matchNo === slot.matchNo && (fixture.home === team || fixture.away === team));
-  if (existing) return existing;
-
   const generated = fixtureFromSlot(slot, fixtures);
   if (generated.home === team || generated.away === team) return generated;
 
@@ -303,6 +301,20 @@ export function completeKnockoutRound({ fixtures, currentMatch, userTeam, userRe
   const awayGoals = userResult ? userResult.awayGoals : (currentMatch.away === userTeam ? 1 : 0);
   const playedUserMatch = { ...currentMatch, played: true, homeGoals, awayGoals };
   let workingFixtures = replaceFixtures(fixtures, [playedUserMatch]);
+
+  // M103 is a one-off placement match. When the user completes it, also resolve
+  // M104 if it has not already been played so the final standings/podium exist.
+  if (roundName === "3RD PLACE PLAY-OFF") {
+    const finalFixture = simulateKnockoutFixture(buildFinalFixture(workingFixtures));
+    workingFixtures = replaceFixtures(workingFixtures, [finalFixture]);
+    const updatedFixtures = workingFixtures;
+    const podium = {
+      winner: fixtureWinner(finalFixture),
+      runnerUp: fixtureRunnerUp(finalFixture),
+      third: bronzeTeamFromThirdPlacePlayoff(updatedFixtures),
+    };
+    return { updatedFixtures, playedUserMatch, nextUserFixture: null, podium };
+  }
 
   const completedRoundFixtures = currentSlots.map((slot) => {
     const fixture = fixtureFromSlot(slot, workingFixtures);
@@ -359,6 +371,8 @@ export function runSelfTests() {
   console.assert(testNext?.matchNo === 89, "Expected M74 winner to progress to M89");
   const testComplete = completeKnockoutRound({ fixtures: round32, currentMatch: round32[0], userTeam: round32[0].home });
   console.assert(testComplete.updatedFixtures.some((fixture) => fixture.matchNo === 89), "Expected R16 fixtures after completing R32");
+  const pathTest = createNextKnockoutFixture({ previousMatchNo: 85, team: "Canada", fixtures: [{ matchNo: 85, home: "Canada", away: "Algeria", played: true, homeGoals: 1, awayGoals: 0 }, { matchNo: 87, home: "Portugal", away: "Ghana", played: true, homeGoals: 1, awayGoals: 0 }] });
+  console.assert(pathTest?.matchNo === 96, "Expected M85 winner to progress to M96 on official bracket path");
   const semiFixtures = [
     { matchNo: 101, home: "Spain", away: "France", played: false, homeGoals: null, awayGoals: null },
     { matchNo: 102, home: "Argentina", away: "Brazil", played: false, homeGoals: null, awayGoals: null },

@@ -192,7 +192,13 @@ export default function App() {
       setScore(userScore);
       setKnockoutFixtures(updatedFixtures);
       if (completedPodium) setPodium(completedPodium);
-      const lostSemiFinal = !result.userWon && (playedUserMatch.matchNo === 101 || playedUserMatch.matchNo === 102);
+      const matchNo = playedUserMatch.matchNo;
+      const lostSemiFinal = !result.userWon && (matchNo === 101 || matchNo === 102);
+      let status = "eliminated";
+      if (matchNo === 103) status = result.userWon ? "third" : "fourth";
+      else if (matchNo === 104) status = result.userWon ? "champion" : "runnerUp";
+      else if (result.userWon) status = "knockoutWin";
+      else if (lostSemiFinal) status = "thirdPlace";
       setModalDismissed(false);
       setMatchResult({
         home: playedUserMatch.home,
@@ -201,8 +207,8 @@ export default function App() {
         awayGoals: playedUserMatch.awayGoals,
         won: result.userWon,
         week: null,
-        matchNo: playedUserMatch.matchNo,
-        status: result.userWon ? (playedUserMatch.matchNo === 104 ? "champion" : "knockoutWin") : (lostSemiFinal ? "thirdPlace" : "eliminated"),
+        matchNo,
+        status,
         nextFixture: nextUserFixture,
       });
       return;
@@ -253,7 +259,7 @@ export default function App() {
       }
     }
 
-    if (matchResult.status === "eliminated") { resetTournament(); return; }
+    if (["eliminated", "runnerUp", "third", "fourth"].includes(matchResult.status)) { resetTournament(); return; }
 
     if (matchResult.status === "champion") {
       setCurrentKnockoutMatch(null);
