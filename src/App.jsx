@@ -193,7 +193,7 @@ export default function App() {
         won: result.userWon,
         week: null,
         matchNo: playedUserMatch.matchNo,
-        status: playedUserMatch.matchNo === 104 ? "champion" : "knockoutWin",
+        status: result.userWon ? (playedUserMatch.matchNo === 104 ? "champion" : "knockoutWin") : "eliminated",
       });
       return;
     }
@@ -219,7 +219,8 @@ export default function App() {
       awayGoals: result.awayGoals,
       won: result.userWon,
       week: match.week,
-      status: completedGroupStage ? (qualified ? "qualified" : "eliminated") : (result.userWon ? "groupWin" : "groupLoss"),
+      status: completedGroupStage ? (qualified ? "qualified" : "eliminated") : (result.isDraw ? "groupDraw" : result.userWon ? "groupWin" : "groupLoss"),
+      isDraw: result.isDraw || result.homeGoals === result.awayGoals,
     });
   };
 

@@ -19,14 +19,16 @@ function teamToGameTeam(name) {
 }
 
 function modalTitle(result) {
-  if (result.status === "qualified") return "YOU QUALIFIED!";
+  if (result.status === "qualified") return "QUALIFIED!";
   if (result.status === "eliminated") return "ELIMINATED!";
   if (result.status === "champion") return "CHAMPIONS!";
-  return result.won ? "YOU WON!" : "YOU LOST!";
+  if (result.isDraw || result.homeGoals === result.awayGoals) return "DRAW!";
+  if (result.status === "knockoutWin") return "QUALIFIED!";
+  return result.won ? "VICTORY!" : "DEFEAT!";
 }
 
 function modalButton(result) {
-  if (result.status === "eliminated") return "PLAY AGAIN";
+  if (result.status === "eliminated") return "TRY AGAIN";
   if (result.status === "champion") return "VIEW BRACKET";
   return "NEXT MATCH";
 }
@@ -68,23 +70,32 @@ function FullTimeModal({ result, onNext, menuProps, groupRows, qualifiedTeams, u
         <div className="relative min-h-[76px] px-5 pb-3 pt-4">
           <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-4 top-1/2 h-12 w-12 -translate-y-1/2 object-contain" draggable={false} />
           <div className="px-12 text-[36px] font-black uppercase leading-[0.92] tracking-[-0.035em]">{modalTitle(result)}</div>
-          <button onClick={menuProps.onToggleMenu} className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl text-[#0B5F35]">
+          <button onClick={menuProps.onToggleMenu} className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-[#0B5F35] text-[#F5F0E6]">
             <HamburgerIcon />
           </button>
           {menuProps.menuOpen && <MenuDropdown onClose={menuProps.onToggleMenu} onMatch={menuProps.onMatch} onFixtures={menuProps.onFixtures} onGroups={menuProps.onGroups} onRestart={menuProps.onRestart} />}
         </div>
 
         <div className="px-5 pb-5">
-          <div className="rounded-[1.25rem] bg-[#EFE7D8] px-4 py-3">
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-              <span className="text-[32px] font-black uppercase tracking-[-0.025em]">{teamCode(result.home)}</span>
-              <span className="rounded-full bg-[#0B5F35] px-4 py-1 text-[24px] font-black tabular-nums text-[#F5F0E6]">{result.homeGoals}-{result.awayGoals}</span>
-              <span className="text-[32px] font-black uppercase tracking-[-0.025em]">{teamCode(result.away)}</span>
-            </div>
-          </div>
-
-          <div className="mt-3 text-[9px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/45">{contextLabel}</div>
-          {!isKnockout && <StandingsMiniTable rows={groupRows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />}
+          {isKnockout ? (
+            <>
+              <div className="mt-1 text-[9px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/45">{contextLabel}</div>
+              <div className="mt-2 rounded-[1.25rem] bg-[#EFE7D8] px-3 py-3">
+                <div className="grid grid-cols-[32px_minmax(0,1fr)_auto_minmax(0,1fr)_32px] items-center gap-2">
+                  <Flag team={result.home} className="h-5 w-8" />
+                  <span className="min-w-0 truncate text-right text-[14px] font-black uppercase tracking-[0.02em]">{result.home}</span>
+                  <span className="rounded-full bg-[#0B5F35] px-4 py-1 text-[24px] font-black tabular-nums text-[#F5F0E6]">{result.homeGoals}-{result.awayGoals}</span>
+                  <span className="min-w-0 truncate text-left text-[14px] font-black uppercase tracking-[0.02em]">{result.away}</span>
+                  <Flag team={result.away} className="h-5 w-8" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mt-1 text-[9px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/45">{contextLabel}</div>
+              <StandingsMiniTable rows={groupRows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />
+            </>
+          )}
 
           <button onClick={onNext} className="mt-5 h-12 w-full rounded-full bg-[#0B5F35] text-[13px] font-black uppercase tracking-[0.12em] text-[#F5F0E6]">{modalButton(result)}</button>
         </div>
@@ -131,6 +142,7 @@ export function MatchScreen({
     awayGoals: matchResult.awayGoals,
     won: matchResult.won,
     status: matchResult.status,
+    isDraw: matchResult.isDraw,
   } : null;
 
   return (
@@ -139,7 +151,7 @@ export function MatchScreen({
         <div className="relative flex h-[54px] shrink-0 items-center justify-center bg-[#F5F0E6] text-[#0B5F35]">
           <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain" draggable={false} />
           <div className="text-[24px] font-black uppercase tracking-[-0.02em]">LIVE MATCH</div>
-          <button onClick={menuProps.onToggleMenu} className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl text-[#0B5F35]">
+          <button onClick={menuProps.onToggleMenu} className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-[#0B5F35] text-[#F5F0E6]">
             <HamburgerIcon />
           </button>
           {menuProps.menuOpen && <MenuDropdown onClose={menuProps.onToggleMenu} onMatch={menuProps.onMatch} onFixtures={menuProps.onFixtures} onGroups={menuProps.onGroups} onRestart={menuProps.onRestart} />}

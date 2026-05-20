@@ -407,7 +407,7 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
             <div className="col-start-4 row-start-2 flex justify-center pt-[2%]"><div className="w-[4.4em]"><PenaltyMarkers attempts={attempts.opponent} /></div></div>
           </div>
         </div>
-        <div className="grid h-[26%] place-items-center px-[3%] text-center font-sans text-[clamp(13px,2.3vh,28px)] font-black tracking-tight" style={tickerStyle}>
+        <div className="grid h-[26%] w-full place-items-center overflow-hidden px-[3%] text-center font-sans text-[clamp(13px,2.3vh,28px)] font-black tracking-tight" style={tickerStyle}>
           {ticker}
         </div>
       </div>
@@ -446,7 +446,12 @@ function CrowdBackdrop({ crowdColours = [] }) {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = 8;
   const boardTop = goalLine - boardHeight;
-  const shirts = crowdColours.length ? crowdColours : ["#f5f1e8", "#0b2d1d", "#0d6c3d", "#24a857", "#ffd600", "#c94235"];
+  const shirts = crowdColours.length ? crowdColours : [
+    "#2DA94F", "#F7D117", "#FF1E3C", "#FF3131", "#E1251B", "#2F3ED6", "#8A1538", "#E3000F",
+    "#E10600", "#1A22C9", "#2A248A", "#F7C600", "#FF8A00", "#F7D900", "#FF8500", "#3131E8",
+    "#FF1744", "#9B003F", "#F20D1B", "#25308F", "#7CB5E8", "#0D47A1", "#157A52", "#D50000",
+    "#93BFEA", "#00A86B", "#FF3B30", "#1E7FF0", "#2437C6", "#FFFFFF"
+  ];
   const skins = ["#c98f65", "#8f5f3f", "#e0b184", "#6f4632"];
   const makeRow = ({ count, startX, step, y, scale, opacity, stagger = 0, wave = 0, shirtOffset = 0, skinOffset = 0 }) => Array.from({ length: count }, (_, i) => ({
     x: startX + i * step + (i % 2 ? stagger : 0),
@@ -516,7 +521,7 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
       <LedAdvertisingHoard logo={assets.logo} />
       <div className="absolute bottom-0 left-0 right-0" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
-      <div className="pointer-events-none absolute left-1/2 z-[3] h-[31%] w-[88%] -translate-x-1/2 rounded-b-full border-b-[5px] border-l-[5px] border-r-[5px] border-[#f5f1e8]" style={{ top: `${goalLine + 1.5}%` }} />
+      <div className="pointer-events-none absolute left-1/2 z-[3] h-[31%] w-[88%] -translate-x-1/2 rounded-b-full border-b-[8px] border-l-[8px] border-r-[8px] border-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
       <GoalFrame showAim={showAim} aimDirection={aimDirection} />
       <div className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f1e8]" style={{ left: `${GAME.spot.x}%`, top: `${GAME.spot.y}%` }} />
       <div className="absolute z-[4] grid h-12 w-12 place-items-center rounded-full border-2 will-change-transform" style={{ left: `${keeperPoint.x}%`, top: `${keeperPoint.y}%`, background: defenderTeam.primaryColour, borderColor: defenderTeam.textColour, transform: keeperTransform(shot?.keeperDirection ?? getDirection("CM"), shotActive), transitionProperty: "left, top, transform", transitionDuration: `${keeperTravelMs(shot)}ms`, transitionTimingFunction: shotActive ? "cubic-bezier(0.18, 0.82, 0.24, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)" }}>
@@ -629,7 +634,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       setAttempts({ user: [], opponent: [] });
       setShot(null);
       setWinnerSide(completedResult.won ? "user" : "opponent");
-      setTicker(`${(completedResult.won ? user.name : opponent.name).toUpperCase()} WINS!`);
+      setTicker(completedResult.isDraw ? "DRAW!" : `${(completedResult.won ? user.name : opponent.name).toUpperCase()} WINS!`);
       setPhase(PHASE.FINISHED);
       setHasCompleted(true);
       return;
@@ -709,6 +714,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   function tickerStyle() {
     const finalTeam = winnerSide === "user" ? user : winnerSide === "opponent" ? opponent : null;
     if (phase === PHASE.FINISHED && finalTeam) return { background: finalTeam.primaryColour, color: finalTeam.textColour };
+    if (phase === PHASE.FINISHED && !finalTeam) return { background: "#F7D117", color: "#0b2d1d" };
     if (ticker === COMMENTARY.goal) return { background: activeTeam.primaryColour, color: activeTeam.textColour, animation: "goalFlash 0.82s steps(1, end) 1 forwards", "--goal-bg": activeTeam.primaryColour, "--goal-fg": activeTeam.textColour };
     if (ticker === COMMENTARY.save) return { background: defenderTeam.primaryColour, color: defenderTeam.textColour };
     return { background: activeTeam.primaryColour, color: activeTeam.textColour };
