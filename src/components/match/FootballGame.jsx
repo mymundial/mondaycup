@@ -335,8 +335,8 @@ function stageLabelForFixture(fixture) {
     round32: "ROUND OF 32",
     round16: "ROUND OF 16",
     quarterFinal: "QUARTER-FINAL",
-    semiFinal: "SEMI-FINALS",
-    thirdPlace: "3RD PLACE PLAY-OFF",
+    semiFinal: "SEMI-FINAL",
+    thirdPlace: "THIRD PLACE",
     final: "FINAL",
   };
   return labels[stage] || "MATCH";
@@ -384,7 +384,7 @@ function PenaltyMarkers({ attempts }) {
 
 function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerStyle, stageLabel }) {
   return (
-    <section className="relative h-[17%] shrink-0 overflow-hidden bg-[#050505]">
+    <section className="relative h-[17%] shrink-0 overflow-hidden rounded-[clamp(14px,2.2vh,28px)] bg-[#050505]">
       <div
         className="absolute inset-0 opacity-50"
         style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }}
@@ -399,12 +399,12 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
         <div className="h-[52%] px-[3.5%] pt-[1%]">
           <div className="grid h-full grid-cols-[12%_1fr_auto_1fr_12%] grid-rows-[58%_42%] items-center">
             <div className="col-start-1 row-start-1 flex items-center justify-center"><TeamFlag team={userTeam} className="h-4 w-6" /></div>
-            <div className="col-start-2 row-start-1 flex items-center justify-center px-[4%]"><div className="led-text-glow w-full text-center font-sans text-[clamp(20px,3.8vh,42px)] font-black leading-none tracking-tight text-[#F7D117]">{userTeam.code}</div></div>
+            <div className="col-start-2 row-start-1 flex items-center justify-start pr-[10%]"><div className="led-text-glow w-full text-left font-sans text-[clamp(20px,3.8vh,42px)] font-black leading-none tracking-tight text-[#F7D117]">{userTeam.code}</div></div>
             <div className="led-text-glow col-start-3 row-start-1 flex items-center justify-center px-[4%] font-sans text-[clamp(24px,4vh,48px)] font-black leading-none tracking-tight text-[#F7D117]">{score.user}-{score.opponent}</div>
-            <div className="col-start-4 row-start-1 flex items-center justify-center px-[4%]"><div className="led-text-glow w-full text-center font-sans text-[clamp(20px,3.8vh,42px)] font-black leading-none tracking-tight text-[#F7D117]">{opponentTeam.code}</div></div>
+            <div className="col-start-4 row-start-1 flex items-center justify-end pl-[10%]"><div className="led-text-glow w-full text-right font-sans text-[clamp(20px,3.8vh,42px)] font-black leading-none tracking-tight text-[#F7D117]">{opponentTeam.code}</div></div>
             <div className="col-start-5 row-start-1 flex items-center justify-center"><TeamFlag team={opponentTeam} className="h-4 w-6" /></div>
-            <div className="col-start-2 row-start-2 flex justify-center pt-[2%]"><div className="w-[3.8em]"><PenaltyMarkers attempts={attempts.user} /></div></div>
-            <div className="col-start-4 row-start-2 flex justify-center pt-[2%]"><div className="w-[3.8em]"><PenaltyMarkers attempts={attempts.opponent} /></div></div>
+            <div className="col-start-2 row-start-2 flex justify-start pr-[10%] pt-[2%]"><div className="w-[3.8em] translate-x-[0.18em]"><PenaltyMarkers attempts={attempts.user} /></div></div>
+            <div className="col-start-4 row-start-2 flex justify-end pl-[10%] pt-[2%]"><div className="w-[3.8em] -translate-x-[0.18em]"><PenaltyMarkers attempts={attempts.opponent} /></div></div>
           </div>
         </div>
         <div className="grid h-[26%] place-items-center px-[3%] text-center font-sans text-[clamp(13px,2.3vh,28px)] font-black tracking-tight" style={tickerStyle}>
@@ -420,8 +420,7 @@ function Meter({ value, ideal }) {
     <div className="h-8 rounded-[clamp(14px,2.2vh,28px)] bg-[#0b2d1d] p-1">
       <div className="relative h-full overflow-hidden rounded-[clamp(14px,2.2vh,28px)] bg-[#0b2d1d]">
         <div className="absolute top-0 h-full bg-[#0d6c3d]" style={{ left: `${ideal[0]}%`, width: `${ideal[1] - ideal[0]}%` }} />
-        <div className="absolute left-1/2 top-0 z-[1] h-full w-[2px] -translate-x-1/2 bg-[#f5f1e8]" />
-        <div className="absolute top-0 z-[2] h-full w-1 -translate-x-1/2 bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.75)]" style={{ left: `${value}%` }} />
+        <div className="absolute top-0 h-full w-1 -translate-x-1/2 bg-[#f5f1e8]" style={{ left: `${value}%` }} />
       </div>
     </div>
   );
@@ -516,7 +515,6 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
       <LedAdvertisingHoard logo={assets.logo} />
       <div className="absolute bottom-0 left-0 right-0" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
-      <div className="pointer-events-none absolute left-1/2 z-[3] h-[34%] w-[92%] -translate-x-1/2 rounded-b-full border-b-[6px] border-l-[6px] border-r-[6px] border-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
       <GoalFrame showAim={showAim} aimDirection={aimDirection} />
       <div className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f1e8]" style={{ left: `${GAME.spot.x}%`, top: `${GAME.spot.y}%` }} />
       <div className="absolute z-[4] grid h-12 w-12 place-items-center rounded-full border-2 will-change-transform" style={{ left: `${keeperPoint.x}%`, top: `${keeperPoint.y}%`, background: defenderTeam.primaryColour, borderColor: defenderTeam.textColour, transform: keeperTransform(shot?.keeperDirection ?? getDirection("CM"), shotActive), transitionProperty: "left, top, transform", transitionDuration: `${keeperTravelMs(shot)}ms`, transitionTimingFunction: shotActive ? "cubic-bezier(0.18, 0.82, 0.24, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)" }}>
@@ -629,7 +627,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       setAttempts({ user: [], opponent: [] });
       setShot(null);
       setWinnerSide(completedResult.won ? "user" : "opponent");
-      setTicker(`${(completedResult.won ? user.name : opponent.name).toUpperCase()} WINS!`);
+      setTicker(completedResult.status === "champion" ? `${user.name.toUpperCase()} WINS THE MONDAY CUP!` : `${(completedResult.won ? user.name : opponent.name).toUpperCase()} WINS!`);
       setPhase(PHASE.FINISHED);
       setHasCompleted(true);
       return;
@@ -646,7 +644,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       setPhase(PHASE.FINISHED);
       setWinnerSide(matchState.winnerSide);
       const winnerName = matchState.winnerSide === "user" ? user.name : opponent.name;
-      setTicker(matchState.draw ? "FULL TIME" : `${winnerName.toUpperCase()} WINS!`);
+      setTicker(matchState.draw ? "FULL TIME" : fixture?.stage === "final" ? `${winnerName.toUpperCase()} WINS THE MONDAY CUP!` : `${winnerName.toUpperCase()} WINS!`);
       setHasCompleted(true);
       onMatchComplete?.(result);
       return;
