@@ -84,12 +84,17 @@ export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam =
   </div>;
 }
 
+function mergeActualFixtures(placeholders, actualFixtures) {
+  const actualByMatchNo = new Map(actualFixtures.map((fixture) => [fixture.matchNo, fixture]));
+  return placeholders.map((placeholder) => actualByMatchNo.get(placeholder.matchNo) || placeholder);
+}
+
 function KnockoutBracket({ round32 = [], podium = {} }) {
-  const r32 = round32.length ? round32 : buildRound32Placeholders();
-  const r16 = placeholderFixtures("Round of 16");
-  const qf = placeholderFixtures("Quarter-finals");
-  const sf = placeholderFixtures("Semi-finals");
-  const final = placeholderFixtures("Final");
+  const r32 = mergeActualFixtures(buildRound32Placeholders(), round32);
+  const r16 = mergeActualFixtures(placeholderFixtures("Round of 16"), round32);
+  const qf = mergeActualFixtures(placeholderFixtures("Quarter-finals"), round32);
+  const sf = mergeActualFixtures(placeholderFixtures("Semi-finals"), round32);
+  const final = mergeActualFixtures(placeholderFixtures("Final"), round32);
   const medalTeams = {
     ...(podium.winner ? { [podium.winner]: "gold" } : {}),
     ...(podium.runnerUp ? { [podium.runnerUp]: "silver" } : {}),
