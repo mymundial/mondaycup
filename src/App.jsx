@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { GROUPS, GROUP_LETTERS } from "./data/teams.js";
-import { buildSchedule, blankTable, buildQualifiers, buildRound32Fixtures, sortRows, applyFixtureResult, completeMatchday, didTeamQualify, runSelfTests } from "./logic/tournament.js";
+import { buildSchedule, blankTable, buildQualifiers, buildRound32Fixtures, sortRows, applyFixtureResult, completeMatchday, didTeamQualify, findTeamKnockoutFixture, getFixtureOpponent, runSelfTests } from "./logic/tournament.js";
 import { DrawerShell } from "./components/layout/Layout.jsx";
 import { HomeScreen, TeamSelectScreen } from "./components/selection/SelectionScreens.jsx";
 import { FixturesScreen } from "./components/schedule/ScheduleScreens.jsx";
@@ -23,6 +23,7 @@ export default function App() {
   const [table, setTable] = useState(blankTable());
   const [schedule, setSchedule] = useState(buildSchedule());
   const [knockoutFixtures, setKnockoutFixtures] = useState([]);
+  const [matchStage, setMatchStage] = useState("GROUP STAGE");
 
   const groupStageComplete = schedule.every((fixture) => fixture.played);
   const visibleKnockoutFixtures = groupStageComplete && !knockoutFixtures.length ? buildRound32Fixtures(table) : knockoutFixtures;
@@ -30,7 +31,7 @@ export default function App() {
   const qualifiers = useMemo(() => buildQualifiers(table), [table]);
 
   const closeMenu = () => setMenuOpen(false);
-  const resetTournament = () => { setScreen("home"); setDrawer(null); setMenuOpen(false); setFixtureView("group"); setStandingsView("group"); setSelectedGroup("A"); setTeam(null); setOpponent(""); setScore([0, 0]); setMatchResult(null); setTable(blankTable()); setSchedule(buildSchedule()); setKnockoutFixtures([]); };
+  const resetTournament = () => { setScreen("home"); setDrawer(null); setMenuOpen(false); setFixtureView("group"); setStandingsView("group"); setSelectedGroup("A"); setTeam(null); setOpponent(""); setScore([0, 0]); setMatchResult(null); setTable(blankTable()); setSchedule(buildSchedule()); setKnockoutFixtures([]); setMatchStage("GROUP STAGE"); };
   const openMatch = () => { closeMenu(); setDrawer(null); };
   const openFixtures = () => { closeMenu(); setFixtureView(groupStageComplete ? "knockout" : "group"); setDrawer("fixtures"); };
   const openGroups = () => { closeMenu(); setStandingsView(groupStageComplete ? "knockout" : standingsView); setDrawer("groups"); };
@@ -45,6 +46,7 @@ export default function App() {
     setDrawer(null);
     setMenuOpen(false);
     setScore([0, 0]);
+    setMatchStage("GROUP STAGE");
     setMatchResult(null);
   };
 
@@ -74,6 +76,18 @@ export default function App() {
   const nextMatch = () => {
     if (!team || !matchResult) return;
     if (matchResult.status === "eliminated") { resetTournament(); return; }
+    if (matchResult.status === "qualified") {
+      const round32 = knockoutFixtures.length ? knockoutFixtures : buildRound32Fixtures(table);
+      const userFixture = findTeamKnockoutFixture(team, round32);
+      setKnockoutFixtures(round32);
+      setOpponent(getFixtureOpponent(team, userFixture));
+      setScore([0, 0]);
+      setMatchStage(`ROUND OF 32${userFixture?.matchNo ? ` · M${userFixture.matchNo}` : ""}`);
+      setMatchResult(null);
+      setDrawer(null);
+      setScreen("match");
+      return;
+    }
     let updatedSchedule = schedule;
     let updatedTable = table;
     if (matchResult.week !== 3) {
@@ -91,6 +105,7 @@ export default function App() {
     if (upcoming) {
       setOpponent(upcoming.home === team ? upcoming.away : upcoming.home);
       setScore([0, 0]);
+      setMatchStage("GROUP STAGE");
       setDrawer(null);
       setScreen("match");
     } else {
@@ -106,5 +121,5 @@ export default function App() {
   if (screen === "teams") return <TeamSelectScreen selectedGroup={selectedGroup} onSelectGroup={setSelectedGroup} onSelectTeam={startTeam} />;
   if (drawer === "groups") return <DrawerShell><GroupsScreen allGroups={allGroups} qualifiers={qualifiers} menuProps={menuProps} standingsView={standingsView} onStandingsViewChange={setStandingsView} knockoutFixtures={visibleKnockoutFixtures} /></DrawerShell>;
   if (drawer === "fixtures") return <DrawerShell><FixturesScreen fixtureView={fixtureView} onFixtureViewChange={setFixtureView} schedule={schedule} menuProps={menuProps} knockoutFixtures={visibleKnockoutFixtures} /></DrawerShell>;
-  return <MatchScreen team={team} opponent={opponent} score={score} matchResult={matchResult} onQuickWin={quickWin} onNextMatch={nextMatch} menuProps={menuProps} />;
+  return <MatchScreen team={team} opponent={opponent} score={score} matchResult={matchResult} onQuickWin={quickWin} onNextMatch={nextMatch} menuProps={menuProps} stageLabel={matchStage} />;
 }

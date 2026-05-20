@@ -1,7 +1,11 @@
 import { GROUPS, GROUP_LETTERS, TEAM_RANK } from "../data/teams.js";
-import { MATCHDAY_PAIRINGS } from "../data/tournament.js";
+import { MATCHDAY_PAIRINGS, ROUND_OF_32_SLOTS } from "../data/tournament.js";
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
+const seedPosition = (seed) => Number(seed.slice(0, 1)) - 1;
+const seedGroup = (seed) => seed.slice(1, 2);
+const isThirdSeed = (seed) => seed.startsWith("3");
+const thirdAllowedGroups = (seed) => seed.slice(1).split("");
 
 export const sortRows = (rows) => [...rows].sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || 0);
 
@@ -36,10 +40,80 @@ export function didTeamQualify(team, table) {
   return GROUP_LETTERS.some((group) => byGroup[group].slice(0, 2).some((row) => row.team === team)) || best3RDs.some((row) => row.team === team);
 }
 
+function resolveSeed(seed, byGroup) {
+  const group = seedGroup(seed);
+  const row = byGroup[group]?.[seedPosition(seed)];
+  return row?.team || seed;
+}
+
+function assignThirdPlaceSeeds(slots, best3RDs) {
+  const assignments = {};
+  const usedGroups = new Set();
+  const thirdSlots = slots
+    .flatMap((slot) => [slot.homeSeed, slot.awaySeed].filter(isThirdSeed).map((seed) => ({ matchNo: slot.matchNo, seed })))
+    .sort((a, b) => thirdAllowedGroups(a.seed).length - thirdAllowedGroups(b.seed).length);
+
+  const trySlot = (index) => {
+    if (index >= thirdSlots.length) return true;
+    const { seed } = thirdSlots[index];
+    const candidates = best3RDs.filter((row) => thirdAllowedGroups(seed).includes(row.group) && !usedGroups.has(row.group));
+
+    for (const candidate of candidates) {
+      assignments[seed] = candidate.team;
+      usedGroups.add(candidate.group);
+      if (trySlot(index + 1)) return true;
+      usedGroups.delete(candidate.group);
+      delete assignments[seed];
+    }
+    return false;
+  };
+
+  trySlot(0);
+  return assignments;
+}
+
 export function buildRound32Fixtures(table) {
   const { byGroup, best3RDs } = buildQualifiers(table);
-  const teams = GROUP_LETTERS.flatMap((group) => byGroup[group].slice(0, 2).map((row) => row.team)).concat(best3RDs.map((row) => row.team));
-  return Array.from({ length: 16 }, (_, index) => ({ id: `M${73 + index}`, matchNo: 73 + index, home: teams[index * 2] || "TBC", away: teams[index * 2 + 1] || "TBC", played: false, homeGoals: null, awayGoals: null }));
+  const thirdAssignments = assignThirdPlaceSeeds(ROUND_OF_32_SLOTS, best3RDs);
+
+  return ROUND_OF_32_SLOTS.map((slot) => {
+    const home = isThirdSeed(slot.homeSeed) ? thirdAssignments[slot.homeSeed] : resolveSeed(slot.homeSeed, byGroup);
+    const away = isThirdSeed(slot.awaySeed) ? thirdAssignments[slot.awaySeed] : resolveSeed(slot.awaySeed, byGroup);
+    return {
+      id: `M${slot.matchNo}`,
+      matchNo: slot.matchNo,
+      home: home || slot.homeSeed,
+      away: away || slot.awaySeed,
+      homeSeed: slot.homeSeed,
+      awaySeed: slot.awaySeed,
+      played: false,
+      homeGoals: null,
+      awayGoals: null,
+    };
+  });
+}
+
+export function buildRound32Placeholders() {
+  return ROUND_OF_32_SLOTS.map((slot) => ({
+    id: `M${slot.matchNo}`,
+    matchNo: slot.matchNo,
+    home: slot.homeSeed,
+    away: slot.awaySeed,
+    homeSeed: slot.homeSeed,
+    awaySeed: slot.awaySeed,
+    played: false,
+    homeGoals: null,
+    awayGoals: null,
+  }));
+}
+
+export function findTeamKnockoutFixture(team, fixtures) {
+  return fixtures.find((fixture) => fixture.home === team || fixture.away === team) || null;
+}
+
+export function getFixtureOpponent(team, fixture) {
+  if (!fixture) return "Opponent";
+  return fixture.home === team ? fixture.away : fixture.home;
 }
 
 export function applyFixtureResult(tableState, fixture, homeGoals, awayGoals) {
@@ -55,20 +129,9 @@ export function applyFixtureResult(tableState, fixture, homeGoals, awayGoals) {
   away.ga += homeGoals;
   home.gd = home.gf - home.ga;
   away.gd = away.gf - away.ga;
-  if (homeGoals > awayGoals) {
-    home.won += 1;
-    away.lost += 1;
-    home.pts += 3;
-  } else if (awayGoals > homeGoals) {
-    away.won += 1;
-    home.lost += 1;
-    away.pts += 3;
-  } else {
-    home.drawn += 1;
-    away.drawn += 1;
-    home.pts += 1;
-    away.pts += 1;
-  }
+  if (homeGoals > awayGoals) { home.won += 1; away.lost += 1; home.pts += 3; }
+  else if (awayGoals > homeGoals) { away.won += 1; home.lost += 1; away.pts += 3; }
+  else { home.drawn += 1; away.drawn += 1; home.pts += 1; away.pts += 1; }
   return next;
 }
 
@@ -95,10 +158,13 @@ export function completeMatchday(scheduleState, tableState, week) {
 export function runSelfTests() {
   const schedule = buildSchedule();
   const table = blankTable();
+  const placeholders = buildRound32Placeholders();
+  const round32 = buildRound32Fixtures(table);
   console.assert(schedule.length === 72, "Expected 72 group fixtures");
   console.assert(Object.keys(table).length === 48, "Expected 48 teams in table");
   console.assert(buildQualifiers(table).best3RDs.length === 8, "Expected 8 best third-place teams");
-  console.assert(buildRound32Fixtures(table).length === 16, "Expected 16 round-of-32 fixtures");
+  console.assert(placeholders.length === 16 && placeholders[0].matchNo === 74 && placeholders[0].home === "1E", "Expected official R32 placeholder order");
+  console.assert(round32.length === 16 && round32[0].matchNo === 74, "Expected 16 official round-of-32 fixtures");
   console.assert(didTeamQualify("Mexico", table), "Expected a group top-two team to qualify");
   console.assert(applyFixtureResult(table, schedule[0], 1, 0)[schedule[0].home].pts === 3, "Expected winner to receive 3 points");
 }
