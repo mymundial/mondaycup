@@ -17,25 +17,36 @@ function PlaceholderSlot({ value, size = "sm" }) {
   return <span className={`relative flex ${sizeClass} shrink-0 items-center justify-center overflow-hidden rounded bg-[#DCE9DE] font-black uppercase tracking-[0.035em] text-[#0B5F35]/55 ring-1 ring-[#0B5F35]/10`}>{value || "TBC"}</span>;
 }
 
-function BracketSlot({ value, size = "sm" }) {
+const medalRing = (medal) => {
+  if (medal === "gold") return "ring-2 ring-[#D4AF37]";
+  if (medal === "silver") return "ring-2 ring-[#C0C0C0]";
+  if (medal === "bronze") return "ring-2 ring-[#CD7F32]";
+  return "";
+};
+
+function BracketSlot({ value, size = "sm", medalTeams = {} }) {
   const sizeClass = size === "lg" ? "h-7 w-11" : size === "md" ? "h-6 w-9" : "h-5 w-7";
-  return isRealTeam(value) ? <Flag team={value} className={`${sizeClass} rounded`} /> : <PlaceholderSlot value={value || "TBC"} size={size} />;
+  const medal = isRealTeam(value) ? medalTeams[value] : null;
+  return isRealTeam(value)
+    ? <span className={`inline-flex rounded ${medalRing(medal)}`}><Flag team={value} className={`${sizeClass} rounded`} /></span>
+    : <PlaceholderSlot value={value || "TBC"} size={size} />;
 }
 
-function BracketFixture({ fixture, size = "sm" }) {
-  const widthClass = size === "lg" ? "w-[62px]" : size === "md" ? "w-[52px]" : "w-[36px]";
+function BracketFixture({ fixture, size = "sm", layout = "vertical", medalTeams = {} }) {
+  const widthClass = layout === "horizontal" ? (size === "lg" ? "w-[112px]" : "w-[94px]") : size === "lg" ? "w-[62px]" : size === "md" ? "w-[52px]" : "w-[36px]";
+  const slotDirection = layout === "horizontal" ? "flex-row" : "flex-col";
   return <div className={`mx-auto flex ${widthClass} flex-col items-center rounded-[0.65rem] bg-[#F8F4EC] px-1 py-1 ring-1 ring-[#0B5F35]/8`}>
     <div className="mb-[3px] text-[6px] font-black uppercase tracking-[0.06em] text-[#0B5F35]/50">M{fixture?.matchNo || ""}</div>
-    <div className="flex flex-col items-center gap-[3px]">
-      <BracketSlot value={fixture?.home || fixture?.homeSeed || "TBC"} size={size} />
-      <BracketSlot value={fixture?.away || fixture?.awaySeed || "TBC"} size={size} />
+    <div className={`flex ${slotDirection} items-center gap-[3px]`}>
+      <BracketSlot value={fixture?.home || fixture?.homeSeed || "TBC"} size={size} medalTeams={medalTeams} />
+      <BracketSlot value={fixture?.away || fixture?.awaySeed || "TBC"} size={size} medalTeams={medalTeams} />
     </div>
   </div>;
 }
 
-function BracketRow({ count, fixtures = [], size = "sm", gap = "gap-[2px]" }) {
+function BracketRow({ count, fixtures = [], size = "sm", gap = "gap-[2px]", layout = "vertical", medalTeams = {} }) {
   const cols = count === 8 ? "grid-cols-8" : count === 4 ? "grid-cols-4" : count === 2 ? "grid-cols-2" : "grid-cols-1";
-  return <div className={`grid w-full ${cols} ${gap} items-start`}>{Array.from({ length: count }).map((_, index) => <BracketFixture key={index} fixture={fixtures[index]} size={size} />)}</div>;
+  return <div className={`grid w-full ${cols} ${gap} items-start`}>{Array.from({ length: count }).map((_, index) => <BracketFixture key={index} fixture={fixtures[index]} size={size} layout={layout} medalTeams={medalTeams} />)}</div>;
 }
 
 function StageLabel({ children }) {
@@ -73,29 +84,32 @@ export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam =
   </div>;
 }
 
-function KnockoutBracket({ round32 = [] }) {
+function KnockoutBracket({ round32 = [], podium = {} }) {
   const r32 = round32.length ? round32 : buildRound32Placeholders();
   const r16 = placeholderFixtures("Round of 16");
   const qf = placeholderFixtures("Quarter-finals");
   const sf = placeholderFixtures("Semi-finals");
-  const third = placeholderFixtures("3RD PLACE PLAY-OFF");
   const final = placeholderFixtures("Final");
+  const medalTeams = {
+    ...(podium.winner ? { [podium.winner]: "gold" } : {}),
+    ...(podium.runnerUp ? { [podium.runnerUp]: "silver" } : {}),
+    ...(podium.third ? { [podium.third]: "bronze" } : {}),
+  };
 
   return <div className="mx-auto w-[94%] text-[#072D1D]">
     <div className="mb-2 rounded-[1.15rem] bg-[#0B5F35] px-3 py-2.5 text-center text-[17px] font-black tracking-[-0.025em] text-[#F5F0E6]">TOURNAMENT BRACKET</div>
     <div className="origin-top scale-90 px-1 pb-2">
       <StageLabel>ROUND OF 32</StageLabel>
-      <div className="mt-2"><BracketRow count={8} fixtures={r32.slice(0, 8)} size="sm" gap="gap-[1px]" /></div>
+      <div className="mt-2"><BracketRow count={8} fixtures={r32.slice(0, 8)} size="sm" gap="gap-[1px]" layout="vertical" medalTeams={medalTeams} /></div>
 
-      <div className="mt-5"><StageLabel>ROUND OF 16</StageLabel><div className="mt-2"><BracketRow count={4} fixtures={r16.slice(0, 4)} size="md" gap="gap-2" /></div></div>
-      <div className="mt-6"><StageLabel>QUARTER-FINALS</StageLabel><div className="mt-2"><BracketRow count={2} fixtures={qf.slice(0, 2)} size="md" gap="gap-10" /></div></div>
-      <div className="mt-7"><StageLabel>SEMI-FINAL</StageLabel><div className="mt-2"><BracketRow count={1} fixtures={sf.slice(0, 1)} size="lg" /></div></div>
-      <div className="mt-9"><StageLabel>FINAL</StageLabel><div className="mt-2"><BracketRow count={1} fixtures={final} size="lg" /></div></div>
-      <div className="mt-7"><StageLabel>SEMI-FINAL</StageLabel><div className="mt-2"><BracketRow count={1} fixtures={sf.slice(1, 2)} size="lg" /></div></div>
-      <div className="mt-7"><StageLabel>THIRD PLACE</StageLabel><div className="mt-2"><BracketRow count={1} fixtures={third} size="lg" /></div></div>
-      <div className="mt-7"><StageLabel>QUARTER-FINALS</StageLabel><div className="mt-2"><BracketRow count={2} fixtures={qf.slice(2, 4)} size="md" gap="gap-10" /></div></div>
-      <div className="mt-5"><StageLabel>ROUND OF 16</StageLabel><div className="mt-2"><BracketRow count={4} fixtures={r16.slice(4, 8)} size="md" gap="gap-2" /></div></div>
-      <div className="mt-5"><StageLabel>ROUND OF 32</StageLabel><div className="mt-2"><BracketRow count={8} fixtures={r32.slice(8, 16)} size="sm" gap="gap-[1px]" /></div></div>
+      <div className="mt-5"><StageLabel>ROUND OF 16</StageLabel><div className="mt-2"><BracketRow count={4} fixtures={r16.slice(0, 4)} size="md" gap="gap-2" layout="horizontal" medalTeams={medalTeams} /></div></div>
+      <div className="mt-6"><StageLabel>QUARTER-FINALS</StageLabel><div className="mt-2"><BracketRow count={2} fixtures={qf.slice(0, 2)} size="md" gap="gap-10" layout="horizontal" medalTeams={medalTeams} /></div></div>
+      <div className="mt-7"><StageLabel>SEMI-FINAL</StageLabel><div className="mt-2"><BracketRow count={1} fixtures={sf.slice(0, 1)} size="lg" layout="horizontal" medalTeams={medalTeams} /></div></div>
+      <div className="mt-9"><StageLabel>FINAL</StageLabel><div className="mt-2"><BracketRow count={1} fixtures={final} size="lg" layout="horizontal" medalTeams={medalTeams} /></div></div>
+      <div className="mt-7"><StageLabel>SEMI-FINAL</StageLabel><div className="mt-2"><BracketRow count={1} fixtures={sf.slice(1, 2)} size="lg" layout="horizontal" medalTeams={medalTeams} /></div></div>
+      <div className="mt-7"><StageLabel>QUARTER-FINALS</StageLabel><div className="mt-2"><BracketRow count={2} fixtures={qf.slice(2, 4)} size="md" gap="gap-10" layout="horizontal" medalTeams={medalTeams} /></div></div>
+      <div className="mt-5"><StageLabel>ROUND OF 16</StageLabel><div className="mt-2"><BracketRow count={4} fixtures={r16.slice(4, 8)} size="md" gap="gap-2" layout="horizontal" medalTeams={medalTeams} /></div></div>
+      <div className="mt-5"><StageLabel>ROUND OF 32</StageLabel><div className="mt-2"><BracketRow count={8} fixtures={r32.slice(8, 16)} size="sm" gap="gap-[1px]" layout="vertical" medalTeams={medalTeams} /></div></div>
     </div>
   </div>;
 }
