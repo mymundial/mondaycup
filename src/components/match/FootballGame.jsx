@@ -536,13 +536,13 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
 
 function ConfirmButton({ onClick, disabled = false, children }) {
   return (
-    <button onClick={onClick} disabled={disabled} className="grid h-[clamp(40px,4.7vh,62px)] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] bg-[#F7D117] px-4 text-center text-[clamp(11px,1.6vh,19px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22)] disabled:opacity-50">
+    <button onClick={onClick} disabled={disabled} className="grid h-[clamp(40px,4.7vh,62px)] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] bg-[#F7D117] px-4 text-center text-[clamp(11px,1.6vh,19px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22)] disabled:cursor-default disabled:opacity-65">
       <span className="block w-full whitespace-nowrap text-center">{children}</span>
     </button>
   );
 }
 
-function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMeter, accuracyMeter, opponentTeam, completionActionLabel = "MATCH COMPLETE", completionActionEnabled = false, onCompletionAction }) {
+function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMeter, accuracyMeter, opponentTeam, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction }) {
   const canChoose = phase === PHASE.DIRECTION;
   const canPower = phase === PHASE.POWER;
   const canAccuracy = phase === PHASE.ACCURACY;
@@ -575,20 +575,16 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
       )}
       {!canChoose && !canPower && !canAccuracy && (
         <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%]">
-          {phase === PHASE.FINISHED ? (
-            <ConfirmButton onClick={completionActionEnabled ? onCompletionAction : undefined} disabled={!completionActionEnabled}>
-              {completionActionEnabled ? completionActionLabel : "MATCH COMPLETE"}
-            </ConfirmButton>
-          ) : (
-            <ConfirmButton disabled>{phase === PHASE.SHOT ? "SHOT IN PROGRESS" : `${opponentTeam.name.toUpperCase()} TAKING PENALTY`}</ConfirmButton>
-          )}
+          <ConfirmButton onClick={endActionEnabled ? onEndAction : undefined} disabled={!endActionEnabled}>
+            {phase === PHASE.SHOT ? "SHOT IN PROGRESS" : phase === PHASE.AI_WAIT ? `${opponentTeam.name.toUpperCase()} TAKING PENALTY` : endActionLabel}
+          </ConfirmButton>
         </div>
       )}
     </section>
   );
 }
 
-export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, completionActionLabel = "MATCH COMPLETE", completionActionEnabled = false, onCompletionAction }) {
+export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction }) {
   const user = useMemo(() => normaliseTeam(userTeam, "Team A"), [userTeam]);
   const opponent = useMemo(() => normaliseTeam(opponentTeam, "Team B"), [opponentTeam]);
   const mergedAssets = useMemo(() => ({ ...DEFAULT_ASSETS, ...assets, sounds: { ...DEFAULT_ASSETS.sounds, ...(assets?.sounds || {}) } }), [assets]);
@@ -744,7 +740,18 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       `}</style>
       <Scoreboard userTeam={user} opponentTeam={opponent} score={score} attempts={attempts} ticker={ticker} tickerStyle={tickerStyle()} stageLabel={stageLabel} />
       <Pitch ballPoint={ballPoint} keeperPoint={keeperPoint} shot={shot} shotActive={shotActive} activeTeam={activeTeam} defenderTeam={defenderTeam} showAim={showAim} aimDirection={aimDirection} assets={mergedAssets} />
-      <ControlOverlay phase={phase} selected={selected} setSelected={setSelected} handleConfirm={handleConfirm} powerMeter={powerMeter} accuracyMeter={accuracyMeter} opponentTeam={opponent} completionActionLabel={completionActionLabel} completionActionEnabled={completionActionEnabled} onCompletionAction={onCompletionAction} />
+      <ControlOverlay
+        phase={phase}
+        selected={selected}
+        setSelected={setSelected}
+        handleConfirm={handleConfirm}
+        powerMeter={powerMeter}
+        accuracyMeter={accuracyMeter}
+        opponentTeam={opponent}
+        endActionLabel={endActionLabel}
+        endActionEnabled={endActionEnabled}
+        onEndAction={onEndAction}
+      />
     </div>
   );
 }

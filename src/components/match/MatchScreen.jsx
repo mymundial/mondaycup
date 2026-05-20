@@ -28,7 +28,8 @@ function modalTitle(result) {
 }
 
 function modalButton(result) {
-  if (result.status === "eliminated" || result.status === "champion" || result.status === "runnerUp" || result.status === "fourth") return "PLAY AGAIN";
+  if (!result) return "MATCH COMPLETE";
+  if (["eliminated", "champion", "runnerUp", "third", "fourth"].includes(result.status)) return "PLAY AGAIN";
   return "NEXT MATCH";
 }
 
@@ -59,7 +60,7 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
   );
 }
 
-function FullTimeModal({ result, onDismiss, groupRows, qualifiedTeams, userTeam, selectedGroup, stageLabel }) {
+function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, userTeam, selectedGroup, stageLabel }) {
   const isKnockout = !result.week;
   const contextLabel = isKnockout ? stageLabel : `GROUP ${selectedGroup}`;
 
@@ -94,6 +95,8 @@ function FullTimeModal({ result, onDismiss, groupRows, qualifiedTeams, userTeam,
               <StandingsMiniTable rows={groupRows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />
             </>
           )}
+
+          <button onClick={onNext} className="mt-5 h-12 w-full rounded-full bg-[#0B5F35] text-[13px] font-black uppercase tracking-[0.12em] text-[#F5F0E6]">{modalButton(result)}</button>
         </div>
       </div>
     </div>
@@ -162,15 +165,16 @@ export function MatchScreen({
             fixture={fallbackFixture}
             onMatchComplete={onMatchComplete || onQuickWin}
             completedResult={completedResult}
-            completionActionLabel={matchResult ? modalButton(matchResult) : "MATCH COMPLETE"}
-            completionActionEnabled={Boolean(matchResult && modalDismissed)}
-            onCompletionAction={onNextMatch}
+            endActionLabel={matchResult && modalDismissed ? modalButton(matchResult) : "MATCH COMPLETE"}
+            endActionEnabled={Boolean(matchResult && modalDismissed)}
+            onEndAction={onNextMatch}
           />
         </div>
 
         {matchResult && !modalDismissed && (
           <FullTimeModal
             result={matchResult}
+            onNext={onNextMatch}
             onDismiss={onDismissModal}
             groupRows={groupRows}
             qualifiedTeams={qualifiedTeams}
@@ -179,6 +183,7 @@ export function MatchScreen({
             stageLabel={stageLabel}
           />
         )}
+
       </div>
     </Shell>
   );
