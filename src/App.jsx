@@ -23,6 +23,21 @@ import { MatchScreen } from "./components/match/MatchScreen.jsx";
 
 runSelfTests();
 
+const stageFromMatchNo = (matchNo) => {
+  if (matchNo >= 73 && matchNo <= 88) return "round32";
+  if (matchNo >= 89 && matchNo <= 96) return "round16";
+  if (matchNo >= 97 && matchNo <= 100) return "quarterFinal";
+  if (matchNo === 101 || matchNo === 102) return "semiFinal";
+  if (matchNo === 103) return "thirdPlace";
+  if (matchNo === 104) return "final";
+  return "round32";
+};
+
+function userScoreFromFixtureResult(result, userTeam) {
+  const userIsHome = result.homeTeam === userTeam;
+  return userIsHome ? [result.homeGoals, result.awayGoals] : [result.awayGoals, result.homeGoals];
+}
+
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [drawer, setDrawer] = useState(null);
@@ -50,6 +65,43 @@ export default function App() {
     const teams = GROUP_LETTERS.flatMap((group) => qualifiers.byGroup[group].slice(0, 2).map((row) => row.team)).concat(qualifiers.best3RDs.map((row) => row.team));
     return new Set(teams);
   }, [groupStageComplete, qualifiers]);
+
+  const currentGroupFixture = useMemo(() => {
+    if (!team || !opponent || currentKnockoutMatch) return null;
+    return schedule.find((fixture) => !fixture.played && fixture.group === selectedGroup && ((fixture.home === team && fixture.away === opponent) || (fixture.home === opponent && fixture.away === team))) || null;
+  }, [currentKnockoutMatch, opponent, schedule, selectedGroup, team]);
+
+  const currentFixture = currentKnockoutMatch
+    ? {
+        id: currentKnockoutMatch.id || `M${currentKnockoutMatch.matchNo}`,
+        matchNo: currentKnockoutMatch.matchNo ?? null,
+        stage: stageFromMatchNo(currentKnockoutMatch.matchNo),
+        homeTeamId: currentKnockoutMatch.home,
+        awayTeamId: currentKnockoutMatch.away,
+        allowDraw: false,
+        requiresWinner: true,
+      }
+    : currentGroupFixture
+      ? {
+          id: currentGroupFixture.id,
+          matchNo: null,
+          stage: "group",
+          homeTeamId: currentGroupFixture.home,
+          awayTeamId: currentGroupFixture.away,
+          allowDraw: true,
+          requiresWinner: false,
+        }
+      : matchResult?.fixtureId
+        ? {
+            id: matchResult.fixtureId,
+            matchNo: null,
+            stage: "group",
+            homeTeamId: matchResult.home,
+            awayTeamId: matchResult.away,
+            allowDraw: true,
+            requiresWinner: false,
+          }
+        : null;
 
   const closeMenu = () => setMenuOpen(false);
   const resetTournament = () => {
@@ -89,53 +141,54 @@ export default function App() {
     setMatchResult(null);
   };
 
-  const quickWin = () => {
-    if (!team || !opponent) return;
+  const handleMatchComplete = (result) => {
+    if (!team || !opponent || !result) return;
+
+    setScore(userScoreFromFixtureResult(result, team));
 
     if (currentKnockoutMatch) {
       const { updatedFixtures, playedUserMatch, podium: completedPodium } = completeKnockoutRound({
         fixtures: knockoutFixtures,
         currentMatch: currentKnockoutMatch,
         userTeam: team,
+        playedResult: result,
       });
-      const homeGoals = playedUserMatch.homeGoals;
-      const awayGoals = playedUserMatch.awayGoals;
 
-      setScore([1, 0]);
       setKnockoutFixtures(updatedFixtures);
       if (completedPodium) setPodium(completedPodium);
       setMatchResult({
         home: playedUserMatch.home,
         away: playedUserMatch.away,
-        homeGoals,
-        awayGoals,
-        won: true,
+        homeGoals: playedUserMatch.homeGoals,
+        awayGoals: playedUserMatch.awayGoals,
+        won: result.userWon,
+        isDraw: result.isDraw,
         week: null,
         matchNo: playedUserMatch.matchNo,
-        status: playedUserMatch.matchNo === 104 ? "champion" : "knockoutWin",
+        status: result.userWon ? (playedUserMatch.matchNo === 104 ? "champion" : "knockoutWin") : "eliminated",
       });
       return;
     }
 
-    const match = schedule.find((fixture) => !fixture.played && fixture.group === selectedGroup && ((fixture.home === team && fixture.away === opponent) || (fixture.home === opponent && fixture.away === team)));
+    const match = schedule.find((fixture) => fixture.id === result.fixtureId) || currentGroupFixture;
     if (!match) return;
-    const homeGoals = match.home === team ? 1 : 0;
-    const awayGoals = match.away === team ? 1 : 0;
-    const afterUserSchedule = schedule.map((fixture) => fixture.id === match.id ? { ...fixture, played: true, homeGoals, awayGoals } : fixture);
-    const afterUserTable = applyFixtureResult(table, match, homeGoals, awayGoals);
-    setScore([1, 0]);
+
+    const afterUserSchedule = schedule.map((fixture) => fixture.id === match.id ? { ...fixture, played: true, homeGoals: result.homeGoals, awayGoals: result.awayGoals } : fixture);
+    const afterUserTable = applyFixtureResult(table, match, result.homeGoals, result.awayGoals);
+
     if (match.week === 3) {
       const { updatedSchedule, updatedTable } = completeMatchday(afterUserSchedule, afterUserTable, 3);
       const qualified = didTeamQualify(team, updatedTable);
       setSchedule(updatedSchedule);
       setTable(updatedTable);
       setKnockoutFixtures(buildRound32Fixtures(updatedTable));
-      setMatchResult({ home: match.home, away: match.away, homeGoals, awayGoals, won: true, week: match.week, status: qualified ? "qualified" : "eliminated" });
+      setMatchResult({ fixtureId: match.id, home: match.home, away: match.away, homeGoals: result.homeGoals, awayGoals: result.awayGoals, won: result.userWon, isDraw: result.isDraw, week: match.week, status: qualified ? "qualified" : "eliminated" });
       return;
     }
+
     setSchedule(afterUserSchedule);
     setTable(afterUserTable);
-    setMatchResult({ home: match.home, away: match.away, homeGoals, awayGoals, won: true, week: match.week });
+    setMatchResult({ fixtureId: match.id, home: match.home, away: match.away, homeGoals: result.homeGoals, awayGoals: result.awayGoals, won: result.userWon, isDraw: result.isDraw, week: match.week });
   };
 
   const nextMatch = () => {
@@ -213,5 +266,5 @@ export default function App() {
   if (screen === "teams") return <TeamSelectScreen selectedGroup={selectedGroup} onSelectGroup={setSelectedGroup} onSelectTeam={startTeam} />;
   if (drawer === "groups") return <DrawerShell><GroupsScreen allGroups={allGroups} qualifiers={qualifiers} menuProps={menuProps} standingsView={standingsView} onStandingsViewChange={setStandingsView} knockoutFixtures={visibleKnockoutFixtures} qualifiedTeams={qualifiedTeams} userTeam={team} podium={podium} /></DrawerShell>;
   if (drawer === "fixtures") return <DrawerShell><FixturesScreen fixtureView={fixtureView} onFixtureViewChange={setFixtureView} schedule={schedule} menuProps={menuProps} knockoutFixtures={visibleKnockoutFixtures} userTeam={team} /></DrawerShell>;
-  return <MatchScreen team={team} opponent={opponent} score={score} matchResult={matchResult} onQuickWin={quickWin} onNextMatch={nextMatch} menuProps={menuProps} stageLabel={matchStage} />;
+  return <MatchScreen team={team} opponent={opponent} currentFixture={currentFixture} matchResult={matchResult} onMatchComplete={handleMatchComplete} onNextMatch={nextMatch} menuProps={menuProps} stageLabel={matchStage} />;
 }

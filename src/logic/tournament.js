@@ -296,11 +296,11 @@ export function createNextKnockoutFixture({ previousMatchNo, team, fixtures }) {
   };
 }
 
-export function completeKnockoutRound({ fixtures, currentMatch, userTeam }) {
+export function completeKnockoutRound({ fixtures, currentMatch, userTeam, playedResult = null }) {
   const roundName = roundNameForMatchNo(currentMatch.matchNo);
   const currentSlots = ROUND_SLOTS[roundName] || [];
-  const homeGoals = currentMatch.home === userTeam ? 1 : 0;
-  const awayGoals = currentMatch.away === userTeam ? 1 : 0;
+  const homeGoals = playedResult ? playedResult.homeGoals : currentMatch.home === userTeam ? 1 : 0;
+  const awayGoals = playedResult ? playedResult.awayGoals : currentMatch.away === userTeam ? 1 : 0;
   const playedUserMatch = { ...currentMatch, played: true, homeGoals, awayGoals };
   let workingFixtures = replaceFixtures(fixtures, [playedUserMatch]);
 
