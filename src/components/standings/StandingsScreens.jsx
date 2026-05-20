@@ -102,13 +102,13 @@ function KnockoutBracket({ round32 = [], podium = {} }) {
       <StageLabel>ROUND OF 32</StageLabel>
       <div className="mt-1.5"><BracketRow count={8} fixtures={r32.slice(0, 8)} size="sm" gap="gap-[1px]" layout="vertical" medalTeams={medalTeams} /></div>
 
-      <div className="mt-3"><StageLabel>ROUND OF 16</StageLabel><div className="mt-1.5"><BracketRow count={4} fixtures={r16.slice(0, 4)} size="md" gap="gap-3" layout="horizontal" medalTeams={medalTeams} /></div></div>
+      <div className="mt-3"><StageLabel>ROUND OF 16</StageLabel><div className="mt-1.5"><BracketRow count={4} fixtures={r16.slice(0, 4)} size="sm" gap="gap-3" layout="horizontal" medalTeams={medalTeams} /></div></div>
       <div className="mt-4"><StageLabel>QUARTER-FINALS</StageLabel><div className="mt-1.5"><BracketRow count={2} fixtures={qf.slice(0, 2)} size="md" gap="gap-8" layout="horizontal" medalTeams={medalTeams} /></div></div>
       <div className="mt-4"><StageLabel>SEMI-FINAL</StageLabel><div className="mt-1.5"><BracketRow count={1} fixtures={sf.slice(0, 1)} size="lg" layout="horizontal" medalTeams={medalTeams} /></div></div>
-      <div className="mt-5"><StageLabel>FINAL</StageLabel><div className="mt-1.5"><BracketRow count={1} fixtures={final} size="lg" layout="horizontal" medalTeams={medalTeams} /></div></div>
+      <div className="mt-5"><StageLabel>FINAL</StageLabel><div className="mt-1.5"><BracketRow count={1} fixtures={final} size="lg" layout="vertical" medalTeams={medalTeams} /></div></div>
       <div className="mt-4"><StageLabel>SEMI-FINAL</StageLabel><div className="mt-1.5"><BracketRow count={1} fixtures={sf.slice(1, 2)} size="lg" layout="horizontal" medalTeams={medalTeams} /></div></div>
       <div className="mt-4"><StageLabel>QUARTER-FINALS</StageLabel><div className="mt-1.5"><BracketRow count={2} fixtures={qf.slice(2, 4)} size="md" gap="gap-8" layout="horizontal" medalTeams={medalTeams} /></div></div>
-      <div className="mt-3"><StageLabel>ROUND OF 16</StageLabel><div className="mt-1.5"><BracketRow count={4} fixtures={r16.slice(4, 8)} size="md" gap="gap-3" layout="horizontal" medalTeams={medalTeams} /></div></div>
+      <div className="mt-3"><StageLabel>ROUND OF 16</StageLabel><div className="mt-1.5"><BracketRow count={4} fixtures={r16.slice(4, 8)} size="sm" gap="gap-3" layout="horizontal" medalTeams={medalTeams} /></div></div>
       <div className="mt-3"><StageLabel>ROUND OF 32</StageLabel><div className="mt-1.5"><BracketRow count={8} fixtures={r32.slice(8, 16)} size="sm" gap="gap-[1px]" layout="vertical" medalTeams={medalTeams} /></div></div>
     </div>
   </div>;
