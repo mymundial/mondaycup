@@ -1,11 +1,12 @@
 import { GROUPS, GROUP_LETTERS, TEAM_RANK } from "../data/teams.js";
-import { MATCHDAY_PAIRINGS, ROUND_OF_32_SLOTS } from "../data/tournament.js";
+import { MATCHDAY_PAIRINGS, ROUND_OF_32_SLOTS, KNOCKOUT_PLACEHOLDER_SLOTS } from "../data/tournament.js";
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const seedPosition = (seed) => Number(seed.slice(0, 1)) - 1;
 const seedGroup = (seed) => seed.slice(1, 2);
 const isThirdSeed = (seed) => seed.startsWith("3");
 const thirdAllowedGroups = (seed) => seed.slice(1).split("");
+const isRealTeam = (value) => Boolean(value && TEAM_RANK[value]);
 
 export const sortRows = (rows) => [...rows].sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || 0);
 
@@ -156,6 +157,77 @@ export function completeMatchday(scheduleState, tableState, week) {
   return { updatedSchedule, updatedTable };
 }
 
+const knockoutSlots = Object.values(KNOCKOUT_PLACEHOLDER_SLOTS).flat().filter((slot) => slot.matchNo !== 103);
+
+function fixtureWinner(fixture) {
+  if (!fixture?.played) return null;
+  if (fixture.homeGoals > fixture.awayGoals) return fixture.home;
+  if (fixture.awayGoals > fixture.homeGoals) return fixture.away;
+  return null;
+}
+
+function fixtureRunnerUp(fixture) {
+  if (!fixture?.played) return null;
+  if (fixture.homeGoals > fixture.awayGoals) return fixture.away;
+  if (fixture.awayGoals > fixture.homeGoals) return fixture.home;
+  return null;
+}
+
+function resolveKnockoutSeed(seed, fixtures) {
+  if (!seed) return null;
+  if (isRealTeam(seed)) return seed;
+  const winnerMatch = String(seed).match(/^W(\d+)$/);
+  if (winnerMatch) return fixtureWinner(fixtures.find((fixture) => fixture.matchNo === Number(winnerMatch[1])));
+  const runnerUpMatch = String(seed).match(/^RU(\d+)$/);
+  if (runnerUpMatch) return fixtureRunnerUp(fixtures.find((fixture) => fixture.matchNo === Number(runnerUpMatch[1])));
+  return null;
+}
+
+function chooseFallbackKnockoutOpponent(fixtures, userTeam) {
+  const usedTeams = new Set([userTeam]);
+  fixtures.forEach((fixture) => {
+    if (isRealTeam(fixture.home)) usedTeams.add(fixture.home);
+    if (isRealTeam(fixture.away)) usedTeams.add(fixture.away);
+  });
+  return Object.keys(TEAM_RANK)
+    .filter((candidate) => !usedTeams.has(candidate))
+    .sort((a, b) => (TEAM_RANK[a] || 99) - (TEAM_RANK[b] || 99))[0] || "Opponent";
+}
+
+export function knockoutStageLabel(matchNo) {
+  if (matchNo >= 73 && matchNo <= 88) return "ROUND OF 32";
+  if (matchNo >= 89 && matchNo <= 96) return "ROUND OF 16";
+  if (matchNo >= 97 && matchNo <= 100) return "QUARTER-FINAL";
+  if (matchNo === 101 || matchNo === 102) return "SEMI-FINAL";
+  if (matchNo === 104) return "FINAL";
+  return "KNOCKOUT";
+}
+
+export function createNextKnockoutFixture({ previousMatchNo, team, fixtures }) {
+  const winnerSeed = `W${previousMatchNo}`;
+  const slot = knockoutSlots.find((candidate) => candidate.homeSeed === winnerSeed || candidate.awaySeed === winnerSeed);
+  if (!slot) return null;
+
+  const existing = fixtures.find((fixture) => fixture.matchNo === slot.matchNo && (fixture.home === team || fixture.away === team));
+  if (existing) return existing;
+
+  const userIsHome = slot.homeSeed === winnerSeed;
+  const opponentSeed = userIsHome ? slot.awaySeed : slot.homeSeed;
+  const opponent = resolveKnockoutSeed(opponentSeed, fixtures) || chooseFallbackKnockoutOpponent(fixtures, team);
+
+  return {
+    id: `M${slot.matchNo}`,
+    matchNo: slot.matchNo,
+    home: userIsHome ? team : opponent,
+    away: userIsHome ? opponent : team,
+    homeSeed: slot.homeSeed,
+    awaySeed: slot.awaySeed,
+    played: false,
+    homeGoals: null,
+    awayGoals: null,
+  };
+}
+
 export function runSelfTests() {
   const schedule = buildSchedule();
   const table = blankTable();
@@ -170,4 +242,6 @@ export function runSelfTests() {
   console.assert(round32.length === 16 && round32[0].matchNo === 74, "Expected 16 official round-of-32 fixtures");
   console.assert(didTeamQualify("Mexico", table), "Expected a group top-two team to qualify");
   console.assert(applyFixtureResult(table, schedule[0], 1, 0)[schedule[0].home].pts === 3, "Expected winner to receive 3 points");
+  console.assert(knockoutStageLabel(104) === "FINAL", "Expected final stage label without match number");
+  console.assert(createNextKnockoutFixture({ previousMatchNo: 74, team: "Mexico", fixtures: [{ matchNo: 74, home: "Mexico", away: "Qatar", played: true, homeGoals: 1, awayGoals: 0 }] })?.matchNo === 89, "Expected M74 winner to progress to M89");
 }
