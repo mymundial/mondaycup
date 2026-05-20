@@ -33,6 +33,16 @@ function modalButton(result) {
   return "NEXT MATCH";
 }
 
+
+function CloseIcon({ className = "h-7 w-7" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" />
+      <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = null }) {
   if (!rows.length) return null;
 
@@ -67,12 +77,14 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/45 px-5">
       <div className="w-full max-w-sm overflow-hidden rounded-[2rem] bg-[#F5F0E6] text-center text-[#0B5F35] shadow-[0_20px_60px_rgba(7,45,29,0.22)]">
-        <div className="relative min-h-[76px] px-5 pb-3 pt-4">
-          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-4 top-1/2 h-12 w-12 -translate-y-1/2 object-contain" draggable={false} />
-          <div className="px-12 text-[30px] font-black uppercase leading-[0.92] tracking-[-0.035em]">{modalTitle(result)}</div>
-          <button onClick={onDismiss} aria-label="Close result" className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-[#0B5F35] text-[28px] font-black leading-none text-[#F5F0E6]">
-            ×
-          </button>
+        <div className="px-5 pb-2 pt-4">
+          <div className="grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-3">
+            <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-12 w-12 object-contain" draggable={false} />
+            <div className="text-center text-[30px] font-black uppercase leading-[0.92] tracking-[-0.035em]">{modalTitle(result)}</div>
+            <button onClick={onDismiss} aria-label="Close result" className="flex h-12 w-12 items-center justify-center justify-self-end text-[#0B5F35]">
+              <CloseIcon className="h-8 w-8" />
+            </button>
+          </div>
         </div>
 
         <div className="px-5 pb-5">
