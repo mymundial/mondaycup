@@ -1,5 +1,5 @@
 import { KO_ROUNDS, KNOCKOUT_PLACEHOLDER_SLOTS } from "../../data/tournament.js";
-import { buildRound32Placeholders, mergeKnockoutFixtures } from "../../logic/tournament.js";
+import { buildRound32Placeholders } from "../../logic/tournament.js";
 import { Flag } from "../shared.jsx";
 import { ScreenTitle } from "../layout/Menu.jsx";
 
@@ -45,10 +45,7 @@ function buildPlaceholderFixtures(label, nums) {
 
 export function FixtureCard({ home = "TBC", away = "TBC", group, played = false, homeGoals = null, awayGoals = null, matchNo = null, userTeam = null }) {
   const isUserFixture = userTeam && (home === userTeam || away === userTeam);
-  const cardClass = [
-    "mb-2 rounded-2xl px-3 py-3 text-center text-[11px] font-semibold text-[#072D1D]/80 ring-1 ring-[#0B5F35]/6 last:mb-0",
-    isUserFixture ? "bg-[#DCE9DE]" : "bg-[#F8F4EC]",
-  ].join(" ");
+  const cardClass = `mb-2 rounded-2xl px-3 py-3 text-center text-[11px] font-semibold text-[#072D1D]/80 ring-1 ring-[#0B5F35]/6 last:mb-0 ${isUserFixture ? "bg-[#DCE9DE]" : "bg-[#F8F4EC]"}`;
   return <div className={cardClass}>
     <div className="mb-2 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#0B5F35]/60">
       {matchNo && <span>M{matchNo}</span>}
@@ -73,22 +70,12 @@ export function FixtureSection({ title, children }) {
   return <div className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.04)]"><div className="bg-[#0B5F35] px-3 py-2.5 text-center text-[17px] font-black uppercase tracking-[-0.025em] text-[#F5F0E6]">{title}</div><div className="p-3">{children}</div></div>;
 }
 
-function mergeActualFixtures(label, nums, knockoutFixtures) {
-  const placeholders = label === "Round of 32" ? buildRound32Placeholders() : buildPlaceholderFixtures(label, nums);
-  const actualByMatchNo = new Map(
-    knockoutFixtures
-      .filter((fixture) => nums.includes(fixture.matchNo))
-      .map((fixture) => [fixture.matchNo, fixture])
-  );
-
-  return placeholders.map((placeholder) => actualByMatchNo.get(placeholder.matchNo) || placeholder);
-}
-
 export function FixturesScreen({ fixtureView, onFixtureViewChange, schedule, menuProps, knockoutFixtures, userTeam = null }) {
+  const round32 = knockoutFixtures.length ? knockoutFixtures : buildRound32Placeholders();
   return <main className="flex min-h-0 flex-1 flex-col gap-2"><ScreenTitle {...menuProps}>SCHEDULE</ScreenTitle><FixturesToggle value={fixtureView} onChange={onFixtureViewChange} /><section className="min-h-0 flex-1 overflow-auto py-1"><div className="space-y-3">
     {fixtureView === "group" && [1, 2, 3].map((round) => <FixtureSection key={round} title={`MATCHDAY ${round}`}>{schedule.filter((fixture) => fixture.week === round).map((fixture) => <FixtureCard key={fixture.id} {...fixture} userTeam={userTeam} />)}</FixtureSection>)}
     {fixtureView === "knockout" && KO_ROUNDS.map(([label, nums]) => {
-      const fixtures = mergeActualFixtures(label, nums, knockoutFixtures);
+      const fixtures = label === "Round of 32" ? round32 : buildPlaceholderFixtures(label, nums);
       return <FixtureSection key={label} title={label}>{fixtures.map((fixture) => <FixtureCard key={fixture.id || fixture.matchNo} {...fixture} userTeam={userTeam} />)}</FixtureSection>;
     })}
   </div></section></main>;

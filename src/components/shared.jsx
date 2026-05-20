@@ -8,6 +8,6 @@ export function Flag({ team, className = "h-4 w-6" }) {
   </span>;
 }
 
-export function BrandMark() { return <img src={ASSETS.myMundialLogo} alt="myMUNDIAL" className="h-10 w-auto object-contain" />; }
-export function MondayLogo({ small = false }) { return <img src={ASSETS.mondayLogo} alt="Monday Cup" className={`${small ? "h-16 opacity-95" : "h-[12rem] -mt-3 -mb-3 opacity-95"} w-auto select-none object-contain`} />; }
+export function BrandMark() { return <img src={ASSETS.myMundialLogo} alt="myMUNDIAL" className="h-8 w-auto object-contain" />; }
+export function MondayLogo({ small = false }) { return <span className={`${small ? "h-14 w-14" : "h-[132px] w-[132px]"} inline-flex items-center justify-center overflow-hidden`}><img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-full w-full select-none object-contain opacity-95" draggable={false} /></span>; }
 export function HamburgerIcon() { return <span className="relative flex h-[14px] w-[18px] flex-col items-center justify-between"><span className="block h-[2px] w-full rounded-full bg-current" /><span className="block h-[2px] w-full rounded-full bg-current" /><span className="block h-[2px] w-full rounded-full bg-current" /></span>; }

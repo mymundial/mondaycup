@@ -161,12 +161,12 @@ const ROUND_SLOTS = {
   "ROUND OF 32": ROUND_OF_32_SLOTS,
   "ROUND OF 16": KNOCKOUT_PLACEHOLDER_SLOTS["Round of 16"],
   "QUARTER-FINAL": KNOCKOUT_PLACEHOLDER_SLOTS["Quarter-finals"],
-  "SEMI-FINAL": KNOCKOUT_PLACEHOLDER_SLOTS["Semi-finals"],
+  "SEMI-FINALS": KNOCKOUT_PLACEHOLDER_SLOTS["Semi-finals"],
   "3RD PLACE PLAY-OFF": KNOCKOUT_PLACEHOLDER_SLOTS["3RD PLACE PLAY-OFF"],
   FINAL: KNOCKOUT_PLACEHOLDER_SLOTS.Final,
 };
 
-const ROUND_ORDER = ["ROUND OF 32", "ROUND OF 16", "QUARTER-FINAL", "SEMI-FINAL", "FINAL"];
+const ROUND_ORDER = ["ROUND OF 32", "ROUND OF 16", "QUARTER-FINAL", "SEMI-FINALS", "FINAL"];
 const knockoutSlots = Object.values(ROUND_SLOTS).flat();
 
 function fixtureWinner(fixture) {
@@ -208,7 +208,7 @@ function roundNameForMatchNo(matchNo) {
   if (matchNo >= 73 && matchNo <= 88) return "ROUND OF 32";
   if (matchNo >= 89 && matchNo <= 96) return "ROUND OF 16";
   if (matchNo >= 97 && matchNo <= 100) return "QUARTER-FINAL";
-  if (matchNo === 101 || matchNo === 102) return "SEMI-FINAL";
+  if (matchNo === 101 || matchNo === 102) return "SEMI-FINALS";
   if (matchNo === 104) return "FINAL";
   return "KNOCKOUT";
 }
@@ -296,11 +296,11 @@ export function createNextKnockoutFixture({ previousMatchNo, team, fixtures }) {
   };
 }
 
-export function completeKnockoutRound({ fixtures, currentMatch, userTeam, playedResult = null }) {
+export function completeKnockoutRound({ fixtures, currentMatch, userTeam, userResult = null }) {
   const roundName = roundNameForMatchNo(currentMatch.matchNo);
   const currentSlots = ROUND_SLOTS[roundName] || [];
-  const homeGoals = playedResult ? playedResult.homeGoals : currentMatch.home === userTeam ? 1 : 0;
-  const awayGoals = playedResult ? playedResult.awayGoals : currentMatch.away === userTeam ? 1 : 0;
+  const homeGoals = userResult ? userResult.homeGoals : (currentMatch.home === userTeam ? 1 : 0);
+  const awayGoals = userResult ? userResult.awayGoals : (currentMatch.away === userTeam ? 1 : 0);
   const playedUserMatch = { ...currentMatch, played: true, homeGoals, awayGoals };
   let workingFixtures = replaceFixtures(fixtures, [playedUserMatch]);
 
@@ -315,7 +315,7 @@ export function completeKnockoutRound({ fixtures, currentMatch, userTeam, played
   let nextRoundFixtures = [];
   const nextRound = nextRoundName(roundName);
 
-  if (roundName === "SEMI-FINAL") {
+  if (roundName === "SEMI-FINALS") {
     nextRoundFixtures = [buildThirdPlacePlayoff(workingFixtures), buildFinalFixture(workingFixtures)];
   } else if (roundName === "FINAL") {
     const thirdPlaceFixture = simulateKnockoutFixture(buildThirdPlacePlayoff(workingFixtures));
@@ -369,34 +369,4 @@ export function runSelfTests() {
   const finalComplete = completeKnockoutRound({ fixtures: semiComplete.updatedFixtures, currentMatch: finalFixture, userTeam: "Spain" });
   console.assert(finalComplete.updatedFixtures.find((fixture) => fixture.matchNo === 103)?.played, "Expected third-place play-off to be played when final is completed");
   console.assert(finalComplete.podium?.third, "Expected bronze team to come from M103 winner");
-}
-
-export function completeTournamentFromFixtures(fixtures, userTeam = null) {
-  let workingFixtures = [...fixtures];
-  const roundsToComplete = ["ROUND OF 32", "ROUND OF 16", "QUARTER-FINAL", "SEMI-FINAL", "FINAL"];
-
-  roundsToComplete.forEach((roundName) => {
-    const slots = ROUND_SLOTS[roundName] || [];
-    const roundFixtures = slots.map((slot) => simulateKnockoutFixture(fixtureFromSlot(slot, workingFixtures)));
-    workingFixtures = replaceFixtures(workingFixtures, roundFixtures);
-
-    if (roundName === "SEMI-FINAL") {
-      workingFixtures = replaceFixtures(workingFixtures, [buildThirdPlacePlayoff(workingFixtures), buildFinalFixture(workingFixtures)]);
-    } else if (roundName !== "FINAL") {
-      const next = nextRoundName(roundName);
-      const nextFixtures = next ? (ROUND_SLOTS[next] || []).map((slot) => fixtureFromSlot(slot, workingFixtures)) : [];
-      workingFixtures = replaceFixtures(workingFixtures, nextFixtures);
-    }
-  });
-
-  const thirdPlace = simulateKnockoutFixture(buildThirdPlacePlayoff(workingFixtures));
-  workingFixtures = replaceFixtures(workingFixtures, [thirdPlace]);
-  const finalFixture = workingFixtures.find((fixture) => fixture.matchNo === 104);
-  const podium = finalFixture?.played ? {
-    winner: fixtureWinner(finalFixture),
-    runnerUp: fixtureRunnerUp(finalFixture),
-    third: bronzeTeamFromThirdPlacePlayoff(workingFixtures),
-  } : null;
-
-  return { updatedFixtures: workingFixtures, podium };
 }
