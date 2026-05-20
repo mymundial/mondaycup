@@ -32,7 +32,8 @@ export function buildQualifiers(table) {
     byGroup[group] = rows;
     thirds.push(rows[2]);
   });
-  return { byGroup, best3RDs: sortRows(thirds).slice(0, 8) };
+  const thirdPlaceRows = sortRows(thirds);
+  return { byGroup, thirdPlaceRows, best3RDs: thirdPlaceRows.slice(0, 8) };
 }
 
 export function didTeamQualify(team, table) {
@@ -162,7 +163,9 @@ export function runSelfTests() {
   const round32 = buildRound32Fixtures(table);
   console.assert(schedule.length === 72, "Expected 72 group fixtures");
   console.assert(Object.keys(table).length === 48, "Expected 48 teams in table");
-  console.assert(buildQualifiers(table).best3RDs.length === 8, "Expected 8 best third-place teams");
+  const qualifierTest = buildQualifiers(table);
+  console.assert(qualifierTest.best3RDs.length === 8, "Expected 8 best third-place teams");
+  console.assert(qualifierTest.thirdPlaceRows.length === 12, "Expected all 12 third-place teams for qualification table");
   console.assert(placeholders.length === 16 && placeholders[0].matchNo === 74 && placeholders[0].home === "1E", "Expected official R32 placeholder order");
   console.assert(round32.length === 16 && round32[0].matchNo === 74, "Expected 16 official round-of-32 fixtures");
   console.assert(didTeamQualify("Mexico", table), "Expected a group top-two team to qualify");

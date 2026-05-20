@@ -4,9 +4,32 @@ import { FixturesToggle } from "../schedule/ScheduleScreens.jsx";
 import { buildRound32Placeholders } from "../../logic/tournament.js";
 
 const isSeedLabel = (value) => /^[123][A-L]+$/.test(String(value || ""));
+const rowClass = ({ isQualified, isUserTeam, divider }) => [
+  "mb-1.5 grid grid-cols-[24px_minmax(0,1.9fr)_repeat(6,24px)] items-center gap-[3px] rounded-xl px-2 py-2 text-center text-[9px] font-semibold text-[#072D1D]/80 last:mb-0",
+  isQualified ? "bg-[#DCE9DE]" : "bg-[#F8F4EC]",
+  isUserTeam ? "ring-2 ring-[#D4AF37]" : "ring-1 ring-[#0B5F35]/5",
+  divider ? "mt-2 border-t border-[#0B5F35]/18 pt-3" : "",
+].join(" ");
 
-export function GroupTable({ title, rows }) {
-  return <div className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.04)]"><div className="bg-[#0B5F35] px-3 py-2.5 text-center text-[17px] font-black tracking-[-0.025em] text-[#F5F0E6]">{title}</div><div className="p-3"><div className="mb-1.5 grid grid-cols-[24px_minmax(0,1.9fr)_repeat(6,24px)] items-center gap-[3px] px-2 text-center text-[8px] font-black uppercase tracking-[0.08em] text-[#072D1D]/42"><span>#</span><span className="pl-1 text-left">Team</span><span>P</span><span>W</span><span>D</span><span>L</span><span>GD</span><span>Pts</span></div>{rows.map((row, index) => <div key={row.team} className="mb-1.5 grid grid-cols-[24px_minmax(0,1.9fr)_repeat(6,24px)] items-center gap-[3px] rounded-xl bg-[#F8F4EC] px-2 py-2 text-center text-[9px] font-semibold text-[#072D1D]/80 ring-1 ring-[#0B5F35]/5 last:mb-0"><span>{index + 1}</span><span className="flex min-w-0 items-center gap-1.5 pl-1 text-left"><Flag team={row.team} /><span className="truncate uppercase tracking-[0.015em]">{row.team}</span></span><span>{row.played}</span><span>{row.won}</span><span>{row.drawn}</span><span>{row.lost}</span><span>{row.gd}</span><span className="font-black">{row.pts}</span></div>)}</div></div>;
+export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam = null, dividerAfter = null }) {
+  return <div className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.04)]">
+    <div className="bg-[#0B5F35] px-3 py-2.5 text-center text-[17px] font-black tracking-[-0.025em] text-[#F5F0E6]">{title}</div>
+    <div className="p-3">
+      <div className="mb-1.5 grid grid-cols-[24px_minmax(0,1.9fr)_repeat(6,24px)] items-center gap-[3px] px-2 text-center text-[8px] font-black uppercase tracking-[0.08em] text-[#072D1D]/42">
+        <span>#</span><span className="pl-1 text-left">Team</span><span>P</span><span>W</span><span>D</span><span>L</span><span>GD</span><span>Pts</span>
+      </div>
+      {rows.map((row, index) => {
+        const isQualified = qualifiedTeams.has(row.team);
+        const isUserTeam = userTeam === row.team;
+        const divider = dividerAfter !== null && index === dividerAfter;
+        return <div key={row.team} className={rowClass({ isQualified, isUserTeam, divider })}>
+          <span>{index + 1}</span>
+          <span className="flex min-w-0 items-center gap-1.5 pl-1 text-left"><Flag team={row.team} /><span className="truncate uppercase tracking-[0.015em]">{row.team}</span></span>
+          <span>{row.played}</span><span>{row.won}</span><span>{row.drawn}</span><span>{row.lost}</span><span>{row.gd}</span><span className="font-black">{row.pts}</span>
+        </div>;
+      })}
+    </div>
+  </div>;
 }
 
 function KnockoutBracket({ round32 = [] }) {
@@ -22,6 +45,10 @@ function KnockoutBracket({ round32 = [] }) {
   return <div className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.04)]"><div className="bg-[#0B5F35] px-3 py-2.5 text-center text-[17px] font-black tracking-[-0.025em] text-[#F5F0E6]">TOURNAMENT BRACKET</div><div className="p-2"><div className="rounded-[1.5rem] bg-[#F8F4EC] px-2 py-3 ring-1 ring-[#0B5F35]/8"><div className="flex flex-col items-center"><StageLabel>ROUND OF 32</StageLabel><div className="mt-2"><Row count={8} matches={fixtures.slice(0, 8)} compact gap="gap-[2px]" /></div><div className="mt-5"><StageLabel>ROUND OF 16</StageLabel><div className="mt-2"><Row count={4} gap="gap-2" /></div></div><div className="mt-6"><StageLabel>QUARTER-FINALS</StageLabel><div className="mt-2"><Row count={2} gap="gap-2" /></div></div><div className="mt-6"><StageLabel>SEMI-FINALS</StageLabel><div className="mt-2"><Row count={1} gap="gap-2" /></div></div><div className="mt-6"><StageLabel>FINAL</StageLabel><div className="mt-2"><Row count={1} large /></div></div><div className="mt-6"><StageLabel>SEMI-FINALS</StageLabel><div className="mt-2"><Row count={1} gap="gap-2" /></div></div><div className="mt-6"><StageLabel>QUARTER-FINALS</StageLabel><div className="mt-2"><Row count={2} gap="gap-2" /></div></div><div className="mt-5"><StageLabel>ROUND OF 16</StageLabel><div className="mt-2"><Row count={4} gap="gap-2" /></div></div><div className="mt-5"><StageLabel>ROUND OF 32</StageLabel><div className="mt-2"><Row count={8} matches={fixtures.slice(8, 16)} compact gap="gap-[2px]" /></div></div></div></div></div></div>;
 }
 
-export function GroupsScreen({ allGroups, qualifiers, menuProps, standingsView, onStandingsViewChange, knockoutFixtures }) {
-  return <main className="flex min-h-0 flex-1 flex-col gap-2"><ScreenTitle {...menuProps}>STANDINGS</ScreenTitle><FixturesToggle value={standingsView} onChange={onStandingsViewChange} /><section className="min-h-0 flex-1 overflow-auto py-1"><div className="space-y-2">{standingsView === "group" && allGroups.map(({ group, rows }) => <GroupTable key={group} title={`GROUP ${group}`} rows={rows} />)}{standingsView === "group" && <GroupTable title="BEST 3RD-PLACE TEAMS" rows={qualifiers.best3RDs} />}{standingsView === "knockout" && <KnockoutBracket round32={knockoutFixtures} />}</div></section></main>;
+export function GroupsScreen({ allGroups, qualifiers, menuProps, standingsView, onStandingsViewChange, knockoutFixtures, qualifiedTeams = new Set(), userTeam = null }) {
+  return <main className="flex min-h-0 flex-1 flex-col gap-2"><ScreenTitle {...menuProps}>STANDINGS</ScreenTitle><FixturesToggle value={standingsView} onChange={onStandingsViewChange} /><section className="min-h-0 flex-1 overflow-auto py-1"><div className="space-y-2">
+    {standingsView === "group" && allGroups.map(({ group, rows }) => <GroupTable key={group} title={`GROUP ${group}`} rows={rows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />)}
+    {standingsView === "group" && <GroupTable title="3RD PLACE QUALIFICATION" rows={qualifiers.thirdPlaceRows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} dividerAfter={8} />}
+    {standingsView === "knockout" && <KnockoutBracket round32={knockoutFixtures} />}
+  </div></section></main>;
 }
