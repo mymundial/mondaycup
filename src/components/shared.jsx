@@ -9,5 +9,5 @@ export function Flag({ team, className = "h-4 w-6" }) {
 }
 
 export function BrandMark() { return <img src={ASSETS.myMundialLogo} alt="myMUNDIAL" className="h-10 w-auto object-contain" />; }
-export function MondayLogo({ small = false }) { return <img src={ASSETS.mondayLogo} alt="Monday Cup" className={`${small ? "h-20 opacity-95" : "h-[17rem] -mt-5 -mb-5 opacity-95"} w-auto select-none object-contain`} />; }
+export function MondayLogo({ small = false }) { return <img src={ASSETS.mondayLogo} alt="Monday Cup" className={`${small ? "h-16 opacity-95" : "h-[12rem] -mt-3 -mb-3 opacity-95"} w-auto select-none object-contain`} />; }
 export function HamburgerIcon() { return <span className="relative flex h-[14px] w-[18px] flex-col items-center justify-between"><span className="block h-[2px] w-full rounded-full bg-current" /><span className="block h-[2px] w-full rounded-full bg-current" /><span className="block h-[2px] w-full rounded-full bg-current" /></span>; }
