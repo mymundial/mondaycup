@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ASSETS } from "../../data/assets.js";
 import { FLAG_CC, getTeamTheme, teamCode } from "../../data/teams.js";
 import { Flag, HamburgerIcon } from "../shared.jsx";
@@ -61,6 +62,8 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
 }
 
 function FullTimeModal({ result, onNext, menuProps, groupRows, qualifiedTeams, userTeam, selectedGroup, stageLabel }) {
+  const [modalMenuOpen, setModalMenuOpen] = useState(false);
+  const modalMenuProps = { ...menuProps, menuOpen: modalMenuOpen, onToggleMenu: () => setModalMenuOpen((open) => !open) };
   const isKnockout = !result.week;
   const contextLabel = isKnockout ? stageLabel : `GROUP ${selectedGroup}`;
 
@@ -69,11 +72,11 @@ function FullTimeModal({ result, onNext, menuProps, groupRows, qualifiedTeams, u
       <div className="w-full max-w-sm overflow-hidden rounded-[2rem] bg-[#F5F0E6] text-center text-[#0B5F35] shadow-[0_20px_60px_rgba(7,45,29,0.22)]">
         <div className="relative min-h-[76px] px-5 pb-3 pt-4">
           <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-4 top-1/2 h-12 w-12 -translate-y-1/2 object-contain" draggable={false} />
-          <div className="px-12 text-[36px] font-black uppercase leading-[0.92] tracking-[-0.035em]">{modalTitle(result)}</div>
-          <button onClick={menuProps.onToggleMenu} className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-[#0B5F35] text-[#F5F0E6]">
+          <div className="px-12 text-[30px] font-black uppercase leading-[0.92] tracking-[-0.035em]">{modalTitle(result)}</div>
+          <button onClick={modalMenuProps.onToggleMenu} className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-[#0B5F35] text-[#F5F0E6]">
             <HamburgerIcon />
           </button>
-          {menuProps.menuOpen && <MenuDropdown onClose={menuProps.onToggleMenu} onMatch={menuProps.onMatch} onFixtures={menuProps.onFixtures} onGroups={menuProps.onGroups} onRestart={menuProps.onRestart} />}
+          {modalMenuProps.menuOpen && <MenuDropdown onClose={modalMenuProps.onToggleMenu} onMatch={modalMenuProps.onMatch} onFixtures={modalMenuProps.onFixtures} onGroups={modalMenuProps.onGroups} onRestart={modalMenuProps.onRestart} />}
         </div>
 
         <div className="px-5 pb-5">
@@ -83,9 +86,9 @@ function FullTimeModal({ result, onNext, menuProps, groupRows, qualifiedTeams, u
               <div className="mt-2 rounded-[1.25rem] bg-[#EFE7D8] px-3 py-3">
                 <div className="grid grid-cols-[32px_minmax(0,1fr)_auto_minmax(0,1fr)_32px] items-center gap-2">
                   <Flag team={result.home} className="h-5 w-8" />
-                  <span className="min-w-0 truncate text-right text-[14px] font-black uppercase tracking-[0.02em]">{result.home}</span>
+                  <span className="min-w-0 truncate text-right text-[18px] font-black uppercase tracking-[0.04em]">{teamCode(result.home)}</span>
                   <span className="rounded-full bg-[#0B5F35] px-4 py-1 text-[24px] font-black tabular-nums text-[#F5F0E6]">{result.homeGoals}-{result.awayGoals}</span>
-                  <span className="min-w-0 truncate text-left text-[14px] font-black uppercase tracking-[0.02em]">{result.away}</span>
+                  <span className="min-w-0 truncate text-left text-[18px] font-black uppercase tracking-[0.04em]">{teamCode(result.away)}</span>
                   <Flag team={result.away} className="h-5 w-8" />
                 </div>
               </div>

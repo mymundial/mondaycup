@@ -63,6 +63,10 @@ function calculateEarlyQualifiedTeams(table, schedule, fullQualifiers, groupStag
     const groupTeams = GROUPS[group];
     groupTeams.forEach((teamName) => {
       const row = table[teamName];
+      if (row.pts >= 6) {
+        qualified.add(teamName);
+        return;
+      }
       const challengers = groupTeams.filter((otherTeam) => {
         if (otherTeam === teamName) return false;
         const otherRow = table[otherTeam];
