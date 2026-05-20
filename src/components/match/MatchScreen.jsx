@@ -20,7 +20,11 @@ function teamToGameTeam(name) {
 
 function modalTitle(result) {
   if (result.status === "qualified") return "QUALIFIED!";
-  if (result.status === "eliminated" || result.status === "thirdPlace") return "ELIMINATED!";
+  if (result.status === "thirdPlace") return "ELIMINATED!";
+  if (result.status === "third") return "THIRD!";
+  if (result.status === "fourth") return "FOURTH!";
+  if (result.status === "runnerUp") return "RUNNER UP!";
+  if (result.status === "eliminated") return "ELIMINATED!";
   if (result.status === "champion") return "CHAMPIONS!";
   if (result.isDraw || result.homeGoals === result.awayGoals) return "DRAW!";
   if (result.status === "knockoutWin") return "QUALIFIED!";
@@ -28,26 +32,11 @@ function modalTitle(result) {
 }
 
 function modalButton(result) {
+  if (["third", "fourth", "runnerUp"].includes(result.status)) return "PLAY AGAIN";
   if (result.status === "thirdPlace") return "NEXT MATCH";
   if (result.status === "eliminated") return "TRY AGAIN";
   if (result.status === "champion") return "VIEW BRACKET";
   return "NEXT MATCH";
-}
-
-
-function CloseXIcon({ className = "h-7 w-7" }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden="true" focusable="false">
-      <path
-        d="M6 6L18 18M18 6L6 18"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
 }
 
 function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = null }) {
@@ -84,46 +73,36 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/45 px-5">
       <div className="w-full max-w-sm overflow-hidden rounded-[2rem] bg-[#F5F0E6] text-center text-[#0B5F35] shadow-[0_20px_60px_rgba(7,45,29,0.22)]">
-        <div className="grid h-[68px] grid-cols-[64px_minmax(0,1fr)_64px] items-center px-4 pt-2">
-          <div className="flex h-full items-center justify-center">
-            <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-12 w-12 object-contain" draggable={false} />
-          </div>
-
-          <div className="flex h-full min-w-0 items-center justify-center">
-            <div className="truncate text-center text-[30px] font-black uppercase leading-none tracking-[-0.035em] text-[#0B5F35]">
-              {modalTitle(result)}
-            </div>
-          </div>
-
-          <div className="flex h-full items-center justify-center">
-            <button onClick={onDismiss} aria-label="Close result" className="flex h-12 w-12 items-center justify-center text-[#0B5F35]">
-              <CloseXIcon />
-            </button>
-          </div>
+        <div className="grid min-h-[62px] grid-cols-[56px_minmax(0,1fr)_56px] items-center gap-2 px-5 pt-4">
+          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-11 w-11 object-contain" draggable={false} />
+          <div className="text-[25px] font-black uppercase leading-[0.9] tracking-[-0.035em]">{modalTitle(result)}</div>
+          <button onClick={onDismiss} aria-label="Close result" className="flex h-11 w-11 items-center justify-center justify-self-end rounded-none bg-transparent text-[34px] font-black leading-none text-[#0B5F35]">
+            ×
+          </button>
         </div>
 
-        <div className="px-5 pb-5">
+        <div className="px-5 pb-4 pt-2">
           {isKnockout ? (
             <>
-              <div className="mt-1 text-[9px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/45">{contextLabel}</div>
+              <div className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/48">{contextLabel}</div>
               <div className="mt-2 rounded-[1.25rem] bg-[#EFE7D8] px-3 py-3">
-                <div className="grid grid-cols-[34px_minmax(0,1fr)_auto_minmax(0,1fr)_34px] items-center gap-3">
+                <div className="grid grid-cols-[34px_minmax(0,1fr)_58px_minmax(0,1fr)_34px] items-center gap-3">
                   <Flag team={result.home} className="h-5 w-8" />
-                  <span className="min-w-0 truncate text-right text-[18px] font-black uppercase tracking-[0.04em]">{teamCode(result.home)}</span>
-                  <span className="rounded-full bg-[#0B5F35] px-5 py-1 text-[24px] font-black tabular-nums text-[#F5F0E6]">{result.homeGoals}-{result.awayGoals}</span>
-                  <span className="min-w-0 truncate text-left text-[18px] font-black uppercase tracking-[0.04em]">{teamCode(result.away)}</span>
+                  <span className="min-w-0 truncate text-right text-[17px] font-black uppercase tracking-[0.04em]">{teamCode(result.home)}</span>
+                  <span className="text-center text-[26px] font-black tabular-nums leading-none text-[#0B5F35]">{result.homeGoals}-{result.awayGoals}</span>
+                  <span className="min-w-0 truncate text-left text-[17px] font-black uppercase tracking-[0.04em]">{teamCode(result.away)}</span>
                   <Flag team={result.away} className="h-5 w-8" />
                 </div>
               </div>
             </>
           ) : (
             <>
-              <div className="mt-1 text-[9px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/45">{contextLabel}</div>
+              <div className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/48">{contextLabel}</div>
               <StandingsMiniTable rows={groupRows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />
             </>
           )}
 
-          <button onClick={onNext} className="mt-5 h-12 w-full rounded-full bg-[#0B5F35] text-[13px] font-black uppercase tracking-[0.12em] text-[#F5F0E6]">{modalButton(result)}</button>
+          <button onClick={onNext} className="mt-4 h-12 w-full rounded-full bg-[#0B5F35] text-[13px] font-black uppercase tracking-[0.12em] text-[#F5F0E6]">{modalButton(result)}</button>
         </div>
       </div>
     </div>
@@ -192,6 +171,8 @@ export function MatchScreen({
             fixture={fallbackFixture}
             onMatchComplete={onMatchComplete || onQuickWin}
             completedResult={completedResult}
+            finishedActionLabel={matchResult ? modalButton(matchResult) : "MATCH COMPLETE"}
+            onFinishedAction={matchResult ? onNextMatch : undefined}
           />
         </div>
 
@@ -207,11 +188,7 @@ export function MatchScreen({
             stageLabel={stageLabel}
           />
         )}
-        {matchResult && modalDismissed && (
-          <button onClick={onNextMatch} className="fixed bottom-5 left-1/2 z-[85] h-12 w-[min(22rem,calc(100%-2.5rem))] -translate-x-1/2 rounded-full bg-[#0B5F35] text-[13px] font-black uppercase tracking-[0.12em] text-[#F5F0E6] shadow-[0_14px_34px_rgba(7,45,29,0.26)]">
-            {modalButton(matchResult)}
-          </button>
-        )}
+
       </div>
     </Shell>
   );
