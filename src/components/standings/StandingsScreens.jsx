@@ -6,10 +6,17 @@ import { FixturesToggle } from "../schedule/ScheduleScreens.jsx";
 
 const isRealTeam = (value) => value && value !== "TBC" && !/^[123][A-L]+$/.test(String(value)) && !/^(W|RU)\d+$/.test(String(value));
 
-const rowClass = ({ isQualified, isUserTeam }) => [
+const medalRingClass = (medal) => {
+  if (medal === "gold") return "ring-2 ring-[#D4AF37]";
+  if (medal === "silver") return "ring-2 ring-[#C0C0C0]";
+  if (medal === "bronze") return "ring-2 ring-[#CD7F32]";
+  return "ring-1 ring-[#0B5F35]/5";
+};
+
+const rowClass = ({ isUserTeam, medal }) => [
   "mb-1.5 grid grid-cols-[24px_minmax(0,1.9fr)_repeat(6,24px)] items-center gap-[3px] rounded-xl px-2 py-2 text-center text-[9px] font-semibold text-[#072D1D]/80 last:mb-0",
-  isQualified ? "bg-[#DCE9DE]" : "bg-[#F8F4EC]",
-  isUserTeam ? "ring-2 ring-[#D4AF37]" : "ring-1 ring-[#0B5F35]/5",
+  isUserTeam ? "bg-[#DCE9DE]" : "bg-[#F8F4EC]",
+  medalRingClass(medal),
 ].join(" ");
 
 function PlaceholderSlot({ value, size = "sm" }) {
@@ -68,6 +75,7 @@ function placeholderFixtures(label) {
 }
 
 export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam = null }) {
+  const showQualificationOutlines = qualifiedTeams.size > 0;
   return <div className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.04)]">
     <div className="bg-[#0B5F35] px-3 py-2.5 text-center text-[17px] font-black tracking-[-0.025em] text-[#F5F0E6]">{title}</div>
     <div className="p-3">
@@ -75,9 +83,17 @@ export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam =
         <span>#</span><span className="pl-1 text-left">Team</span><span>P</span><span>W</span><span>D</span><span>L</span><span>GD</span><span>Pts</span>
       </div>
       {rows.map((row, index) => {
-        const isQualified = qualifiedTeams.has(row.team);
         const isUserTeam = userTeam === row.team;
-        return <div key={row.team} className={rowClass({ isQualified, isUserTeam })}>
+        const medal = showQualificationOutlines
+          ? index === 0
+            ? "gold"
+            : index === 1
+              ? "silver"
+              : index === 2 && qualifiedTeams.has(row.team)
+                ? "bronze"
+                : null
+          : null;
+        return <div key={row.team} className={rowClass({ isUserTeam, medal })}>
           <span>{index + 1}</span>
           <span className="flex min-w-0 items-center gap-1.5 pl-1 text-left"><Flag team={row.team} /><span className="truncate uppercase tracking-[0.015em]">{row.team}</span></span>
           <span>{row.played}</span><span>{row.won}</span><span>{row.drawn}</span><span>{row.lost}</span><span>{row.gd}</span><span className="font-black">{row.pts}</span>

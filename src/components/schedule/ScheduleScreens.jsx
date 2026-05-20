@@ -45,7 +45,10 @@ function buildPlaceholderFixtures(label, nums) {
 
 export function FixtureCard({ home = "TBC", away = "TBC", group, played = false, homeGoals = null, awayGoals = null, matchNo = null, userTeam = null }) {
   const isUserFixture = userTeam && (home === userTeam || away === userTeam);
-  const cardClass = `mb-2 rounded-2xl bg-[#F8F4EC] px-3 py-3 text-center text-[11px] font-semibold text-[#072D1D]/80 last:mb-0 ${isUserFixture ? "ring-2 ring-[#D4AF37]" : "ring-1 ring-[#0B5F35]/6"}`;
+  const cardClass = [
+    "mb-2 rounded-2xl px-3 py-3 text-center text-[11px] font-semibold text-[#072D1D]/80 ring-1 ring-[#0B5F35]/6 last:mb-0",
+    isUserFixture ? "bg-[#DCE9DE]" : "bg-[#F8F4EC]",
+  ].join(" ");
   return <div className={cardClass}>
     <div className="mb-2 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.14em] text-[#0B5F35]/60">
       {matchNo && <span>M{matchNo}</span>}
