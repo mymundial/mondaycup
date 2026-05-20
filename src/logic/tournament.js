@@ -162,6 +162,7 @@ const ROUND_SLOTS = {
   "ROUND OF 16": KNOCKOUT_PLACEHOLDER_SLOTS["Round of 16"],
   "QUARTER-FINAL": KNOCKOUT_PLACEHOLDER_SLOTS["Quarter-finals"],
   "SEMI-FINAL": KNOCKOUT_PLACEHOLDER_SLOTS["Semi-finals"],
+  "3RD PLACE PLAY-OFF": KNOCKOUT_PLACEHOLDER_SLOTS["3RD PLACE PLAY-OFF"],
   FINAL: KNOCKOUT_PLACEHOLDER_SLOTS.Final,
 };
 
@@ -254,10 +255,16 @@ function simulateKnockoutFixture(fixture) {
   return { ...fixture, played: true, homeGoals: homeWins ? 1 : 0, awayGoals: homeWins ? 0 : 1 };
 }
 
-function bronzeTeamFromSemiFinals(fixtures) {
-  const semiLosers = [101, 102].map((matchNo) => fixtureRunnerUp(fixtures.find((fixture) => fixture.matchNo === matchNo))).filter(Boolean);
-  if (!semiLosers.length) return null;
-  return semiLosers.sort((a, b) => (TEAM_RANK[a] || 99) - (TEAM_RANK[b] || 99))[0] || null;
+function bronzeTeamFromThirdPlacePlayoff(fixtures) {
+  return fixtureWinner(fixtures.find((fixture) => fixture.matchNo === 103));
+}
+
+function buildThirdPlacePlayoff(fixtures) {
+  return fixtureFromSlot(KNOCKOUT_PLACEHOLDER_SLOTS["3RD PLACE PLAY-OFF"][0], fixtures);
+}
+
+function buildFinalFixture(fixtures) {
+  return fixtureFromSlot(KNOCKOUT_PLACEHOLDER_SLOTS.Final[0], fixtures);
 }
 
 export function createNextKnockoutFixture({ previousMatchNo, team, fixtures }) {
@@ -305,15 +312,25 @@ export function completeKnockoutRound({ fixtures, currentMatch, userTeam }) {
 
   workingFixtures = replaceFixtures(workingFixtures, completedRoundFixtures);
 
+  let nextRoundFixtures = [];
   const nextRound = nextRoundName(roundName);
-  const nextRoundFixtures = nextRound ? (ROUND_SLOTS[nextRound] || []).map((slot) => fixtureFromSlot(slot, workingFixtures)) : [];
+
+  if (roundName === "SEMI-FINAL") {
+    nextRoundFixtures = [buildThirdPlacePlayoff(workingFixtures), buildFinalFixture(workingFixtures)];
+  } else if (roundName === "FINAL") {
+    const thirdPlaceFixture = simulateKnockoutFixture(buildThirdPlacePlayoff(workingFixtures));
+    workingFixtures = replaceFixtures(workingFixtures, [thirdPlaceFixture]);
+  } else {
+    nextRoundFixtures = nextRound ? (ROUND_SLOTS[nextRound] || []).map((slot) => fixtureFromSlot(slot, workingFixtures)) : [];
+  }
+
   const updatedFixtures = replaceFixtures(workingFixtures, nextRoundFixtures);
   const nextUserFixture = nextRoundFixtures.find((fixture) => fixture.home === userTeam || fixture.away === userTeam) || null;
   const finalFixture = updatedFixtures.find((fixture) => fixture.matchNo === 104);
   const podium = finalFixture?.played ? {
     winner: fixtureWinner(finalFixture),
     runnerUp: fixtureRunnerUp(finalFixture),
-    third: bronzeTeamFromSemiFinals(updatedFixtures),
+    third: bronzeTeamFromThirdPlacePlayoff(updatedFixtures),
   } : null;
 
   return { updatedFixtures, playedUserMatch, nextUserFixture, podium };
@@ -342,4 +359,14 @@ export function runSelfTests() {
   console.assert(testNext?.matchNo === 89, "Expected M74 winner to progress to M89");
   const testComplete = completeKnockoutRound({ fixtures: round32, currentMatch: round32[0], userTeam: round32[0].home });
   console.assert(testComplete.updatedFixtures.some((fixture) => fixture.matchNo === 89), "Expected R16 fixtures after completing R32");
+  const semiFixtures = [
+    { matchNo: 101, home: "Spain", away: "France", played: false, homeGoals: null, awayGoals: null },
+    { matchNo: 102, home: "Argentina", away: "Brazil", played: false, homeGoals: null, awayGoals: null },
+  ];
+  const semiComplete = completeKnockoutRound({ fixtures: semiFixtures, currentMatch: semiFixtures[0], userTeam: "Spain" });
+  console.assert(semiComplete.updatedFixtures.some((fixture) => fixture.matchNo === 103), "Expected third-place play-off fixture after semi-finals");
+  const finalFixture = semiComplete.updatedFixtures.find((fixture) => fixture.matchNo === 104);
+  const finalComplete = completeKnockoutRound({ fixtures: semiComplete.updatedFixtures, currentMatch: finalFixture, userTeam: "Spain" });
+  console.assert(finalComplete.updatedFixtures.find((fixture) => fixture.matchNo === 103)?.played, "Expected third-place play-off to be played when final is completed");
+  console.assert(finalComplete.podium?.third, "Expected bronze team to come from M103 winner");
 }
