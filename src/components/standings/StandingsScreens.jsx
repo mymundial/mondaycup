@@ -16,23 +16,24 @@ function PlaceholderSlot({ value }) {
   return <span className="relative flex h-[18px] w-[26px] shrink-0 items-center justify-center overflow-hidden rounded bg-[#DCE9DE] text-[5px] font-black uppercase tracking-[0.035em] text-[#0B5F35]/55 ring-1 ring-[#0B5F35]/10">{value || "TBC"}</span>;
 }
 
-function BracketSlot({ value, userTeam = null }) {
-  const isUser = userTeam && value === userTeam;
+function BracketSlot({ value }) {
   if (!isRealTeam(value)) return <PlaceholderSlot value={value || "TBC"} />;
   return <span className="relative inline-flex h-[18px] w-[26px] shrink-0 overflow-hidden rounded">
     <Flag team={value} className="h-[18px] w-[26px] rounded" />
-    {isUser && <span className="pointer-events-none absolute inset-0 rounded border-[2px] border-[#6FB98C] shadow-[inset_0_0_0_1px_rgba(245,240,230,0.95)]" />}
   </span>;
 }
 
 function BracketFixture({ fixture, layout = "vertical", userTeam = null }) {
   const widthClass = layout === "horizontal" ? "w-[78px]" : "w-[44px]";
   const slotDirection = layout === "horizontal" ? "flex-row" : "flex-col";
-  return <div className={`mx-auto flex ${widthClass} flex-col items-center rounded-[0.55rem] bg-[#F8F4EC] px-[3px] py-[3px] ring-1 ring-[#0B5F35]/8`}>
-    <div className="mb-[2px] text-[5.5px] font-black uppercase tracking-[0.05em] text-[#0B5F35]/50">M{fixture?.matchNo || ""}</div>
-    <div className={`flex ${slotDirection} items-center gap-[4px]`}>
-      <BracketSlot value={fixture?.home || fixture?.homeSeed || "TBC"} userTeam={userTeam} />
-      <BracketSlot value={fixture?.away || fixture?.awaySeed || "TBC"} userTeam={userTeam} />
+  const isUserFixture = userTeam && (fixture?.home === userTeam || fixture?.away === userTeam);
+  const cardClass = isUserFixture ? "bg-[#7DAA8F] text-[#F5F0E6] ring-[#F5F0E6]/50" : "bg-[#F8F4EC] text-[#072D1D] ring-[#0B5F35]/8";
+  const labelClass = isUserFixture ? "text-[#F5F0E6]" : "text-[#0B5F35]/50";
+  return <div className={`mx-auto flex ${widthClass} flex-col items-center rounded-[0.55rem] ${cardClass} px-[4px] py-[3px] ring-1`}>
+    <div className={`mb-[2px] text-[5.5px] font-black uppercase tracking-[0.05em] ${labelClass}`}>M{fixture?.matchNo || ""}</div>
+    <div className={`flex ${slotDirection} items-center gap-[5px]`}>
+      <BracketSlot value={fixture?.home || fixture?.homeSeed || "TBC"} />
+      <BracketSlot value={fixture?.away || fixture?.awaySeed || "TBC"} />
     </div>
   </div>;
 }
@@ -82,7 +83,7 @@ function runnerUpOf(fixture) {
 }
 
 function PodiumBox({ title, team, className }) {
-  return <div className={`flex h-[50px] w-[86px] flex-col items-center justify-center rounded-[0.9rem] ${className}`}>
+  return <div className={`flex h-[46px] w-[80px] flex-col items-center justify-center rounded-[0.9rem] ${className}`}>
     <div className="mb-1 text-[6px] font-black uppercase tracking-[0.16em] text-[#072D1D]/70">{title}</div>
     <BracketSlot value={team || "TBC"} />
   </div>;
@@ -125,7 +126,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
 
   return <div className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.04)]">
     <div className="bg-[#0B5F35] px-3 py-2.5 text-center text-[17px] font-black tracking-[-0.025em] text-[#F5F0E6]">TOURNAMENT BRACKET</div>
-    <div className="origin-top scale-[0.86] px-2 py-3">
+    <div className="px-2 py-2" style={{ zoom: 0.86 }}>
       <StageLabel>ROUND OF 32</StageLabel>
       <div className="mt-1.5"><BracketRow count={8} fixtures={r32.slice(0, 8)} gap="gap-[1px]" layout="vertical" userTeam={userTeam} /></div>
 
