@@ -12,6 +12,7 @@ import {
   findTeamKnockoutFixture,
   getFixtureOpponent,
   completeKnockoutRound,
+  completeTournamentFromFixtures,
   knockoutStageLabel,
   runSelfTests,
 } from "./logic/tournament.js";
@@ -55,6 +56,7 @@ export default function App() {
   const [currentKnockoutMatch, setCurrentKnockoutMatch] = useState(null);
   const [matchStage, setMatchStage] = useState("GROUP STAGE");
   const [podium, setPodium] = useState({});
+  const [tournamentComplete, setTournamentComplete] = useState(false);
 
   const groupStageComplete = schedule.every((fixture) => fixture.played);
   const visibleKnockoutFixtures = groupStageComplete && !knockoutFixtures.length ? buildRound32Fixtures(table) : knockoutFixtures;
@@ -121,6 +123,7 @@ export default function App() {
     setCurrentKnockoutMatch(null);
     setMatchStage("GROUP STAGE");
     setPodium({});
+    setTournamentComplete(false);
   };
   const openMatch = () => { closeMenu(); setDrawer(null); };
   const openFixtures = () => { closeMenu(); setFixtureView(groupStageComplete ? "knockout" : "group"); setDrawer("fixtures"); };
@@ -139,6 +142,7 @@ export default function App() {
     setCurrentKnockoutMatch(null);
     setMatchStage("GROUP STAGE");
     setMatchResult(null);
+    setTournamentComplete(false);
   };
 
   const handleMatchComplete = (result) => {
@@ -156,6 +160,7 @@ export default function App() {
 
       setKnockoutFixtures(updatedFixtures);
       if (completedPodium) setPodium(completedPodium);
+      if (playedUserMatch.matchNo === 104) setTournamentComplete(true);
       setMatchResult({
         home: playedUserMatch.home,
         away: playedUserMatch.away,
@@ -195,10 +200,9 @@ export default function App() {
     if (!team || !matchResult) return;
     if (matchResult.status === "eliminated") { resetTournament(); return; }
     if (matchResult.status === "champion") {
-      setCurrentKnockoutMatch(null);
+      setTournamentComplete(true);
       setStandingsView("knockout");
       setDrawer("groups");
-      setMatchResult(null);
       return;
     }
 
@@ -260,11 +264,37 @@ export default function App() {
     }
   };
 
+
+  const viewStandingsFromFullTime = () => {
+    if (!matchResult) return;
+
+    const isKnockout = matchResult.week == null;
+    if (matchResult.status === "eliminated" || matchResult.status === "champion") {
+      if (isKnockout) {
+        const completed = completeTournamentFromFixtures(knockoutFixtures, team);
+        setKnockoutFixtures(completed.updatedFixtures);
+        if (completed.podium) setPodium(completed.podium);
+        setStandingsView("knockout");
+      } else {
+        setStandingsView("group");
+      }
+      setDrawer("groups");
+      return;
+    }
+
+    const targetView = isKnockout ? "knockout" : "group";
+    nextMatch();
+    window.setTimeout(() => {
+      setStandingsView(targetView);
+      setDrawer("groups");
+    }, 0);
+  };
+
   const menuProps = { menuOpen, onToggleMenu: () => setMenuOpen((open) => !open), onMatch: openMatch, onFixtures: openFixtures, onGroups: openGroups, onRestart: resetTournament };
 
   if (screen === "home") return <HomeScreen onSelectGroup={selectGroup} onSelectTeam={startTeam} />;
   if (screen === "teams") return <TeamSelectScreen selectedGroup={selectedGroup} onSelectGroup={setSelectedGroup} onSelectTeam={startTeam} />;
   if (drawer === "groups") return <DrawerShell><GroupsScreen allGroups={allGroups} qualifiers={qualifiers} menuProps={menuProps} standingsView={standingsView} onStandingsViewChange={setStandingsView} knockoutFixtures={visibleKnockoutFixtures} qualifiedTeams={qualifiedTeams} userTeam={team} podium={podium} /></DrawerShell>;
   if (drawer === "fixtures") return <DrawerShell><FixturesScreen fixtureView={fixtureView} onFixtureViewChange={setFixtureView} schedule={schedule} menuProps={menuProps} knockoutFixtures={visibleKnockoutFixtures} userTeam={team} /></DrawerShell>;
-  return <MatchScreen team={team} opponent={opponent} currentFixture={currentFixture} matchResult={matchResult} onMatchComplete={handleMatchComplete} onNextMatch={nextMatch} menuProps={menuProps} stageLabel={matchStage} />;
+  return <MatchScreen team={team} opponent={opponent} currentFixture={currentFixture} matchResult={matchResult} onMatchComplete={handleMatchComplete} onNextMatch={nextMatch} onViewStandings={viewStandingsFromFullTime} menuProps={menuProps} stageLabel={matchStage} table={table} selectedGroup={selectedGroup} tournamentComplete={tournamentComplete} />;
 }
