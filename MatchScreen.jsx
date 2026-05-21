@@ -32,10 +32,7 @@ function modalTitle(result) {
 }
 
 function modalButton(result) {
-  if (["third", "fourth", "runnerUp"].includes(result.status)) return "PLAY AGAIN";
-  if (result.status === "thirdPlace") return "NEXT MATCH";
-  if (result.status === "eliminated") return "TRY AGAIN";
-  if (result.status === "champion") return "VIEW BRACKET";
+  if (["third", "fourth", "runnerUp", "eliminated", "champion"].includes(result.status)) return "PLAY AGAIN";
   return "NEXT MATCH";
 }
 
