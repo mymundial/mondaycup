@@ -215,6 +215,8 @@ function roundNameForMatchNo(matchNo) {
 }
 
 export function knockoutStageLabel(matchNo) {
+  if (matchNo >= 97 && matchNo <= 100) return "QUARTER-FINAL";
+  if (matchNo === 101 || matchNo === 102) return "SEMI-FINAL";
   return roundNameForMatchNo(matchNo);
 }
 
