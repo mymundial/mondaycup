@@ -12,7 +12,7 @@ function teamToGameTeam(name) {
     id: name,
     name,
     code: teamCode(name),
-    flag: cc ? `https://flagcdn.com/w80/${cc}.png` : "",
+    flag: `/flags/${teamCode(name)}.png`,
     primaryColour: theme.bg,
     textColour: theme.text,
   };
@@ -95,7 +95,7 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
                 <div className="grid grid-cols-[34px_minmax(0,1fr)_auto_minmax(0,1fr)_34px] items-center gap-3">
                   <Flag team={result.home} className="h-5 w-8" />
                   <span className="min-w-0 truncate text-right text-[18px] font-black uppercase tracking-[0.04em]">{teamCode(result.home)}</span>
-                  <span className="rounded-full bg-[#0B5F35] px-5 py-1 text-[24px] font-black tabular-nums text-[#F5F0E6]">{result.homeGoals}-{result.awayGoals}</span>
+                  <span className="px-2 text-[18px] font-black uppercase tracking-[0.04em] tabular-nums text-[#0B5F35]">{result.homeGoals}-{result.awayGoals}</span>
                   <span className="min-w-0 truncate text-left text-[18px] font-black uppercase tracking-[0.04em]">{teamCode(result.away)}</span>
                   <Flag team={result.away} className="h-5 w-8" />
                 </div>
