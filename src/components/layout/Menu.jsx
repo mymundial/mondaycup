@@ -16,7 +16,7 @@ export function HeaderMenuButton({ onClick }) {
 }
 
 export function ScreenTitle({ children, menuOpen, onToggleMenu, onMatch, onFixtures, onGroups, onRestart }) {
-  return <section className="relative -mx-5 flex h-[54px] shrink-0 items-center justify-center bg-[#F5F0E6] px-5 text-[#0B5F35]">
+  return <section className="relative flex h-[54px] shrink-0 items-center justify-center bg-transparent text-[#0B5F35]">
     <span className="absolute left-3 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center overflow-hidden"><img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-full w-full object-contain" draggable={false} /></span>
     <h2 className="text-[24px] font-black uppercase tracking-[-0.02em]">{children}</h2>
     <HeaderMenuButton onClick={onToggleMenu} />

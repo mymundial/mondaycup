@@ -23,7 +23,6 @@ const GAME = {
   aiWaitMs: 500,
   goal: { left: 10, top: 8, width: 80, height: 30 },
   spot: { x: 50, y: 54.5 },
-  penaltyArc: { height: 11 },
 };
 
 const DIRECTIONS = [
@@ -523,8 +522,8 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
       <div className="absolute bottom-0 left-0 right-0" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
       <div
-        className="pointer-events-none absolute z-[3] rounded-b-full border-b-[8px] border-l-[8px] border-r-[8px] border-[#f5f1e8]"
-        style={{ left: `${GAME.goal.left}%`, top: `${goalLine}%`, width: `${GAME.goal.width}%`, height: `${GAME.penaltyArc.height}%` }}
+        className="pointer-events-none absolute z-[3] rounded-b-[999px] border-b-[8px] border-l-[8px] border-r-[8px] border-[#f5f1e8]"
+        style={{ left: `${GAME.goal.left}%`, top: `${goalLine}%`, width: `${GAME.goal.width}%`, height: "30%" }}
       />
       <GoalFrame showAim={showAim} aimDirection={aimDirection} />
       <div className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f1e8]" style={{ left: `${GAME.spot.x}%`, top: `${GAME.spot.y}%` }} />
@@ -540,13 +539,13 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
 
 function ConfirmButton({ onClick, disabled = false, children }) {
   return (
-    <button onClick={onClick} disabled={disabled} className="grid h-[clamp(40px,4.7vh,62px)] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] bg-[#F7D117] px-4 text-center text-[clamp(11px,1.6vh,19px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22)] disabled:opacity-50">
+    <button onClick={onClick} disabled={disabled} className="grid h-[clamp(40px,4.7vh,62px)] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] bg-[#F7D117] px-4 text-center text-[clamp(11px,1.6vh,19px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22)] disabled:cursor-default disabled:opacity-65">
       <span className="block w-full whitespace-nowrap text-center">{children}</span>
     </button>
   );
 }
 
-function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMeter, accuracyMeter, opponentTeam, finishedActionLabel = "MATCH COMPLETE", onFinishedAction }) {
+function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMeter, accuracyMeter, opponentTeam, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction }) {
   const canChoose = phase === PHASE.DIRECTION;
   const canPower = phase === PHASE.POWER;
   const canAccuracy = phase === PHASE.ACCURACY;
@@ -579,18 +578,16 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
       )}
       {!canChoose && !canPower && !canAccuracy && (
         <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%]">
-          {phase === PHASE.FINISHED && onFinishedAction ? (
-            <ConfirmButton onClick={onFinishedAction}>{finishedActionLabel}</ConfirmButton>
-          ) : (
-            <ConfirmButton disabled>{phase === PHASE.SHOT ? "SHOT IN PROGRESS" : phase === PHASE.AI_WAIT ? `${opponentTeam.name.toUpperCase()} TAKING PENALTY` : finishedActionLabel}</ConfirmButton>
-          )}
+          <ConfirmButton onClick={endActionEnabled ? onEndAction : undefined} disabled={!endActionEnabled}>
+            {phase === PHASE.SHOT ? "SHOT IN PROGRESS" : phase === PHASE.AI_WAIT ? `${opponentTeam.name.toUpperCase()} TAKING PENALTY` : endActionLabel}
+          </ConfirmButton>
         </div>
       )}
     </section>
   );
 }
 
-export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, finishedActionLabel = "MATCH COMPLETE", onFinishedAction }) {
+export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction }) {
   const user = useMemo(() => normaliseTeam(userTeam, "Team A"), [userTeam]);
   const opponent = useMemo(() => normaliseTeam(opponentTeam, "Team B"), [opponentTeam]);
   const mergedAssets = useMemo(() => ({ ...DEFAULT_ASSETS, ...assets, sounds: { ...DEFAULT_ASSETS.sounds, ...(assets?.sounds || {}) } }), [assets]);
@@ -746,7 +743,18 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       `}</style>
       <Scoreboard userTeam={user} opponentTeam={opponent} score={score} attempts={attempts} ticker={ticker} tickerStyle={tickerStyle()} stageLabel={stageLabel} />
       <Pitch ballPoint={ballPoint} keeperPoint={keeperPoint} shot={shot} shotActive={shotActive} activeTeam={activeTeam} defenderTeam={defenderTeam} showAim={showAim} aimDirection={aimDirection} assets={mergedAssets} />
-      <ControlOverlay phase={phase} selected={selected} setSelected={setSelected} handleConfirm={handleConfirm} powerMeter={powerMeter} accuracyMeter={accuracyMeter} opponentTeam={opponent} finishedActionLabel={finishedActionLabel} onFinishedAction={onFinishedAction} />
+      <ControlOverlay
+        phase={phase}
+        selected={selected}
+        setSelected={setSelected}
+        handleConfirm={handleConfirm}
+        powerMeter={powerMeter}
+        accuracyMeter={accuracyMeter}
+        opponentTeam={opponent}
+        endActionLabel={endActionLabel}
+        endActionEnabled={endActionEnabled}
+        onEndAction={onEndAction}
+      />
     </div>
   );
 }
