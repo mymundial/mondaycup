@@ -1,12 +1,10 @@
 import { ASSETS } from "../data/assets.js";
-import { FLAG_CC, teamCode } from "../data/teams.js";
+import { FLAG_CC } from "../data/teams.js";
 
 export function Flag({ team, className = "h-4 w-6" }) {
   const cc = FLAG_CC[team];
-  const localSrc = team ? `/flags/${teamCode(team)}.png` : "";
-  const fallbackSrc = cc ? `https://flagcdn.com/w40/${cc}.png` : "";
   return <span className={`relative flex ${className} shrink-0 items-center justify-center overflow-hidden rounded bg-[#0B5F35] text-[8px] font-black text-[#F5F0E6]`}>
-    {team ? <img alt="" src={localSrc} className="h-full w-full object-cover" onError={(e) => { if (fallbackSrc && e.currentTarget.src !== fallbackSrc) e.currentTarget.src = fallbackSrc; else e.currentTarget.style.display = "none"; }} /> : String(team || "TBC").slice(0, 3).toUpperCase()}
+    {cc ? <img alt="" src={`https://flagcdn.com/w40/${cc}.png`} className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} /> : String(team || "TBC").slice(0, 3).toUpperCase()}
   </span>;
 }
 
