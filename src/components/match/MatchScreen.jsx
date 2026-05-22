@@ -59,12 +59,23 @@ function CloseIcon({ className = "h-7 w-7" }) {
 
 
 function FormTracker({ form = [] }) {
-  const colours = { W: "bg-green-500 text-[#F5F0E6]", L: "bg-red-500 text-[#F5F0E6]", D: "bg-[#B7B7B7] text-[#0B5F35]" };
+  const styles = {
+    W: "bg-green-500 text-[#F5F0E6]",
+    L: "bg-red-500 text-[#F5F0E6]",
+    D: "bg-[#B7B7B7] text-[#F5F0E6]",
+    empty: "bg-[#DCE9DE] text-[#6FA17F]",
+  };
+
   return (
-    <div className="mb-3 flex items-center justify-center gap-1.5">
-      {Array.from({ length: Math.max(1, form.length) }).map((_, index) => {
-        const value = form[index];
-        return <span key={index} className={`grid h-5 w-8 place-items-center rounded-sm text-[10px] font-black ${value ? colours[value] : "bg-[#F5F0E6] text-[#0B5F35]/35"}`}>{value || ""}</span>;
+    <div className="mt-3 flex items-center justify-center gap-1.5">
+      {Array.from({ length: 8 }).map((_, index) => {
+        const value = form[index] || "-";
+        const style = styles[value] || styles.empty;
+        return (
+          <span key={index} className={`grid h-5 w-8 place-items-center rounded-sm text-[10px] font-black ${style}`}>
+            {value}
+          </span>
+        );
       })}
     </div>
   );
@@ -117,7 +128,6 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
         </div>
 
         <div className="px-5 pb-5 pt-4">
-          <FormTracker form={userForm} />
           {isKnockout ? (
             <>
               <div className="mt-2 rounded-[1.25rem] bg-[#F5F0E6] px-3 py-3 ring-1 ring-[#0B5F35]/10">
@@ -129,10 +139,12 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
                   <div className="flex justify-end"><Flag team={result.away} className="h-5 w-7" /></div>
                 </div>
               </div>
+              <FormTracker form={userForm} />
             </>
           ) : (
             <>
               <StandingsMiniTable rows={groupRows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />
+              <FormTracker form={userForm} />
             </>
           )}
 
