@@ -397,14 +397,16 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
           {stageLabel || "GROUP STAGE"}
         </div>
         <div className="h-[52%] px-[3.5%] pt-[1%]">
-          <div className="grid h-full grid-cols-[12%_1fr_auto_1fr_12%] grid-rows-[58%_42%] items-center">
+          <div className="grid h-full grid-cols-[12%_1fr_34px_14px_34px_1fr_12%] grid-rows-[58%_42%] items-center">
             <div className="col-start-1 row-start-1 flex items-center justify-center"><TeamFlag team={userTeam} className="h-4 w-6" /></div>
-            <div className="col-start-2 row-start-1 flex items-center justify-center px-[2%]"><div className="led-text-glow w-full text-center font-sans text-[clamp(20px,3.8vh,42px)] font-black leading-none tracking-tight text-[#F7D117]">{userTeam.code}</div></div>
-            <div className="led-text-glow col-start-3 row-start-1 flex items-center justify-center px-[4%] font-sans text-[clamp(24px,4vh,48px)] font-black leading-none tracking-tight text-[#F7D117]">{score.user}-{score.opponent}</div>
-            <div className="col-start-4 row-start-1 flex items-center justify-center px-[2%]"><div className="led-text-glow w-full text-center font-sans text-[clamp(20px,3.8vh,42px)] font-black leading-none tracking-tight text-[#F7D117]">{opponentTeam.code}</div></div>
-            <div className="col-start-5 row-start-1 flex items-center justify-center"><TeamFlag team={opponentTeam} className="h-4 w-6" /></div>
+            <div className="col-start-2 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow w-full text-center font-sans text-[clamp(20px,3.8vh,42px)] font-black leading-none tracking-tight text-[#F7D117]">{userTeam.code}</div></div>
+            <div className="led-text-glow col-start-3 row-start-1 flex items-center justify-center font-sans text-[clamp(24px,4vh,48px)] font-black leading-none tracking-tight text-[#F7D117] tabular-nums">{score.user}</div>
+            <div className="led-text-glow col-start-4 row-start-1 flex items-center justify-center font-sans text-[clamp(24px,4vh,48px)] font-black leading-none tracking-tight text-[#F7D117]">-</div>
+            <div className="led-text-glow col-start-5 row-start-1 flex items-center justify-center font-sans text-[clamp(24px,4vh,48px)] font-black leading-none tracking-tight text-[#F7D117] tabular-nums">{score.opponent}</div>
+            <div className="col-start-6 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow w-full text-center font-sans text-[clamp(20px,3.8vh,42px)] font-black leading-none tracking-tight text-[#F7D117]">{opponentTeam.code}</div></div>
+            <div className="col-start-7 row-start-1 flex items-center justify-center"><TeamFlag team={opponentTeam} className="h-4 w-6" /></div>
             <div className="col-start-2 row-start-2 flex justify-center pt-[2%]"><div className="w-[4.4em]"><PenaltyMarkers attempts={attempts.user} /></div></div>
-            <div className="col-start-4 row-start-2 flex justify-center pt-[2%]"><div className="w-[4.4em]"><PenaltyMarkers attempts={attempts.opponent} /></div></div>
+            <div className="col-start-6 row-start-2 flex justify-center pt-[2%]"><div className="w-[4.4em]"><PenaltyMarkers attempts={attempts.opponent} /></div></div>
           </div>
         </div>
         <div className="grid h-[26%] w-full place-items-center overflow-hidden px-[3%] text-center font-sans text-[clamp(13px,2.3vh,28px)] font-black tracking-tight" style={tickerStyle}>
@@ -523,7 +525,7 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
       <div
         className="pointer-events-none absolute z-[3] rounded-b-[999px] border-b-[8px] border-l-[8px] border-r-[8px] border-[#f5f1e8]"
-        style={{ left: "5%", top: `${goalLine}%`, width: "90%", height: "22%" }}
+        style={{ left: "5%", top: `${goalLine}%`, width: "90%", height: "24.2%" }}
       />
       <GoalFrame showAim={showAim} aimDirection={aimDirection} />
       <div className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f1e8]" style={{ left: `${GAME.spot.x}%`, top: `${GAME.spot.y}%` }} />
@@ -552,7 +554,7 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
   const titleClass = "text-center text-[clamp(12px,1.8vh,22px)] font-black tracking-[0.08em] text-[#f5f1e8] drop-shadow-md";
 
   return (
-    <section className="pointer-events-none absolute bottom-[4.6%] left-[4%] right-[4%] z-30 h-[26%]">
+    <section className="pointer-events-none absolute bottom-[1%] left-[4%] right-[4%] z-30 h-[26%]">
       {canChoose && (
         <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%] top-[3%] flex flex-col">
           <div className={titleClass}>SHOT DIRECTION</div>
