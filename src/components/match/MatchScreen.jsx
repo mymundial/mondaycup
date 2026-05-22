@@ -51,7 +51,7 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
         const isUser = row.team === userTeam;
         const isQualified = qualifiedTeams.has(row.team);
         return (
-          <div key={row.team} className={`mb-1 grid grid-cols-[22px_30px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] items-center gap-1 rounded-xl px-2 py-[5px] text-center text-[9px] text-[#072D1D]/80 last:mb-0 ${isUser ? "bg-[#DCE9DE] font-black ring-1 ring-[#CFE2D3]" : "bg-[#F8F4EC] font-bold"}`}>
+          <div key={row.team} className={`mb-1 grid grid-cols-[22px_30px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] items-center gap-1 rounded-xl px-2 py-[5px] text-center text-[9px] text-[#072D1D]/80 last:mb-0 ring-1 ${isUser ? "bg-[#DCE9DE] font-black ring-[#CFE2D3]" : "bg-[#F8F4EC] font-bold ring-[#0B5F35]/5"}`}>
             <span>{index + 1}</span>
             <span className="flex justify-center"><Flag team={row.team} className="h-4 w-6" /></span>
             <span className={`min-w-0 truncate text-left uppercase ${isUser ? "font-black" : "font-bold"}`}>{row.team}</span>

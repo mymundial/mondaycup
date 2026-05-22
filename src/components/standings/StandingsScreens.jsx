@@ -8,8 +8,8 @@ const isRealTeam = (value) => value && value !== "TBC" && !/^[123][A-L]+$/.test(
 const isSeedOrProgression = (value) => !isRealTeam(value);
 
 const rowClass = ({ isUserTeam }) => [
-  "mb-1.5 grid grid-cols-[24px_minmax(0,1.9fr)_18px_repeat(6,24px)] items-center gap-[3px] rounded-xl px-2 py-2 text-center text-[9px] font-semibold text-[#072D1D]/80 last:mb-0 ring-1 ring-[#0B5F35]/5",
-  isUserTeam ? "bg-[#DCE9DE]" : "bg-[#F8F4EC]",
+  "mb-1 grid grid-cols-[24px_minmax(0,1.9fr)_18px_repeat(6,24px)] items-center gap-[3px] rounded-xl px-2 py-1.5 text-center text-[9px] text-[#072D1D]/80 last:mb-0 ring-1 ring-[#0B5F35]/5",
+  isUserTeam ? "bg-[#DCE9DE] font-black" : "bg-[#F8F4EC] font-semibold",
 ].join(" ");
 
 function PlaceholderSlot({ value }) {
@@ -92,8 +92,8 @@ function PodiumBox({ title, team, className }) {
 export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam = null }) {
   return <div className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.04)]">
     <div className="bg-[#0B5F35] px-3 py-2.5 text-center text-[17px] font-black tracking-[-0.025em] text-[#F5F0E6]">{title}</div>
-    <div className="p-3">
-      <div className="mb-1.5 grid grid-cols-[24px_minmax(0,1.9fr)_18px_repeat(6,24px)] items-center gap-[3px] px-2 text-center text-[8px] font-black uppercase tracking-[0.08em] text-[#072D1D]/42">
+    <div className="p-2.5">
+      <div className="mb-1 grid grid-cols-[24px_minmax(0,1.9fr)_18px_repeat(6,24px)] items-center gap-[3px] px-2 text-center text-[8px] font-black uppercase tracking-[0.08em] text-[#072D1D]/42">
         <span>#</span><span className="pl-1 text-left">Team</span><span aria-hidden="true" /><span>P</span><span>W</span><span>D</span><span>L</span><span>GD</span><span>Pts</span>
       </div>
       {rows.map((row, index) => {
