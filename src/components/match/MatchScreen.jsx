@@ -106,9 +106,9 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
   const contextLabel = isKnockout ? stageLabel : `GROUP ${selectedGroup}`;
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/45 px-5">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/45 px-5 pt-14">
       <div className="relative w-full max-w-sm overflow-visible rounded-[2rem] bg-[#EFE7D8] text-center text-[#0B5F35] shadow-[0_20px_60px_rgba(7,45,29,0.22)]">
-        <div className="absolute left-1/2 top-[-34px] z-[3] -translate-x-1/2 rounded-full bg-[#072D1D]/28 px-3 py-1.5 shadow-[0_0_14px_rgba(7,45,29,0.38)] backdrop-blur-[1px]"><FormTracker form={userForm} /></div>
+        <div className="absolute left-1/2 top-[-52px] z-[3] -translate-x-1/2 rounded-full bg-[#072D1D]/32 px-3.5 py-2 shadow-[0_0_14px_rgba(7,45,29,0.38)] backdrop-blur-[1px]"><FormTracker form={userForm} /></div>
         <div className="overflow-hidden rounded-t-[2rem] bg-[#0B5F35] px-5 py-2 text-[#F5F0E6]">
           <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center">

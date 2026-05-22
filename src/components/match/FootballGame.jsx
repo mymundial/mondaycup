@@ -685,8 +685,8 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     if (typeof window !== "undefined") {
       try {
         const saved = JSON.parse(window.sessionStorage.getItem(storageKey) || "null");
-        if (saved && saved.fixtureId === fixture?.id && !saved.hasCompleted) {
-          setPhase(saved.phase || PHASE.DIRECTION);
+        if (saved && saved.fixtureId === fixture?.id) {
+          setPhase(saved.hasCompleted ? PHASE.FINISHED : (saved.phase || PHASE.DIRECTION));
           setShootingSide(saved.shootingSide || "user");
           setSelected(getDirection(saved.selectedId || "CM"));
           setLockedDirection(saved.lockedDirectionId ? getDirection(saved.lockedDirectionId) : null);
@@ -695,7 +695,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
           setAttempts(saved.attempts || { user: [], opponent: [] });
           setShot(saved.shot || null);
           setTicker(saved.ticker || `${user.name.toUpperCase()} TO SHOOT`);
-          setHasCompleted(false);
+          setHasCompleted(Boolean(saved.hasCompleted));
           setWinnerSide(saved.winnerSide || null);
           return;
         }
@@ -738,7 +738,10 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   function finishTurn(nextAttempts, nextScore, side) {
     const matchState = decideMatchState({ attempts: nextAttempts, score: nextScore, fixture });
     if (matchState.finished) {
-      const result = buildResult({ fixture, userTeam: user, opponentTeam: opponent, score: nextScore, winnerSide: matchState.winnerSide, isDraw: matchState.draw });
+      const result = {
+        ...buildResult({ fixture, userTeam: user, opponentTeam: opponent, score: nextScore, winnerSide: matchState.winnerSide, isDraw: matchState.draw }),
+        attempts: nextAttempts,
+      };
       setPhase(PHASE.FINISHED);
       setWinnerSide(matchState.winnerSide);
       const winnerName = matchState.winnerSide === "user" ? user.name : opponent.name;
