@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Flag } from "../shared.jsx";
 
 const DEFAULT_ASSETS = {
@@ -56,17 +56,6 @@ const COMMENTARY = {
 };
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-const matchStateKey = (fixture) => fixture?.id ? `mondaycup-match-state:${fixture.id}` : null;
-const readStoredMatchState = (fixture) => {
-  const key = matchStateKey(fixture);
-  if (!key || typeof window === "undefined") return null;
-  try { return JSON.parse(window.sessionStorage.getItem(key) || "null"); } catch { return null; }
-};
-const writeStoredMatchState = (fixture, snapshot) => {
-  const key = matchStateKey(fixture);
-  if (!key || typeof window === "undefined") return;
-  try { window.sessionStorage.setItem(key, JSON.stringify(snapshot)); } catch { /* ignore storage quota/privacy errors */ }
-};
 const getDirection = (id) => DIRECTIONS.find((direction) => direction.id === id) ?? DIRECTIONS[4];
 const randomDirection = () => DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
 const findDirection = (row, col, fallback) => DIRECTIONS.find((direction) => direction.row === row && direction.col === col) ?? fallback;
@@ -353,7 +342,7 @@ function stageLabelForFixture(fixture) {
   return labels[stage] || "MATCH";
 }
 
-function buildResult({ fixture, userTeam, opponentTeam, score, attempts, winnerSide, isDraw }) {
+function buildResult({ fixture, userTeam, opponentTeam, score, winnerSide, isDraw }) {
   const userIsHome = fixture?.homeTeamId === userTeam.id;
   const homeGoals = userIsHome ? score.user : score.opponent;
   const awayGoals = userIsHome ? score.opponent : score.user;
@@ -372,7 +361,6 @@ function buildResult({ fixture, userTeam, opponentTeam, score, attempts, winnerS
     loser,
     userWon: winnerSide === "user",
     isDraw,
-    attempts: attempts || { user: [], opponent: [] },
   };
 }
 
@@ -399,11 +387,10 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
     <section className="relative h-[16.5%] shrink-0 overflow-hidden bg-[#050505]">
       <div
         className="absolute inset-0 opacity-50"
-        style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 1px, transparent 1.8px)", backgroundPosition: "0 0", backgroundSize: "8px 8px" }}
+        style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }}
       />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
-      <div className="absolute inset-x-0 bottom-[26%] h-px bg-[#F7D117]/16" />
       <div className="relative z-[1] h-full">
         <div className="led-text-glow grid h-[22%] place-items-center py-[2%] text-center font-sans text-[clamp(10px,1.6vh,20px)] font-black uppercase tracking-[0.14em] text-[#F7D117]">
           {stageLabel || "GROUP STAGE"}
@@ -421,8 +408,8 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
             <div className="col-start-6 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><PenaltyMarkers attempts={attempts.opponent} totalSlots={totalMarkerSlots} /></div></div>
           </div>
         </div>
-        <div className="grid h-[26%] w-full place-items-center overflow-hidden px-[3%] text-center font-sans text-[clamp(13px,2.3vh,28px)] font-black tracking-tight" style={tickerStyle}>
-          {ticker}
+        <div className="absolute inset-x-0 bottom-0 z-[3] grid h-[26%] w-full place-items-center overflow-hidden px-[3%] text-center font-sans text-[clamp(13px,2.3vh,28px)] font-black leading-none tracking-tight" style={tickerStyle}>
+          <span className="block translate-y-[-1px]">{ticker}</span>
         </div>
       </div>
     </section>
@@ -503,7 +490,7 @@ function LedAdvertisingHoard({ logo }) {
   const boardHeight = 8;
   return (
     <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-hidden border-t border-[#2d2d2d] bg-[#050505] shadow-[0_-8px_24px_rgba(0,0,0,0.45)]" style={{ top: `${goalLine - boardHeight}%`, height: `${boardHeight}%` }}>
-      <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.24) 1px, transparent 1.8px)", backgroundPosition: "0 0", backgroundSize: "8px 8px" }} />
+      <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(36,168,87,0.16),rgba(255,255,255,0.04),rgba(36,168,87,0.16))]" />
       <div className="relative flex h-full items-center justify-center">
         <img src={logo} alt="myMUNDIAL" className="h-[72%] max-w-[82%] object-contain opacity-95 drop-shadow-[0_0_8px_rgba(245,241,232,0.58)]" draggable={false} />
@@ -516,7 +503,7 @@ function GoalFrame({ showAim, aimDirection }) {
   const goal = GAME.goal;
   return (
     <div className="absolute z-[3] overflow-hidden border-[8px] border-b-0 border-[#f5f1e8] bg-[#0d6c3d]/30" style={{ left: `${goal.left}%`, top: `${goal.top}%`, width: `${goal.width}%`, height: `${goal.height}%` }}>
-      <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "linear-gradient(90deg, rgba(245,241,232,0.16) 1px, transparent 1px), linear-gradient(180deg, rgba(245,241,232,0.16) 1px, transparent 1px), linear-gradient(135deg, transparent 0, transparent 7px, rgba(245,241,232,0.08) 7px, rgba(245,241,232,0.08) 8px, transparent 8px)", backgroundPosition: "0 0", backgroundSize: "8px 8px" }} />
+      <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "repeating-linear-gradient(90deg, transparent 0%, transparent 1.8%, rgba(245,241,232,0.18) 2.0%, transparent 2.2%), repeating-linear-gradient(180deg, transparent 0%, transparent 2.6%, rgba(245,241,232,0.16) 2.8%, transparent 3.1%), linear-gradient(135deg, transparent 0%, transparent 49%, rgba(245,241,232,0.08) 49.4%, transparent 50%)", backgroundSize: "100% 100%, 100% 100%, 8px 8px" }} />
       {showAim && (
         <div className="absolute h-10 w-10 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full border-[3px] border-[#F7D117] bg-[#F7D117]/14 shadow-[0_0_10px_rgba(247,209,23,0.52),0_0_22px_rgba(247,209,23,0.22)]" style={{ left: `${((aimDirection.col + 0.5) / 3) * 100}%`, top: `${((aimDirection.row + 0.5) / 3) * 100}%`, animationDuration: "1.1s" }}>
           <div className="absolute inset-[-18%] animate-ping rounded-full border-2 border-[#F7D117]/70" style={{ animationDuration: "1.35s" }} />
@@ -601,11 +588,13 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
   );
 }
 
-export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction }) {
+export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction, onBusyChange }) {
   const user = useMemo(() => normaliseTeam(userTeam, "Team A"), [userTeam]);
   const opponent = useMemo(() => normaliseTeam(opponentTeam, "Team B"), [opponentTeam]);
   const mergedAssets = useMemo(() => ({ ...DEFAULT_ASSETS, ...assets, sounds: { ...DEFAULT_ASSETS.sounds, ...(assets?.sounds || {}) } }), [assets]);
   const stageLabel = stageLabelForFixture(fixture);
+  const storageKey = `mondaycup-match-state:${fixture?.id ?? user.id + "-" + opponent.id}`;
+  const timeoutRefs = useRef([]);
 
   const [phase, setPhase] = useState(PHASE.DIRECTION);
   const [shootingSide, setShootingSide] = useState("user");
@@ -649,6 +638,18 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   );
 
 
+  useEffect(() => {
+    return () => {
+      timeoutRefs.current.forEach((id) => window.clearTimeout(id));
+      timeoutRefs.current = [];
+    };
+  }, []);
+
+  useEffect(() => {
+    onBusyChange?.(phase === PHASE.SHOT || phase === PHASE.AI_WAIT);
+  }, [phase, onBusyChange]);
+
+
   const resetGame = () => {
     setPhase(PHASE.DIRECTION);
     setShootingSide("user");
@@ -672,59 +673,72 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         user: userIsHome ? completedResult.homeGoals : completedResult.awayGoals,
         opponent: userIsHome ? completedResult.awayGoals : completedResult.homeGoals,
       });
-      setAttempts(completedResult.attempts || { user: [], opponent: [] });
       setShot(null);
       setShootingSide("user");
       setWinnerSide(completedResult.isDraw ? null : completedResult.won ? "user" : "opponent");
+      if (completedResult.attempts) setAttempts(completedResult.attempts);
       setTicker(completedResult.isDraw ? "DRAW!" : `${(completedResult.won ? user.name : opponent.name).toUpperCase()} WINS!`);
       setPhase(PHASE.FINISHED);
       setHasCompleted(true);
       return;
     }
-
-    const stored = readStoredMatchState(fixture);
-    if (stored && stored.fixtureId === fixture?.id && !stored.hasCompleted) {
-      setPhase(stored.phase || PHASE.DIRECTION);
-      setShootingSide(stored.shootingSide || "user");
-      setSelected(getDirection(stored.selectedId || "CM"));
-      setLockedDirection(stored.lockedDirectionId ? getDirection(stored.lockedDirectionId) : null);
-      setLockedPower(Number.isFinite(stored.lockedPower) ? stored.lockedPower : 50);
-      setScore(stored.score || { user: 0, opponent: 0 });
-      setAttempts(stored.attempts || { user: [], opponent: [] });
-      setShot(null);
-      setTicker(stored.ticker || `${user.name.toUpperCase()} TO SHOOT`);
-      setHasCompleted(false);
-      setWinnerSide(null);
-      powerMeter.reset();
-      accuracyMeter.reset();
-      return;
+    if (typeof window !== "undefined") {
+      try {
+        const saved = JSON.parse(window.sessionStorage.getItem(storageKey) || "null");
+        if (saved && saved.fixtureId === fixture?.id && !saved.hasCompleted) {
+          setPhase(saved.phase || PHASE.DIRECTION);
+          setShootingSide(saved.shootingSide || "user");
+          setSelected(getDirection(saved.selectedId || "CM"));
+          setLockedDirection(saved.lockedDirectionId ? getDirection(saved.lockedDirectionId) : null);
+          setLockedPower(saved.lockedPower ?? 50);
+          setScore(saved.score || { user: 0, opponent: 0 });
+          setAttempts(saved.attempts || { user: [], opponent: [] });
+          setShot(saved.shot || null);
+          setTicker(saved.ticker || `${user.name.toUpperCase()} TO SHOOT`);
+          setHasCompleted(false);
+          setWinnerSide(saved.winnerSide || null);
+          return;
+        }
+      } catch {}
     }
-
     resetGame();
     // The fixture id is the parent-controlled reset boundary.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fixture?.id, user.id, opponent.id, completedResult?.fixtureId, completedResult?.matchNo]);
 
   useEffect(() => {
-    if (completedResult || !fixture?.id) return;
-    writeStoredMatchState(fixture, {
-      fixtureId: fixture.id,
-      phase,
-      shootingSide,
-      selectedId: selected?.id,
-      lockedDirectionId: lockedDirection?.id || null,
-      lockedPower,
-      score,
-      attempts,
-      ticker,
-      hasCompleted,
-    });
-  }, [fixture, completedResult, phase, shootingSide, selected, lockedDirection, lockedPower, score, attempts, ticker, hasCompleted]);
+    if (typeof window === "undefined" || completedResult) return;
+    try {
+      window.sessionStorage.setItem(storageKey, JSON.stringify({
+        fixtureId: fixture?.id,
+        phase,
+        shootingSide,
+        selectedId: selected.id,
+        lockedDirectionId: lockedDirection?.id || null,
+        lockedPower,
+        score,
+        attempts,
+        shot,
+        ticker,
+        hasCompleted,
+        winnerSide,
+      }));
+    } catch {}
+  }, [storageKey, completedResult, fixture?.id, phase, shootingSide, selected.id, lockedDirection?.id, lockedPower, score, attempts, shot, ticker, hasCompleted, winnerSide]);
+
+  function trackTimeout(callback, delay) {
+    const id = window.setTimeout(() => {
+      timeoutRefs.current = timeoutRefs.current.filter((item) => item !== id);
+      callback();
+    }, delay);
+    timeoutRefs.current.push(id);
+    return id;
+  }
 
   function finishTurn(nextAttempts, nextScore, side) {
     const matchState = decideMatchState({ attempts: nextAttempts, score: nextScore, fixture });
     if (matchState.finished) {
-      const result = buildResult({ fixture, userTeam: user, opponentTeam: opponent, score: nextScore, attempts: nextAttempts, winnerSide: matchState.winnerSide, isDraw: matchState.draw });
+      const result = buildResult({ fixture, userTeam: user, opponentTeam: opponent, score: nextScore, winnerSide: matchState.winnerSide, isDraw: matchState.draw });
       setPhase(PHASE.FINISHED);
       setWinnerSide(matchState.winnerSide);
       const winnerName = matchState.winnerSide === "user" ? user.name : opponent.name;
@@ -739,7 +753,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       setTicker(`${opponent.name.toUpperCase()} TO SHOOT`);
       setShot(null);
       setPhase(PHASE.AI_WAIT);
-      window.setTimeout(() => commitShot("opponent", randomDirection(), aiMeterValue(), aiMeterValue(), nextScore, nextAttempts), GAME.aiWaitMs);
+      trackTimeout(() => commitShot("opponent", randomDirection(), aiMeterValue(), aiMeterValue(), nextScore, nextAttempts), GAME.aiWaitMs);
       return;
     }
 
@@ -767,7 +781,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     setAttempts(nextAttempts);
     setTicker(resolved.commentary);
     setPhase(PHASE.SHOT);
-    window.setTimeout(() => finishTurn(nextAttempts, nextScore, side), GAME.shotMs);
+    trackTimeout(() => finishTurn(nextAttempts, nextScore, side), GAME.shotMs);
   }
 
   function handleConfirm() {

@@ -278,7 +278,7 @@ export default function App() {
       }
     }
 
-    if (["champion", "runnerUp"].includes(matchResult.status)) { resetTournament(); setScreen("teams"); return; }
+    if (["champion", "runnerUp"].includes(matchResult.status)) { resetTournament(); return; }
 
     if (["eliminated", "third", "fourth"].includes(matchResult.status)) { resetTournament(); return; }
 
