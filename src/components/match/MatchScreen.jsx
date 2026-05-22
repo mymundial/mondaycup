@@ -63,7 +63,7 @@ function FormTracker({ form = [] }) {
     if (value === "W") return "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.85),0_0_22px_rgba(34,197,94,0.32)]";
     if (value === "L") return "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.85),0_0_22px_rgba(239,68,68,0.32)]";
     if (value === "D") return "bg-[#F7D117] shadow-[0_0_10px_rgba(247,209,23,0.9),0_0_22px_rgba(247,209,23,0.34)]";
-    return "bg-[#7B856F] opacity-70 shadow-[0_0_6px_rgba(123,133,111,0.35)]";
+    return "bg-[#F7D117]/35 shadow-[0_0_7px_rgba(247,209,23,0.38),0_0_14px_rgba(247,209,23,0.14)]";
   };
 
   return (
@@ -80,19 +80,17 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
 
   return (
     <div className="mt-1 overflow-visible">
-      <div className="grid grid-cols-[22px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] gap-1 px-3 pb-1.5 text-center text-[7px] font-black uppercase tracking-[0.08em] text-[#0B5F35]/45">
-        <span>#</span><span className="text-center">Team</span><span aria-hidden="true" /><span>P</span><span>W</span><span>D</span><span>L</span><span>Pts</span>
+      <div className="grid grid-cols-[22px_30px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] gap-1 px-2 pb-1.5 text-center text-[7px] font-black uppercase tracking-[0.08em] text-[#0B5F35]/45">
+        <span>#</span><span className="text-center">Team</span><span aria-hidden="true" /><span aria-hidden="true" /><span>P</span><span>W</span><span>D</span><span>L</span><span>Pts</span>
       </div>
       {rows.map((row, index) => {
         const isUser = row.team === userTeam;
         const isQualified = qualifiedTeams.has(row.team);
         return (
-          <div key={row.team} className={`mb-1 grid grid-cols-[22px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] items-center gap-1 rounded-xl px-2 py-[5px] text-center text-[9px] font-bold text-[#072D1D]/80 last:mb-0 ${isUser ? "bg-[#DCE9DE]" : "bg-[#F8F4EC]"}`}>
+          <div key={row.team} className={`mb-1 grid grid-cols-[22px_30px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] items-center gap-1 rounded-xl px-2 py-[5px] text-center text-[9px] text-[#072D1D]/80 last:mb-0 ${isUser ? "bg-[#DCE9DE] font-black" : "bg-[#F8F4EC] font-bold"}`}>
             <span>{index + 1}</span>
-            <span className="flex min-w-0 items-center gap-1.5 text-left">
-              <Flag team={row.team} className="h-4 w-6" />
-              <span className="truncate uppercase">{row.team}</span>
-            </span>
+            <span className="flex justify-center"><Flag team={row.team} className="h-4 w-6" /></span>
+            <span className={`min-w-0 truncate text-left uppercase ${isUser ? "font-black" : "font-bold"}`}>{row.team}</span>
             <span className="text-[10px] font-black text-[#0B5F35]">{isQualified ? "Q" : ""}</span>
             <span>{row.played}</span><span>{row.won}</span><span>{row.drawn}</span><span>{row.lost}</span><span className="font-black">{row.pts}</span>
           </div>
@@ -125,13 +123,13 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
         <div className="px-5 pb-4 pt-3">
           {isKnockout ? (
             <>
-              <div className="mt-1 rounded-[1.25rem] bg-[#F5F0E6] px-3 py-3 ring-1 ring-[#0B5F35]/10">
-                <div className="grid grid-cols-[28px_minmax(0,1fr)_42px_minmax(0,1fr)_28px] items-center gap-2 text-[10px] font-black uppercase text-[#3E4F46]">
-                  <div className="flex justify-start"><Flag team={result.home} className="h-5 w-7" /></div>
-                  <span className="min-w-0 truncate text-right tracking-[0.02em]">{result.home}</span>
-                  <span className="text-center text-[13px] font-black tabular-nums text-[#0B5F35]">{result.homeGoals}-{result.awayGoals}</span>
-                  <span className="min-w-0 truncate text-left tracking-[0.02em]">{result.away}</span>
-                  <div className="flex justify-end"><Flag team={result.away} className="h-5 w-7" /></div>
+              <div className="mt-1 rounded-[1.25rem] bg-[#DCE9DE] px-3 py-3">
+                <div className="grid grid-cols-[28px_minmax(0,1fr)_42px_minmax(0,1fr)_28px] items-center gap-2 text-[10px] uppercase text-[#3E4F46]">
+                  <div className="flex items-center justify-start"><Flag team={result.home} className="h-5 w-7" /></div>
+                  <span className={`min-w-0 truncate text-right tracking-[0.02em] ${result.home === userTeam ? "font-black" : "font-bold"}`}>{result.home}</span>
+                  <span className="flex items-center justify-center text-[13px] font-black tabular-nums text-[#0B5F35]">{result.homeGoals}-{result.awayGoals}</span>
+                  <span className={`min-w-0 truncate text-left tracking-[0.02em] ${result.away === userTeam ? "font-black" : "font-bold"}`}>{result.away}</span>
+                  <div className="flex items-center justify-end"><Flag team={result.away} className="h-5 w-7" /></div>
                 </div>
               </div>
             </>

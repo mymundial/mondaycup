@@ -639,6 +639,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         opponent: userIsHome ? completedResult.awayGoals : completedResult.homeGoals,
       });
       setShot(null);
+      setShootingSide("user");
       setWinnerSide(completedResult.isDraw ? null : completedResult.won ? "user" : "opponent");
       setTicker(completedResult.isDraw ? "DRAW!" : `${(completedResult.won ? user.name : opponent.name).toUpperCase()} WINS!`);
       setPhase(PHASE.FINISHED);
