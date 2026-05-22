@@ -61,8 +61,8 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
   if (!rows.length) return null;
 
   return (
-    <div className="mt-2 overflow-hidden rounded-[1.15rem] bg-[#EFE7D8] p-2 ring-1 ring-[#0B5F35]/10">
-      <div className="grid grid-cols-[22px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] gap-1 px-2 pb-1 text-center text-[7px] font-black uppercase tracking-[0.08em] text-[#0B5F35]/45">
+    <div className="mt-2 overflow-visible">
+      <div className="grid grid-cols-[22px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] gap-1 px-3 pb-2 text-center text-[7px] font-black uppercase tracking-[0.08em] text-[#0B5F35]/45">
         <span>#</span><span className="text-left">Team</span><span aria-hidden="true" /><span>P</span><span>W</span><span>D</span><span>L</span><span>Pts</span>
       </div>
       {rows.map((row, index) => {
@@ -91,7 +91,7 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/45 px-5">
       <div className="w-full max-w-sm overflow-hidden rounded-[2rem] bg-[#EFE7D8] text-center text-[#0B5F35] shadow-[0_20px_60px_rgba(7,45,29,0.22)]">
-        <div className="bg-[#0B5F35] px-5 py-4 text-[#F5F0E6]">
+        <div className="bg-[#0B5F35] px-5 py-2.5 text-[#F5F0E6]">
           <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center">
               <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-full w-full object-contain" draggable={false} />
@@ -106,7 +106,7 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
         <div className="px-5 pb-5 pt-4">
           {isKnockout ? (
             <>
-              <div className="mt-2 rounded-[1.25rem] bg-[#EFE7D8] px-3 py-3">
+              <div className="mt-2 rounded-[1.25rem] bg-[#F5F0E6] px-3 py-3 ring-1 ring-[#0B5F35]/10">
                 <div className="grid grid-cols-[34px_minmax(0,1fr)_auto_minmax(0,1fr)_34px] items-center gap-3">
                   <Flag team={result.home} className="h-5 w-8" />
                   <span className="min-w-0 truncate text-right text-[18px] font-black uppercase tracking-[0.04em]">{teamCode(result.home)}</span>
