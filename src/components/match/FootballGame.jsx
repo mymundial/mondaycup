@@ -335,7 +335,7 @@ function stageLabelForFixture(fixture) {
     round32: "ROUND OF 32",
     round16: "ROUND OF 16",
     quarterFinal: "QUARTER-FINAL",
-    semiFinal: "SEMI-FINALS",
+    semiFinal: "SEMI-FINAL",
     thirdPlace: "3RD PLACE PLAY-OFF",
     final: "FINAL",
   };
@@ -523,7 +523,7 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
       <div
         className="pointer-events-none absolute z-[3] rounded-b-[999px] border-b-[8px] border-l-[8px] border-r-[8px] border-[#f5f1e8]"
-        style={{ left: "5%", top: `${goalLine}%`, width: "90%", height: "22%" }}
+        style={{ left: `${GAME.goal.left}%`, top: `${goalLine}%`, width: `${GAME.goal.width}%`, height: "20%" }}
       />
       <GoalFrame showAim={showAim} aimDirection={aimDirection} />
       <div className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f1e8]" style={{ left: `${GAME.spot.x}%`, top: `${GAME.spot.y}%` }} />

@@ -44,7 +44,7 @@ function modalButton(result) {
 }
 
 function modalHeaderTitle({ isKnockout, stageLabel, selectedGroup }) {
-  return isKnockout ? stageLabel : `GROUP ${selectedGroup}`;
+  return isKnockout ? String(stageLabel).replace("SEMI-FINALS", "SEMI-FINAL") : `GROUP ${selectedGroup}`;
 }
 
 
@@ -57,13 +57,26 @@ function CloseIcon({ className = "h-7 w-7" }) {
   );
 }
 
+
+function FormTracker({ form = [] }) {
+  const colours = { W: "bg-green-500 text-[#F5F0E6]", L: "bg-red-500 text-[#F5F0E6]", D: "bg-[#B7B7B7] text-[#0B5F35]" };
+  return (
+    <div className="mb-3 flex items-center justify-center gap-1.5">
+      {Array.from({ length: Math.max(1, form.length) }).map((_, index) => {
+        const value = form[index];
+        return <span key={index} className={`grid h-5 w-8 place-items-center rounded-sm text-[10px] font-black ${value ? colours[value] : "bg-[#F5F0E6] text-[#0B5F35]/35"}`}>{value || ""}</span>;
+      })}
+    </div>
+  );
+}
+
 function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = null }) {
   if (!rows.length) return null;
 
   return (
     <div className="mt-2 overflow-visible">
       <div className="grid grid-cols-[22px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] gap-1 px-3 pb-2 text-center text-[7px] font-black uppercase tracking-[0.08em] text-[#0B5F35]/45">
-        <span>#</span><span className="text-left">Team</span><span aria-hidden="true" /><span>P</span><span>W</span><span>D</span><span>L</span><span>Pts</span>
+        <span>#</span><span className="text-center">Team</span><span aria-hidden="true" /><span>P</span><span>W</span><span>D</span><span>L</span><span>Pts</span>
       </div>
       {rows.map((row, index) => {
         const isUser = row.team === userTeam;
@@ -84,7 +97,7 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
   );
 }
 
-function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, userTeam, selectedGroup, stageLabel }) {
+function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, userTeam, selectedGroup, stageLabel, userForm }) {
   const isKnockout = !result.week;
   const contextLabel = isKnockout ? stageLabel : `GROUP ${selectedGroup}`;
 
@@ -104,15 +117,16 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
         </div>
 
         <div className="px-5 pb-5 pt-4">
+          <FormTracker form={userForm} />
           {isKnockout ? (
             <>
               <div className="mt-2 rounded-[1.25rem] bg-[#F5F0E6] px-3 py-3 ring-1 ring-[#0B5F35]/10">
-                <div className="grid grid-cols-[34px_minmax(0,1fr)_auto_minmax(0,1fr)_34px] items-center gap-3">
-                  <Flag team={result.home} className="h-5 w-8" />
-                  <span className="min-w-0 truncate text-right text-[18px] font-black uppercase tracking-[0.04em]">{teamCode(result.home)}</span>
-                  <span className="px-2 text-[18px] font-black uppercase tracking-[0.04em] tabular-nums text-[#0B5F35]">{result.homeGoals}-{result.awayGoals}</span>
-                  <span className="min-w-0 truncate text-left text-[18px] font-black uppercase tracking-[0.04em]">{teamCode(result.away)}</span>
-                  <Flag team={result.away} className="h-5 w-8" />
+                <div className="grid grid-cols-[28px_minmax(0,1fr)_42px_minmax(0,1fr)_28px] items-center gap-2 text-[10px] font-black uppercase text-[#3E4F46]">
+                  <div className="flex justify-start"><Flag team={result.home} className="h-5 w-7" /></div>
+                  <span className="min-w-0 truncate text-right tracking-[0.02em]">{result.home}</span>
+                  <span className="text-center text-[13px] font-black tabular-nums text-[#0B5F35]">{result.homeGoals}-{result.awayGoals}</span>
+                  <span className="min-w-0 truncate text-left tracking-[0.02em]">{result.away}</span>
+                  <div className="flex justify-end"><Flag team={result.away} className="h-5 w-7" /></div>
                 </div>
               </div>
             </>
@@ -122,7 +136,7 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
             </>
           )}
 
-          <button onClick={onNext} className="mt-5 h-12 w-full rounded-full bg-[#0B5F35] text-[13px] font-black uppercase tracking-[0.12em] text-[#F5F0E6]">{modalButton(result)}</button>
+          <button onClick={onNext} className="mx-auto mt-5 flex h-12 w-1/2 items-center justify-center rounded-full bg-[#0B5F35] text-[13px] font-black uppercase tracking-[0.12em] text-[#F5F0E6]">{modalButton(result)}</button>
         </div>
       </div>
     </div>
@@ -145,6 +159,7 @@ export function MatchScreen({
   groupRows = [],
   qualifiedTeams = new Set(),
   selectedGroup = "A",
+  userForm = [],
 }) {
   const userTeam = teamToGameTeam(team || "Team A");
   const opponentTeam = teamToGameTeam(opponent || "Team B");
@@ -207,6 +222,7 @@ export function MatchScreen({
             userTeam={team}
             selectedGroup={selectedGroup}
             stageLabel={stageLabel}
+            userForm={userForm}
           />
         )}
 
