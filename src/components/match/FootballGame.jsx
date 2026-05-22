@@ -504,7 +504,7 @@ function GoalFrame({ showAim, aimDirection }) {
   const goal = GAME.goal;
   return (
     <div className="absolute z-[3] overflow-hidden border-[8px] border-b-0 border-[#f5f1e8] bg-[#0d6c3d]/30" style={{ left: `${goal.left}%`, top: `${goal.top}%`, width: `${goal.width}%`, height: `${goal.height}%` }}>
-      <div className="absolute inset-0 opacity-80" style={{ backgroundImage: "repeating-linear-gradient(90deg, transparent 0%, transparent 3.6%, rgba(7,45,29,0.55) 3.9%, transparent 4.2%), repeating-linear-gradient(180deg, transparent 0%, transparent 5.2%, rgba(7,45,29,0.52) 5.5%, transparent 5.9%), linear-gradient(135deg, transparent 0%, transparent 49%, rgba(7,45,29,0.28) 49.4%, transparent 50%)", backgroundSize: "100% 100%, 100% 100%, 12px 12px" }} />
+      <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "repeating-linear-gradient(90deg, transparent 0%, transparent 1.8%, rgba(245,241,232,0.18) 2.0%, transparent 2.2%), repeating-linear-gradient(180deg, transparent 0%, transparent 2.6%, rgba(245,241,232,0.16) 2.8%, transparent 3.1%), linear-gradient(135deg, transparent 0%, transparent 49%, rgba(245,241,232,0.08) 49.4%, transparent 50%)", backgroundSize: "100% 100%, 100% 100%, 8px 8px" }} />
       {showAim && (
         <div className="absolute h-10 w-10 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full border-[3px] border-[#F7D117] bg-[#F7D117]/14 shadow-[0_0_10px_rgba(247,209,23,0.52),0_0_22px_rgba(247,209,23,0.22)]" style={{ left: `${((aimDirection.col + 0.5) / 3) * 100}%`, top: `${((aimDirection.row + 0.5) / 3) * 100}%`, animationDuration: "1.1s" }}>
           <div className="absolute inset-[-18%] animate-ping rounded-full border-2 border-[#F7D117]/70" style={{ animationDuration: "1.35s" }} />
@@ -616,6 +616,26 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   const keeperPoint = shot ? pointForDirection(shot.keeperDirection) : pointForDirection(getDirection("CM"));
   const aimDirection = lockedDirection ?? selected;
   const showAim = phase === PHASE.DIRECTION || phase === PHASE.POWER || phase === PHASE.ACCURACY;
+
+  const isKnockoutShootout = Boolean(fixture?.requiresWinner);
+  const matchFinished = phase === PHASE.FINISHED || hasCompleted;
+  const afterRegulationTie =
+    isKnockoutShootout &&
+    attempts.user.length >= GAME.regulationPens &&
+    attempts.opponent.length >= GAME.regulationPens &&
+    score.user === score.opponent;
+  const startingUserSuddenDeath =
+    afterRegulationTie &&
+    !matchFinished &&
+    shootingSide === "user" &&
+    phase === PHASE.DIRECTION;
+  const suddenDeathMarkerSlots = Math.max(
+    GAME.regulationPens,
+    attempts.user.length,
+    attempts.opponent.length,
+    startingUserSuddenDeath ? attempts.user.length + 1 : 0
+  );
+
 
   const resetGame = () => {
     setPhase(PHASE.DIRECTION);
@@ -744,7 +764,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
           80%, 100% { background: var(--goal-bg); color: var(--goal-fg); }
         }
       `}</style>
-      <Scoreboard userTeam={user} opponentTeam={opponent} score={score} attempts={attempts} ticker={ticker} tickerStyle={tickerStyle()} stageLabel={stageLabel} />
+      <Scoreboard userTeam={user} opponentTeam={opponent} score={score} attempts={attempts} ticker={ticker} tickerStyle={tickerStyle()} stageLabel={stageLabel} totalMarkerSlots={suddenDeathMarkerSlots} />
       <Pitch ballPoint={ballPoint} keeperPoint={keeperPoint} shot={shot} shotActive={shotActive} activeTeam={activeTeam} defenderTeam={defenderTeam} showAim={showAim} aimDirection={aimDirection} assets={mergedAssets} />
       <ControlOverlay
         phase={phase}
