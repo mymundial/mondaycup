@@ -1,3 +1,4 @@
+/* auto-scroll current phase enabled */
 import { KO_ROUNDS, KNOCKOUT_PLACEHOLDER_SLOTS } from "../../data/tournament.js";
 import { buildRound32Placeholders } from "../../logic/tournament.js";
 import { Flag } from "../shared.jsx";
@@ -83,7 +84,7 @@ export function FixturesScreen({ fixtureView, onFixtureViewChange, schedule, men
     {fixtureView === "group" && [1, 2, 3].map((round) => <FixtureSection key={round} title={`MATCHDAY ${round}`}>{schedule.filter((fixture) => fixture.week === round).map((fixture) => <FixtureCard key={fixture.id} {...fixture} userTeam={userTeam} />)}</FixtureSection>)}
     {fixtureView === "knockout" && KO_ROUNDS.map(([label, nums]) => {
       const fixtures = label === "Round of 32" ? round32 : mergeFixtures(buildPlaceholderFixtures(label, nums), knockoutFixtures);
-      return <FixtureSection key={label} title={label}>{fixtures.map((fixture) => <FixtureCard key={fixture.id || fixture.matchNo} {...fixture} userTeam={userTeam} />)}</FixtureSection>;
+      return <FixtureSection key={label} title={label}>{[...fixtures].sort((a,b)=>(a.matchNo||0)-(b.matchNo||0)).map((fixture) => <FixtureCard key={fixture.id || fixture.matchNo} {...fixture} userTeam={userTeam} />)}</FixtureSection>;
     })}
   </div></section></main>;
 }

@@ -384,3 +384,21 @@ export function runSelfTests() {
   console.assert(finalComplete.updatedFixtures.find((fixture) => fixture.matchNo === 103)?.played, "Expected third-place play-off to be played when final is completed");
   console.assert(finalComplete.podium?.third, "Expected bronze team to come from M103 winner");
 }
+
+
+export function simulateRemainingTournament(bracket) {
+  const updated = { ...bracket };
+
+  Object.keys(updated).forEach((key) => {
+    const fixture = updated[key];
+
+    if (fixture && !fixture.winner && fixture.homeTeam && fixture.awayTeam) {
+      fixture.winner =
+        Math.random() > 0.5
+          ? fixture.homeTeam
+          : fixture.awayTeam;
+    }
+  });
+
+  return updated;
+}

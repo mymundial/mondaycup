@@ -19,6 +19,9 @@ function teamToGameTeam(name) {
 }
 
 function modalTitle(result) {
+  if (result.status === "champion") return "CHAMPIONS!";
+  if (result.status === "runnerUp") return "RUNNER-UP!";
+  if (result.status === "third") return "THIRD!";
   if (result.status === "qualified") return "QUALIFIED!";
   if (result.status === "eliminated" || result.status === "thirdPlace") return "ELIMINATED!";
   if (result.status === "champion") return "CHAMPIONS!";
@@ -83,15 +86,15 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/45 px-5">
-      <div className="w-full max-w-sm overflow-hidden rounded-[2rem] bg-[#F5F0E6] text-center text-[#0B5F35] shadow-[0_20px_60px_rgba(7,45,29,0.22)]">
+      <div className="w-full max-w-sm overflow-hidden rounded-[2rem] bg-[#EFE7D8] text-center text-[#0B5F35] shadow-[0_20px_60px_rgba(7,45,29,0.22)]">
         <div className="bg-[#0B5F35] px-5 py-4 text-[#F5F0E6]">
-          <div className="grid grid-cols-[46px_minmax(0,1fr)_46px] items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0B5F35]">
+          <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0B5F35]">
               <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-full w-full object-contain" draggable={false} />
             </div>
             <div className="text-center text-[30px] font-black uppercase leading-[0.92] tracking-[-0.035em] text-[#F5F0E6]">{modalTitle(result)}</div>
-            <button onClick={onDismiss} aria-label="Close result" className="flex h-11 w-11 items-center justify-center justify-self-end rounded-xl bg-[#F5F0E6] text-[#0B5F35]">
-              <CloseIcon className="h-6 w-6" />
+            <button onClick={onDismiss} aria-label="Close result" className="flex h-9 w-9 items-center justify-center justify-self-end rounded-xl bg-[#EFE7D8] text-[#0B5F35]">
+              <CloseIcon className="h-5 w-5" />
             </button>
           </div>
         </div>
@@ -169,8 +172,8 @@ export function MatchScreen({
 
   return (
     <Shell>
-      <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#F5F0E6]">
-        <div className="relative flex h-[54px] shrink-0 items-center justify-center bg-[#F5F0E6] text-[#0B5F35]">
+      <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#EFE7D8]">
+        <div className="relative flex h-[54px] shrink-0 items-center justify-center bg-[#EFE7D8] text-[#0B5F35]">
           <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain" draggable={false} />
           <div className="text-[24px] font-black uppercase tracking-[-0.02em]">LIVE MATCH</div>
           <button onClick={menuProps.onToggleMenu} className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-[#0B5F35] text-[#F5F0E6]">
