@@ -148,7 +148,7 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
             </>
           )}
 
-          <button onClick={onNext} className="mx-auto mt-5 flex h-12 w-1/2 items-center justify-center rounded-full bg-[#0B5F35] text-[13px] font-black uppercase tracking-[0.12em] text-[#F5F0E6]">{modalButton(result)}</button>
+          <button onClick={onNext} className="mx-auto mt-3 flex h-11 w-full items-center justify-center rounded-full bg-[#0B5F35] text-[13px] font-black uppercase tracking-[0.12em] text-[#F5F0E6]">{modalButton(result)}</button>
         </div>
       </div>
     </div>
