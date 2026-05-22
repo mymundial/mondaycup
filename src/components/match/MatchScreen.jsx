@@ -87,7 +87,7 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
         const isUser = row.team === userTeam;
         const isQualified = qualifiedTeams.has(row.team);
         return (
-          <div key={row.team} className={`mb-1 grid grid-cols-[22px_30px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] items-center gap-1 rounded-xl px-2 py-[5px] text-center text-[9px] text-[#072D1D]/80 last:mb-0 ${isUser ? "bg-[#DCE9DE] font-black ring-2 ring-[#0B5F35]" : "bg-[#F8F4EC] font-bold"}`}>
+          <div key={row.team} className={`mb-1 grid grid-cols-[22px_30px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] items-center gap-1 rounded-xl px-2 py-[5px] text-center text-[9px] text-[#072D1D]/80 last:mb-0 ${isUser ? "bg-[#DCE9DE] font-black ring-1 ring-[#CFE2D3]" : "bg-[#F8F4EC] font-bold"}`}>
             <span>{index + 1}</span>
             <span className="flex justify-center"><Flag team={row.team} className="h-4 w-6" /></span>
             <span className={`min-w-0 truncate text-left uppercase ${isUser ? "font-black" : "font-bold"}`}>{row.team}</span>
@@ -107,7 +107,7 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/45 px-5">
       <div className="relative w-full max-w-sm overflow-visible rounded-[2rem] bg-[#EFE7D8] text-center text-[#0B5F35] shadow-[0_20px_60px_rgba(7,45,29,0.22)]">
-        <div className="absolute left-1/2 top-[-34px] z-[3] -translate-x-1/2"><FormTracker form={userForm} /></div>
+        <div className="absolute left-1/2 top-[-34px] z-[3] -translate-x-1/2 rounded-full bg-[#072D1D]/28 px-3 py-1.5 shadow-[0_0_14px_rgba(7,45,29,0.38)] backdrop-blur-[1px]"><FormTracker form={userForm} /></div>
         <div className="overflow-hidden rounded-t-[2rem] bg-[#0B5F35] px-5 py-2 text-[#F5F0E6]">
           <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center">
@@ -123,7 +123,7 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
         <div className="px-5 pb-4 pt-3">
           {isKnockout ? (
             <>
-              <div className={`mt-1 rounded-[1.25rem] bg-[#DCE9DE] px-3 py-3 ${(result.home === userTeam || result.away === userTeam) ? "ring-2 ring-[#0B5F35]" : ""}`}>
+              <div className={`mt-1 rounded-[1.25rem] bg-[#DCE9DE] px-3 py-3 ${(result.home === userTeam || result.away === userTeam) ? "ring-1 ring-[#CFE2D3]" : ""}`}>
                 <div className="grid grid-cols-[28px_minmax(0,1fr)_42px_minmax(0,1fr)_28px] items-center gap-2 text-[10px] uppercase text-[#3E4F46]">
                   <div className="flex items-center justify-start"><Flag team={result.home} className="h-5 w-7" /></div>
                   <span className={`min-w-0 truncate text-right tracking-[0.02em] ${result.home === userTeam ? "font-black" : "font-bold"}`}>{result.home}</span>

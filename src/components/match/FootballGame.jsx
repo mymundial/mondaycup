@@ -633,7 +633,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     GAME.regulationPens,
     attempts.user.length,
     attempts.opponent.length,
-    startingUserSuddenDeath ? attempts.user.length + 1 : 0
+    startingUserSuddenDeath ? Math.max(attempts.user.length, attempts.opponent.length) + 1 : 0
   );
 
 
