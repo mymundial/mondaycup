@@ -43,6 +43,10 @@ function modalButton(result) {
   return "NEXT MATCH";
 }
 
+function modalHeaderTitle({ isKnockout, stageLabel, selectedGroup }) {
+  return isKnockout ? stageLabel : `GROUP ${selectedGroup}`;
+}
+
 
 function CloseIcon({ className = "h-7 w-7" }) {
   return (
@@ -89,20 +93,19 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
       <div className="w-full max-w-sm overflow-hidden rounded-[2rem] bg-[#EFE7D8] text-center text-[#0B5F35] shadow-[0_20px_60px_rgba(7,45,29,0.22)]">
         <div className="bg-[#0B5F35] px-5 py-4 text-[#F5F0E6]">
           <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0B5F35]">
+            <div className="flex h-9 w-9 items-center justify-center">
               <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-full w-full object-contain" draggable={false} />
             </div>
-            <div className="text-center text-[30px] font-black uppercase leading-[0.92] tracking-[-0.035em] text-[#F5F0E6]">{modalTitle(result)}</div>
-            <button onClick={onDismiss} aria-label="Close result" className="flex h-9 w-9 items-center justify-center justify-self-end rounded-xl bg-[#EFE7D8] text-[#0B5F35]">
-              <CloseIcon className="h-5 w-5" />
+            <div className="text-center text-[23px] font-black uppercase leading-[0.95] tracking-[-0.02em] text-[#F5F0E6]">{modalHeaderTitle({ isKnockout, stageLabel, selectedGroup })}</div>
+            <button onClick={onDismiss} aria-label="Close result" className="flex h-9 w-9 items-center justify-center justify-self-end text-[#F5F0E6]">
+              <CloseIcon className="h-6 w-6" />
             </button>
           </div>
         </div>
 
-        <div className="px-5 pb-5">
+        <div className="px-5 pb-5 pt-4">
           {isKnockout ? (
             <>
-              <div className="mt-1 text-[9px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/45">{contextLabel}</div>
               <div className="mt-2 rounded-[1.25rem] bg-[#EFE7D8] px-3 py-3">
                 <div className="grid grid-cols-[34px_minmax(0,1fr)_auto_minmax(0,1fr)_34px] items-center gap-3">
                   <Flag team={result.home} className="h-5 w-8" />
@@ -115,7 +118,6 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
             </>
           ) : (
             <>
-              <div className="mt-1 text-[9px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/45">{contextLabel}</div>
               <StandingsMiniTable rows={groupRows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />
             </>
           )}
