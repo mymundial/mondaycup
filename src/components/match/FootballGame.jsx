@@ -311,7 +311,7 @@ function playSound(src, volume = 0.85) {
 }
 
 function visiblePenaltyMarkers(attempts) {
-  return attempts.length > GAME.regulationPens ? attempts.slice(GAME.regulationPens) : attempts;
+  return attempts;
 }
 
 function decideMatchState({ attempts, score, fixture }) {
@@ -369,11 +369,11 @@ function TeamFlag({ team, className = "h-4 w-6" }) {
   return <Flag team={team.name} className={className} />;
 }
 
-function PenaltyMarkers({ attempts }) {
+function PenaltyMarkers({ attempts, totalSlots = GAME.regulationPens }) {
   const visible = visiblePenaltyMarkers(attempts);
   return (
     <div className="flex w-full justify-center gap-1">
-      {Array.from({ length: GAME.regulationPens }).map((_, idx) => {
+      {Array.from({ length: Math.max(totalSlots, GAME.regulationPens) }).map((_, idx) => {
         const value = visible[idx];
         const color = value === "G" ? "bg-green-500 pen-marker-goal" : value === "S" ? "bg-red-500 pen-marker-save" : "bg-[#F7D117] pen-marker-empty";
         return <span key={idx} className={`h-2 w-2 rounded-full ${color}`} />;
@@ -383,6 +383,8 @@ function PenaltyMarkers({ attempts }) {
 }
 
 function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerStyle, stageLabel }) {
+  const maxAttempts = Math.max(attempts.user.length, attempts.opponent.length);
+  const totalMarkerSlots = Math.max(GAME.regulationPens, maxAttempts >= GAME.regulationPens ? maxAttempts + 1 : GAME.regulationPens);
   return (
     <section className="relative h-[16.5%] shrink-0 overflow-hidden bg-[#050505]">
       <div
@@ -405,8 +407,8 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
             <div className="led-text-glow col-start-5 row-start-1 flex items-center justify-center font-sans text-[clamp(24px,4vh,48px)] font-black leading-none tracking-tight text-[#F7D117] tabular-nums">{score.opponent}</div>
             <div className="col-start-6 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow w-full text-center font-sans text-[clamp(20px,3.8vh,42px)] font-black leading-none tracking-tight text-[#F7D117]">{opponentTeam.code}</div></div>
             <div className="col-start-7 row-start-1 flex items-center justify-center"><TeamFlag team={opponentTeam} className="h-4 w-6" /></div>
-            <div className="col-start-2 row-start-2 flex justify-center pt-[2%]"><div className="w-[4.4em]"><PenaltyMarkers attempts={attempts.user} /></div></div>
-            <div className="col-start-6 row-start-2 flex justify-center pt-[2%]"><div className="w-[4.4em]"><PenaltyMarkers attempts={attempts.opponent} /></div></div>
+            <div className="col-start-2 row-start-2 flex justify-center pt-[2%]"><div className="w-[4.4em]"><PenaltyMarkers attempts={attempts.user} totalSlots={totalMarkerSlots} /></div></div>
+            <div className="col-start-6 row-start-2 flex justify-center pt-[2%]"><div className="w-[4.4em]"><PenaltyMarkers attempts={attempts.opponent} totalSlots={totalMarkerSlots} /></div></div>
           </div>
         </div>
         <div className="grid h-[26%] w-full place-items-center overflow-hidden px-[3%] text-center font-sans text-[clamp(13px,2.3vh,28px)] font-black tracking-tight" style={tickerStyle}>
@@ -504,7 +506,7 @@ function GoalFrame({ showAim, aimDirection }) {
   const goal = GAME.goal;
   return (
     <div className="absolute z-[3] overflow-hidden border-[8px] border-b-0 border-[#f5f1e8] bg-[#0d6c3d]/30" style={{ left: `${goal.left}%`, top: `${goal.top}%`, width: `${goal.width}%`, height: `${goal.height}%` }}>
-      <div className="absolute inset-0 opacity-45" style={{ backgroundImage: "repeating-linear-gradient(90deg, transparent 0%, transparent 7%, rgba(245,241,232,0.22) 7.4%, transparent 7.8%), repeating-linear-gradient(180deg, transparent 0%, transparent 11%, rgba(245,241,232,0.18) 11.5%, transparent 12%)" }} />
+      <div className="absolute inset-0 opacity-75" style={{ backgroundImage: "repeating-linear-gradient(90deg, transparent 0%, transparent 7.5%, rgba(245,241,232,0.48) 7.9%, transparent 8.3%), repeating-linear-gradient(180deg, transparent 0%, transparent 10.5%, rgba(245,241,232,0.42) 10.9%, transparent 11.4%), linear-gradient(135deg, transparent 0%, transparent 49%, rgba(245,241,232,0.18) 49.4%, transparent 50%)", backgroundSize: "100% 100%, 100% 100%, 18px 18px" }} />
       {showAim && (
         <div className="absolute h-10 w-10 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full border-[3px] border-[#F7D117] bg-[#F7D117]/14 shadow-[0_0_10px_rgba(247,209,23,0.52),0_0_22px_rgba(247,209,23,0.22)]" style={{ left: `${((aimDirection.col + 0.5) / 3) * 100}%`, top: `${((aimDirection.row + 0.5) / 3) * 100}%`, animationDuration: "1.1s" }}>
           <div className="absolute inset-[-18%] animate-ping rounded-full border-2 border-[#F7D117]/70" style={{ animationDuration: "1.35s" }} />
@@ -554,7 +556,7 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
   const titleClass = "text-center text-[clamp(12px,1.8vh,22px)] font-black tracking-[0.08em] text-[#f5f1e8] drop-shadow-md";
 
   return (
-    <section className="pointer-events-none absolute bottom-[1%] left-[4%] right-[4%] z-30 h-[26%]">
+    <section className="pointer-events-none absolute bottom-[4.6%] left-[4%] right-[4%] z-30 h-[26%]">
       {canChoose && (
         <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%] top-[3%] flex flex-col">
           <div className={titleClass}>SHOT DIRECTION</div>
