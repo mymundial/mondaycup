@@ -1,53 +1,16 @@
 import { useState } from "react";
 import { ASSETS } from "../../data/assets.js";
-import { FLAG_CC, getTeamTheme, teamCode } from "../../data/teams.js";
 import { Flag, HamburgerIcon } from "../shared.jsx";
 import { Shell } from "../layout/Layout.jsx";
 import { MenuDropdown } from "../layout/Menu.jsx";
 import FootballGame from "./FootballGame.jsx";
-
-function teamToGameTeam(name) {
-  const theme = getTeamTheme(name);
-  const cc = FLAG_CC[name];
-  return {
-    id: name,
-    name,
-    code: teamCode(name),
-    flag: `/flags/${teamCode(name)}.png`,
-    primaryColour: theme.bg,
-    textColour: theme.text,
-  };
-}
-
-function modalTitle(result) {
-  if (result.status === "champion") return "CHAMPIONS!";
-  if (result.status === "runnerUp") return "RUNNER-UP!";
-  if (result.status === "third") return "THIRD!";
-  if (result.status === "qualified") return "QUALIFIED!";
-  if (result.status === "eliminated" || result.status === "thirdPlace") return "ELIMINATED!";
-  if (result.status === "champion") return "CHAMPIONS!";
-  if (result.isDraw || result.homeGoals === result.awayGoals) return "DRAW!";
-  if (result.status === "knockoutWin") return "QUALIFIED!";
-  return result.won ? "VICTORY!" : "DEFEAT!";
-}
-
-function modalHeaderColour(result) {
- if (result?.status === "champion") return "#D4AF37";
- if (result?.status === "runnerUp") return "#C0C0C0";
- if (result?.status === "third") return "#CD7F32";
- return "#0B5F35";
-}
-
-function modalButton(result) {
-  if (!result) return "MATCH COMPLETE";
-  if (["eliminated", "champion", "runnerUp", "third", "fourth"].includes(result.status)) return "PLAY AGAIN";
-  return "NEXT MATCH";
-}
-
-function modalHeaderTitle({ isKnockout, stageLabel, selectedGroup }) {
-  return isKnockout ? String(stageLabel).replace("SEMI-FINALS", "SEMI-FINAL") : `GROUP ${selectedGroup}`;
-}
-
+import {
+  createFallbackFixture,
+  modalButton,
+  modalHeaderTitle,
+  teamToGameTeam,
+  toCompletedGameResult,
+} from "../../logic/matchPresentation.js";
 
 function CloseIcon({ className = "h-7 w-7" }) {
   return (
@@ -103,8 +66,6 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
 
 function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, userTeam, selectedGroup, stageLabel, userForm }) {
   const isKnockout = !result.week;
-  const contextLabel = isKnockout ? stageLabel : `GROUP ${selectedGroup}`;
-
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/45 px-5 pt-14">
       <div className="relative w-full max-w-sm overflow-visible rounded-[2rem] bg-[#EFE7D8] text-center text-[#0B5F35] shadow-[0_20px_60px_rgba(7,45,29,0.22)]">
@@ -124,13 +85,17 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
         <div className="px-5 pb-4 pt-3">
           {isKnockout ? (
             <>
-              <div className={`mt-1 rounded-[1.25rem] bg-[#DCE9DE] px-3 py-3 ${(result.home === userTeam || result.away === userTeam) ? "ring-1 ring-[#CFE2D3]" : ""}`}>
-                <div className="grid min-h-[32px] grid-cols-[28px_minmax(0,1fr)_46px_minmax(0,1fr)_28px] items-center gap-2 text-[13px] uppercase leading-none text-[#3E4F46]">
-                  <div className="flex h-full items-center justify-start"><Flag team={result.home} className="h-5 w-7" /></div>
-                  <span className={`flex h-full min-w-0 items-center justify-end truncate text-right tracking-[0.02em] ${result.home === userTeam ? "font-black" : "font-bold"}`}>{result.home}</span>
-                  <span className="flex h-full items-center justify-center text-[13px] font-black tabular-nums leading-none text-[#0B5F35]">{result.homeGoals}-{result.awayGoals}</span>
-                  <span className={`flex h-full min-w-0 items-center justify-start truncate text-left tracking-[0.02em] ${result.away === userTeam ? "font-black" : "font-bold"}`}>{result.away}</span>
-                  <div className="flex h-full items-center justify-end"><Flag team={result.away} className="h-5 w-7" /></div>
+              <div className={`mt-1 rounded-[1.25rem] bg-[#DCE9DE] px-2.5 py-3 ${(result.home === userTeam || result.away === userTeam) ? "ring-1 ring-[#CFE2D3]" : ""}`}>
+                <div className="grid min-h-[32px] grid-cols-[minmax(0,1fr)_34px_minmax(0,1fr)] items-center gap-1 text-[clamp(11px,3vw,13px)] uppercase leading-none text-[#3E4F46]">
+                  <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+                    <Flag team={result.home} className="h-5 w-7" />
+                    <span className={`block min-w-0 flex-1 truncate text-left tracking-[0.005em] ${result.home === userTeam ? "font-black" : "font-bold"}`} title={result.home}>{result.home}</span>
+                  </div>
+                  <span className="flex items-center justify-center font-black tabular-nums leading-none text-[#0B5F35]">{result.homeGoals}-{result.awayGoals}</span>
+                  <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+                    <span className={`block min-w-0 flex-1 truncate text-left tracking-[0.005em] ${result.away === userTeam ? "font-black" : "font-bold"}`} title={result.away}>{result.away}</span>
+                    <Flag team={result.away} className="h-5 w-7" />
+                  </div>
                 </div>
               </div>
             </>
@@ -168,30 +133,8 @@ export function MatchScreen({
   const [matchBusy, setMatchBusy] = useState(false);
   const userTeam = teamToGameTeam(team || "Team A");
   const opponentTeam = teamToGameTeam(opponent || "Team B");
-  const fallbackFixture = fixture || {
-    id: `${team || "team"}-${opponent || "opponent"}`,
-    matchNo: null,
-    stage: "group",
-    homeTeamId: team || "Team A",
-    awayTeamId: opponent || "Team B",
-    allowDraw: true,
-    requiresWinner: false,
-  };
-  const completedResult = matchResult ? {
-    fixtureId: fallbackFixture.id,
-    matchNo: fallbackFixture.matchNo,
-    stage: fallbackFixture.stage,
-    home: matchResult.home,
-    away: matchResult.away,
-    homeTeam: matchResult.home,
-    awayTeam: matchResult.away,
-    homeGoals: matchResult.homeGoals,
-    awayGoals: matchResult.awayGoals,
-    won: matchResult.won,
-    status: matchResult.status,
-    isDraw: matchResult.isDraw,
-    attempts: matchResult.attempts,
-  } : null;
+  const fallbackFixture = fixture || createFallbackFixture({ team, opponent });
+  const completedResult = toCompletedGameResult(matchResult, fallbackFixture);
 
   return (
     <Shell>
