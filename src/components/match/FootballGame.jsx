@@ -56,6 +56,17 @@ const COMMENTARY = {
 };
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const matchStateKey = (fixture) => fixture?.id ? `mondaycup-match-state:${fixture.id}` : null;
+const readStoredMatchState = (fixture) => {
+  const key = matchStateKey(fixture);
+  if (!key || typeof window === "undefined") return null;
+  try { return JSON.parse(window.sessionStorage.getItem(key) || "null"); } catch { return null; }
+};
+const writeStoredMatchState = (fixture, snapshot) => {
+  const key = matchStateKey(fixture);
+  if (!key || typeof window === "undefined") return;
+  try { window.sessionStorage.setItem(key, JSON.stringify(snapshot)); } catch { /* ignore storage quota/privacy errors */ }
+};
 const getDirection = (id) => DIRECTIONS.find((direction) => direction.id === id) ?? DIRECTIONS[4];
 const randomDirection = () => DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
 const findDirection = (row, col, fallback) => DIRECTIONS.find((direction) => direction.row === row && direction.col === col) ?? fallback;
@@ -387,7 +398,7 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
     <section className="relative h-[16.5%] shrink-0 overflow-hidden bg-[#050505]">
       <div
         className="absolute inset-0 opacity-50"
-        style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }}
+        style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 1px, transparent 1.8px)", backgroundPosition: "0 0", backgroundSize: "8px 8px" }}
       />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
@@ -491,7 +502,7 @@ function LedAdvertisingHoard({ logo }) {
   const boardHeight = 8;
   return (
     <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-hidden border-t border-[#2d2d2d] bg-[#050505] shadow-[0_-8px_24px_rgba(0,0,0,0.45)]" style={{ top: `${goalLine - boardHeight}%`, height: `${boardHeight}%` }}>
-      <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
+      <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.24) 1px, transparent 1.8px)", backgroundPosition: "0 0", backgroundSize: "8px 8px" }} />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(36,168,87,0.16),rgba(255,255,255,0.04),rgba(36,168,87,0.16))]" />
       <div className="relative flex h-full items-center justify-center">
         <img src={logo} alt="myMUNDIAL" className="h-[72%] max-w-[82%] object-contain opacity-95 drop-shadow-[0_0_8px_rgba(245,241,232,0.58)]" draggable={false} />
@@ -504,7 +515,7 @@ function GoalFrame({ showAim, aimDirection }) {
   const goal = GAME.goal;
   return (
     <div className="absolute z-[3] overflow-hidden border-[8px] border-b-0 border-[#f5f1e8] bg-[#0d6c3d]/30" style={{ left: `${goal.left}%`, top: `${goal.top}%`, width: `${goal.width}%`, height: `${goal.height}%` }}>
-      <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "repeating-linear-gradient(90deg, transparent 0%, transparent 1.8%, rgba(245,241,232,0.18) 2.0%, transparent 2.2%), repeating-linear-gradient(180deg, transparent 0%, transparent 2.6%, rgba(245,241,232,0.16) 2.8%, transparent 3.1%), linear-gradient(135deg, transparent 0%, transparent 49%, rgba(245,241,232,0.08) 49.4%, transparent 50%)", backgroundSize: "100% 100%, 100% 100%, 8px 8px" }} />
+      <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "linear-gradient(90deg, rgba(245,241,232,0.16) 1px, transparent 1px), linear-gradient(180deg, rgba(245,241,232,0.16) 1px, transparent 1px), linear-gradient(135deg, transparent 0, transparent 7px, rgba(245,241,232,0.08) 7px, rgba(245,241,232,0.08) 8px, transparent 8px)", backgroundPosition: "0 0", backgroundSize: "8px 8px" }} />
       {showAim && (
         <div className="absolute h-10 w-10 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full border-[3px] border-[#F7D117] bg-[#F7D117]/14 shadow-[0_0_10px_rgba(247,209,23,0.52),0_0_22px_rgba(247,209,23,0.22)]" style={{ left: `${((aimDirection.col + 0.5) / 3) * 100}%`, top: `${((aimDirection.row + 0.5) / 3) * 100}%`, animationDuration: "1.1s" }}>
           <div className="absolute inset-[-18%] animate-ping rounded-full border-2 border-[#F7D117]/70" style={{ animationDuration: "1.35s" }} />
@@ -668,10 +679,45 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       setHasCompleted(true);
       return;
     }
+
+    const stored = readStoredMatchState(fixture);
+    if (stored && stored.fixtureId === fixture?.id && !stored.hasCompleted) {
+      setPhase(stored.phase || PHASE.DIRECTION);
+      setShootingSide(stored.shootingSide || "user");
+      setSelected(getDirection(stored.selectedId || "CM"));
+      setLockedDirection(stored.lockedDirectionId ? getDirection(stored.lockedDirectionId) : null);
+      setLockedPower(Number.isFinite(stored.lockedPower) ? stored.lockedPower : 50);
+      setScore(stored.score || { user: 0, opponent: 0 });
+      setAttempts(stored.attempts || { user: [], opponent: [] });
+      setShot(null);
+      setTicker(stored.ticker || `${user.name.toUpperCase()} TO SHOOT`);
+      setHasCompleted(false);
+      setWinnerSide(null);
+      powerMeter.reset();
+      accuracyMeter.reset();
+      return;
+    }
+
     resetGame();
     // The fixture id is the parent-controlled reset boundary.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fixture?.id, user.id, opponent.id, completedResult?.fixtureId, completedResult?.matchNo]);
+
+  useEffect(() => {
+    if (completedResult || !fixture?.id) return;
+    writeStoredMatchState(fixture, {
+      fixtureId: fixture.id,
+      phase,
+      shootingSide,
+      selectedId: selected?.id,
+      lockedDirectionId: lockedDirection?.id || null,
+      lockedPower,
+      score,
+      attempts,
+      ticker,
+      hasCompleted,
+    });
+  }, [fixture, completedResult, phase, shootingSide, selected, lockedDirection, lockedPower, score, attempts, ticker, hasCompleted]);
 
   function finishTurn(nextAttempts, nextScore, side) {
     const matchState = decideMatchState({ attempts: nextAttempts, score: nextScore, fixture });

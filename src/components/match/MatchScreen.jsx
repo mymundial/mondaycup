@@ -107,7 +107,7 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/45 px-5">
       <div className="relative w-full max-w-sm overflow-visible rounded-[2rem] bg-[#EFE7D8] text-center text-[#0B5F35] shadow-[0_20px_60px_rgba(7,45,29,0.22)]">
-        <div className="absolute left-1/2 top-[-34px] z-[3] -translate-x-1/2 rounded-full bg-[#072D1D]/28 px-3 py-1.5 shadow-[0_0_14px_rgba(7,45,29,0.38)] backdrop-blur-[1px]"><FormTracker form={userForm} /></div>
+        <div className="absolute left-1/2 top-[-28px] z-[3] -translate-x-1/2 rounded-full bg-[#072D1D]/28 px-3 py-1.5 shadow-[0_0_14px_rgba(7,45,29,0.38)] backdrop-blur-[1px]"><FormTracker form={userForm} /></div>
         <div className="overflow-hidden rounded-t-[2rem] bg-[#0B5F35] px-5 py-2 text-[#F5F0E6]">
           <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center">
@@ -124,12 +124,12 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
           {isKnockout ? (
             <>
               <div className={`mt-1 rounded-[1.25rem] bg-[#DCE9DE] px-3 py-3 ${(result.home === userTeam || result.away === userTeam) ? "ring-1 ring-[#CFE2D3]" : ""}`}>
-                <div className="grid grid-cols-[28px_minmax(0,1fr)_42px_minmax(0,1fr)_28px] items-center gap-2 text-[10px] uppercase text-[#3E4F46]">
-                  <div className="flex items-center justify-start"><Flag team={result.home} className="h-5 w-7" /></div>
-                  <span className={`min-w-0 truncate text-right tracking-[0.02em] ${result.home === userTeam ? "font-black" : "font-bold"}`}>{result.home}</span>
-                  <span className="flex items-center justify-center text-[13px] font-black tabular-nums text-[#0B5F35]">{result.homeGoals}-{result.awayGoals}</span>
-                  <span className={`min-w-0 truncate text-left tracking-[0.02em] ${result.away === userTeam ? "font-black" : "font-bold"}`}>{result.away}</span>
-                  <div className="flex items-center justify-end"><Flag team={result.away} className="h-5 w-7" /></div>
+                <div className="grid grid-cols-[28px_minmax(0,1fr)_48px_minmax(0,1fr)_28px] items-center gap-2 text-[12px] uppercase leading-none text-[#3E4F46]">
+                  <div className="flex h-7 items-center justify-start"><Flag team={result.home} className="h-5 w-7" /></div>
+                  <span className={`flex h-7 min-w-0 items-center justify-end truncate text-right tracking-[0.02em] ${result.home === userTeam ? "font-black" : "font-bold"}`}>{result.home}</span>
+                  <span className="flex h-7 items-center justify-center text-[12px] font-black tabular-nums text-[#0B5F35]">{result.homeGoals}-{result.awayGoals}</span>
+                  <span className={`flex h-7 min-w-0 items-center justify-start truncate text-left tracking-[0.02em] ${result.away === userTeam ? "font-black" : "font-bold"}`}>{result.away}</span>
+                  <div className="flex h-7 items-center justify-end"><Flag team={result.away} className="h-5 w-7" /></div>
                 </div>
               </div>
             </>
