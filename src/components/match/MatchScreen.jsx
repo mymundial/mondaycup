@@ -60,16 +60,16 @@ function CloseIcon({ className = "h-7 w-7" }) {
 
 function FormTracker({ form = [] }) {
   const ledClass = (value) => {
-    if (value === "L") return "bg-red-500 shadow-[0_0_7px_rgba(239,68,68,0.75),0_0_14px_rgba(239,68,68,0.25)]";
-    if (value === "D") return "bg-[#B7B7B7] shadow-[0_0_7px_rgba(183,183,183,0.65),0_0_14px_rgba(183,183,183,0.22)]";
-    if (value === "W") return "bg-[#F7D117] shadow-[0_0_7px_rgba(247,209,23,0.78),0_0_14px_rgba(247,209,23,0.28)]";
-    return "bg-[#F7D117]/55 shadow-[0_0_6px_rgba(247,209,23,0.45),0_0_12px_rgba(247,209,23,0.16)]";
+    if (value === "W") return "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.85),0_0_22px_rgba(34,197,94,0.32)]";
+    if (value === "L") return "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.85),0_0_22px_rgba(239,68,68,0.32)]";
+    if (value === "D") return "bg-[#F7D117] shadow-[0_0_10px_rgba(247,209,23,0.9),0_0_22px_rgba(247,209,23,0.34)]";
+    return "bg-[#7B856F] opacity-70 shadow-[0_0_6px_rgba(123,133,111,0.35)]";
   };
 
   return (
-    <div className="flex items-center justify-center gap-1.5">
+    <div className="flex items-center justify-center gap-2">
       {Array.from({ length: 8 }).map((_, index) => (
-        <span key={index} className={`h-2.5 w-2.5 rounded-full ${ledClass(form[index])}`} />
+        <span key={index} className={`h-5 w-5 rounded-full ${ledClass(form[index])}`} />
       ))}
     </div>
   );
@@ -109,7 +109,7 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/45 px-5">
       <div className="relative w-full max-w-sm overflow-visible rounded-[2rem] bg-[#EFE7D8] text-center text-[#0B5F35] shadow-[0_20px_60px_rgba(7,45,29,0.22)]">
-        <div className="absolute left-1/2 top-[-18px] z-[2] -translate-x-1/2 rounded-full bg-[#072D1D]/70 px-3 py-1.5 backdrop-blur-sm"><FormTracker form={userForm} /></div>
+        <div className="absolute left-1/2 top-[-34px] z-[3] -translate-x-1/2"><FormTracker form={userForm} /></div>
         <div className="overflow-hidden rounded-t-[2rem] bg-[#0B5F35] px-5 py-2 text-[#F5F0E6]">
           <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center">
