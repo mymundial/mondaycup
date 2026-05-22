@@ -346,14 +346,14 @@ function stageLabelForFixture(fixture) {
     round32: "ROUND OF 32",
     round16: "ROUND OF 16",
     quarterFinal: "QUARTER-FINAL",
-    semiFinal: "SEMI-FINALS",
+    semiFinal: "SEMI-FINAL",
     thirdPlace: "3RD PLACE PLAY-OFF",
     final: "FINAL",
   };
   return labels[stage] || "MATCH";
 }
 
-function buildResult({ fixture, userTeam, opponentTeam, score, winnerSide, isDraw }) {
+function buildResult({ fixture, userTeam, opponentTeam, score, attempts, winnerSide, isDraw }) {
   const userIsHome = fixture?.homeTeamId === userTeam.id;
   const homeGoals = userIsHome ? score.user : score.opponent;
   const awayGoals = userIsHome ? score.opponent : score.user;
@@ -372,6 +372,7 @@ function buildResult({ fixture, userTeam, opponentTeam, score, winnerSide, isDra
     loser,
     userWon: winnerSide === "user",
     isDraw,
+    attempts: attempts || { user: [], opponent: [] },
   };
 }
 
@@ -671,6 +672,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         user: userIsHome ? completedResult.homeGoals : completedResult.awayGoals,
         opponent: userIsHome ? completedResult.awayGoals : completedResult.homeGoals,
       });
+      setAttempts(completedResult.attempts || { user: [], opponent: [] });
       setShot(null);
       setShootingSide("user");
       setWinnerSide(completedResult.isDraw ? null : completedResult.won ? "user" : "opponent");
@@ -722,7 +724,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   function finishTurn(nextAttempts, nextScore, side) {
     const matchState = decideMatchState({ attempts: nextAttempts, score: nextScore, fixture });
     if (matchState.finished) {
-      const result = buildResult({ fixture, userTeam: user, opponentTeam: opponent, score: nextScore, winnerSide: matchState.winnerSide, isDraw: matchState.draw });
+      const result = buildResult({ fixture, userTeam: user, opponentTeam: opponent, score: nextScore, attempts: nextAttempts, winnerSide: matchState.winnerSide, isDraw: matchState.draw });
       setPhase(PHASE.FINISHED);
       setWinnerSide(matchState.winnerSide);
       const winnerName = matchState.winnerSide === "user" ? user.name : opponent.name;

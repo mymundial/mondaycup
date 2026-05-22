@@ -175,6 +175,7 @@ export default function App() {
       won: true,
       week: match.week,
       status: completedGroupStage ? (qualified ? "qualified" : "eliminated") : "groupWin",
+      attempts: { user: ["G", "G", "G", "G", "G"], opponent: ["S", "S", "S", "S", "S"] },
     });
   };
 
@@ -225,6 +226,7 @@ export default function App() {
         matchNo,
         status,
         nextFixture: nextUserFixture,
+        attempts: result.attempts,
       });
       return;
     }
@@ -254,6 +256,7 @@ export default function App() {
       week: match.week,
       status: completedGroupStage ? (qualified ? "qualified" : "eliminated") : (result.isDraw ? "groupDraw" : result.userWon ? "groupWin" : "groupLoss"),
       isDraw: result.isDraw || result.homeGoals === result.awayGoals,
+      attempts: result.attempts,
     });
   };
 
@@ -275,16 +278,9 @@ export default function App() {
       }
     }
 
-    if (["eliminated", "runnerUp", "third", "fourth"].includes(matchResult.status)) { resetTournament(); return; }
+    if (["champion", "runnerUp"].includes(matchResult.status)) { resetTournament(); setScreen("teams"); return; }
 
-    if (matchResult.status === "champion") {
-      setCurrentKnockoutMatch(null);
-      setStandingsView("knockout");
-      setDrawer("groups");
-      setMatchResult(null);
-      setModalDismissed(false);
-      return;
-    }
+    if (["eliminated", "third", "fourth"].includes(matchResult.status)) { resetTournament(); return; }
 
     if (matchResult.status === "qualified") {
       const round32 = knockoutFixtures.length ? knockoutFixtures : buildRound32Fixtures(table);
