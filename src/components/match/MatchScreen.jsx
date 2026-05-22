@@ -77,11 +77,13 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/45 px-5">
       <div className="w-full max-w-sm overflow-hidden rounded-[2rem] bg-[#F5F0E6] text-center text-[#0B5F35] shadow-[0_20px_60px_rgba(7,45,29,0.22)]">
-        <div className="px-5 pb-2 pt-4">
-          <div className="grid grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-3">
-            <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-12 w-12 object-contain" draggable={false} />
-            <div className="text-center text-[30px] font-black uppercase leading-[0.92] tracking-[-0.035em]">{modalTitle(result)}</div>
-            <button onClick={onDismiss} aria-label="Close result" className="flex h-12 w-12 items-center justify-center justify-self-end text-[#0B5F35]">
+        <div className="bg-[#0B5F35] px-5 py-4 text-[#F5F0E6]">
+          <div className="grid grid-cols-[56px_minmax(0,1fr)_56px] items-center gap-3">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0B5F35]">
+              <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-full w-full object-contain" draggable={false} />
+            </div>
+            <div className="text-center text-[30px] font-black uppercase leading-[0.92] tracking-[-0.035em] text-[#F5F0E6]">{modalTitle(result)}</div>
+            <button onClick={onDismiss} aria-label="Close result" className="flex h-14 w-14 items-center justify-center justify-self-end rounded-2xl bg-[#F5F0E6] text-[#0B5F35]">
               <CloseIcon className="h-8 w-8" />
             </button>
           </div>

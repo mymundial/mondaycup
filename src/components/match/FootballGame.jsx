@@ -335,7 +335,7 @@ function stageLabelForFixture(fixture) {
     round32: "ROUND OF 32",
     round16: "ROUND OF 16",
     quarterFinal: "QUARTER-FINAL",
-    semiFinal: "SEMI-FINAL",
+    semiFinal: "SEMI-FINALS",
     thirdPlace: "3RD PLACE PLAY-OFF",
     final: "FINAL",
   };
@@ -407,7 +407,7 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
             <div className="col-start-4 row-start-2 flex justify-center pt-[2%]"><div className="w-[4.4em]"><PenaltyMarkers attempts={attempts.opponent} /></div></div>
           </div>
         </div>
-        <div className="grid h-[calc(26%+2px)] w-full place-items-center overflow-hidden px-[3%] text-center font-sans text-[clamp(13px,2.3vh,28px)] font-black tracking-tight" style={tickerStyle}>
+        <div className="grid h-[26%] w-full place-items-center overflow-hidden px-[3%] text-center font-sans text-[clamp(13px,2.3vh,28px)] font-black tracking-tight" style={tickerStyle}>
           {ticker}
         </div>
       </div>
@@ -523,7 +523,7 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
       <div
         className="pointer-events-none absolute z-[3] rounded-b-[999px] border-b-[8px] border-l-[8px] border-r-[8px] border-[#f5f1e8]"
-        style={{ left: `${GAME.goal.left}%`, top: `${goalLine}%`, width: `${GAME.goal.width}%`, height: "25%" }}
+        style={{ left: `${GAME.goal.left}%`, top: `${goalLine}%`, width: `${GAME.goal.width}%`, height: "20%" }}
       />
       <GoalFrame showAim={showAim} aimDirection={aimDirection} />
       <div className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f1e8]" style={{ left: `${GAME.spot.x}%`, top: `${GAME.spot.y}%` }} />
@@ -639,7 +639,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         opponent: userIsHome ? completedResult.awayGoals : completedResult.homeGoals,
       });
       setShot(null);
-      setWinnerSide(completedResult.won ? "user" : "opponent");
+      setWinnerSide(completedResult.isDraw ? null : completedResult.won ? "user" : "opponent");
       setTicker(completedResult.isDraw ? "DRAW!" : `${(completedResult.won ? user.name : opponent.name).toUpperCase()} WINS!`);
       setPhase(PHASE.FINISHED);
       setHasCompleted(true);
