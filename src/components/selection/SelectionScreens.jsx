@@ -118,14 +118,21 @@ function HomeFlagPanel({ type }) {
 
 function ScoreboardPlaceholder() {
   return (
-    <div className="relative h-[calc((100dvh-54px)*0.043)] shrink-0 overflow-hidden bg-[#072D1D]" aria-hidden="true">
-      <div className="relative flex h-full items-center justify-evenly overflow-hidden bg-[#072D1D] px-[4%] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035)_0%,rgba(0,0,0,0.12)_100%)]" />
-        <HomeFlagPanel type="cup" />
-        <HomeFlagPanel type="canada" />
-        <HomeFlagPanel type="mexico" />
-        <HomeFlagPanel type="usa" />
-        <HomeFlagPanel type="cup" />
+    <div className="relative shrink-0 overflow-hidden" aria-hidden="true">
+      <div className="relative h-[calc(54px+((100dvh-54px)*0.165))] overflow-hidden bg-[#050505]">
+        <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
+      </div>
+      <div className="relative h-[calc((100dvh-54px)*0.043)] overflow-hidden bg-[#072D1D]">
+        <div className="relative flex h-full items-center justify-evenly overflow-hidden bg-[#072D1D] px-[4%] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]">
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035)_0%,rgba(0,0,0,0.12)_100%)]" />
+          <HomeFlagPanel type="cup" />
+          <HomeFlagPanel type="canada" />
+          <HomeFlagPanel type="mexico" />
+          <HomeFlagPanel type="usa" />
+          <HomeFlagPanel type="cup" />
+        </div>
       </div>
     </div>
   );
