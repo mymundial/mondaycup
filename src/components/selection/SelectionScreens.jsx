@@ -332,9 +332,8 @@ function LandingPanel({ onPlayGuest }) {
   return <div className="space-y-3">
     <GreenCard>
       <div className="text-center">
-        <div className="home-copy-regular text-[29px] uppercase leading-[0.95] tracking-[-0.02em] text-[#F5F0E6]">
-          <span className="block">IT&apos;S NEVER SUNDAY...</span>
-          <span className="block">WHEN IT&apos;S MONDAY</span>
+        <div className="home-copy-regular whitespace-nowrap text-[24px] uppercase leading-none tracking-[-0.025em] text-[#F5F0E6]">
+          IF ONLY EVERYDAY WAS MONDAY
         </div>
       </div>
       <div className="mt-5 space-y-2.5">
