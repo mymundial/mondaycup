@@ -199,7 +199,7 @@ function HomeTopLedAdvertisingHoard() {
           {[0, 1].map((copy) => (
             <div key={copy} className="flex shrink-0 items-center pr-12">
               {groupsTicker.map(({ label, teams }) => (
-                <span key={`${copy}-${label}`} className="font-led flex items-center text-[clamp(9px,1.35vh,15px)] uppercase tracking-[0.22em] text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]">
+                <span key={`${copy}-${label}`} className="font-led flex items-center text-[clamp(18px,2.7vh,30px)] uppercase tracking-[0.18em] text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]">
                   <span className="mx-4 text-[#F7D117]">{label}</span>
                   <span className="text-[#F7D117]/95">{teams.join("  •  ")}</span>
                   <span className="mx-5 text-[#F7D117]/75">///</span>
@@ -263,12 +263,12 @@ function ActionButton({ children, eyebrow, onClick, variant = "light", disabled 
   const styles = variant === "green"
     ? "border-[#F5F0E6]/20 bg-[#0B5F35] text-[#F5F0E6]"
     : variant === "account"
-      ? "border-[#F5F0E6]/18 bg-[#F5F0E6]/18 text-[#F5F0E6]/70"
+      ? "border-[#F5F0E6]/18 bg-[#F5F0E6]/18 text-[#F5F0E6]"
       : "border-[#D4AF37]/50 bg-[#F5F0E6] text-[#0B5F35]";
 
-  return <button type={type} onClick={onClick} disabled={disabled} className={`w-full rounded-[1.35rem] border px-4 py-4 text-center shadow-inner transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
-    {eyebrow && <div className="home-copy-light text-[8px] uppercase tracking-[0.24em] opacity-55">{eyebrow}</div>}
-    <div className="home-copy-regular mt-1 text-[18px] uppercase leading-none tracking-[0.02em]">{children}</div>
+  return <button type={type} onClick={onClick} disabled={disabled} className={`flex h-[58px] w-full items-center justify-center rounded-[1.35rem] border px-4 text-center shadow-inner transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
+    {eyebrow && <span className="sr-only">{eyebrow}</span>}
+    <div className="home-copy-bold text-[26px] uppercase leading-none tracking-[0.025em]">{children}</div>
   </button>;
 }
 
@@ -332,12 +332,14 @@ function LandingPanel({ onPlayGuest }) {
   return <div className="space-y-3">
     <GreenCard>
       <div className="text-center">
-        <p className="home-copy-light mx-auto max-w-[248px] text-[10px] uppercase leading-[1.45] tracking-[0.13em] text-[#F5F0E6]/58">A GOOD MAN ONCE SAID</p>
-        <div className="home-copy-regular mt-3 text-[27px] uppercase leading-[0.9] tracking-[-0.02em] text-[#F5F0E6]">IT&apos;S NEVER SUNDAY...<br />WHEN IT&apos;S MONDAY</div>
+        <div className="home-copy-regular text-[29px] uppercase leading-[0.95] tracking-[-0.02em] text-[#F5F0E6]">
+          <span className="block">IT&apos;S NEVER SUNDAY...</span>
+          <span className="block">WHEN IT&apos;S MONDAY</span>
+        </div>
       </div>
       <div className="mt-5 space-y-2.5">
-        <ActionButton onClick={onPlayGuest} eyebrow="NO ACCOUNT NEEDED">PLAY AS GUEST</ActionButton>
-        <ActionButton onClick={() => setAuthMode("signin")} eyebrow="ACCOUNT">SIGN IN / REGISTER</ActionButton>
+        <ActionButton onClick={onPlayGuest}>PLAY NOW</ActionButton>
+        <ActionButton onClick={() => setAuthMode("signin")} variant="account">CLUBHOUSE</ActionButton>
       </div>
     </GreenCard>
   </div>;
