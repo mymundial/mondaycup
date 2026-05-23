@@ -119,13 +119,17 @@ function HomeFlagPanel({ type }) {
 function ScoreboardPlaceholder() {
   return (
     <div className="relative shrink-0 overflow-hidden" aria-hidden="true">
-      <div className="relative h-[calc(54px+((100dvh-54px)*0.165)-((100dvh-54px)*0.043))] overflow-hidden bg-[#050505]">
+      <div className="relative h-[calc(54px+((100dvh-54px)*0.165)-((100dvh-54px)*0.086))] overflow-hidden bg-[#050505]">
         <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.20) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.24))]" />
       </div>
       <div className="relative h-[calc((100dvh-54px)*0.043)] overflow-hidden bg-[#050505]">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.20))]" />
+        <div className="absolute inset-0 opacity-35" style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.16) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(0,0,0,0.20))]" />
+      </div>
+      <div className="relative h-[calc((100dvh-54px)*0.043)] overflow-hidden bg-[#072D1D]">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.18))]" />
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
           <g fill="none" strokeLinecap="round" strokeLinejoin="round">
             <path d="M0 18 H1000 M0 82 H1000" stroke="rgba(190,200,196,0.48)" strokeWidth="5" />
@@ -145,6 +149,19 @@ function ScoreboardPlaceholder() {
             <path d="M400 82 L600 18 M400 18 L600 82" stroke="rgba(220,226,222,0.56)" strokeWidth="5" />
             <path d="M600 82 L800 18 M600 18 L800 82" stroke="rgba(220,226,222,0.56)" strokeWidth="5" />
             <path d="M800 82 L1000 18 M800 18 L1000 82" stroke="rgba(220,226,222,0.56)" strokeWidth="5" />
+          </g>
+          <g>
+            {[100, 300, 500, 700, 900].map((cx) => (
+              <g key={cx}>
+                <rect x={cx - 18} y={32} width="36" height="36" rx="2" fill="#FFFDF2" />
+                <rect x={cx - 11} y={39} width="22" height="22" rx="1.5" fill="#FFFFFF" />
+                <rect x={cx - 4} y={68} width="8" height="11" rx="2" fill="rgba(220,226,222,0.80)" />
+                <rect x={cx - 24} y={26} width="48" height="48" rx="6" fill="none" stroke="rgba(255,253,242,0.22)" strokeWidth="2" />
+                <ellipse cx={cx} cy={50} rx="62" ry="22" fill="rgba(255,250,220,0.24)" />
+                <ellipse cx={cx} cy={50} rx="88" ry="32" fill="rgba(255,250,220,0.16)" />
+                <ellipse cx={cx} cy={50} rx="116" ry="42" fill="rgba(255,250,220,0.09)" />
+              </g>
+            ))}
           </g>
         </svg>
       </div>
