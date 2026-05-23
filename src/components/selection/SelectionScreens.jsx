@@ -62,6 +62,51 @@ function HomeCrowdBackdrop() {
   );
 }
 
+function HomeUnifiedCrowdBackdrop() {
+  const shirts = [
+    "#2DA94F", "#F7D117", "#FF1E3C", "#E1251B", "#2F3ED6", "#8A1538", "#FF8A00", "#1E7FF0",
+    "#157A52", "#93BFEA", "#FFFFFF", "#2437C6", "#F20D1B", "#00A86B", "#7CB5E8", "#F7C600",
+    "#E10600", "#1A22C9", "#9B003F", "#D50000", "#FF3B30", "#3131E8"
+  ];
+  const skins = ["#c98f65", "#8f5f3f", "#e0b184", "#6f4632"];
+  const makeRow = ({ count, startX, step, y, scale, opacity, stagger = 0, wave = 0, shirtOffset = 0, skinOffset = 0 }) => Array.from({ length: count }, (_, i) => ({
+    x: startX + i * step + (i % 2 ? stagger : 0),
+    y: y + (i % 3) * wave,
+    scale,
+    shirt: shirts[((i * 7) + shirtOffset) % shirts.length],
+    skin: skins[(i + skinOffset) % skins.length],
+    pose: i % 4 === 0 || i % 7 === 0 ? "up" : "down",
+    opacity,
+  }));
+
+  const crowdRows = [
+    ...makeRow({ count: 54, startX: -1.0, step: 1.90, y: 2.5, scale: 0.32, opacity: 0.14, stagger: 0.25, wave: 0.25 }),
+    ...makeRow({ count: 52, startX: -0.5, step: 1.98, y: 7.5, scale: 0.36, opacity: 0.20, stagger: 0.30, wave: 0.30, shirtOffset: 1 }),
+    ...makeRow({ count: 50, startX: 0.0, step: 2.05, y: 13.5, scale: 0.40, opacity: 0.26, stagger: 0.35, wave: 0.35, shirtOffset: 2, skinOffset: 1 }),
+    ...makeRow({ count: 46, startX: 0.4, step: 2.22, y: 20.5, scale: 0.46, opacity: 0.34, stagger: 0.45, wave: 0.40, shirtOffset: 3, skinOffset: 2 }),
+    ...makeRow({ count: 44, startX: 0.8, step: 2.38, y: 28.5, scale: 0.52, opacity: 0.42, stagger: 0.50, wave: 0.50, shirtOffset: 4, skinOffset: 1 }),
+    ...makeRow({ count: 40, startX: 1.2, step: 2.58, y: 37.5, scale: 0.60, opacity: 0.52, stagger: 0.60, wave: 0.60, shirtOffset: 5, skinOffset: 3 }),
+    ...makeRow({ count: 36, startX: 1.6, step: 2.82, y: 47.5, scale: 0.68, opacity: 0.64, stagger: 0.72, wave: 0.65, shirtOffset: 6, skinOffset: 1 }),
+    ...makeRow({ count: 34, startX: 2.0, step: 3.05, y: 58.5, scale: 0.76, opacity: 0.76, stagger: 0.84, wave: 0.75, shirtOffset: 7, skinOffset: 2 }),
+    ...makeRow({ count: 30, startX: 2.6, step: 3.40, y: 70.5, scale: 0.86, opacity: 0.88, stagger: 0.96, wave: 0.80, shirtOffset: 8, skinOffset: 3 }),
+    ...makeRow({ count: 28, startX: 3.2, step: 3.72, y: 82.8, scale: 0.96, opacity: 0.98, stagger: 1.10, wave: 0.78, shirtOffset: 9, skinOffset: 1 }),
+    ...makeRow({ count: 24, startX: 4.2, step: 4.25, y: 94.0, scale: 1.04, opacity: 1, stagger: 1.20, wave: 0.45, shirtOffset: 10, skinOffset: 2 }),
+  ];
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden bg-[#123822]" aria-hidden="true">
+      <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 20% 7%, rgba(245,241,232,0.08), transparent 22%), radial-gradient(circle at 80% 10%, rgba(255,214,0,0.055), transparent 18%), linear-gradient(180deg, rgba(4,22,14,0.52), rgba(4,22,14,0.10) 42%, rgba(4,22,14,0.04))" }} />
+      <div className="absolute inset-x-0 top-[7%] h-[9%] bg-[#0b2d1d]/12" />
+      <div className="absolute inset-x-0 top-[20%] h-[10%] bg-[#0b2d1d]/10" />
+      <div className="absolute inset-x-0 top-[36%] h-[11%] bg-[#0b2d1d]/12" />
+      <div className="absolute inset-x-0 top-[56%] h-[12%] bg-[#0b2d1d]/10" />
+      <div className="absolute inset-x-0 top-[78%] h-[13%] bg-[#0b2d1d]/12" />
+      {crowdRows.map((person, index) => <HomeCrowdPerson key={index} {...person} />)}
+    </div>
+  );
+}
+
+
 function HomeLedAdvertisingHoard() {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = 8;
@@ -88,8 +133,7 @@ function HomeGoalFrame() {
 function HomePitchBackdrop() {
   const goalLine = GAME.goal.top + GAME.goal.height;
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[#0d6c3d]">
-      <HomeCrowdBackdrop />
+    <div className="absolute inset-0 overflow-hidden bg-transparent">
       <HomeLedAdvertisingHoard />
       <div className="absolute bottom-0 left-0 right-0" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
@@ -100,53 +144,9 @@ function HomePitchBackdrop() {
   );
 }
 
-function HomeTopCrowdBackdrop() {
-  const shirts = [
-    "#2DA94F", "#F7D117", "#FF1E3C", "#E1251B", "#2F3ED6", "#8A1538", "#FF8A00", "#1E7FF0",
-    "#157A52", "#93BFEA", "#FFFFFF", "#2437C6", "#F20D1B", "#00A86B", "#7CB5E8", "#F7C600"
-  ];
-  const skins = ["#c98f65", "#8f5f3f", "#e0b184", "#6f4632"];
-  const makeRow = ({ count, startX, step, y, scale, opacity, stagger = 0, wave = 0, shirtOffset = 0, skinOffset = 0 }) => Array.from({ length: count }, (_, i) => ({
-    x: startX + i * step + (i % 2 ? stagger : 0),
-    y: y + (i % 3) * wave,
-    scale,
-    shirt: shirts[((i * 5) + shirtOffset) % shirts.length],
-    skin: skins[(i + skinOffset) % skins.length],
-    pose: i % 4 === 0 || i % 7 === 0 ? "up" : "down",
-    opacity,
-  }));
-
-  const crowdRows = [
-    ...makeRow({ count: 52, startX: -0.5, step: 1.95, y: 5, scale: 0.34, opacity: 0.20, stagger: 0.25, wave: 0.25 }),
-    ...makeRow({ count: 48, startX: 0.2, step: 2.12, y: 13, scale: 0.40, opacity: 0.28, stagger: 0.35, wave: 0.35, shirtOffset: 1 }),
-    ...makeRow({ count: 44, startX: 0.8, step: 2.32, y: 23, scale: 0.48, opacity: 0.38, stagger: 0.45, wave: 0.45, shirtOffset: 2, skinOffset: 1 }),
-    ...makeRow({ count: 40, startX: 1.2, step: 2.55, y: 35, scale: 0.56, opacity: 0.50, stagger: 0.55, wave: 0.55, shirtOffset: 3, skinOffset: 2 }),
-    ...makeRow({ count: 36, startX: 1.6, step: 2.85, y: 49, scale: 0.66, opacity: 0.64, stagger: 0.65, wave: 0.65, shirtOffset: 4, skinOffset: 1 }),
-    ...makeRow({ count: 32, startX: 2.1, step: 3.18, y: 65, scale: 0.78, opacity: 0.78, stagger: 0.85, wave: 0.75, shirtOffset: 5, skinOffset: 3 }),
-    ...makeRow({ count: 28, startX: 2.9, step: 3.65, y: 82, scale: 0.92, opacity: 0.92, stagger: 1.05, wave: 0.85, shirtOffset: 6, skinOffset: 1 }),
-    ...makeRow({ count: 24, startX: 4.2, step: 4.25, y: 96, scale: 1.02, opacity: 1, stagger: 1.2, wave: 0.35, shirtOffset: 7, skinOffset: 2 }),
-  ];
-
-  return (
-    <div className="relative h-full overflow-hidden bg-[#123822]" aria-hidden="true">
-      <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 20% 8%, rgba(245,241,232,0.08), transparent 22%), radial-gradient(circle at 80% 12%, rgba(255,214,0,0.055), transparent 18%), linear-gradient(180deg, rgba(4,22,14,0.48), rgba(4,22,14,0.10))" }} />
-      <div className="absolute inset-x-0 top-[9%] h-[10%] bg-[#0b2d1d]/12" />
-      <div className="absolute inset-x-0 top-[25%] h-[11%] bg-[#0b2d1d]/10" />
-      <div className="absolute inset-x-0 top-[44%] h-[12%] bg-[#0b2d1d]/12" />
-      <div className="absolute inset-x-0 top-[66%] h-[14%] bg-[#0b2d1d]/10" />
-      {crowdRows.map((person, index) => <HomeCrowdPerson key={index} {...person} />)}
-      <div className="absolute inset-x-0 bottom-[-1px] h-[3px] bg-[#123822]" />
-    </div>
-  );
-}
-
 function ScoreboardPlaceholder() {
   const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
-  return (
-    <div className="relative shrink-0 overflow-hidden" style={{ height: headerHeight }}>
-      <HomeTopCrowdBackdrop />
-    </div>
-  );
+  return <div className="relative z-[1] shrink-0" style={{ height: headerHeight }} aria-hidden="true" />;
 }
 
 
@@ -161,7 +161,8 @@ function HomeFooter() {
 function HomeLayout({ children }) {
   return (
     <Shell>
-      <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#EFE7D8] text-[#072D1D]">
+      <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-[#123822] text-[#072D1D]">
+        <HomeUnifiedCrowdBackdrop />
         <ScoreboardPlaceholder />
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
