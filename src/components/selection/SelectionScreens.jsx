@@ -57,7 +57,6 @@ function HomeCrowdBackdrop() {
       <div className="absolute inset-x-0 top-[5%] h-[10%] bg-[#0b2d1d]/12" />
       <div className="absolute inset-x-0 top-[18%] h-[11%] bg-[#0b2d1d]/10" />
       <div className="absolute inset-x-0 top-[33%] h-[12%] bg-[#0b2d1d]/12" />
-      <div className="absolute inset-x-0 top-0 z-[1] h-[28%] bg-[linear-gradient(180deg,#072D1D_0%,rgba(7,45,29,0.82)_34%,rgba(7,45,29,0.28)_78%,rgba(7,45,29,0)_100%)]" />
       {crowdRows.map((person, index) => <HomeCrowdPerson key={index} {...person} />)}
     </div>
   );
@@ -105,7 +104,7 @@ function HomeFlagPanel({ type }) {
   const isCup = type === "cup";
   const flagSrc = type === "canada" ? "/flags/CAN.png" : type === "mexico" ? "/flags/MEX.png" : "/flags/USA.png";
   return (
-    <div className="relative flex h-[64%] aspect-[2/1] items-center justify-center rounded-sm shadow-[0_4px_10px_rgba(0,0,0,0.22)]">
+    <div className="relative flex h-[64%] aspect-[250/167] items-center justify-center rounded-sm shadow-[0_4px_10px_rgba(0,0,0,0.22)]">
       <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-sm ${isCup ? "bg-[#7D8581]" : "bg-[#F5F0E6]"}`}>
         {isCup ? (
           <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[88%] w-auto object-contain" draggable={false} />
