@@ -70,18 +70,33 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
           </div>
         </div>
         <div
-          className="absolute inset-x-0 z-[5] grid w-full place-items-center overflow-hidden px-[3%] text-center font-sans text-[clamp(13px,2.3vh,28px)] font-black leading-none tracking-tight"
+          className="absolute inset-x-0 z-[5] w-full overflow-hidden text-center font-sans text-[clamp(13px,2.3vh,28px)] font-black leading-none tracking-tight"
           style={{
-            ...tickerStyle,
-            bottom: 0,
-            height: "26%",
+            bottom: "-2px",
+            height: "calc(26% + 2px)",
+            background: "#050505",
+            isolation: "isolate",
             boxShadow: "none",
             outline: "1px solid transparent",
             WebkitBackfaceVisibility: "hidden",
             backfaceVisibility: "hidden",
+            transform: "translateZ(0)",
           }}
         >
-          <span className="block translate-y-[-1px]">{ticker}</span>
+          <div
+            className="absolute inset-x-0 top-0 grid place-items-center px-[3%]"
+            style={{
+              ...tickerStyle,
+              height: "calc(100% - 2px)",
+              bottom: "2px",
+              WebkitBackfaceVisibility: "hidden",
+              backfaceVisibility: "hidden",
+              transform: "translateZ(0)",
+            }}
+          >
+            <span className="block translate-y-[-1px]">{ticker}</span>
+          </div>
+          <div className="absolute inset-x-0 bottom-0 z-[2] h-[2px] bg-[#050505]" aria-hidden="true" />
         </div>
       </div>
     </section>
@@ -483,7 +498,15 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, campaign
     const finalTeam = winnerSide === "user" ? user : winnerSide === "opponent" ? opponent : null;
     if (phase === PHASE.FINISHED && finalTeam) return { background: finalTeam.primaryColour, color: finalTeam.textColour };
     if (phase === PHASE.FINISHED && !finalTeam) return { background: user.primaryColour, color: user.textColour };
-    if (ticker === COMMENTARY.goal) return { background: activeTeam.primaryColour, color: activeTeam.textColour, animation: "goalFlash 0.82s steps(1, end) 1 forwards", "--goal-bg": activeTeam.primaryColour, "--goal-fg": activeTeam.textColour };
+    if (ticker === COMMENTARY.goal) return {
+      background: activeTeam.primaryColour,
+      color: activeTeam.textColour,
+      animation: "goalFlashBar 0.82s steps(1, end) 1 forwards",
+      "--goal-bg": activeTeam.primaryColour,
+      "--goal-fg": activeTeam.textColour,
+      "--goal-alt-bg": "#050505",
+      "--goal-alt-fg": activeTeam.primaryColour,
+    };
     if (ticker === COMMENTARY.save) return { background: defenderTeam.primaryColour, color: defenderTeam.textColour };
     return { background: activeTeam.primaryColour, color: activeTeam.textColour };
   }
@@ -495,11 +518,11 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, campaign
         .pen-marker-goal { box-shadow: 0 0 5px rgba(34,197,94,0.72), 0 0 10px rgba(34,197,94,0.25); }
         .pen-marker-save { box-shadow: 0 0 5px rgba(239,68,68,0.72), 0 0 10px rgba(239,68,68,0.25); }
         .pen-marker-empty { box-shadow: 0 0 5px rgba(247,209,23,0.42), 0 0 9px rgba(247,209,23,0.18); }
-        @keyframes goalFlash {
+        @keyframes goalFlashBar {
           0%, 19.9% { background: var(--goal-bg); color: var(--goal-fg); }
-          20%, 39.9% { background: var(--goal-fg); color: var(--goal-bg); }
+          20%, 39.9% { background: var(--goal-alt-bg); color: var(--goal-alt-fg); }
           40%, 59.9% { background: var(--goal-bg); color: var(--goal-fg); }
-          60%, 79.9% { background: var(--goal-fg); color: var(--goal-bg); }
+          60%, 79.9% { background: var(--goal-alt-bg); color: var(--goal-alt-fg); }
           80%, 100% { background: var(--goal-bg); color: var(--goal-fg); }
         }
       `}</style>
