@@ -1,11 +1,19 @@
 import { HOST_TEAMS, GROUPS, GROUP_LETTERS, TEAM_RANK, getTeamTheme } from "../../data/teams.js";
 import { ASSETS } from "../../data/assets.js";
 import { DEFAULT_ASSETS, GAME } from "../../logic/penaltyEngine.js";
-import { Flag } from "../shared.jsx";
-import { Footer, GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
+import { BrandMark, Flag, HamburgerIcon } from "../shared.jsx";
+import { GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
 
 function HomeTopBar() {
-  return <div className="relative h-[54px] shrink-0 bg-[#EFE7D8]" />;
+  return (
+    <div className="relative h-[54px] shrink-0 bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_54%,#ADD2EC_100%)]">
+      <div className="absolute inset-y-0 right-4 flex items-center">
+        <button type="button" aria-label="Menu" className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#DDF2FF]/68 text-[#0B5F35] shadow-[inset_0_0_0_1px_rgba(11,95,53,0.16)]">
+          <span className="scale-[1.05]"><HamburgerIcon /></span>
+        </button>
+      </div>
+    </div>
+  );
 }
 
 
@@ -105,16 +113,23 @@ function HomePitchBackdrop() {
 }
 
 function HomeSkyFlag({ x, country }) {
-  const flagY = 35;
-  const poleTop = 20;
-  const poleBottom = 108;
-  const commonPole = <><rect x={x - 1.5} y={poleTop} width="3" height={poleBottom - poleTop} rx="1.5" fill="#D7DEE1" /><rect x={x + 2} y={poleTop + 6} width="1.5" height="74" rx="0.75" fill="rgba(7,19,27,0.32)" /><circle cx={x} cy={poleTop - 1} r="5" fill="#E9EEE9" /></>;
+  const roofTop = 18;
+  const poleHeight = 30;
+  const flagTop = roofTop - poleHeight + 2;
+  const commonPole = (
+    <>
+      <rect x={x - 1.5} y={flagTop - 4} width="3" height={poleHeight + 4} rx="1.5" fill="#D7DEE1" />
+      <circle cx={x} cy={flagTop - 5} r="3.4" fill="#F4F7F7" />
+    </>
+  );
+
+  const clothBase = `M${x + 2} ${flagTop} C${x + 12} ${flagTop - 3} ${x + 24} ${flagTop + 3} ${x + 34} ${flagTop} L${x + 34} ${flagTop + 18} C${x + 24} ${flagTop + 21} ${x + 12} ${flagTop + 15} ${x + 2} ${flagTop + 18} Z`;
 
   const flag = country === "canada"
-    ? <g><path d={`M${x + 3} ${flagY} C${x + 26} ${flagY - 9} ${x + 50} ${flagY + 4} ${x + 76} ${flagY - 4} L${x + 76} ${flagY + 31} C${x + 51} ${flagY + 39} ${x + 27} ${flagY + 25} ${x + 3} ${flagY + 34} Z`} fill="#F5F0E6" /><path d={`M${x + 3} ${flagY} C${x + 11} ${flagY - 3} ${x + 19} ${flagY - 3} ${x + 27} ${flagY - 1} L${x + 27} ${flagY + 33} C${x + 19} ${flagY + 30} ${x + 11} ${flagY + 31} ${x + 3} ${flagY + 34} Z`} fill="#E1251B" /><path d={`M${x + 58} ${flagY - 2} C${x + 64} ${flagY - 2} ${x + 70} ${flagY - 3} ${x + 76} ${flagY - 4} L${x + 76} ${flagY + 31} C${x + 70} ${flagY + 33} ${x + 64} ${flagY + 34} ${x + 58} ${flagY + 33} Z`} fill="#E1251B" /><path d={`M${x + 41} ${flagY + 9} l4 8 h7 l-6 4 2 8 -7 -5 -7 5 2 -8 -6 -4 h7 Z`} fill="#E1251B" /></g>
+    ? <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 7} ${flagTop - 2} ${x + 12} ${flagTop - 2} ${x + 16} ${flagTop} L${x + 16} ${flagTop + 18} C${x + 12} ${flagTop + 16} ${x + 7} ${flagTop + 16} ${x + 2} ${flagTop + 18} Z`} fill="#E1251B" /><path d={`M${x + 20} ${flagTop} C${x + 25} ${flagTop - 1} ${x + 30} ${flagTop - 1} ${x + 34} ${flagTop} L${x + 34} ${flagTop + 18} C${x + 30} ${flagTop + 19} ${x + 25} ${flagTop + 19} ${x + 20} ${flagTop + 18} Z`} fill="#E1251B" /><path d={`M${x + 18} ${flagTop + 6} l2 4 h4 l-3 2 1 4 -4 -3 -4 3 1 -4 -3 -2 h4 Z`} fill="#E1251B" /></g>
     : country === "mexico"
-      ? <g><path d={`M${x + 3} ${flagY} C${x + 26} ${flagY - 9} ${x + 50} ${flagY + 4} ${x + 76} ${flagY - 4} L${x + 76} ${flagY + 31} C${x + 51} ${flagY + 39} ${x + 27} ${flagY + 25} ${x + 3} ${flagY + 34} Z`} fill="#F5F0E6" /><path d={`M${x + 3} ${flagY} C${x + 12} ${flagY - 3} ${x + 21} ${flagY - 3} ${x + 30} ${flagY - 1} L${x + 30} ${flagY + 33} C${x + 21} ${flagY + 30} ${x + 12} ${flagY + 31} ${x + 3} ${flagY + 34} Z`} fill="#006847" /><path d={`M${x + 52} ${flagY - 2} C${x + 60} ${flagY - 2} ${x + 68} ${flagY - 3} ${x + 76} ${flagY - 4} L${x + 76} ${flagY + 31} C${x + 68} ${flagY + 33} ${x + 60} ${flagY + 34} ${x + 52} ${flagY + 33} Z`} fill="#CE1126" /><circle cx={x + 41} cy={flagY + 17} r="6" fill="#C89A35" opacity="0.95" /><path d={`M${x + 37} ${flagY + 18} q4 5 9 0`} fill="none" stroke="#0B5F35" strokeWidth="2" strokeLinecap="round" /></g>
-      : <g><path d={`M${x + 3} ${flagY} C${x + 26} ${flagY - 9} ${x + 50} ${flagY + 4} ${x + 76} ${flagY - 4} L${x + 76} ${flagY + 31} C${x + 51} ${flagY + 39} ${x + 27} ${flagY + 25} ${x + 3} ${flagY + 34} Z`} fill="#F5F0E6" /><path d={`M${x + 3} ${flagY} C${x + 26} ${flagY - 9} ${x + 50} ${flagY + 4} ${x + 76} ${flagY - 4} L${x + 76} ${flagY + 1} C${x + 50} ${flagY + 9} ${x + 26} ${flagY - 4} ${x + 3} ${flagY + 5} Z M${x + 3} ${flagY + 11} C${x + 27} ${flagY + 3} ${x + 51} ${flagY + 16} ${x + 76} ${flagY + 8} L${x + 76} ${flagY + 13} C${x + 51} ${flagY + 21} ${x + 27} ${flagY + 8} ${x + 3} ${flagY + 16} Z M${x + 3} ${flagY + 22} C${x + 27} ${flagY + 14} ${x + 51} ${flagY + 27} ${x + 76} ${flagY + 19} L${x + 76} ${flagY + 24} C${x + 51} ${flagY + 32} ${x + 27} ${flagY + 19} ${x + 3} ${flagY + 27} Z`} fill="#B22234" /><path d={`M${x + 3} ${flagY} C${x + 14} ${flagY - 4} ${x + 26} ${flagY - 4} ${x + 38} ${flagY - 1} L${x + 38} ${flagY + 17} C${x + 26} ${flagY + 13} ${x + 14} ${flagY + 12} ${x + 3} ${flagY + 16} Z`} fill="#224184" /><g fill="#F5F0E6" opacity="0.95">{Array.from({ length: 12 }).map((_, i) => <circle key={i} cx={x + 10 + (i % 4) * 6} cy={flagY + 4 + Math.floor(i / 4) * 5} r="1.2" />)}</g></g>;
+      ? <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 7} ${flagTop - 2} ${x + 12} ${flagTop - 2} ${x + 16} ${flagTop} L${x + 16} ${flagTop + 18} C${x + 12} ${flagTop + 16} ${x + 7} ${flagTop + 16} ${x + 2} ${flagTop + 18} Z`} fill="#006847" /><path d={`M${x + 20} ${flagTop} C${x + 25} ${flagTop - 1} ${x + 30} ${flagTop - 1} ${x + 34} ${flagTop} L${x + 34} ${flagTop + 18} C${x + 30} ${flagTop + 19} ${x + 25} ${flagTop + 19} ${x + 20} ${flagTop + 18} Z`} fill="#CE1126" /><circle cx={x + 18} cy={flagTop + 10} r="2.8" fill="#B48A2F" /></g>
+      : <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 12} ${flagTop - 3} ${x + 24} ${flagTop + 3} ${x + 34} ${flagTop} L${x + 34} ${flagTop + 4} C${x + 24} ${flagTop + 7} ${x + 12} ${flagTop + 1} ${x + 2} ${flagTop + 4} Z M${x + 2} ${flagTop + 7} C${x + 12} ${flagTop + 4} ${x + 24} ${flagTop + 10} ${x + 34} ${flagTop + 7} L${x + 34} ${flagTop + 11} C${x + 24} ${flagTop + 14} ${x + 12} ${flagTop + 8} ${x + 2} ${flagTop + 11} Z M${x + 2} ${flagTop + 14} C${x + 12} ${flagTop + 11} ${x + 24} ${flagTop + 17} ${x + 34} ${flagTop + 14} L${x + 34} ${flagTop + 18} C${x + 24} ${flagTop + 21} ${x + 12} ${flagTop + 15} ${x + 2} ${flagTop + 18} Z`} fill="#B22234" /><path d={`M${x + 2} ${flagTop} C${x + 8} ${flagTop - 1} ${x + 14} ${flagTop - 1} ${x + 18} ${flagTop} L${x + 18} ${flagTop + 10} C${x + 14} ${flagTop + 9} ${x + 8} ${flagTop + 9} ${x + 2} ${flagTop + 10} Z`} fill="#224184" /></g>;
 
   return <g>{commonPole}{flag}</g>;
 }
@@ -123,27 +138,26 @@ function ScoreboardPlaceholder() {
   return (
     <div className="relative h-[calc((100dvh-54px)*0.208)] shrink-0 overflow-hidden">
       <div className="relative h-[79.4%] overflow-hidden bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_54%,#ADD2EC_100%)]">
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
-          <HomeSkyFlag x={182} country="canada" />
-          <HomeSkyFlag x={500} country="mexico" />
-          <HomeSkyFlag x={818} country="usa" />
-        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[70%] w-auto object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.12)]" draggable={false} />
+        </div>
       </div>
       <div className="relative h-[20.6%] overflow-visible bg-[linear-gradient(180deg,#314451_0%,#22313B_100%)]">
-        <svg className="absolute inset-x-0 bottom-0 h-[142%] w-full" viewBox="0 0 1000 170" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M0 70 C150 46 280 62 500 42 C720 62 850 46 1000 70 L1000 170 L0 170 Z" fill="#2C3D49" />
-          <path d="M0 86 C170 64 300 82 500 62 C700 82 830 64 1000 86 L1000 170 L0 170 Z" fill="#1B2A34" />
-          <path d="M0 108 C170 92 310 104 500 88 C690 104 830 92 1000 108 L1000 170 L0 170 Z" fill="#121E27" opacity="0.98" />
-          <path d="M0 72 C150 48 280 64 500 44 C720 64 850 48 1000 72" fill="none" stroke="#405460" strokeWidth="7" opacity="0.78" />
-          <g stroke="#2C3D49" strokeWidth="5" opacity="0.86">
-            <path d="M70 118 L145 88 L220 118 M220 118 L295 88 L370 118 M370 118 L445 88 L520 118 M520 118 L595 88 L670 118 M670 118 L745 88 L820 118 M820 118 L895 88 L970 118" fill="none" />
-          </g>
+        <svg className="absolute inset-x-0 bottom-0 h-[132%] w-full" viewBox="0 0 1000 170" preserveAspectRatio="none" aria-hidden="true">
+          <rect x="0" y="18" width="1000" height="74" fill="#243541" />
+          <rect x="0" y="18" width="1000" height="6" fill="#495B67" opacity="0.9" />
+          <rect x="0" y="80" width="1000" height="12" fill="#15212A" />
+          <HomeSkyFlag x={220} country="canada" />
+          <HomeSkyFlag x={500} country="mexico" />
+          <HomeSkyFlag x={780} country="usa" />
           <g>
-            {[[105,102],[214,92],[323,100],[432,88],[500,96],[568,88],[677,100],[786,92],[895,102]].map(([cx, cy], idx) => (
+            {[[130,55],[315,55],[500,55],[685,55],[870,55]].map(([cx, cy], idx) => (
               <g key={idx}>
-                <circle cx={cx} cy={cy} r="8" fill="#F5F0E6" opacity="0.96" />
-                <circle cx={cx} cy={cy} r="14" fill="rgba(245,240,230,0.18)" />
-                <path d={`M${cx - 28} ${cy + 48} L${cx - 8} ${cy + 9} L${cx + 8} ${cy + 9} L${cx + 28} ${cy + 48} Z`} fill="rgba(245,240,230,0.08)" />
+                <rect x={cx - 28} y={cy - 4} width="56" height="8" rx="4" fill="#FFF1A8" opacity="0.96" />
+                <rect x={cx - 20} y={cy - 2} width="40" height="4" rx="2" fill="#FFF9D6" opacity="0.95" />
+                <rect x={cx - 2} y={cy + 4} width="4" height="17" rx="2" fill="#6F808A" />
+                <ellipse cx={cx} cy={cy + 1} rx="44" ry="14" fill="rgba(255,212,72,0.18)" />
+                <ellipse cx={cx} cy={cy + 2} rx="64" ry="22" fill="rgba(255,212,72,0.10)" />
               </g>
             ))}
           </g>
@@ -154,11 +168,18 @@ function ScoreboardPlaceholder() {
   );
 }
 
+function HomeFooter() {
+  return (
+    <div className="relative z-10 flex justify-center pb-5 pt-2">
+      <BrandMark />
+    </div>
+  );
+}
 
 function HomeLayout({ children }) {
   return (
     <Shell>
-      <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#EFE7D8] text-[#072D1D]">
+      <div className="flex h-[100dvh] flex-col overflow-hidden bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_18%,#ADD2EC_28%,#0D6C3D_28%,#0D6C3D_100%)] text-[#072D1D]">
         <HomeTopBar />
         <ScoreboardPlaceholder />
         <main className="relative min-h-0 flex-1 overflow-hidden">
@@ -167,7 +188,7 @@ function HomeLayout({ children }) {
             <div className="flex min-h-0 flex-1 flex-col justify-center py-2">
               {children}
             </div>
-            <Footer />
+            <HomeFooter />
           </div>
         </main>
       </div>
@@ -206,9 +227,8 @@ function LandingPanel({ savedCampaign, onContinueCampaign, onNewCampaign, onPlay
   return <div className="space-y-3">
     <GreenCard>
       <div className="text-center">
-        <div className="text-[9px] font-black uppercase tracking-[0.24em] text-[#F5F0E6]/50">MONDAY CUP</div>
-        <div className="mt-2 text-[28px] font-black uppercase leading-[0.9] tracking-[-0.03em]">PLAY YOUR TOURNAMENT JOURNEY</div>
-        <p className="mx-auto mt-3 max-w-[260px] text-[11px] font-bold uppercase leading-[1.45] tracking-[0.08em] text-[#F5F0E6]/62">Choose a host nation, take every penalty, and chase the final.</p>
+        <div className="text-[28px] font-black uppercase leading-[0.9] tracking-[-0.03em]">PLAY YOUR TOURNAMENT JOURNEY</div>
+        <p className="mx-auto mt-3 max-w-[248px] text-[10px] font-bold uppercase leading-[1.45] tracking-[0.09em] text-[#F5F0E6]/58">Choose a host nation and chase the final.</p>
       </div>
       <div className="mt-5 space-y-2.5">
         <SavedCampaignCard summary={savedCampaign} onContinue={onContinueCampaign} />
