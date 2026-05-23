@@ -1,7 +1,9 @@
 /* auto-scroll current phase enabled */
 import { useEffect, useRef } from "react";
-import { KO_ROUNDS, KNOCKOUT_PLACEHOLDER_SLOTS } from "../../data/tournament.js";
+import { KO_ROUNDS } from "../../data/tournament.js";
 import { buildRound32Placeholders } from "../../logic/tournament.js";
+import { buildPlaceholderFixtures, mergeByMatchNo } from "../../logic/bracketMappingSelectors.js";
+import { selectFixtureScrollTarget } from "../../logic/schedulePositioningSelectors.js";
 import { Flag } from "../shared.jsx";
 import { ScreenTitle } from "../layout/Menu.jsx";
 
@@ -16,40 +18,6 @@ function PlaceholderFlag({ className = "h-4 w-6" }) {
 
 function FlagSlot({ value }) {
   return isPlaceholderLabel(value) ? <PlaceholderFlag /> : <Flag team={value} />;
-}
-
-function buildPlaceholderFixtures(label, nums) {
-  const configuredSlots = KNOCKOUT_PLACEHOLDER_SLOTS[label];
-  if (configuredSlots) {
-    return configuredSlots.map((slot) => ({
-      id: `M${slot.matchNo}`,
-      matchNo: slot.matchNo,
-      home: slot.homeSeed,
-      away: slot.awaySeed,
-      homeSeed: slot.homeSeed,
-      awaySeed: slot.awaySeed,
-      played: false,
-      homeGoals: null,
-      awayGoals: null,
-    }));
-  }
-
-  return nums.map((num) => ({
-    id: `M${num}`,
-    matchNo: num,
-    home: "TBC",
-    away: "TBC",
-    played: false,
-    homeGoals: null,
-    awayGoals: null,
-  }));
-}
-
-function mergeFixtures(placeholders, actualFixtures) {
-  return placeholders.map((fixture) => {
-    const actual = actualFixtures.find((item) => item.matchNo === fixture.matchNo);
-    return actual ? { ...fixture, ...actual } : fixture;
-  });
 }
 
 export function FixtureCard({ home = "TBC", away = "TBC", group, played = false, homeGoals = null, awayGoals = null, matchNo = null, userTeam = null }) {
@@ -82,23 +50,20 @@ export function FixtureSection({ title, children, sectionRef }) {
 }
 
 export function FixturesScreen({ fixtureView, onFixtureViewChange, schedule, menuProps, knockoutFixtures, userTeam = null, scheduleFocus = null }) {
-  const round32 = mergeFixtures(buildRound32Placeholders(), knockoutFixtures);
+  const round32 = mergeByMatchNo(buildRound32Placeholders(), knockoutFixtures);
   const scrollRef = useRef(null);
   const sectionRefs = useRef({});
-  const focusKey = fixtureView === "group"
-    ? `group-${scheduleFocus?.week || 1}`
-    : `knockout-${scheduleFocus?.round || "Round of 32"}`;
-  const shouldScrollToBottom = fixtureView === "knockout" && ["Semi-finals", "3RD PLACE PLAY-OFF", "Final"].includes(scheduleFocus?.round);
+  const scrollTarget = selectFixtureScrollTarget({ fixtureView, scheduleFocus });
 
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
     const frame = requestAnimationFrame(() => {
-      if (shouldScrollToBottom) {
+      if (scrollTarget.align === "bottom") {
         container.scrollTop = container.scrollHeight;
         return;
       }
-      const target = sectionRefs.current[focusKey];
+      const target = sectionRefs.current[scrollTarget.key];
       if (!target) {
         container.scrollTop = 0;
         return;
@@ -106,7 +71,7 @@ export function FixturesScreen({ fixtureView, onFixtureViewChange, schedule, men
       container.scrollTop = Math.max(0, target.offsetTop - container.offsetTop);
     });
     return () => cancelAnimationFrame(frame);
-  }, [fixtureView, focusKey, shouldScrollToBottom, schedule.length, knockoutFixtures.length]);
+  }, [fixtureView, scrollTarget.key, scrollTarget.align, schedule.length, knockoutFixtures.length]);
 
   const setSectionRef = (key) => (node) => {
     if (node) sectionRefs.current[key] = node;
@@ -115,7 +80,7 @@ export function FixturesScreen({ fixtureView, onFixtureViewChange, schedule, men
   return <main className="flex min-h-0 flex-1 flex-col gap-2"><ScreenTitle {...menuProps}>SCHEDULE</ScreenTitle><FixturesToggle value={fixtureView} onChange={onFixtureViewChange} /><section ref={scrollRef} className="min-h-0 flex-1 overflow-auto py-1"><div className="space-y-2.5">
     {fixtureView === "group" && [1, 2, 3].map((round) => <FixtureSection key={round} title={`MATCHDAY ${round}`} sectionRef={setSectionRef(`group-${round}`)}>{schedule.filter((fixture) => fixture.week === round).map((fixture) => <FixtureCard key={fixture.id} {...fixture} userTeam={userTeam} />)}</FixtureSection>)}
     {fixtureView === "knockout" && KO_ROUNDS.map(([label, nums]) => {
-      const fixtures = label === "Round of 32" ? round32 : mergeFixtures(buildPlaceholderFixtures(label, nums), knockoutFixtures);
+      const fixtures = label === "Round of 32" ? round32 : mergeByMatchNo(buildPlaceholderFixtures(label, nums), knockoutFixtures);
       return <FixtureSection key={label} title={label} sectionRef={setSectionRef(`knockout-${label}`)}>{[...fixtures].sort((a,b)=>(a.matchNo||0)-(b.matchNo||0)).map((fixture) => <FixtureCard key={fixture.id || fixture.matchNo} {...fixture} userTeam={userTeam} />)}</FixtureSection>;
     })}
   </div></section></main>;

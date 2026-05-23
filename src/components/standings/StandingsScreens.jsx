@@ -1,12 +1,9 @@
 import { useEffect, useRef } from "react";
-import { KNOCKOUT_PLACEHOLDER_SLOTS } from "../../data/tournament.js";
-import { buildRound32Placeholders } from "../../logic/tournament.js";
+import { isRealBracketTeam, selectBracketModel, selectBracketSideForTeam, selectUserGroup } from "../../logic/bracketMappingSelectors.js";
+import { selectStandingsScrollTarget } from "../../logic/schedulePositioningSelectors.js";
 import { Flag } from "../shared.jsx";
 import { ScreenTitle } from "../layout/Menu.jsx";
 import { FixturesToggle } from "../schedule/ScheduleScreens.jsx";
-
-const isRealTeam = (value) => value && value !== "TBC" && !/^[123][A-L]+$/.test(String(value)) && !/^(W|RU)\d+$/.test(String(value));
-const isSeedOrProgression = (value) => !isRealTeam(value);
 
 const rowClass = ({ isUserTeam }) => [
   "mb-1 grid grid-cols-[24px_minmax(0,1.9fr)_18px_repeat(6,24px)] items-center gap-[3px] rounded-xl px-2 py-1.5 text-center text-[9px] text-[#072D1D]/80 last:mb-0 ring-1 ring-[#0B5F35]/5",
@@ -19,7 +16,7 @@ function PlaceholderSlot({ value, compact = false }) {
 }
 
 function BracketSlot({ value, compact = false }) {
-  if (!isRealTeam(value)) return <PlaceholderSlot value={value || "TBC"} compact={compact} />;
+  if (!isRealBracketTeam(value)) return <PlaceholderSlot value={value || "TBC"} compact={compact} />;
   const sizeClass = compact ? "h-[14px] w-[21px]" : "h-[18px] w-[26px]";
   return <span className={`relative inline-flex ${sizeClass} shrink-0 overflow-hidden rounded`}>
     <Flag team={value} className={`${sizeClass} rounded`} />
@@ -51,41 +48,6 @@ function StageLabel({ children }) {
   return <div className="text-center text-[6px] font-black uppercase tracking-[0.1em] text-[#7DAA8F]">{children}</div>;
 }
 
-function placeholderFixtures(label) {
-  return (KNOCKOUT_PLACEHOLDER_SLOTS[label] || []).map((slot) => ({
-    id: `M${slot.matchNo}`,
-    matchNo: slot.matchNo,
-    home: slot.homeSeed,
-    away: slot.awaySeed,
-    homeSeed: slot.homeSeed,
-    awaySeed: slot.awaySeed,
-    played: false,
-    homeGoals: null,
-    awayGoals: null,
-  }));
-}
-
-function mergeByMatchNo(placeholders, fixtures) {
-  return placeholders.map((placeholder) => {
-    const actual = fixtures.find((fixture) => fixture.matchNo === placeholder.matchNo);
-    return actual ? { ...placeholder, ...actual } : placeholder;
-  });
-}
-
-function winnerOf(fixture) {
-  if (!fixture?.played) return null;
-  if (fixture.homeGoals > fixture.awayGoals) return fixture.home;
-  if (fixture.awayGoals > fixture.homeGoals) return fixture.away;
-  return null;
-}
-
-function runnerUpOf(fixture) {
-  if (!fixture?.played) return null;
-  if (fixture.homeGoals > fixture.awayGoals) return fixture.away;
-  if (fixture.awayGoals > fixture.homeGoals) return fixture.home;
-  return null;
-}
-
 function PodiumBox({ title, team, className }) {
   return <div className={`flex h-[42px] w-[76px] flex-col items-center justify-center rounded-[0.85rem] ${className}`}>
     <div className="mb-1 text-[6px] font-black uppercase tracking-[0.16em] text-[#072D1D]/70">{title}</div>
@@ -115,18 +77,7 @@ export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam =
 }
 
 function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
-  const allFixtures = round32;
-  const r32 = mergeByMatchNo(buildRound32Placeholders(), allFixtures);
-  const r16 = mergeByMatchNo(placeholderFixtures("Round of 16"), allFixtures);
-  const qf = mergeByMatchNo(placeholderFixtures("Quarter-finals"), allFixtures);
-  const sf = mergeByMatchNo(placeholderFixtures("Semi-finals"), allFixtures);
-  const final = mergeByMatchNo(placeholderFixtures("Final"), allFixtures);
-  const third = mergeByMatchNo(placeholderFixtures("3RD PLACE PLAY-OFF"), allFixtures);
-  const finalFixture = final[0];
-  const thirdFixture = third[0];
-  const winner = podium.winner || winnerOf(finalFixture);
-  const runnerUp = podium.runnerUp || runnerUpOf(finalFixture);
-  const thirdPlace = podium.third || winnerOf(thirdFixture);
+  const { r32, r16, qf, sf, finalFixture, thirdFixture, winner, runnerUp, thirdPlace } = selectBracketModel({ knockoutFixtures: round32, podium });
 
   return <div className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.04)]">
     <div className="bg-[#0B5F35] px-3 py-2.5 text-center text-[17px] font-black tracking-[-0.025em] text-[#F5F0E6]">TOURNAMENT BRACKET</div>
@@ -156,43 +107,26 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
   </div>;
 }
 
-function bracketSideForTeam(fixtures = [], userTeam = null) {
-  if (!userTeam) return "top";
-  const fixture = fixtures
-    .filter((item) => item?.matchNo && (item.home === userTeam || item.away === userTeam))
-    .sort((a, b) => (b.matchNo || 0) - (a.matchNo || 0))[0];
-
-  if (!fixture) return "top";
-  const matchNo = fixture.matchNo;
-  if (matchNo >= 102 || (matchNo >= 99 && matchNo <= 100) || (matchNo >= 93 && matchNo <= 96) || (matchNo >= 81 && matchNo <= 88)) return "bottom";
-  return "top";
-}
-
 export function GroupsScreen({ allGroups, menuProps, standingsView, onStandingsViewChange, knockoutFixtures, qualifiedTeams = new Set(), userTeam = null, podium = {} }) {
   const scrollRef = useRef(null);
   const groupRefs = useRef({});
-  const bracketSide = bracketSideForTeam(knockoutFixtures, userTeam);
-  const userGroup = allGroups.find(({ rows }) => rows.some((row) => row.team === userTeam))?.group || null;
+  const bracketSide = selectBracketSideForTeam(knockoutFixtures, userTeam);
+  const userGroup = selectUserGroup(allGroups, userTeam);
+  const scrollTarget = selectStandingsScrollTarget({ standingsView, bracketSide, userGroup });
 
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
     const frame = requestAnimationFrame(() => {
-      if (standingsView === "knockout") {
-        container.scrollTop = bracketSide === "bottom" ? container.scrollHeight : 0;
+      if (scrollTarget.align === "bottom") {
+        container.scrollTop = container.scrollHeight;
         return;
       }
-      if (standingsView === "group") {
-        if (userGroup === "K" || userGroup === "L") {
-          container.scrollTop = container.scrollHeight;
-          return;
-        }
-        const target = userGroup ? groupRefs.current[userGroup] : null;
-        container.scrollTop = target ? Math.max(0, target.offsetTop - container.offsetTop) : 0;
-      }
+      const target = groupRefs.current[scrollTarget.key.replace("group-", "")];
+      container.scrollTop = target ? Math.max(0, target.offsetTop - container.offsetTop) : 0;
     });
     return () => cancelAnimationFrame(frame);
-  }, [standingsView, bracketSide, knockoutFixtures.length, userTeam, userGroup, allGroups.length]);
+  }, [scrollTarget.key, scrollTarget.align, standingsView, knockoutFixtures.length, userTeam, userGroup, allGroups.length]);
 
   return <main className="flex min-h-0 flex-1 flex-col gap-2"><ScreenTitle {...menuProps}>STANDINGS</ScreenTitle><FixturesToggle value={standingsView} onChange={onStandingsViewChange} /><section ref={scrollRef} className="min-h-0 flex-1 overflow-auto py-1"><div className="space-y-2">
     {standingsView === "group" && allGroups.map(({ group, rows }) => <div key={group} ref={(node) => { if (node) groupRefs.current[group] = node; }}><GroupTable title={`GROUP ${group}`} rows={rows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} /></div>)}

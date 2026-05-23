@@ -1,20 +1,7 @@
 import { useMemo, useReducer } from "react";
-import {
-  applyFixtureResult,
-  buildQualifiers,
-  buildRound32Fixtures,
-  completeKnockoutRound,
-  completeMatchday,
-  didTeamQualify,
-  findTeamKnockoutFixture,
-  getFixtureOpponent,
-  knockoutStageLabel,
-} from "../logic/tournament.js";
-import {
-  resultBelongsToFixture,
-  resultFormCode,
-  userScoreFromFixtureResult,
-} from "../logic/gameFixture.js";
+import { buildQualifiers } from "../logic/tournament.js";
+import { matchLifecycleReducer } from "../logic/matchLifecycleReducer.js";
+import { selectScheduleFocus } from "../logic/schedulePositioningSelectors.js";
 import {
   calculateEarlyQualifiedTeams,
   isGroupStageComplete,
@@ -31,17 +18,6 @@ function clearSavedMatchState() {
   Object.keys(window.sessionStorage)
     .filter((key) => key.startsWith("mondaycup-match-state:"))
     .forEach((key) => window.sessionStorage.removeItem(key));
-}
-
-function scheduleRoundForMatchNo(matchNo) {
-  if (!matchNo) return "Round of 32";
-  if (matchNo >= 73 && matchNo <= 88) return "Round of 32";
-  if (matchNo >= 89 && matchNo <= 96) return "Round of 16";
-  if (matchNo >= 97 && matchNo <= 100) return "Quarter-finals";
-  if (matchNo >= 101 && matchNo <= 102) return "Semi-finals";
-  if (matchNo === 103) return "3RD PLACE PLAY-OFF";
-  if (matchNo === 104) return "Final";
-  return "Round of 32";
 }
 
 export function useTournamentController() {
@@ -88,23 +64,20 @@ export function useTournamentController() {
   const currentFixture = selectCurrentGameFixture({ currentKnockoutMatch, activeGroupFixture });
   const selectedGroupRows = selectSelectedGroupRows({ allGroups, selectedGroup });
 
-  const getScheduleFocus = () => {
-    if (matchResult?.week) return { view: "group", week: matchResult.week };
-    if (matchResult?.matchNo) return { view: "knockout", round: scheduleRoundForMatchNo(matchResult.matchNo) };
-    if (currentKnockoutMatch?.matchNo) return { view: "knockout", round: scheduleRoundForMatchNo(currentKnockoutMatch.matchNo) };
-    if (activeGroupFixture?.week) return { view: "group", week: activeGroupFixture.week };
-    const upcomingGroupFixture = team ? schedule.find((fixture) => !fixture.played && fixture.group === selectedGroup && (fixture.home === team || fixture.away === team)) : null;
-    if (upcomingGroupFixture?.week) return { view: "group", week: upcomingGroupFixture.week };
-    return groupStageComplete ? { view: "knockout", round: "Round of 32" } : { view: "group", week: 1 };
-  };
-
-  const scheduleFocus = getScheduleFocus();
+  const scheduleFocus = selectScheduleFocus({
+    matchResult,
+    currentKnockoutMatch,
+    activeGroupFixture,
+    schedule,
+    selectedGroup,
+    team,
+    groupStageComplete,
+  });
 
   const closeMenu = () => patch({ menuOpen: false });
   const openMatch = () => patch({ menuOpen: false, drawer: null });
   const openFixtures = () => {
-    const focus = getScheduleFocus();
-    patch({ menuOpen: false, fixtureView: focus.view, drawer: "fixtures" });
+    patch({ menuOpen: false, fixtureView: scheduleFocus.view, drawer: "fixtures" });
   };
   const openGroups = () => patch({ menuOpen: false, standingsView: groupStageComplete ? "knockout" : standingsView, drawer: "groups" });
 
@@ -136,201 +109,37 @@ export function useTournamentController() {
     });
   };
 
-  const quickWin = () => {
-    if (!team || !opponent) return;
-    const match = schedule.find((fixture) => !fixture.played && fixture.group === selectedGroup && ((fixture.home === team && fixture.away === opponent) || (fixture.home === opponent && fixture.away === team)));
-    if (!match) return;
-
-    const homeGoals = match.home === team ? 1 : 0;
-    const awayGoals = match.away === team ? 1 : 0;
-    const afterUserSchedule = schedule.map((fixture) => fixture.id === match.id ? { ...fixture, played: true, homeGoals, awayGoals } : fixture);
-    const afterUserTable = applyFixtureResult(table, match, homeGoals, awayGoals);
-    const { updatedSchedule, updatedTable } = completeMatchday(afterUserSchedule, afterUserTable, match.week);
-    const completedGroupStage = updatedSchedule.every((fixture) => fixture.played);
-    const qualified = completedGroupStage ? didTeamQualify(team, updatedTable) : false;
-
-    patch({
-      score: [1, 0],
-      schedule: updatedSchedule,
-      table: updatedTable,
-      knockoutFixtures: completedGroupStage ? buildRound32Fixtures(updatedTable) : knockoutFixtures,
-      modalDismissed: false,
-      userForm: [...userForm, "W"].slice(-8),
-      matchResult: {
-        home: match.home,
-        away: match.away,
-        homeGoals,
-        awayGoals,
-        won: true,
-        week: match.week,
-        status: completedGroupStage ? (qualified ? "qualified" : "eliminated") : "groupWin",
-        attempts: { user: ["G", "G", "G", "G", "G"], opponent: ["S", "S", "S", "S", "S"] },
-      },
-    });
+  const lifecycleState = {
+    schedule,
+    table,
+    selectedGroup,
+    team,
+    opponent,
+    knockoutFixtures,
+    currentKnockoutMatch,
+    activeGroupFixture,
+    podium,
+    userForm,
+    matchResult,
+    groupStageComplete,
+    standingsView,
   };
 
-  const handleKnockoutComplete = (result) => {
-    const userPlayedMatch = {
-      ...currentKnockoutMatch,
-      played: true,
-      homeGoals: result.homeGoals,
-      awayGoals: result.awayGoals,
-    };
-
-    const { updatedFixtures, playedUserMatch, nextUserFixture, podium: completedPodium } = completeKnockoutRound({
-      fixtures: knockoutFixtures,
-      currentMatch: currentKnockoutMatch,
-      userTeam: team,
-      userResult: userPlayedMatch,
-    });
-
-    const userScore = userScoreFromFixtureResult({
-      homeTeam: playedUserMatch.home,
-      awayTeam: playedUserMatch.away,
-      homeGoals: playedUserMatch.homeGoals,
-      awayGoals: playedUserMatch.awayGoals,
-    }, team);
-
-    const matchNo = playedUserMatch.matchNo;
-    const lostSemiFinal = !result.userWon && (matchNo === 101 || matchNo === 102);
-    let status = "eliminated";
-    if (matchNo === 103) status = result.userWon ? "third" : "fourth";
-    else if (matchNo === 104) status = result.userWon ? "champion" : "runnerUp";
-    else if (result.userWon) status = "knockoutWin";
-    else if (lostSemiFinal) status = "thirdPlace";
-
-    patch({
-      score: userScore,
-      knockoutFixtures: updatedFixtures,
-      podium: completedPodium || podium,
-      modalDismissed: false,
-      userForm: [...userForm, resultFormCode(result)].filter(Boolean).slice(-8),
-      matchResult: {
-        home: playedUserMatch.home,
-        away: playedUserMatch.away,
-        homeGoals: playedUserMatch.homeGoals,
-        awayGoals: playedUserMatch.awayGoals,
-        won: result.userWon,
-        week: null,
-        matchNo,
-        status,
-        nextFixture: nextUserFixture,
-        attempts: result.attempts,
-      },
-    });
-  };
-
-  const handleGroupComplete = (result) => {
-    const match = schedule.find((fixture) => fixture.id === result.fixtureId) || activeGroupFixture;
-    if (!match) return;
-
-    const afterUserSchedule = schedule.map((fixture) => fixture.id === match.id ? { ...fixture, played: true, homeGoals: result.homeGoals, awayGoals: result.awayGoals } : fixture);
-    const afterUserTable = applyFixtureResult(table, match, result.homeGoals, result.awayGoals);
-    const { updatedSchedule, updatedTable } = completeMatchday(afterUserSchedule, afterUserTable, match.week);
-    const completedGroupStage = updatedSchedule.every((fixture) => fixture.played);
-    const qualified = completedGroupStage ? didTeamQualify(team, updatedTable) : false;
-    const userScore = userScoreFromFixtureResult(result, team);
-
-    patch({
-      score: userScore,
-      schedule: updatedSchedule,
-      table: updatedTable,
-      knockoutFixtures: completedGroupStage ? buildRound32Fixtures(updatedTable) : knockoutFixtures,
-      modalDismissed: false,
-      userForm: [...userForm, resultFormCode(result)].filter(Boolean).slice(-8),
-      matchResult: {
-        home: match.home,
-        away: match.away,
-        homeGoals: result.homeGoals,
-        awayGoals: result.awayGoals,
-        won: result.userWon,
-        week: match.week,
-        status: completedGroupStage ? (qualified ? "qualified" : "eliminated") : (result.isDraw ? "groupDraw" : result.userWon ? "groupWin" : "groupLoss"),
-        isDraw: result.isDraw || result.homeGoals === result.awayGoals,
-        attempts: result.attempts,
-      },
-    });
-  };
-
-  const handleMatchComplete = (result) => {
-    if (!result || !team) return;
-    if (currentKnockoutMatch && resultBelongsToFixture(result, currentKnockoutMatch)) {
-      handleKnockoutComplete(result);
-      return;
-    }
-    handleGroupComplete(result);
-  };
-
-  const goToKnockoutFixture = (fixture) => {
-    patch({
-      currentKnockoutMatch: fixture,
-      opponent: getFixtureOpponent(team, fixture),
-      score: [0, 0],
-      matchStage: knockoutStageLabel(fixture.matchNo),
-      matchResult: null,
-      modalDismissed: false,
-      drawer: null,
-      screen: "match",
-    });
-  };
-
-  const nextMatch = () => {
-    if (!team || !matchResult) return;
-
-    if (matchResult.status === "thirdPlace") {
-      const nextFixture = matchResult.nextFixture || knockoutFixtures.find((fixture) => fixture.matchNo === 103 && (fixture.home === team || fixture.away === team));
-      if (nextFixture) {
-        goToKnockoutFixture(nextFixture);
-        return;
-      }
-    }
-
-    if (["champion", "runnerUp", "eliminated", "third", "fourth"].includes(matchResult.status)) {
+  const applyLifecycleAction = (action) => {
+    const lifecyclePatch = matchLifecycleReducer(lifecycleState, action);
+    if (!lifecyclePatch) return;
+    if (lifecyclePatch.resetTournament) {
       resetTournament();
       return;
     }
-
-    if (matchResult.status === "qualified") {
-      const round32 = knockoutFixtures.length ? knockoutFixtures : buildRound32Fixtures(table);
-      const userFixture = findTeamKnockoutFixture(team, round32);
-      if (userFixture) {
-        patch({ knockoutFixtures: round32 });
-        goToKnockoutFixture(userFixture);
-        return;
-      }
-    }
-
-    if (matchResult.status === "knockoutWin") {
-      const nextFixture = matchResult.nextFixture || knockoutFixtures.find((fixture) => !fixture.played && (fixture.home === team || fixture.away === team));
-      if (nextFixture) {
-        goToKnockoutFixture(nextFixture);
-        return;
-      }
-    }
-
-    const upcoming = schedule.find((fixture) => !fixture.played && fixture.group === selectedGroup && (fixture.home === team || fixture.away === team));
-
-    if (upcoming) {
-      patch({
-        matchResult: null,
-        modalDismissed: false,
-        opponent: upcoming.home === team ? upcoming.away : upcoming.home,
-        score: [0, 0],
-        currentKnockoutMatch: null,
-        matchStage: "GROUP STAGE",
-        drawer: null,
-        screen: "match",
-      });
-    } else {
-      patch({
-        matchResult: null,
-        modalDismissed: false,
-        fixtureView: groupStageComplete ? "knockout" : "group",
-        standingsView: groupStageComplete ? "knockout" : standingsView,
-        drawer: "fixtures",
-      });
-    }
+    patch(lifecyclePatch);
   };
+
+  const quickWin = () => applyLifecycleAction({ type: "quick-win" });
+
+  const handleMatchComplete = (result) => applyLifecycleAction({ type: "complete-match", result });
+
+  const nextMatch = () => applyLifecycleAction({ type: "next-match" });
 
   const menuProps = {
     menuOpen,
