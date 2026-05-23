@@ -104,10 +104,13 @@ function HomeFlagPanel({ type }) {
   const isCup = type === "cup";
   const flagSrc = type === "canada" ? "/flags/CAN.png" : type === "mexico" ? "/flags/MEX.png" : "/flags/USA.png";
   return (
-    <div className="relative flex h-[54%] aspect-[250/167] items-center justify-center rounded-sm shadow-[0_3px_8px_rgba(0,0,0,0.24)]">
-      <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-sm ${isCup ? "bg-[#7D8581]" : "bg-[#F5F0E6]"}`}>
+    <div className="relative h-full w-full">
+      <div className="absolute -left-[3%] -right-[3%] -top-[5px] h-[4px] rounded-full bg-[#BFC7C4] shadow-[0_1px_3px_rgba(0,0,0,0.35)]" />
+      <div className="absolute -left-[3%] -top-[7px] h-[8px] w-[8px] rounded-full bg-[#AEB7B4] shadow-[0_1px_3px_rgba(0,0,0,0.35)]" />
+      <div className="absolute -right-[3%] -top-[7px] h-[8px] w-[8px] rounded-full bg-[#AEB7B4] shadow-[0_1px_3px_rgba(0,0,0,0.35)]" />
+      <div className={`flex h-full w-full items-center justify-center overflow-hidden border border-[#0A1A12]/55 shadow-[0_4px_10px_rgba(0,0,0,0.30)] ${isCup ? "bg-[#7D8581]" : "bg-[#F5F0E6]"}`}>
         {isCup ? (
-          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[86%] w-[86%] object-contain" draggable={false} />
+          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[80%] w-[84%] object-contain" draggable={false} />
         ) : (
           <img src={flagSrc} alt="" className="h-full w-full object-contain" draggable={false} />
         )}
@@ -116,9 +119,19 @@ function HomeFlagPanel({ type }) {
   );
 }
 
+function HomeHangingFlag({ type, left }) {
+  return (
+    <div className="absolute z-[4] -translate-x-1/2" style={{ left: `${left}%`, top: "42%", width: "12.5%", height: "46%" }}>
+      <div className="absolute left-[10%] top-[-24%] h-[24%] w-[2px] rounded-full bg-[#D8DFDC]/80 shadow-[0_1px_2px_rgba(0,0,0,0.38)]" />
+      <div className="absolute right-[10%] top-[-24%] h-[24%] w-[2px] rounded-full bg-[#D8DFDC]/80 shadow-[0_1px_2px_rgba(0,0,0,0.38)]" />
+      <HomeFlagPanel type={type} />
+    </div>
+  );
+}
+
 function ScoreboardPlaceholder() {
-  const flagCenters = [14, 32, 50, 68, 86];
-  const lightCenters = [140, 320, 500, 680, 860];
+  const flagCenters = [20, 35, 50, 65, 80];
+  const lightCenters = flagCenters.map((x) => x * 10);
   const flagItems = ["canada", "cup", "mexico", "cup", "usa"];
   const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
   const flashHeight = "calc((100dvh - 54px) * 0.165 * 0.26)";
@@ -164,47 +177,34 @@ function ScoreboardPlaceholder() {
         <div className="absolute inset-x-0 top-0" style={{ height: trussHeight }}>
           <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
             <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M80 22 H920" stroke="rgba(196,201,205,0.58)" strokeWidth="5" />
-              <path d="M80 76 H920" stroke="rgba(196,201,205,0.50)" strokeWidth="5" />
-              {lightCenters.map((cx) => (
-                <g key={`bay-${cx}`}>
-                  <path d={`M${cx - 78} 76 L${cx} 22 L${cx + 78} 76`} stroke="rgba(217,222,226,0.36)" strokeWidth="3.5" />
-                  <path d={`M${cx - 78} 22 L${cx} 76 L${cx + 78} 22`} stroke="rgba(217,222,226,0.24)" strokeWidth="2.5" />
-                </g>
-              ))}
-              {lightCenters.map((cx) => <path key={`post-${cx}`} d={`M${cx} 22 V76`} stroke="rgba(196,201,205,0.28)" strokeWidth="3" />)}
+              <path d="M120 20 H880" stroke="rgba(210,216,218,0.54)" strokeWidth="6" />
+              <path d="M120 74 H880" stroke="rgba(155,164,166,0.48)" strokeWidth="6" />
+              {Array.from({ length: 4 }).map((_, idx) => {
+                const x0 = 120 + idx * 190;
+                const x1 = x0 + 190;
+                return (
+                  <g key={idx}>
+                    <path d={`M${x0} 74 L${x1} 20`} stroke="rgba(210,216,218,0.32)" strokeWidth="4" />
+                    <path d={`M${x0} 20 L${x1} 74`} stroke="rgba(210,216,218,0.28)" strokeWidth="4" />
+                  </g>
+                );
+              })}
+              {lightCenters.map((cx) => <path key={`hanger-${cx}`} d={`M${cx} 20 V83`} stroke="rgba(210,216,218,0.22)" strokeWidth="3" />)}
             </g>
             <g>
               {lightCenters.map((cx) => (
                 <g key={cx}>
-                  <rect x={cx - 18} y={35} width="36" height="22" rx="2" fill="#F4F1E6" />
-                  <rect x={cx - 10} y={40} width="20" height="12" rx="1.5" fill="#FFFFFF" />
-                  <rect x={cx - 3} y={57} width="6" height="10" rx="1.5" fill="rgba(220,226,222,0.78)" />
+                  <rect x={cx - 15} y="38" width="30" height="20" rx="2" fill="#F5F1E8" />
+                  <rect x={cx - 9} y="43" width="18" height="10" rx="1.5" fill="#FFFFFF" />
+                  <rect x={cx - 3} y="58" width="6" height="9" rx="1.5" fill="rgba(220,226,222,0.78)" />
                 </g>
               ))}
             </g>
           </svg>
         </div>
 
-        <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1000 150" preserveAspectRatio="none" aria-hidden="true">
-          <g stroke="rgba(220,226,222,0.72)" strokeWidth="2.25" strokeLinecap="round">
-            {lightCenters.map((cx) => (
-              <g key={`rope-${cx}`}>
-                <path d={`M${cx - 27} 50 L${cx - 27} 96`} />
-                <path d={`M${cx + 27} 50 L${cx + 27} 96`} />
-              </g>
-            ))}
-          </g>
-        </svg>
-
-        <div className="absolute inset-x-0 bottom-0 flex h-[66.6667%] items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.015)_0%,rgba(0,0,0,0.10)_100%)]" />
-          {flagItems.map((type, index) => (
-            <div key={`${type}-${index}`} className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: `${flagCenters[index]}%` }}>
-              <HomeFlagPanel type={type} />
-            </div>
-          ))}
-        </div>
+        {flagItems.map((type, index) => <HomeHangingFlag key={`${type}-${index}`} type={type} left={flagCenters[index]} />)}
+        <div className="absolute inset-x-0 bottom-[-1px] h-[3px] bg-[#123822]" />
       </div>
     </div>
   );
