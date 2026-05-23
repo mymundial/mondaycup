@@ -63,11 +63,11 @@ export function FixtureCard({ home = "TBC", away = "TBC", group, played = false,
       {group && <span>Group {group}</span>}
     </div>
     <div className="grid grid-cols-[24px_minmax(0,1fr)_34px_minmax(0,1fr)_24px] items-center gap-2 text-[10px] font-black text-[#072D1D]">
-      <div className="flex items-center justify-start"><FlagSlot value={home} /></div>
-      <span className={`min-w-0 truncate text-right uppercase tracking-[0.005em] ${isUserHome ? "font-black" : "font-semibold"}`}>{displayTeam(home)}</span>
-      <span className="text-center text-[#0B5F35]">{played ? `${homeGoals}-${awayGoals}` : "v"}</span>
-      <span className={`min-w-0 truncate text-left uppercase tracking-[0.005em] ${isUserAway ? "font-black" : "font-semibold"}`}>{displayTeam(away)}</span>
-      <div className="flex items-center justify-end"><FlagSlot value={away} /></div>
+      <div className="flex items-center justify-center"><FlagSlot value={home} /></div>
+      <span className={`min-w-0 truncate text-center uppercase tracking-[0.005em] ${isUserHome ? "font-black" : "font-semibold"}`}>{displayTeam(home)}</span>
+      <span className="text-center font-black text-[#0B5F35]">{played ? `${homeGoals}-${awayGoals}` : "v"}</span>
+      <span className={`min-w-0 truncate text-center uppercase tracking-[0.005em] ${isUserAway ? "font-black" : "font-semibold"}`}>{displayTeam(away)}</span>
+      <div className="flex items-center justify-center"><FlagSlot value={away} /></div>
     </div>
   </div>;
 }

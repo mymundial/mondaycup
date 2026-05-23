@@ -86,16 +86,12 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
           {isKnockout ? (
             <>
               <div className={`mt-1 rounded-[1.25rem] bg-[#DCE9DE] px-2.5 py-3 ${(result.home === userTeam || result.away === userTeam) ? "ring-1 ring-[#CFE2D3]" : ""}`}>
-                <div className="grid min-h-[32px] grid-cols-[minmax(0,1fr)_34px_minmax(0,1fr)] items-center gap-1 text-[clamp(11px,3vw,13px)] uppercase leading-none text-[#3E4F46]">
-                  <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-                    <Flag team={result.home} className="h-5 w-7" />
-                    <span className={`block min-w-0 flex-1 truncate text-left tracking-[0.005em] ${result.home === userTeam ? "font-black" : "font-bold"}`} title={result.home}>{result.home}</span>
-                  </div>
+                <div className="grid min-h-[32px] grid-cols-[28px_minmax(0,1fr)_34px_minmax(0,1fr)_28px] items-center gap-1 text-[clamp(11px,3vw,13px)] uppercase leading-none text-[#3E4F46]">
+                  <div className="flex items-center justify-center"><Flag team={result.home} className="h-5 w-7" /></div>
+                  <span className={`block min-w-0 truncate text-center tracking-[0.005em] ${result.home === userTeam ? "font-black" : "font-bold"}`} title={result.home}>{result.home}</span>
                   <span className="flex items-center justify-center font-black tabular-nums leading-none text-[#0B5F35]">{result.homeGoals}-{result.awayGoals}</span>
-                  <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-                    <span className={`block min-w-0 flex-1 truncate text-left tracking-[0.005em] ${result.away === userTeam ? "font-black" : "font-bold"}`} title={result.away}>{result.away}</span>
-                    <Flag team={result.away} className="h-5 w-7" />
-                  </div>
+                  <span className={`block min-w-0 truncate text-center tracking-[0.005em] ${result.away === userTeam ? "font-black" : "font-bold"}`} title={result.away}>{result.away}</span>
+                  <div className="flex items-center justify-center"><Flag team={result.away} className="h-5 w-7" /></div>
                 </div>
               </div>
             </>

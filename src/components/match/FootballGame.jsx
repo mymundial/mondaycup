@@ -69,7 +69,10 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
             <div className="col-start-6 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><PenaltyMarkers attempts={attempts.opponent} totalSlots={totalMarkerSlots} /></div></div>
           </div>
         </div>
-        <div className="absolute inset-x-0 bottom-0 z-[3] grid h-[26%] w-full place-items-center overflow-hidden px-[3%] text-center font-sans text-[clamp(13px,2.3vh,28px)] font-black leading-none tracking-tight" style={tickerStyle}>
+        <div
+          className="absolute inset-x-0 z-[5] grid w-full place-items-center overflow-hidden px-[3%] text-center font-sans text-[clamp(13px,2.3vh,28px)] font-black leading-none tracking-tight"
+          style={{ ...tickerStyle, bottom: "-2px", height: "calc(26% + 3px)", boxShadow: `0 2px 0 ${tickerStyle.background || "#0B5F35"}` }}
+        >
           <span className="block translate-y-[-1px]">{ticker}</span>
         </div>
       </div>
