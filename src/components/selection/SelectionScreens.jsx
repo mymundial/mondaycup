@@ -1,18 +1,8 @@
 import { HOST_TEAMS, GROUPS, GROUP_LETTERS, TEAM_RANK, getTeamTheme } from "../../data/teams.js";
 import { ASSETS } from "../../data/assets.js";
 import { DEFAULT_ASSETS, GAME } from "../../logic/penaltyEngine.js";
-import { Flag, HamburgerIcon } from "../shared.jsx";
+import { Flag } from "../shared.jsx";
 import { GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
-
-function HomeTopBar() {
-  return (
-    <div className="relative h-[54px] shrink-0 bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_54%,#ADD2EC_100%)]">
-      <button type="button" aria-label="Menu" className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[0.95rem] bg-[#DDF2FF]/42 text-[#0B5F35] shadow-[inset_0_0_0_1px_rgba(11,95,53,0.14)]">
-        <span className="scale-90"><HamburgerIcon /></span>
-      </button>
-    </div>
-  );
-}
 
 
 function HomeCrowdPerson({ x, y, scale = 1, shirt = "#0d6c3d", skin = "#c98f65", pose = "down", opacity = 1 }) {
@@ -110,53 +100,52 @@ function HomePitchBackdrop() {
   );
 }
 
-function HomeSkyFlag({ x, country }) {
-  const roofY = 166;
-  const poleTop = 116;
-  const flagTop = 119;
-  const flagW = 34;
-  const flagH = 18;
+function HomeSkyFlag({ x, roofTop, country }) {
+  const poleTop = roofTop - 54;
+  const flagTop = poleTop + 3;
+  const flagW = 48;
+  const flagH = 20;
   const commonPole = (
     <>
-      <rect x={x - 1.4} y={poleTop} width="2.8" height={roofY - poleTop} rx="1.4" fill="#D7DEE1" />
-      <circle cx={x} cy={poleTop - 2.5} r="3.3" fill="#F4F7F7" />
+      <rect x={x - 1.5} y={poleTop} width="3" height={roofTop - poleTop} rx="1.5" fill="#E6EEF1" />
+      <circle cx={x} cy={poleTop - 2.8} r="3.6" fill="#F9FBFB" />
     </>
   );
-  const clothBase = `M${x + 2} ${flagTop} C${x + 12} ${flagTop - 3} ${x + 24} ${flagTop + 3} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + flagH} C${x + 24} ${flagTop + flagH + 3} ${x + 12} ${flagTop + flagH - 3} ${x + 2} ${flagTop + flagH} Z`;
+  const clothBase = `M${x + 2} ${flagTop} C${x + 14} ${flagTop - 3} ${x + 31} ${flagTop + 3} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + flagH} C${x + 31} ${flagTop + flagH + 3} ${x + 14} ${flagTop + flagH - 3} ${x + 2} ${flagTop + flagH} Z`;
 
   const flag = country === "canada"
-    ? <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 7} ${flagTop - 2} ${x + 12} ${flagTop - 2} ${x + 15} ${flagTop} L${x + 15} ${flagTop + flagH} C${x + 12} ${flagTop + flagH - 2} ${x + 7} ${flagTop + flagH - 2} ${x + 2} ${flagTop + flagH} Z`} fill="#E1251B" /><path d={`M${x + 21} ${flagTop} C${x + 26} ${flagTop + 1} ${x + 30} ${flagTop + 1} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + flagH} C${x + 30} ${flagTop + flagH + 1} ${x + 26} ${flagTop + flagH + 1} ${x + 21} ${flagTop + flagH} Z`} fill="#E1251B" /><path d={`M${x + 18} ${flagTop + 6} l2 4 h4 l-3 2 1 4 -4 -3 -4 3 1 -4 -3 -2 h4 Z`} fill="#E1251B" /></g>
+    ? <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 9} ${flagTop - 2} ${x + 14} ${flagTop - 2} ${x + 18} ${flagTop} L${x + 18} ${flagTop + flagH} C${x + 14} ${flagTop + flagH - 2} ${x + 9} ${flagTop + flagH - 2} ${x + 2} ${flagTop + flagH} Z`} fill="#E1251B" /><path d={`M${x + 30} ${flagTop} C${x + 36} ${flagTop + 1} ${x + 41} ${flagTop + 1} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + flagH} C${x + 41} ${flagTop + flagH + 1} ${x + 36} ${flagTop + flagH + 1} ${x + 30} ${flagTop + flagH} Z`} fill="#E1251B" /><path d={`M${x + 24} ${flagTop + 6} l2.5 4.5 h4.5 l-3.5 2.2 1.2 4.3 -4.4 -3.1 -4.4 3.1 1.2 -4.3 -3.5 -2.2 h4.5 Z`} fill="#E1251B" /></g>
     : country === "mexico"
-      ? <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 7} ${flagTop - 2} ${x + 12} ${flagTop - 2} ${x + 15} ${flagTop} L${x + 15} ${flagTop + flagH} C${x + 12} ${flagTop + flagH - 2} ${x + 7} ${flagTop + flagH - 2} ${x + 2} ${flagTop + flagH} Z`} fill="#006847" /><path d={`M${x + 21} ${flagTop} C${x + 26} ${flagTop + 1} ${x + 30} ${flagTop + 1} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + flagH} C${x + 30} ${flagTop + flagH + 1} ${x + 26} ${flagTop + flagH + 1} ${x + 21} ${flagTop + flagH} Z`} fill="#CE1126" /><circle cx={x + 18} cy={flagTop + 10} r="2.8" fill="#B48A2F" /></g>
-      : <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 12} ${flagTop - 3} ${x + 24} ${flagTop + 3} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + 4} C${x + 24} ${flagTop + 7} ${x + 12} ${flagTop + 1} ${x + 2} ${flagTop + 4} Z M${x + 2} ${flagTop + 7} C${x + 12} ${flagTop + 4} ${x + 24} ${flagTop + 10} ${x + flagW} ${flagTop + 7} L${x + flagW} ${flagTop + 11} C${x + 24} ${flagTop + 14} ${x + 12} ${flagTop + 8} ${x + 2} ${flagTop + 11} Z M${x + 2} ${flagTop + 14} C${x + 12} ${flagTop + 11} ${x + 24} ${flagTop + 17} ${x + flagW} ${flagTop + 14} L${x + flagW} ${flagTop + flagH} C${x + 24} ${flagTop + flagH + 3} ${x + 12} ${flagTop + flagH - 3} ${x + 2} ${flagTop + flagH} Z`} fill="#B22234" /><path d={`M${x + 2} ${flagTop} C${x + 8} ${flagTop - 1} ${x + 14} ${flagTop - 1} ${x + 18} ${flagTop} L${x + 18} ${flagTop + 10} C${x + 14} ${flagTop + 9} ${x + 8} ${flagTop + 9} ${x + 2} ${flagTop + 10} Z`} fill="#224184" /></g>;
+      ? <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 9} ${flagTop - 2} ${x + 14} ${flagTop - 2} ${x + 18} ${flagTop} L${x + 18} ${flagTop + flagH} C${x + 14} ${flagTop + flagH - 2} ${x + 9} ${flagTop + flagH - 2} ${x + 2} ${flagTop + flagH} Z`} fill="#006847" /><path d={`M${x + 30} ${flagTop} C${x + 36} ${flagTop + 1} ${x + 41} ${flagTop + 1} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + flagH} C${x + 41} ${flagTop + flagH + 1} ${x + 36} ${flagTop + flagH + 1} ${x + 30} ${flagTop + flagH} Z`} fill="#CE1126" /><circle cx={x + 24} cy={flagTop + 10.5} r="3.1" fill="#B48A2F" /></g>
+      : <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 14} ${flagTop - 3} ${x + 31} ${flagTop + 3} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + 4.6} C${x + 31} ${flagTop + 7} ${x + 14} ${flagTop + 1} ${x + 2} ${flagTop + 4.6} Z M${x + 2} ${flagTop + 7.7} C${x + 14} ${flagTop + 4.8} ${x + 31} ${flagTop + 10.8} ${x + flagW} ${flagTop + 7.7} L${x + flagW} ${flagTop + 12.4} C${x + 31} ${flagTop + 15} ${x + 14} ${flagTop + 9} ${x + 2} ${flagTop + 12.4} Z M${x + 2} ${flagTop + 15.4} C${x + 14} ${flagTop + 12.2} ${x + 31} ${flagTop + 18.2} ${x + flagW} ${flagTop + 15.4} L${x + flagW} ${flagTop + flagH} C${x + 31} ${flagTop + flagH + 3} ${x + 14} ${flagTop + flagH - 3} ${x + 2} ${flagTop + flagH} Z`} fill="#B22234" /><path d={`M${x + 2} ${flagTop} C${x + 10} ${flagTop - 1} ${x + 17} ${flagTop - 1} ${x + 24} ${flagTop} L${x + 24} ${flagTop + 11} C${x + 17} ${flagTop + 10} ${x + 10} ${flagTop + 10} ${x + 2} ${flagTop + 11} Z`} fill="#224184" /></g>;
 
   return <g>{commonPole}{flag}</g>;
 }
 
 function ScoreboardPlaceholder() {
+  const roofTop = 226;
   return (
-    <div className="relative h-[calc((100dvh-54px)*0.208)] shrink-0 overflow-hidden bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_54%,#ADD2EC_100%)]">
-      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 214" preserveAspectRatio="none" aria-hidden="true">
-        <HomeSkyFlag x={220} country="canada" />
-        <HomeSkyFlag x={500} country="mexico" />
-        <HomeSkyFlag x={780} country="usa" />
-        <rect x="0" y="166" width="1000" height="44" fill="#243541" />
-        <rect x="0" y="166" width="1000" height="5" fill="#4A5F69" opacity="0.9" />
-        <rect x="0" y="204" width="1000" height="10" fill="#111D25" />
+    <div className="relative h-[calc(54px+((100dvh-54px)*0.208))] shrink-0 overflow-hidden bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_56%,#ADD2EC_100%)]">
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 274" preserveAspectRatio="none" aria-hidden="true">
+        <rect x="0" y={roofTop} width="1000" height="48" fill="#243541" />
+        <rect x="0" y={roofTop + 38} width="1000" height="10" fill="#16212A" />
+        <HomeSkyFlag x={210} roofTop={roofTop} country="canada" />
+        <HomeSkyFlag x={500} roofTop={roofTop} country="mexico" />
+        <HomeSkyFlag x={790} roofTop={roofTop} country="usa" />
         <g>
-          {[[140,188],[320,188],[500,188],[680,188],[860,188]].map(([cx, cy], idx) => (
+          {[[140, roofTop + 20], [320, roofTop + 20], [500, roofTop + 20], [680, roofTop + 20], [860, roofTop + 20]].map(([cx, cy], idx) => (
             <g key={idx}>
-              <ellipse cx={cx} cy={cy + 1} rx="62" ry="18" fill="rgba(255,212,72,0.16)" />
-              <ellipse cx={cx} cy={cy + 2} rx="90" ry="27" fill="rgba(255,212,72,0.08)" />
-              <rect x={cx - 34} y={cy - 4} width="68" height="8" rx="4" fill="#F6DE67" />
-              <rect x={cx - 24} y={cy - 2} width="48" height="4" rx="2" fill="#FFF9D6" />
-              <rect x={cx - 2} y={cy + 4} width="4" height="18" rx="2" fill="#6F808A" />
+              <ellipse cx={cx} cy={cy} rx="58" ry="20" fill="rgba(255,255,255,0.11)" />
+              <ellipse cx={cx} cy={cy} rx="40" ry="14" fill="rgba(255,255,255,0.17)" />
+              <circle cx={cx} cy={cy} r="14" fill="#FFFDF3" />
+              <circle cx={cx} cy={cy} r="8" fill="#FFFFFF" />
+              <rect x={cx - 1.75} y={cy + 14} width="3.5" height="17" rx="1.75" fill="#E4EAE8" />
             </g>
           ))}
         </g>
       </svg>
-      <div className="absolute inset-x-0 top-0 flex h-[77%] items-center justify-center">
-        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[66%] w-auto object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.12)]" draggable={false} />
+      <div className="absolute inset-x-0 top-0 flex h-[78%] items-center justify-center">
+        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[56%] w-auto object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.12)]" draggable={false} />
       </div>
     </div>
   );
@@ -173,8 +162,7 @@ function HomeFooter() {
 function HomeLayout({ children }) {
   return (
     <Shell>
-      <div className="flex h-[100dvh] flex-col overflow-hidden bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_18%,#ADD2EC_28%,#0D6C3D_28%,#0D6C3D_100%)] text-[#072D1D]">
-        <HomeTopBar />
+      <div className="flex h-[100dvh] flex-col overflow-hidden bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_18%,#ADD2EC_32%,#0D6C3D_32%,#0D6C3D_100%)] text-[#072D1D]">
         <ScoreboardPlaceholder />
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
