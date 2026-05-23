@@ -100,120 +100,127 @@ function HomePitchBackdrop() {
   );
 }
 
-function HomeFlagPanel({ type }) {
+function HomeBannerCard({ type }) {
   const isCup = type === "cup";
   const flagSrc = type === "canada" ? "/flags/CAN.png" : type === "mexico" ? "/flags/MEX.png" : "/flags/USA.png";
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-[4px] border border-[#111A16] bg-[#173323] shadow-[0_6px_14px_rgba(0,0,0,0.35)]">
+    <div className="relative h-full w-full overflow-hidden rounded-[3px] border border-[#07120D]/70 bg-[#0B281A] shadow-[0_5px_14px_rgba(0,0,0,0.38)]">
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(0,0,0,0.24))]" />
-      <div className={`absolute left-[7%] right-[7%] top-[8%] bottom-[26%] overflow-hidden rounded-[2px] border border-[#07110C]/30 ${isCup ? "bg-[#8A918D]" : "bg-[#F5F0E6]"}`}>
+      <div className={`absolute left-[8%] right-[8%] top-[8%] bottom-[30%] grid place-items-center overflow-hidden rounded-[2px] border border-[#07120D]/45 ${isCup ? "bg-[#8A918D]" : "bg-[#F5F0E6]"}`}>
         {isCup ? (
-          <div className="flex h-full items-center justify-center bg-[linear-gradient(180deg,#8F9692,#767E79)] px-[8%] py-[6%]">
-            <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-full w-full object-contain" draggable={false} />
-          </div>
+          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[92%] w-[92%] object-contain" draggable={false} />
         ) : (
-          <img src={flagSrc} alt="" className="h-full w-full object-cover object-center" draggable={false} />
+          <img src={flagSrc} alt="" className="h-full w-full object-contain" draggable={false} />
         )}
       </div>
-      <div className="absolute inset-x-0 bottom-0 flex h-[22%] items-center justify-center border-t border-[#F5F1E8]/8 bg-[#102619]">
-        <div className="text-[7px] font-black uppercase tracking-[0.18em] text-[#F5F1E8]/88">{isCup ? "MONDAY CUP" : "HOST NATION"}</div>
+      <div className="absolute inset-x-0 bottom-0 grid h-[26%] place-items-center border-t border-[#F5F1E8]/8 bg-[#0A2015]">
+        <span className="text-[6px] font-black uppercase tracking-[0.16em] text-[#F5F1E8]/82">{isCup ? "MONDAY CUP" : "HOST"}</span>
       </div>
     </div>
   );
 }
 
-function HomeHangingFlag({ type, left }) {
+function HomeHangingBanner({ type, left }) {
   return (
-    <div className="absolute z-[4] -translate-x-1/2" style={{ left: `${left}%`, top: "28%", width: "11.5%", height: "60%" }}>
-      <div className="absolute left-[11%] top-[-22%] h-[22%] w-[2px] rounded-full bg-[#C9D0CD]/70 shadow-[0_1px_2px_rgba(0,0,0,0.38)]" />
-      <div className="absolute right-[11%] top-[-22%] h-[22%] w-[2px] rounded-full bg-[#C9D0CD]/70 shadow-[0_1px_2px_rgba(0,0,0,0.38)]" />
-      <div className="absolute inset-x-[9%] top-[-4px] h-[4px] rounded-full bg-[#D7DDDA]/70 shadow-[0_1px_3px_rgba(0,0,0,0.32)]" />
-      <HomeFlagPanel type={type} />
+    <div className="absolute z-[5] -translate-x-1/2" style={{ left: `${left}%`, top: "36%", width: "11.25%", height: "56%" }}>
+      <div className="absolute left-[10%] top-[-28%] h-[28%] w-[2px] rounded-full bg-[#C9D0CD]/72 shadow-[0_1px_2px_rgba(0,0,0,0.36)]" />
+      <div className="absolute right-[10%] top-[-28%] h-[28%] w-[2px] rounded-full bg-[#C9D0CD]/72 shadow-[0_1px_2px_rgba(0,0,0,0.36)]" />
+      <div className="absolute inset-x-[7%] top-[-5px] h-[4px] rounded-full bg-[#D4DBD8]/80 shadow-[0_1px_3px_rgba(0,0,0,0.35)]" />
+      <HomeBannerCard type={type} />
+    </div>
+  );
+}
+
+function HomeStadiumRoof({ height }) {
+  return (
+    <div className="relative overflow-hidden bg-[linear-gradient(180deg,#141B22_0%,#070B10_100%)]" style={{ height }}>
+      <div className="absolute inset-x-0 top-0 h-[12%] bg-[linear-gradient(180deg,rgba(255,255,255,0.15),rgba(255,255,255,0))]" />
+      <div className="absolute inset-x-0 top-[16%] h-[9%] bg-[#535A61]/45" />
+      <div className="absolute inset-x-0 top-[23%] h-[4%] bg-[#9EA4A8]/22" />
+      <div className="absolute inset-x-0 bottom-0 h-[16%] bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.62))]" />
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
+        <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M0 28 H1000" stroke="rgba(22,27,32,0.82)" strokeWidth="16" />
+          <path d="M0 31 H1000" stroke="rgba(245,241,232,0.10)" strokeWidth="2" />
+          <path d="M0 86 H1000" stroke="rgba(4,7,10,0.86)" strokeWidth="9" />
+          {Array.from({ length: 8 }).map((_, idx) => {
+            const x = -20 + idx * 145;
+            return (
+              <g key={idx}>
+                <path d={`M${x} 100 L${x + 34} 28`} stroke="rgba(188,196,201,0.16)" strokeWidth="7" />
+                <path d={`M${x + 34} 28 L${x + 134} 28`} stroke="rgba(188,196,201,0.08)" strokeWidth="3" />
+              </g>
+            );
+          })}
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function HomeFloodlightGantry({ centers }) {
+  return (
+    <div className="absolute inset-x-0 top-[8%] h-[26%]">
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
+        <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M84 30 H916" stroke="rgba(207,214,211,0.72)" strokeWidth="5" />
+          <path d="M84 70 H916" stroke="rgba(117,128,124,0.76)" strokeWidth="5" />
+          {Array.from({ length: 18 }).map((_, idx) => {
+            const x0 = 92 + idx * 46;
+            const x1 = x0 + 46;
+            return (
+              <g key={idx}>
+                <path d={`M${x0} 70 L${x1} 30`} stroke="rgba(204,211,208,0.36)" strokeWidth="2.25" />
+                <path d={`M${x0} 30 L${x1} 70`} stroke="rgba(204,211,208,0.22)" strokeWidth="2.25" />
+              </g>
+            );
+          })}
+          {centers.map((cx) => <path key={`drop-${cx}`} d={`M${cx} 70 V96`} stroke="rgba(207,214,211,0.42)" strokeWidth="2" />)}
+        </g>
+        <g>
+          {centers.map((cx) => (
+            <g key={`light-${cx}`}>
+              <rect x={cx - 20} y="5" width="40" height="6" rx="3" fill="rgba(210,216,213,0.82)" />
+              <rect x={cx - 18} y="12" width="10" height="17" rx="1.5" fill="#F3F2E9" />
+              <rect x={cx - 5} y="12" width="10" height="17" rx="1.5" fill="#F3F2E9" />
+              <rect x={cx + 8} y="12" width="10" height="17" rx="1.5" fill="#F3F2E9" />
+              <rect x={cx - 3} y="29" width="6" height="10" rx="1.5" fill="rgba(207,214,211,0.74)" />
+            </g>
+          ))}
+        </g>
+      </svg>
     </div>
   );
 }
 
 function ScoreboardPlaceholder() {
   const bannerCenters = Array.from({ length: 5 }, (_, i) => GAME.goal.left + (GAME.goal.width * (i + 0.5)) / 5);
+  const lightCenters = bannerCenters.map((x) => x * 10);
   const bannerItems = ["canada", "cup", "mexico", "cup", "usa"];
   const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
   const flashHeight = "calc((100dvh - 54px) * 0.165 * 0.26)";
-  const skyHeight = "calc(54px + ((100dvh - 54px) * 0.165) - (((100dvh - 54px) * 0.165 * 0.26) * 2))";
-  const roofHeight = flashHeight;
-  const bannerStageHeight = flashHeight;
-  const lightCenters = bannerCenters.map((x) => x * 10);
+  const stadiumBandHeight = "calc(((100dvh - 54px) * 0.165 * 0.26) * 1.55)";
+  const skyHeight = "calc(54px + ((100dvh - 54px) * 0.165) - (((100dvh - 54px) * 0.165 * 0.26) * 2.55))";
 
   return (
     <div className="relative shrink-0 overflow-hidden" style={{ height: headerHeight }} aria-hidden="true">
-      <div className="relative overflow-hidden bg-[linear-gradient(180deg,#07111E_0%,#10243B_52%,#183854_100%)]" style={{ height: skyHeight }}>
+      <div className="relative overflow-hidden bg-[linear-gradient(180deg,#07111E_0%,#10243B_55%,#183854_100%)]" style={{ height: skyHeight }}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(255,255,255,0.10),transparent_46%)]" />
-        <div className="absolute inset-x-0 top-[10%] bottom-[20%] opacity-60" style={{ backgroundImage: "radial-gradient(circle at 8% 18%, rgba(255,255,255,0.8) 0.7px, transparent 1.1px), radial-gradient(circle at 22% 26%, rgba(255,255,255,0.7) 0.8px, transparent 1.2px), radial-gradient(circle at 42% 12%, rgba(255,255,255,0.75) 0.8px, transparent 1.2px), radial-gradient(circle at 67% 22%, rgba(255,255,255,0.7) 0.7px, transparent 1.1px), radial-gradient(circle at 84% 14%, rgba(255,255,255,0.75) 0.8px, transparent 1.2px)" }} />
-        <div className="absolute inset-x-0 bottom-0 h-[22%] bg-[linear-gradient(180deg,rgba(255,255,255,0),rgba(245,241,232,0.04))]" />
+        <div className="absolute inset-x-0 top-[12%] bottom-[22%] opacity-55" style={{ backgroundImage: "radial-gradient(circle at 8% 18%, rgba(255,255,255,0.8) 0.7px, transparent 1.1px), radial-gradient(circle at 22% 26%, rgba(255,255,255,0.7) 0.8px, transparent 1.2px), radial-gradient(circle at 42% 12%, rgba(255,255,255,0.75) 0.8px, transparent 1.2px), radial-gradient(circle at 67% 22%, rgba(255,255,255,0.7) 0.7px, transparent 1.1px), radial-gradient(circle at 84% 14%, rgba(255,255,255,0.75) 0.8px, transparent 1.2px)" }} />
       </div>
 
-      <div className="relative overflow-hidden bg-[linear-gradient(180deg,#11181E_0%,#090D12_100%)]" style={{ height: roofHeight }}>
-        <div className="absolute inset-x-0 top-0 h-[10%] bg-[linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0))]" />
-        <div className="absolute inset-x-0 bottom-0 h-[10%] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.5))]" />
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
-          <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M0 22 H1000" stroke="rgba(255,255,255,0.12)" strokeWidth="2" />
-            <path d="M0 85 H1000" stroke="rgba(0,0,0,0.55)" strokeWidth="10" />
-            {Array.from({ length: 7 }).map((_, idx) => {
-              const x = 80 + idx * 140;
-              return (
-                <g key={idx}>
-                  <path d={`M${x} 100 L${x + 20} 28`} stroke="rgba(180,188,194,0.18)" strokeWidth="6" />
-                  <path d={`M${x + 20} 28 L${x + 118} 28`} stroke="rgba(180,188,194,0.10)" strokeWidth="2" />
-                </g>
-              );
-            })}
-          </g>
-        </svg>
-      </div>
+      <HomeStadiumRoof height={flashHeight} />
 
-      <div className="relative overflow-hidden bg-[linear-gradient(180deg,#0C3120_0%,#0B2619_55%,#081A12_100%)]" style={{ height: bannerStageHeight }}>
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(0,0,0,0.22))]" />
-        <div className="absolute inset-x-0 top-[18%] h-[16%] opacity-95">
-          <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
-            <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M90 34 H910" stroke="rgba(201,208,205,0.72)" strokeWidth="4" />
-              <path d="M90 68 H910" stroke="rgba(126,136,132,0.82)" strokeWidth="4" />
-              {Array.from({ length: 20 }).map((_, idx) => {
-                const x0 = 90 + idx * 41;
-                const x1 = x0 + 41;
-                return (
-                  <g key={idx}>
-                    <path d={`M${x0} 68 L${x1} 34`} stroke="rgba(191,198,194,0.4)" strokeWidth="2" />
-                    <path d={`M${x0} 34 L${x1} 68`} stroke="rgba(191,198,194,0.24)" strokeWidth="2" />
-                  </g>
-                );
-              })}
-              {lightCenters.map((cx) => (
-                <g key={`bar-${cx}`}>
-                  <path d={`M${cx} 68 V84`} stroke="rgba(191,198,194,0.62)" strokeWidth="2" />
-                </g>
-              ))}
-            </g>
-            <g>
-              {lightCenters.map((cx) => (
-                <g key={`light-${cx}`}>
-                  <rect x={cx - 18} y="6" width="12" height="16" rx="1.5" fill="#F6F7F7" />
-                  <rect x={cx - 4} y="6" width="12" height="16" rx="1.5" fill="#F6F7F7" />
-                  <rect x={cx + 10} y="6" width="12" height="16" rx="1.5" fill="#F6F7F7" />
-                  <rect x={cx - 20} y="4" width="44" height="4" rx="2" fill="rgba(224,229,226,0.8)" />
-                </g>
-              ))}
-            </g>
-          </svg>
-        </div>
-
+      <div className="relative overflow-hidden bg-[linear-gradient(180deg,#0D3322_0%,#0B291B_44%,#071B12_100%)]" style={{ height: stadiumBandHeight }}>
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.24))]" />
+        <HomeFloodlightGantry centers={lightCenters} />
         {lightCenters.map((cx) => (
-          <div key={`beam-${cx}`} className="absolute -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(245,241,232,0.12),rgba(245,241,232,0))] blur-[10px]" style={{ left: `${cx / 10}%`, top: "20%", width: "11%", height: "46%" }} />
+          <div key={`wash-${cx}`} className="absolute -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(245,241,232,0.10),rgba(245,241,232,0)_68%)]" style={{ left: `${cx / 10}%`, top: "20%", width: "10%", height: "64%" }} />
         ))}
-
         {bannerItems.map((type, index) => (
-          <HomeHangingFlag key={`${type}-${index}`} type={type} left={bannerCenters[index]} />
+          <HomeHangingBanner key={`${type}-${index}`} type={type} left={bannerCenters[index]} />
         ))}
+        <div className="absolute inset-x-0 bottom-[-1px] h-[3px] bg-[#123822]" />
       </div>
     </div>
   );
