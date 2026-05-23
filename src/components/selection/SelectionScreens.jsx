@@ -1,6 +1,38 @@
 import { HOST_TEAMS, GROUPS, GROUP_LETTERS, TEAM_RANK, getTeamTheme } from "../../data/teams.js";
+import { ASSETS } from "../../data/assets.js";
 import { Flag } from "../shared.jsx";
-import { GreenCard, SelectionLayout } from "../layout/Layout.jsx";
+import { Footer, GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
+
+function HomeTopBar() {
+  return (
+    <div className="relative flex h-[54px] shrink-0 items-center justify-center bg-[#EFE7D8] text-[#0B5F35]">
+      <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain" draggable={false} />
+      <div className="text-[24px] font-black uppercase tracking-[-0.02em]">MONDAY CUP</div>
+      <div className="absolute right-3 top-1/2 h-10 w-10 -translate-y-1/2" aria-hidden="true" />
+    </div>
+  );
+}
+
+function HomeLayout({ children }) {
+  return (
+    <Shell>
+      <div className="flex min-h-[100dvh] flex-col bg-[#F5F0E6] text-[#072D1D]">
+        <HomeTopBar />
+        <main className="flex min-h-0 flex-1 flex-col px-5 pb-0 pt-4">
+          <div className="flex justify-center pb-2">
+            <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[86px] w-[86px] object-contain" draggable={false} />
+          </div>
+          <div className="flex min-h-0 flex-1 flex-col justify-center py-2">
+            {children}
+          </div>
+        </main>
+        <div className="px-5">
+          <Footer />
+        </div>
+      </div>
+    </Shell>
+  );
+}
 
 function ActionButton({ children, eyebrow, onClick, variant = "light", disabled = false }) {
   const styles = variant === "green"
@@ -65,6 +97,6 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam }) {
   return <GreenCard><div className="mb-3 flex items-center justify-between"><ArrowButton direction="left" onClick={previousGroup} /><div className="text-[24px] font-black uppercase tracking-[-0.02em] text-[#F5F0E6]">GROUP {group}</div><ArrowButton direction="right" onClick={nextGroup} /></div><div className="grid gap-2">{GROUPS[group].map((name) => <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[38px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] bg-[#F5F0E6] px-4 text-left text-[15px] font-black tracking-[-0.02em] text-[#0B5F35] shadow-inner"><Flag team={name} className="h-5 w-7" /><span className="truncate text-center uppercase tracking-[-0.01em]">{name}</span><span className="text-right text-[11px] font-black tabular-nums tracking-[0.06em] text-[#0B5F35]/45">#{TEAM_RANK[name]}</span></button>)}</div></GreenCard>;
 }
 
-export function HomeScreen(props) { return <SelectionLayout><LandingPanel {...props} /></SelectionLayout>; }
+export function HomeScreen(props) { return <HomeLayout><LandingPanel {...props} /></HomeLayout>; }
 export function HostSelectScreen(props) { return <SelectionLayout><HostPanel {...props} /></SelectionLayout>; }
 export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam }) { return <SelectionLayout><TeamPanel group={selectedGroup} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></SelectionLayout>; }
