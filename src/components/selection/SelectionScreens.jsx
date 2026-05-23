@@ -79,17 +79,18 @@ function HomeUnifiedCrowdBackdrop() {
     opacity,
   }));
 
-  const rowConfigs = Array.from({ length: 22 }, (_, index) => {
-    const t = index / 21;
+  const rowConfigs = Array.from({ length: 28 }, (_, index) => {
+    const t = index / 27;
+    const y = 3 + 94 * Math.pow(t, 1.28);
     return {
-      count: Math.round(60 - t * 34),
-      startX: -1.2 + t * 5.2,
-      step: 1.72 + t * 2.55,
-      y: 2 + index * 4.45,
-      scale: 0.24 + t * 0.80,
+      count: Math.round(66 - t * 38),
+      startX: -1.4 + t * 5.4,
+      step: 1.58 + t * 2.72,
+      y,
+      scale: 0.22 + t * 0.84,
       opacity: 0.12 + t * 0.88,
-      stagger: 0.18 + t * 1.05,
-      wave: 0.14 + t * 0.80,
+      stagger: 0.16 + t * 1.10,
+      wave: 0.12 + t * 0.84,
       shirtOffset: index,
       skinOffset: index % skins.length,
     };
@@ -98,10 +99,13 @@ function HomeUnifiedCrowdBackdrop() {
   const crowdRows = rowConfigs.flatMap((config) => makeRow(config));
 
   const boardTop = GAME.goal.top + GAME.goal.height - 8;
-  const crowdHeight = `calc(54px + ((100dvh - 54px) * 0.165) + ((100dvh - 54px - ((100dvh - 54px) * 0.165)) * ${boardTop / 100}))`;
+  const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
+  const mainHeight = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
+  const topLedHeight = `calc(${mainHeight} * 0.08)`;
+  const crowdHeight = `calc(${headerHeight} + (${mainHeight} * ${boardTop / 100}) - ${topLedHeight})`;
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden" style={{ height: crowdHeight }} aria-hidden="true">
+    <div className="pointer-events-none absolute inset-x-0 z-0 overflow-hidden" style={{ top: topLedHeight, height: crowdHeight }} aria-hidden="true">
       <div className="absolute inset-0 bg-[#123822]" />
       <div
         className="absolute inset-0"
@@ -166,8 +170,10 @@ function ScoreboardPlaceholder() {
 
 
 function HomeTopLedAdvertisingHoard() {
+  const mainHeight = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
+  const boardHeight = `calc(${mainHeight} * 0.08)`;
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-[3] h-[clamp(28px,5vh,44px)] overflow-hidden border-b border-[#2d2d2d] bg-[#050505] shadow-[0_6px_16px_rgba(0,0,0,0.36)]" aria-hidden="true">
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-[3] overflow-hidden border-b border-[#2d2d2d] bg-[#050505] shadow-[0_6px_16px_rgba(0,0,0,0.36)]" style={{ height: boardHeight }} aria-hidden="true">
       <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(36,168,87,0.20),rgba(255,255,255,0.04),rgba(36,168,87,0.20))]" />
       <div className="relative flex h-full items-center justify-center gap-[7%] overflow-hidden px-4">
@@ -184,11 +190,12 @@ function HomeTopLedAdvertisingHoard() {
 function HomeCentreLogoOverlay() {
   const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
   const mainHeight = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
-  const topLedHeight = "clamp(28px,5vh,44px)";
+  const topLedHeight = `calc(${mainHeight} * 0.08)`;
   const crossbarTop = `calc(${headerHeight} + (${mainHeight} * ${GAME.goal.top / 100}))`;
   return (
     <div className="pointer-events-none absolute inset-x-0 z-[2] flex items-center justify-center" style={{ top: topLedHeight, height: `calc(${crossbarTop} - ${topLedHeight})` }} aria-hidden="true">
-      <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[clamp(54px,10vh,110px)] w-auto object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.55)]" draggable={false} />
+      <div className="absolute h-[clamp(78px,15vh,150px)] w-[clamp(78px,15vh,150px)] rounded-full bg-[#F7D117]/18 blur-2xl" />
+      <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative h-[clamp(59px,11vh,121px)] w-auto object-contain drop-shadow-[0_0_16px_rgba(247,209,23,0.28)] drop-shadow-[0_8px_16px_rgba(0,0,0,0.58)]" draggable={false} />
     </div>
   );
 }
