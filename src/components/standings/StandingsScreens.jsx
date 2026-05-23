@@ -170,7 +170,9 @@ function bracketSideForTeam(fixtures = [], userTeam = null) {
 
 export function GroupsScreen({ allGroups, menuProps, standingsView, onStandingsViewChange, knockoutFixtures, qualifiedTeams = new Set(), userTeam = null, podium = {} }) {
   const scrollRef = useRef(null);
+  const groupRefs = useRef({});
   const bracketSide = bracketSideForTeam(knockoutFixtures, userTeam);
+  const userGroup = allGroups.find(({ rows }) => rows.some((row) => row.team === userTeam))?.group || null;
 
   useEffect(() => {
     const container = scrollRef.current;
@@ -180,13 +182,20 @@ export function GroupsScreen({ allGroups, menuProps, standingsView, onStandingsV
         container.scrollTop = bracketSide === "bottom" ? container.scrollHeight : 0;
         return;
       }
-      container.scrollTop = 0;
+      if (standingsView === "group") {
+        if (userGroup === "K" || userGroup === "L") {
+          container.scrollTop = container.scrollHeight;
+          return;
+        }
+        const target = userGroup ? groupRefs.current[userGroup] : null;
+        container.scrollTop = target ? Math.max(0, target.offsetTop - container.offsetTop) : 0;
+      }
     });
     return () => cancelAnimationFrame(frame);
-  }, [standingsView, bracketSide, knockoutFixtures.length, userTeam]);
+  }, [standingsView, bracketSide, knockoutFixtures.length, userTeam, userGroup, allGroups.length]);
 
   return <main className="flex min-h-0 flex-1 flex-col gap-2"><ScreenTitle {...menuProps}>STANDINGS</ScreenTitle><FixturesToggle value={standingsView} onChange={onStandingsViewChange} /><section ref={scrollRef} className="min-h-0 flex-1 overflow-auto py-1"><div className="space-y-2">
-    {standingsView === "group" && allGroups.map(({ group, rows }) => <GroupTable key={group} title={`GROUP ${group}`} rows={rows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />)}
+    {standingsView === "group" && allGroups.map(({ group, rows }) => <div key={group} ref={(node) => { if (node) groupRefs.current[group] = node; }}><GroupTable title={`GROUP ${group}`} rows={rows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} /></div>)}
     {standingsView === "knockout" && <KnockoutBracket round32={knockoutFixtures} podium={podium} userTeam={userTeam} />}
   </div></section></main>;
 }
