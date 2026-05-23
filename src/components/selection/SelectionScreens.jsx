@@ -93,8 +93,12 @@ function HomeUnifiedCrowdBackdrop() {
     ...makeRow({ count: 24, startX: 4.2, step: 4.25, y: 94.0, scale: 1.04, opacity: 1, stagger: 1.20, wave: 0.45, shirtOffset: 10, skinOffset: 2 }),
   ];
 
+  const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
+  const boardTop = GAME.goal.top + GAME.goal.height - 8;
+  const crowdHeight = `calc(54px + ((100dvh - 54px) * 0.165) + ((100dvh - 54px - ((100dvh - 54px) * 0.165)) * ${boardTop / 100}))`;
+
   return (
-    <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden bg-[#123822]" aria-hidden="true">
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden bg-[#123822]" style={{ height: crowdHeight }} aria-hidden="true">
       <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 20% 7%, rgba(245,241,232,0.08), transparent 22%), radial-gradient(circle at 80% 10%, rgba(255,214,0,0.055), transparent 18%), linear-gradient(180deg, rgba(4,22,14,0.52), rgba(4,22,14,0.10) 42%, rgba(4,22,14,0.04))" }} />
       <div className="absolute inset-x-0 top-[7%] h-[9%] bg-[#0b2d1d]/12" />
       <div className="absolute inset-x-0 top-[20%] h-[10%] bg-[#0b2d1d]/10" />
