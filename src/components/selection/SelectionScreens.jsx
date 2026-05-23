@@ -113,31 +113,44 @@ function HomePitchBackdrop() {
 function ScoreboardPlaceholder() {
   return (
     <div className="relative h-[calc((100dvh-54px)*0.208)] shrink-0 overflow-hidden">
-      <div className="relative h-[20.6%] overflow-hidden bg-[linear-gradient(180deg,#516979_0%,#3D5361_48%,#1F2D36_100%)]">
-        <div className="absolute inset-x-0 top-0 h-[28%] bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0))]" />
-        <div className="absolute inset-x-0 bottom-0 h-[36%] bg-[linear-gradient(180deg,rgba(0,0,0,0),rgba(5,5,5,0.32))]" />
-        <div className="absolute inset-x-0 bottom-0 h-[2px] bg-[#2B3942]" />
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M0 52 L110 24 L230 40 L350 18 L470 34 L600 18 L730 42 L860 24 L1000 48 L1000 120 L0 120 Z" fill="#23323B" opacity="0.96" />
-          <path d="M0 64 L150 34 L300 50 L440 28 L590 48 L740 26 L890 46 L1000 36 L1000 120 L0 120 Z" fill="#19252D" opacity="0.95" />
-          {[[120,56,18],[250,44,22],[395,58,18],[520,40,22],[665,56,18],[810,44,22]].map(([cx,cy,r],idx)=>(<g key={idx} opacity="0.98"><circle cx={cx} cy={cy} r={r} fill="#F5F0E6" /><circle cx={cx} cy={cy} r={r*0.82} fill="#FFF6BF" /><circle cx={cx} cy={cy} r={r*0.48} fill="#FFFDF2" /></g>))}
+      <div className="relative h-[79.4%] overflow-hidden bg-[linear-gradient(180deg,#DFF1FF_0%,#CDE6FB_42%,#B5D4F0_100%)]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-8%,rgba(255,255,255,0.65),transparent_42%)]" />
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
+          <g opacity="0.96">
+            <g fill="#F7F5EF">
+              <path d="M56 118c0-18 16-33 37-33 8 0 16 2 22 6 9-14 28-23 49-23 27 0 49 14 56 34 5-2 10-3 16-3 25 0 45 16 45 36s-20 36-45 36H100c-24 0-44-15-44-34 0-8 4-14 0-19Z"/>
+              <path d="M377 105c0-14 13-25 29-25 5 0 10 1 14 3 8-12 22-19 40-19 22 0 41 12 46 28 4-1 8-2 12-2 20 0 36 13 36 29s-16 29-36 29H412c-19 0-35-12-35-27 0-6 2-11 0-16Z"/>
+              <path d="M643 110c0-20 18-36 41-36 10 0 18 2 25 6 10-16 30-26 54-26 31 0 57 16 64 39 5-2 11-3 17-3 28 0 50 18 50 40s-22 40-50 40H688c-27 0-49-17-49-38 0-8 3-15 4-22Z"/>
+            </g>
+            <g fill="#FFFFFF" opacity="0.72">
+              <ellipse cx="142" cy="134" rx="118" ry="34"/>
+              <ellipse cx="458" cy="124" rx="88" ry="28"/>
+              <ellipse cx="770" cy="132" rx="128" ry="38"/>
+            </g>
+            <g fill="#E9F3FB" opacity="0.9">
+              <circle cx="121" cy="122" r="28"/><circle cx="170" cy="114" r="24"/><circle cx="214" cy="126" r="26"/>
+              <circle cx="433" cy="116" r="22"/><circle cx="470" cy="109" r="19"/><circle cx="507" cy="119" r="21"/>
+              <circle cx="716" cy="121" r="30"/><circle cx="771" cy="110" r="27"/><circle cx="825" cy="123" r="30"/>
+            </g>
+          </g>
         </svg>
       </div>
-      <div className="relative h-[79.4%] overflow-hidden bg-[linear-gradient(180deg,#DAF1FF_0%,#BFE3FF_46%,#A8D5F5_100%)]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.48),transparent_40%)]" />
-        <div className="absolute inset-x-0 top-[16%] h-[34%] opacity-90">
-          <div className="absolute left-[5%] top-[8%] h-[34px] w-[132px] rounded-full bg-white/78 blur-[1px]" />
-          <div className="absolute left-[13%] top-[3%] h-[28px] w-[96px] rounded-full bg-white/82 blur-[1px]" />
-          <div className="absolute left-[24%] top-[14%] h-[26px] w-[118px] rounded-full bg-white/72 blur-[1px]" />
-          <div className="absolute right-[18%] top-[2%] h-[32px] w-[128px] rounded-full bg-white/80 blur-[1px]" />
-          <div className="absolute right-[8%] top-[14%] h-[24px] w-[94px] rounded-full bg-white/76 blur-[1px]" />
-          <div className="absolute right-[29%] top-[19%] h-[22px] w-[76px] rounded-full bg-white/68 blur-[1px]" />
-        </div>
-        <div className="absolute inset-x-0 bottom-0 h-[16%] bg-[linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,0.18))]" />
+      <div className="relative h-[20.6%] overflow-hidden bg-[linear-gradient(180deg,#314451_0%,#22313B_100%)]">
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 58 L96 44 L188 52 L286 34 L372 48 L482 30 L594 50 L706 36 L804 48 L900 28 L1000 46 L1000 120 L0 120 Z" fill="#2A3944" />
+          <path d="M0 72 L108 58 L228 68 L330 48 L456 66 L570 50 L688 70 L804 56 L920 66 L1000 58 L1000 120 L0 120 Z" fill="#18242C" />
+          <path d="M0 88 L136 80 L244 84 L360 74 L474 86 L594 76 L730 88 L848 78 L1000 86 L1000 120 L0 120 Z" fill="#132029" opacity="0.95" />
+          <g>
+            {[[118,58,18],[255,42,22],[398,60,18],[520,38,22],[666,56,18],[810,42,22]].map(([cx,cy,r],idx)=>(<g key={idx}><rect x={cx-2} y={cy+r-1} width="4" height="16" rx="2" fill="#5E6F79" /><circle cx={cx} cy={cy} r={r+2} fill="#6E7E86" opacity="0.55" /><circle cx={cx} cy={cy} r={r} fill="#F3E7B8" /><circle cx={cx} cy={cy} r={r*0.56} fill="#FFFDF3" /></g>))}
+          </g>
+          <rect x="0" y="114" width="1000" height="6" fill="#10181E" />
+        </svg>
+        <div className="absolute inset-x-0 top-0 h-[16%] bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0))]" />
       </div>
     </div>
   );
 }
+
 
 function HomeLayout({ children }) {
   return (
