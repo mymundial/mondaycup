@@ -63,16 +63,51 @@ export function selectBracketModel({ knockoutFixtures = [], podium = {} }) {
   };
 }
 
+const BRACKET_SIDE_BY_MATCH_NO = {
+  // Visual top half
+  74: "top",
+  77: "top",
+  73: "top",
+  75: "top",
+  83: "top",
+  84: "top",
+  81: "top",
+  82: "top",
+  89: "top",
+  90: "top",
+  93: "top",
+  94: "top",
+  97: "top",
+  98: "top",
+  101: "top",
+
+  // Visual bottom half
+  76: "bottom",
+  78: "bottom",
+  79: "bottom",
+  80: "bottom",
+  86: "bottom",
+  88: "bottom",
+  85: "bottom",
+  87: "bottom",
+  91: "bottom",
+  92: "bottom",
+  95: "bottom",
+  96: "bottom",
+  99: "bottom",
+  100: "bottom",
+  102: "bottom",
+};
+
 export function selectBracketSideForTeam(fixtures = [], userTeam = null) {
   if (!userTeam) return "top";
-  const fixture = fixtures
-    .filter((item) => item?.matchNo && (item.home === userTeam || item.away === userTeam))
-    .sort((a, b) => (b.matchNo || 0) - (a.matchNo || 0))[0];
 
-  if (!fixture) return "top";
-  const matchNo = fixture.matchNo;
-  if (matchNo >= 102 || (matchNo >= 99 && matchNo <= 100) || (matchNo >= 93 && matchNo <= 96) || (matchNo >= 81 && matchNo <= 88)) return "bottom";
-  return "top";
+  const userFixtures = fixtures
+    .filter((item) => item?.matchNo && (item.home === userTeam || item.away === userTeam))
+    .sort((a, b) => (b.matchNo || 0) - (a.matchNo || 0));
+
+  const sideFixture = userFixtures.find((fixture) => BRACKET_SIDE_BY_MATCH_NO[fixture.matchNo]);
+  return sideFixture ? BRACKET_SIDE_BY_MATCH_NO[sideFixture.matchNo] : "top";
 }
 
 export function selectUserGroup(allGroups = [], userTeam = null) {
