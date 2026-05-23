@@ -129,24 +129,14 @@ function ScoreboardPlaceholder() {
       <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 274" preserveAspectRatio="none" aria-hidden="true">
         <rect x="0" y={roofTop} width="1000" height="48" fill="#243541" />
         <rect x="0" y={roofTop + 42} width="1000" height="6" fill="#16212A" />
-        <HomeSkyFlag x={170} roofTop={roofTop} country="canada" />
-        <HomeSkyFlag x={469} roofTop={roofTop} country="mexico" />
-        <HomeSkyFlag x={768} roofTop={roofTop} country="usa" />
-        <g>
-          {[[145, roofTop + 20], [323, roofTop + 20], [500, roofTop + 20], [677, roofTop + 20], [855, roofTop + 20]].map(([cx, cy], idx) => (
-            <g key={idx}>
-              <circle cx={cx} cy={cy} r="26" fill="rgba(255,255,255,0.10)" />
-              <circle cx={cx} cy={cy} r="18" fill="rgba(255,255,255,0.18)" />
-              <circle cx={cx} cy={cy} r="10.5" fill="#FFFFFF" />
-              <circle cx={cx} cy={cy} r="6.2" fill="#F8FBFF" />
-              <circle cx={cx} cy={cy} r="34" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="10" />
-              <rect x={cx - 1.7} y={cy + 10.5} width="3.4" height="16" rx="1.7" fill="#E8EDF0" />
-            </g>
-          ))}
-        </g>
       </svg>
-      <div className="absolute inset-x-0 top-0 flex h-[66%] items-start justify-center pt-7">
-        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[44%] w-auto object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.12)]" draggable={false} />
+      <div className="absolute inset-x-0 top-0 flex h-[82%] items-center justify-center px-6">
+        <img
+          src={ASSETS.mondayLogo}
+          alt="Monday Cup"
+          className="max-h-[88%] w-auto object-contain drop-shadow-[0_5px_12px_rgba(0,0,0,0.14)]"
+          draggable={false}
+        />
       </div>
     </div>
   );
