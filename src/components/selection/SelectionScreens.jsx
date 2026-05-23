@@ -79,32 +79,43 @@ function HomeUnifiedCrowdBackdrop() {
     opacity,
   }));
 
-  const crowdRows = [
-    ...makeRow({ count: 54, startX: -1.0, step: 1.90, y: 2.5, scale: 0.32, opacity: 0.14, stagger: 0.25, wave: 0.25 }),
-    ...makeRow({ count: 52, startX: -0.5, step: 1.98, y: 7.5, scale: 0.36, opacity: 0.20, stagger: 0.30, wave: 0.30, shirtOffset: 1 }),
-    ...makeRow({ count: 50, startX: 0.0, step: 2.05, y: 13.5, scale: 0.40, opacity: 0.26, stagger: 0.35, wave: 0.35, shirtOffset: 2, skinOffset: 1 }),
-    ...makeRow({ count: 46, startX: 0.4, step: 2.22, y: 20.5, scale: 0.46, opacity: 0.34, stagger: 0.45, wave: 0.40, shirtOffset: 3, skinOffset: 2 }),
-    ...makeRow({ count: 44, startX: 0.8, step: 2.38, y: 28.5, scale: 0.52, opacity: 0.42, stagger: 0.50, wave: 0.50, shirtOffset: 4, skinOffset: 1 }),
-    ...makeRow({ count: 40, startX: 1.2, step: 2.58, y: 37.5, scale: 0.60, opacity: 0.52, stagger: 0.60, wave: 0.60, shirtOffset: 5, skinOffset: 3 }),
-    ...makeRow({ count: 36, startX: 1.6, step: 2.82, y: 47.5, scale: 0.68, opacity: 0.64, stagger: 0.72, wave: 0.65, shirtOffset: 6, skinOffset: 1 }),
-    ...makeRow({ count: 34, startX: 2.0, step: 3.05, y: 58.5, scale: 0.76, opacity: 0.76, stagger: 0.84, wave: 0.75, shirtOffset: 7, skinOffset: 2 }),
-    ...makeRow({ count: 30, startX: 2.6, step: 3.40, y: 70.5, scale: 0.86, opacity: 0.88, stagger: 0.96, wave: 0.80, shirtOffset: 8, skinOffset: 3 }),
-    ...makeRow({ count: 28, startX: 3.2, step: 3.72, y: 82.8, scale: 0.96, opacity: 0.98, stagger: 1.10, wave: 0.78, shirtOffset: 9, skinOffset: 1 }),
-    ...makeRow({ count: 24, startX: 4.2, step: 4.25, y: 94.0, scale: 1.04, opacity: 1, stagger: 1.20, wave: 0.45, shirtOffset: 10, skinOffset: 2 }),
-  ];
+  const rowConfigs = Array.from({ length: 22 }, (_, index) => {
+    const t = index / 21;
+    return {
+      count: Math.round(60 - t * 34),
+      startX: -1.2 + t * 5.2,
+      step: 1.72 + t * 2.55,
+      y: 2 + index * 4.45,
+      scale: 0.24 + t * 0.80,
+      opacity: 0.12 + t * 0.88,
+      stagger: 0.18 + t * 1.05,
+      wave: 0.14 + t * 0.80,
+      shirtOffset: index,
+      skinOffset: index % skins.length,
+    };
+  });
 
-  const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
+  const crowdRows = rowConfigs.flatMap((config) => makeRow(config));
+
   const boardTop = GAME.goal.top + GAME.goal.height - 8;
   const crowdHeight = `calc(54px + ((100dvh - 54px) * 0.165) + ((100dvh - 54px - ((100dvh - 54px) * 0.165)) * ${boardTop / 100}))`;
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden bg-[#123822]" style={{ height: crowdHeight }} aria-hidden="true">
-      <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 20% 7%, rgba(245,241,232,0.08), transparent 22%), radial-gradient(circle at 80% 10%, rgba(255,214,0,0.055), transparent 18%), linear-gradient(180deg, rgba(4,22,14,0.52), rgba(4,22,14,0.10) 42%, rgba(4,22,14,0.04))" }} />
-      <div className="absolute inset-x-0 top-[7%] h-[9%] bg-[#0b2d1d]/12" />
-      <div className="absolute inset-x-0 top-[20%] h-[10%] bg-[#0b2d1d]/10" />
-      <div className="absolute inset-x-0 top-[36%] h-[11%] bg-[#0b2d1d]/12" />
-      <div className="absolute inset-x-0 top-[56%] h-[12%] bg-[#0b2d1d]/10" />
-      <div className="absolute inset-x-0 top-[78%] h-[13%] bg-[#0b2d1d]/12" />
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden" style={{ height: crowdHeight }} aria-hidden="true">
+      <div className="absolute inset-0 bg-[#123822]" />
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: "linear-gradient(180deg, rgba(5,26,17,0.52), rgba(5,26,17,0.28) 30%, rgba(5,26,17,0.18) 58%, rgba(5,26,17,0.10) 100%), radial-gradient(circle at 18% 10%, rgba(245,241,232,0.05), transparent 18%), radial-gradient(circle at 82% 14%, rgba(255,214,0,0.04), transparent 16%)",
+        }}
+      />
+      <div className="absolute inset-x-0 top-[6%] h-[6%]" style={{ backgroundColor: "rgba(11,45,29,0.10)" }} />
+      <div className="absolute inset-x-0 top-[16%] h-[7%]" style={{ backgroundColor: "rgba(11,45,29,0.08)" }} />
+      <div className="absolute inset-x-0 top-[28%] h-[8%]" style={{ backgroundColor: "rgba(11,45,29,0.10)" }} />
+      <div className="absolute inset-x-0 top-[41%] h-[9%]" style={{ backgroundColor: "rgba(11,45,29,0.08)" }} />
+      <div className="absolute inset-x-0 top-[55%] h-[10%]" style={{ backgroundColor: "rgba(11,45,29,0.10)" }} />
+      <div className="absolute inset-x-0 top-[70%] h-[11%]" style={{ backgroundColor: "rgba(11,45,29,0.08)" }} />
+      <div className="absolute inset-x-0 top-[85%] h-[10%]" style={{ backgroundColor: "rgba(11,45,29,0.10)" }} />
       {crowdRows.map((person, index) => <HomeCrowdPerson key={index} {...person} />)}
     </div>
   );
