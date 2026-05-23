@@ -118,20 +118,24 @@ function HomeFlagPanel({ type }) {
 
 function ScoreboardPlaceholder() {
   const flagCenters = [118, 308, 498, 688, 878];
+  const flashHeight = "calc((100dvh - 54px) * 0.165 * 0.26)";
+  const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
+  const skyHeight = "calc(54px + ((100dvh - 54px) * 0.165) - (((100dvh - 54px) * 0.165 * 0.26) * 3))";
+
   return (
-    <div className="relative h-[calc(100dvh*0.165)] shrink-0 overflow-hidden" aria-hidden="true">
-      <div className="relative h-[calc(100dvh*0.036)] overflow-hidden bg-[linear-gradient(180deg,#04070D_0%,#0A1321_42%,#11243C_78%,#18314A_100%)]">
+    <div className="relative shrink-0 overflow-hidden" style={{ height: headerHeight }} aria-hidden="true">
+      <div className="relative overflow-hidden bg-[linear-gradient(180deg,#04070D_0%,#0A1321_42%,#11243C_78%,#18314A_100%)]" style={{ height: skyHeight }}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.08),transparent_45%)]" />
         <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.55) 1px, transparent 1.8px)', backgroundSize: '44px 44px', backgroundPosition: '0 0, 22px 22px' }} />
       </div>
 
-      <div className="relative h-[calc(100dvh*0.043)] overflow-hidden bg-[#0B0D10]">
+      <div className="relative overflow-hidden bg-[#0B0D10]" style={{ height: flashHeight }}>
         <div className="absolute inset-x-0 top-0 h-[18%] bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0))]" />
         <div className="absolute inset-x-0 bottom-0 h-[24%] bg-[linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.28))]" />
         <div className="absolute inset-x-0 top-[24%] h-[8%] bg-[#2E333A]/78" />
       </div>
 
-      <div className="relative h-[calc(100dvh*0.043)] overflow-hidden bg-[#072D1D]">
+      <div className="relative overflow-hidden bg-[#072D1D]" style={{ height: flashHeight }}>
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.18))]" />
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
           <g fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -169,7 +173,7 @@ function ScoreboardPlaceholder() {
         </svg>
       </div>
 
-      <div className="relative flex h-[calc(100dvh*0.043)] items-center justify-center overflow-hidden bg-[#072D1D] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]">
+      <div className="relative flex items-center justify-center overflow-hidden bg-[#072D1D] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]" style={{ height: flashHeight }}>
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035)_0%,rgba(0,0,0,0.12)_100%)]" />
         <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
           <g stroke="rgba(220,226,222,0.72)" strokeWidth="2.5" strokeLinecap="round">
