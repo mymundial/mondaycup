@@ -69,28 +69,33 @@ function HomeUnifiedCrowdBackdrop() {
     "#E10600", "#1A22C9", "#9B003F", "#D50000", "#FF3B30", "#3131E8"
   ];
   const skins = ["#c98f65", "#8f5f3f", "#e0b184", "#6f4632"];
-  const makeRow = ({ count, startX, step, y, scale, opacity, stagger = 0, wave = 0, shirtOffset = 0, skinOffset = 0 }) => Array.from({ length: count }, (_, i) => ({
-    x: startX + i * step + (i % 2 ? stagger : 0),
-    y: y + (i % 3) * wave,
-    scale,
-    shirt: shirts[((i * 7) + shirtOffset) % shirts.length],
-    skin: skins[(i + skinOffset) % skins.length],
-    pose: i % 4 === 0 || i % 7 === 0 ? "up" : "down",
-    opacity,
-  }));
+  const makeRow = ({ count, step, y, scale, opacity, stagger = 0, wave = 0, shirtOffset = 0, skinOffset = 0 }) => {
+    const centredStartX = 50 - (((count - 1) * step) + stagger) / 2;
+    return Array.from({ length: count }, (_, i) => ({
+      x: centredStartX + i * step + (i % 2 ? stagger : 0),
+      y: y + (i % 3) * wave,
+      scale,
+      shirt: shirts[((i * 7) + shirtOffset) % shirts.length],
+      skin: skins[(i + skinOffset) % skins.length],
+      pose: i % 4 === 0 || i % 7 === 0 ? "up" : "down",
+      opacity,
+    }));
+  };
 
-  const rowConfigs = Array.from({ length: 28 }, (_, index) => {
-    const t = index / 27;
-    const y = 3 + 94 * Math.pow(t, 1.28);
+  // Match crowd uses 9 rows across 30% of the match pitch area.
+  // Home crowd runs from below the top LED to the behind-goal LED board, which is about 1.7x taller
+  // on the target mobile viewport, so 16 rows keeps the visual row density consistent.
+  const rowConfigs = Array.from({ length: 16 }, (_, index) => {
+    const t = index / 15;
+    const y = 2.5 + 94 * Math.pow(t, 1.24);
     return {
-      count: Math.round(66 - t * 38),
-      startX: -1.4 + t * 5.4,
-      step: 1.58 + t * 2.72,
+      count: Math.round(62 - t * 34),
+      step: 1.68 + t * 2.45,
       y,
-      scale: 0.22 + t * 0.84,
-      opacity: 0.12 + t * 0.88,
-      stagger: 0.16 + t * 1.10,
-      wave: 0.12 + t * 0.84,
+      scale: 0.26 + t * 0.78,
+      opacity: 0.16 + t * 0.84,
+      stagger: 0.18 + t * 1.04,
+      wave: 0.12 + t * 0.80,
       shirtOffset: index,
       skinOffset: index % skins.length,
     };
