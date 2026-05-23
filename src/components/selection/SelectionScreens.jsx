@@ -199,7 +199,7 @@ function HomeTopLedAdvertisingHoard() {
           {[0, 1].map((copy) => (
             <div key={copy} className="flex shrink-0 items-center pr-12">
               {groupsTicker.map(({ label, teams }) => (
-                <span key={`${copy}-${label}`} className="font-led flex items-center text-[clamp(18px,2.7vh,30px)] uppercase tracking-[0.18em] text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]">
+                <span key={`${copy}-${label}`} className="font-led flex items-center text-[clamp(9px,1.35vh,15px)] uppercase tracking-[0.18em] text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]">
                   <span className="mx-4 text-[#F7D117]">{label}</span>
                   <span className="text-[#F7D117]/95">{teams.join("  •  ")}</span>
                   <span className="mx-5 text-[#F7D117]/75">///</span>
