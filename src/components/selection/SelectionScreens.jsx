@@ -117,7 +117,9 @@ function HomeFlagPanel({ type }) {
 }
 
 function ScoreboardPlaceholder() {
-  const lightCenters = [100, 300, 500, 700, 900];
+  const flagCenters = [18, 34, 50, 66, 82];
+  const lightCenters = [180, 340, 500, 660, 820];
+  const flagItems = ["canada", "cup", "mexico", "cup", "usa"];
   const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
   const flashHeight = "calc((100dvh - 54px) * 0.165 * 0.26)";
   const trussHeight = "calc(((100dvh - 54px) * 0.165 * 0.26) * 0.5)";
@@ -142,23 +144,10 @@ function ScoreboardPlaceholder() {
         <div className="absolute inset-x-0 top-0" style={{ height: trussHeight }}>
           <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
             <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M0 18 H1000 M0 82 H1000" stroke="rgba(190,200,196,0.48)" strokeWidth="5" />
-              <path d="M0 50 H1000" stroke="rgba(190,200,196,0.18)" strokeWidth="3" />
-              {Array.from({ length: 6 }).map((_, idx) => {
-                const x0 = -100 + idx * 200;
-                const x1 = x0 + 200;
-                return (
-                  <g key={idx}>
-                    <path d={`M${x0} 82 L${x1} 18`} stroke="rgba(190,200,196,0.36)" strokeWidth="4" />
-                    <path d={`M${x0} 18 L${x1} 82`} stroke="rgba(190,200,196,0.36)" strokeWidth="4" />
-                  </g>
-                );
-              })}
-              <path d="M0 82 L200 18 M0 18 L200 82" stroke="rgba(220,226,222,0.56)" strokeWidth="5" />
-              <path d="M200 82 L400 18 M200 18 L400 82" stroke="rgba(220,226,222,0.56)" strokeWidth="5" />
-              <path d="M400 82 L600 18 M400 18 L600 82" stroke="rgba(220,226,222,0.56)" strokeWidth="5" />
-              <path d="M600 82 L800 18 M600 18 L800 82" stroke="rgba(220,226,222,0.56)" strokeWidth="5" />
-              <path d="M800 82 L1000 18 M800 18 L1000 82" stroke="rgba(220,226,222,0.56)" strokeWidth="5" />
+              <path d="M100 18 H900 M100 82 H900" stroke="rgba(190,200,196,0.48)" strokeWidth="5" />
+              {lightCenters.map((cx) => (
+                <path key={`x-${cx}`} d={`M${cx - 80} 82 L${cx + 80} 18 M${cx - 80} 18 L${cx + 80} 82`} stroke="rgba(220,226,222,0.50)" strokeWidth="4" />
+              ))}
             </g>
             <g>
               {lightCenters.map((cx) => (
@@ -167,9 +156,6 @@ function ScoreboardPlaceholder() {
                   <rect x={cx - 11} y={39} width="22" height="22" rx="1.5" fill="#FFFFFF" />
                   <rect x={cx - 4} y={68} width="8" height="11" rx="2" fill="rgba(220,226,222,0.80)" />
                   <rect x={cx - 24} y={26} width="48" height="48" rx="6" fill="none" stroke="rgba(255,253,242,0.22)" strokeWidth="2" />
-                  <ellipse cx={cx} cy={50} rx="62" ry="22" fill="rgba(255,250,220,0.24)" />
-                  <ellipse cx={cx} cy={50} rx="88" ry="32" fill="rgba(255,250,220,0.16)" />
-                  <ellipse cx={cx} cy={50} rx="116" ry="42" fill="rgba(255,250,220,0.09)" />
                 </g>
               ))}
             </g>
@@ -180,23 +166,21 @@ function ScoreboardPlaceholder() {
           <g stroke="rgba(220,226,222,0.74)" strokeWidth="2.5" strokeLinecap="round">
             {lightCenters.map((cx) => (
               <g key={cx}>
-                <path d={`M${cx - 27.2} 50 L${cx - 27.2} 94`} />
-                <path d={`M${cx + 27.2} 50 L${cx + 27.2} 94`} />
+                <path d={`M${cx - 36} 50 L${cx - 36} 94`} />
+                <path d={`M${cx + 36} 50 L${cx + 36} 94`} />
               </g>
             ))}
           </g>
         </svg>
 
-        <div className="absolute inset-x-0 bottom-0 flex h-[66.6667%] items-center justify-center">
+        <div className="absolute inset-x-0 bottom-0 flex h-[66.6667%] items-center justify-center overflow-hidden">
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.025)_0%,rgba(0,0,0,0.11)_100%)]" />
           <div className="absolute inset-x-0 bottom-0 h-[2px] bg-[#072D1D]" />
-          <div className="absolute inset-x-[7%] inset-y-0 flex items-center justify-between">
-            <HomeFlagPanel type="canada" />
-            <HomeFlagPanel type="cup" />
-            <HomeFlagPanel type="mexico" />
-            <HomeFlagPanel type="cup" />
-            <HomeFlagPanel type="usa" />
-          </div>
+          {flagItems.map((type, index) => (
+            <div key={`${type}-${index}`} className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: `${flagCenters[index]}%` }}>
+              <HomeFlagPanel type={type} />
+            </div>
+          ))}
         </div>
       </div>
     </div>
