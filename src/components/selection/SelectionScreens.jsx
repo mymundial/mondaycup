@@ -140,7 +140,11 @@ function ScoreboardPlaceholder() {
                 </g>
               );
             })}
+            <path d="M0 82 L200 18 M0 18 L200 82" stroke="rgba(220,226,222,0.56)" strokeWidth="5" />
+            <path d="M200 82 L400 18 M200 18 L400 82" stroke="rgba(220,226,222,0.56)" strokeWidth="5" />
             <path d="M400 82 L600 18 M400 18 L600 82" stroke="rgba(220,226,222,0.56)" strokeWidth="5" />
+            <path d="M600 82 L800 18 M600 18 L800 82" stroke="rgba(220,226,222,0.56)" strokeWidth="5" />
+            <path d="M800 82 L1000 18 M800 18 L1000 82" stroke="rgba(220,226,222,0.56)" strokeWidth="5" />
           </g>
         </svg>
       </div>
