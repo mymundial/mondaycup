@@ -101,10 +101,10 @@ function HomePitchBackdrop() {
 }
 
 function HomeSkyFlag({ x, roofTop, country }) {
-  const poleTop = roofTop - 54;
-  const flagTop = poleTop + 3;
-  const flagW = 48;
-  const flagH = 20;
+  const poleTop = roofTop - 62;
+  const flagTop = poleTop + 4;
+  const flagW = 62;
+  const flagH = 22;
   const commonPole = (
     <>
       <rect x={x - 1.5} y={poleTop} width="3" height={roofTop - poleTop} rx="1.5" fill="#E6EEF1" />
@@ -128,24 +128,25 @@ function ScoreboardPlaceholder() {
     <div className="relative h-[calc(54px+((100dvh-54px)*0.208))] shrink-0 overflow-hidden bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_56%,#ADD2EC_100%)]">
       <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 274" preserveAspectRatio="none" aria-hidden="true">
         <rect x="0" y={roofTop} width="1000" height="48" fill="#243541" />
-        <rect x="0" y={roofTop + 38} width="1000" height="10" fill="#16212A" />
-        <HomeSkyFlag x={210} roofTop={roofTop} country="canada" />
-        <HomeSkyFlag x={500} roofTop={roofTop} country="mexico" />
-        <HomeSkyFlag x={790} roofTop={roofTop} country="usa" />
+        <rect x="0" y={roofTop + 42} width="1000" height="6" fill="#16212A" />
+        <HomeSkyFlag x={170} roofTop={roofTop} country="canada" />
+        <HomeSkyFlag x={469} roofTop={roofTop} country="mexico" />
+        <HomeSkyFlag x={768} roofTop={roofTop} country="usa" />
         <g>
-          {[[140, roofTop + 20], [320, roofTop + 20], [500, roofTop + 20], [680, roofTop + 20], [860, roofTop + 20]].map(([cx, cy], idx) => (
+          {[[145, roofTop + 20], [323, roofTop + 20], [500, roofTop + 20], [677, roofTop + 20], [855, roofTop + 20]].map(([cx, cy], idx) => (
             <g key={idx}>
-              <ellipse cx={cx} cy={cy} rx="58" ry="20" fill="rgba(255,255,255,0.11)" />
-              <ellipse cx={cx} cy={cy} rx="40" ry="14" fill="rgba(255,255,255,0.17)" />
-              <circle cx={cx} cy={cy} r="14" fill="#FFFDF3" />
-              <circle cx={cx} cy={cy} r="8" fill="#FFFFFF" />
-              <rect x={cx - 1.75} y={cy + 14} width="3.5" height="17" rx="1.75" fill="#E4EAE8" />
+              <circle cx={cx} cy={cy} r="26" fill="rgba(255,255,255,0.10)" />
+              <circle cx={cx} cy={cy} r="18" fill="rgba(255,255,255,0.18)" />
+              <circle cx={cx} cy={cy} r="10.5" fill="#FFFFFF" />
+              <circle cx={cx} cy={cy} r="6.2" fill="#F8FBFF" />
+              <circle cx={cx} cy={cy} r="34" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="10" />
+              <rect x={cx - 1.7} y={cy + 10.5} width="3.4" height="16" rx="1.7" fill="#E8EDF0" />
             </g>
           ))}
         </g>
       </svg>
-      <div className="absolute inset-x-0 top-0 flex h-[78%] items-center justify-center">
-        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[56%] w-auto object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.12)]" draggable={false} />
+      <div className="absolute inset-x-0 top-0 flex h-[66%] items-start justify-center pt-7">
+        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[44%] w-auto object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.12)]" draggable={false} />
       </div>
     </div>
   );
