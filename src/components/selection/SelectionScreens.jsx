@@ -130,9 +130,9 @@ function ScoreboardPlaceholder() {
           <g fill="none" strokeLinecap="round" strokeLinejoin="round">
             <path d="M0 18 H1000 M0 82 H1000" stroke="rgba(190,200,196,0.48)" strokeWidth="5" />
             <path d="M0 50 H1000" stroke="rgba(190,200,196,0.22)" strokeWidth="3" />
-            {Array.from({ length: 8 }).map((_, idx) => {
-              const x0 = idx * 125;
-              const x1 = x0 + 125;
+            {Array.from({ length: 6 }).map((_, idx) => {
+              const x0 = -100 + idx * 200;
+              const x1 = x0 + 200;
               return (
                 <g key={idx}>
                   <path d={`M${x0} 82 L${x1} 18`} stroke="rgba(190,200,196,0.38)" strokeWidth="4" />
@@ -140,7 +140,7 @@ function ScoreboardPlaceholder() {
                 </g>
               );
             })}
-            <path d="M500 14 V86" stroke="rgba(220,226,222,0.52)" strokeWidth="5" />
+            <path d="M400 82 L600 18 M400 18 L600 82" stroke="rgba(220,226,222,0.56)" strokeWidth="5" />
           </g>
         </svg>
       </div>
