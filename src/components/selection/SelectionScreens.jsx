@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { HOST_TEAMS, GROUPS, GROUP_LETTERS, TEAM_RANK, getTeamTheme } from "../../data/teams.js";
 import { ASSETS } from "../../data/assets.js";
 import { DEFAULT_ASSETS, GAME } from "../../logic/penaltyEngine.js";
@@ -183,7 +184,7 @@ function HomeTopLedAdvertisingHoard() {
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(36,168,87,0.20),rgba(255,255,255,0.04),rgba(36,168,87,0.20))]" />
       <div className="relative flex h-full items-center justify-center gap-[7%] overflow-hidden px-4">
         {Array.from({ length: 5 }).map((_, index) => (
-          <span key={index} className="whitespace-nowrap text-[clamp(9px,1.35vh,15px)] font-black uppercase tracking-[0.24em] text-[#F5F1E8]/80 drop-shadow-[0_0_5px_rgba(245,241,232,0.36)]">
+          <span key={index} className="font-led whitespace-nowrap text-[clamp(9px,1.35vh,15px)] uppercase tracking-[0.24em] text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]">
             MONDAY CUP
           </span>
         ))}
@@ -199,8 +200,9 @@ function HomeCentreLogoOverlay() {
   const crossbarTop = `calc(${headerHeight} + (${mainHeight} * ${GAME.goal.top / 100}))`;
   return (
     <div className="pointer-events-none absolute inset-x-0 z-[2] flex items-center justify-center" style={{ top: topLedHeight, height: `calc(${crossbarTop} - ${topLedHeight})` }} aria-hidden="true">
-      <div className="absolute h-[clamp(78px,15vh,150px)] w-[clamp(78px,15vh,150px)] rounded-full bg-[#F7D117]/18 blur-2xl" />
-      <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative h-[clamp(59px,11vh,121px)] w-auto object-contain drop-shadow-[0_0_16px_rgba(247,209,23,0.28)] drop-shadow-[0_8px_16px_rgba(0,0,0,0.58)]" draggable={false} />
+      <div className="absolute h-[clamp(120px,24vh,248px)] w-[clamp(120px,24vh,248px)] rounded-full bg-[#F5F1E8]/42 blur-3xl" />
+      <div className="absolute h-[clamp(92px,18vh,190px)] w-[clamp(92px,18vh,190px)] rounded-full bg-[#F5F1E8]/28 blur-xl" />
+      <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative h-[clamp(89px,16.5vh,182px)] w-auto object-contain drop-shadow-[0_0_20px_rgba(245,241,232,0.58)] drop-shadow-[0_8px_16px_rgba(0,0,0,0.58)]" draggable={false} />
     </div>
   );
 }
@@ -217,7 +219,7 @@ function HomeFooter() {
 function HomeLayout({ children }) {
   return (
     <Shell>
-      <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-[#123822] text-[#072D1D]">
+      <div className="home-main-font relative flex h-[100dvh] flex-col overflow-hidden bg-[#123822] text-[#072D1D]">
         <HomeUnifiedCrowdBackdrop />
         <HomeTopLedAdvertisingHoard />
         <HomeCentreLogoOverlay />
@@ -236,16 +238,16 @@ function HomeLayout({ children }) {
   );
 }
 
-function ActionButton({ children, eyebrow, onClick, variant = "light", disabled = false }) {
+function ActionButton({ children, eyebrow, onClick, variant = "light", disabled = false, type = "button" }) {
   const styles = variant === "green"
     ? "border-[#F5F0E6]/20 bg-[#0B5F35] text-[#F5F0E6]"
     : variant === "account"
-      ? "border-[#F5F0E6]/18 bg-[#F5F0E6]/18 text-[#F5F0E6]/60"
+      ? "border-[#F5F0E6]/18 bg-[#F5F0E6]/18 text-[#F5F0E6]/70"
       : "border-[#D4AF37]/50 bg-[#F5F0E6] text-[#0B5F35]";
 
-  return <button onClick={onClick} disabled={disabled} className={`w-full rounded-[1.35rem] border px-4 py-4 text-center shadow-inner transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
-    {eyebrow && <div className="text-[8px] font-black uppercase tracking-[0.24em] opacity-50">{eyebrow}</div>}
-    <div className="mt-1 text-[18px] font-black uppercase leading-none tracking-[0.02em]">{children}</div>
+  return <button type={type} onClick={onClick} disabled={disabled} className={`w-full rounded-[1.35rem] border px-4 py-4 text-center shadow-inner transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
+    {eyebrow && <div className="home-copy-light text-[8px] uppercase tracking-[0.24em] opacity-55">{eyebrow}</div>}
+    <div className="home-copy-regular mt-1 text-[18px] uppercase leading-none tracking-[0.02em]">{children}</div>
   </button>;
 }
 
@@ -263,16 +265,58 @@ function SavedCampaignCard({ summary, onContinue }) {
   </button>;
 }
 
-function LandingPanel({ onSelectGroup }) {
+function AuthInput({ label, type = "text" }) {
+  return (
+    <label className="block text-left">
+      <span className="home-copy-light mb-1 block text-[8px] uppercase tracking-[0.22em] text-[#F5F0E6]/58">{label}</span>
+      <input type={type} className="home-copy-regular h-11 w-full rounded-[1rem] border border-[#F5F0E6]/14 bg-[#F5F0E6]/92 px-4 text-[14px] uppercase tracking-[0.04em] text-[#0B5F35] outline-none placeholder:text-[#0B5F35]/30 focus:border-[#D4AF37]" />
+    </label>
+  );
+}
+
+function AuthPanel({ mode, setMode, onBack }) {
+  const isRegister = mode === "register";
   return <div className="space-y-3">
     <GreenCard>
       <div className="text-center">
-        <div className="text-[28px] font-black uppercase leading-[0.9] tracking-[-0.03em]">PLAY YOUR TOURNAMENT JOURNEY</div>
-        <p className="mx-auto mt-3 max-w-[248px] text-[10px] font-bold uppercase leading-[1.45] tracking-[0.09em] text-[#F5F0E6]/58">Choose a host nation and chase the final.</p>
+        <div className="home-copy-light text-[10px] uppercase leading-none tracking-[0.22em] text-[#F5F0E6]/58">{isRegister ? "CREATE YOUR ACCOUNT" : "WELCOME BACK"}</div>
+        <div className="home-copy-regular mt-2 text-[27px] uppercase leading-[0.92] tracking-[-0.02em] text-[#F5F0E6]">{isRegister ? "REGISTER" : "SIGN IN"}</div>
+      </div>
+      <form className="mt-4 space-y-2.5" onSubmit={(event) => event.preventDefault()}>
+        {isRegister && <AuthInput label="Username" />}
+        <AuthInput label="Email address" type="email" />
+        <AuthInput label="Password" type="password" />
+        {isRegister && (
+          <label className="home-copy-light flex items-start gap-2 rounded-[0.9rem] bg-[#F5F0E6]/8 p-3 text-left text-[8px] uppercase leading-[1.25] tracking-[0.12em] text-[#F5F0E6]/62">
+            <input type="checkbox" className="mt-[1px] h-4 w-4 shrink-0 accent-[#D4AF37]" />
+            <span>Receive Monday Cup email communications</span>
+          </label>
+        )}
+        <ActionButton type="submit">{isRegister ? "CREATE ACCOUNT" : "SIGN IN"}</ActionButton>
+      </form>
+      <button type="button" onClick={() => setMode(isRegister ? "signin" : "register")} className="home-copy-light mt-3 w-full text-center text-[9px] uppercase tracking-[0.16em] text-[#F5F0E6]/64 underline-offset-4 active:scale-[0.99]">
+        {isRegister ? "Already a user? Sign in" : "Not already a user? Register"}
+      </button>
+      <button type="button" onClick={onBack} className="home-copy-light mt-2 w-full text-center text-[8px] uppercase tracking-[0.18em] text-[#F5F0E6]/45">
+        Back
+      </button>
+    </GreenCard>
+  </div>;
+}
+
+function LandingPanel({ onPlayGuest }) {
+  const [authMode, setAuthMode] = useState(null);
+  if (authMode) return <AuthPanel mode={authMode} setMode={setAuthMode} onBack={() => setAuthMode(null)} />;
+
+  return <div className="space-y-3">
+    <GreenCard>
+      <div className="text-center">
+        <p className="home-copy-light mx-auto max-w-[248px] text-[10px] uppercase leading-[1.45] tracking-[0.13em] text-[#F5F0E6]/58">A GOOD MAN ONCE SAID</p>
+        <div className="home-copy-regular mt-3 text-[27px] uppercase leading-[0.9] tracking-[-0.02em] text-[#F5F0E6]">IT&apos;S NEVER SUNDAY...<br />WHEN IT&apos;S MONDAY</div>
       </div>
       <div className="mt-5 space-y-2.5">
-        <ActionButton onClick={() => onSelectGroup("A")} eyebrow="NO ACCOUNT NEEDED">PLAY AS GUEST</ActionButton>
-        <ActionButton disabled eyebrow="COMING SOON" variant="account">SIGN IN / REGISTER</ActionButton>
+        <ActionButton onClick={onPlayGuest} eyebrow="NO ACCOUNT NEEDED">PLAY AS GUEST</ActionButton>
+        <ActionButton onClick={() => setAuthMode("signin")} eyebrow="ACCOUNT">SIGN IN / REGISTER</ActionButton>
       </div>
     </GreenCard>
   </div>;
@@ -293,6 +337,10 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam }) {
   return <GreenCard><div className="mb-3 flex items-center justify-between"><ArrowButton direction="left" onClick={previousGroup} /><div className="text-[24px] font-black uppercase tracking-[-0.02em] text-[#F5F0E6]">GROUP {group}</div><ArrowButton direction="right" onClick={nextGroup} /></div><div className="grid gap-2">{GROUPS[group].map((name) => <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[38px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] bg-[#F5F0E6] px-4 text-left text-[15px] font-black tracking-[-0.02em] text-[#0B5F35] shadow-inner"><Flag team={name} className="h-5 w-7" /><span className="truncate text-center uppercase tracking-[-0.01em]">{name}</span><span className="text-right text-[11px] font-black tabular-nums tracking-[0.06em] text-[#0B5F35]/45">#{TEAM_RANK[name]}</span></button>)}</div></GreenCard>;
 }
 
-export function HomeScreen({ onSelectGroup }) { return <HomeLayout><LandingPanel onSelectGroup={onSelectGroup} /></HomeLayout>; }
+export function HomeScreen({ onSelectGroup, onSelectTeam }) {
+  const [homeMode, setHomeMode] = useState("landing");
+  if (homeMode === "hosts") return <HomeLayout><HostPanel onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>;
+  return <HomeLayout><LandingPanel onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
+}
 export function HostSelectScreen(props) { return <SelectionLayout><HostPanel {...props} /></SelectionLayout>; }
 export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam }) { return <SelectionLayout><TeamPanel group={selectedGroup} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></SelectionLayout>; }
