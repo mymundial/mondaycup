@@ -104,12 +104,12 @@ function HomeFlagPanel({ type }) {
   const isCup = type === "cup";
   const flagSrc = type === "canada" ? "/flags/CAN.png" : type === "mexico" ? "/flags/MEX.png" : "/flags/USA.png";
   return (
-    <div className="relative flex h-[82%] aspect-[2/1] shrink-0 items-center justify-center overflow-hidden rounded-sm shadow-[0_3px_8px_rgba(0,0,0,0.24)]">
+    <div className="relative flex h-[61.5%] aspect-[2/1] shrink-0 items-center justify-center overflow-hidden rounded-sm shadow-[0_3px_8px_rgba(0,0,0,0.22)]">
       <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-sm ${isCup ? "bg-[#7D8581]" : "bg-[#F5F0E6]"}`}>
         {isCup ? (
           <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[92%] w-auto object-contain" draggable={false} />
         ) : (
-          <img src={flagSrc} alt="" className="h-full w-full object-cover" draggable={false} />
+          <img src={flagSrc} alt="" className="h-full w-full object-contain" draggable={false} />
         )}
       </div>
     </div>
