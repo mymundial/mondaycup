@@ -150,7 +150,7 @@ function HomePitchBackdrop() {
   return (
     <div className="absolute inset-0 overflow-hidden bg-transparent">
       <HomeLedAdvertisingHoard />
-      <div className="absolute bottom-0 left-0 right-0" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
+      <div className="absolute bottom-0 left-0 right-0 bg-[#0d6c3d]" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
       <div className="pointer-events-none absolute z-[3] rounded-b-[999px] border-b-[8px] border-l-[8px] border-r-[8px] border-[#f5f1e8]" style={{ left: "5%", top: `${goalLine}%`, width: "90%", height: "24.2%" }} />
       <HomeGoalFrame />
@@ -162,6 +162,35 @@ function HomePitchBackdrop() {
 function ScoreboardPlaceholder() {
   const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
   return <div className="relative z-[1] shrink-0" style={{ height: headerHeight }} aria-hidden="true" />;
+}
+
+
+function HomeTopLedAdvertisingHoard() {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-[3] h-[clamp(28px,5vh,44px)] overflow-hidden border-b border-[#2d2d2d] bg-[#050505] shadow-[0_6px_16px_rgba(0,0,0,0.36)]" aria-hidden="true">
+      <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(36,168,87,0.20),rgba(255,255,255,0.04),rgba(36,168,87,0.20))]" />
+      <div className="relative flex h-full items-center justify-center gap-[7%] overflow-hidden px-4">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <span key={index} className="whitespace-nowrap text-[clamp(9px,1.35vh,15px)] font-black uppercase tracking-[0.24em] text-[#F5F1E8]/80 drop-shadow-[0_0_5px_rgba(245,241,232,0.36)]">
+            MONDAY CUP
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HomeCentreLogoOverlay() {
+  const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
+  const mainHeight = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
+  const topLedHeight = "clamp(28px,5vh,44px)";
+  const crossbarTop = `calc(${headerHeight} + (${mainHeight} * ${GAME.goal.top / 100}))`;
+  return (
+    <div className="pointer-events-none absolute inset-x-0 z-[2] flex items-center justify-center" style={{ top: topLedHeight, height: `calc(${crossbarTop} - ${topLedHeight})` }} aria-hidden="true">
+      <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[clamp(54px,10vh,110px)] w-auto object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.55)]" draggable={false} />
+    </div>
+  );
 }
 
 
@@ -178,6 +207,8 @@ function HomeLayout({ children }) {
     <Shell>
       <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-[#123822] text-[#072D1D]">
         <HomeUnifiedCrowdBackdrop />
+        <HomeTopLedAdvertisingHoard />
+        <HomeCentreLogoOverlay />
         <ScoreboardPlaceholder />
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
