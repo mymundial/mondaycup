@@ -178,20 +178,41 @@ function ScoreboardPlaceholder() {
 function HomeTopLedAdvertisingHoard() {
   const mainHeight = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
   const boardHeight = `calc(${mainHeight} * 0.08)`;
+  const groupsTicker = GROUP_LETTERS.map((group) => ({
+    label: `GROUP ${group}:`,
+    teams: GROUPS[group] || [],
+  }));
+
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-[3] overflow-hidden border-b border-[#2d2d2d] bg-[#050505] shadow-[0_6px_16px_rgba(0,0,0,0.36)]" style={{ height: boardHeight }} aria-hidden="true">
+      <style>{`
+        @keyframes homeLedTickerScroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .home-led-ticker-track { animation: homeLedTickerScroll 78s linear infinite; }
+      `}</style>
       <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(36,168,87,0.20),rgba(255,255,255,0.04),rgba(36,168,87,0.20))]" />
-      <div className="relative flex h-full items-center justify-center gap-[7%] overflow-hidden px-4">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <span key={index} className="font-led whitespace-nowrap text-[clamp(9px,1.35vh,15px)] uppercase tracking-[0.24em] text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]">
-            MONDAY CUP
-          </span>
-        ))}
+      <div className="relative flex h-full items-center overflow-hidden">
+        <div className="home-led-ticker-track flex w-max items-center whitespace-nowrap will-change-transform">
+          {[0, 1].map((copy) => (
+            <div key={copy} className="flex shrink-0 items-center pr-12">
+              {groupsTicker.map(({ label, teams }) => (
+                <span key={`${copy}-${label}`} className="font-led flex items-center text-[clamp(9px,1.35vh,15px)] uppercase tracking-[0.22em] text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]">
+                  <span className="mx-4 text-[#F7D117]">{label}</span>
+                  <span className="text-[#F7D117]/95">{teams.join("  •  ")}</span>
+                  <span className="mx-5 text-[#F7D117]/75">///</span>
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
+
 
 function HomeCentreLogoOverlay() {
   const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
