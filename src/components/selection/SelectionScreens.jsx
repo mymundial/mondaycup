@@ -1,17 +1,15 @@
 import { HOST_TEAMS, GROUPS, GROUP_LETTERS, TEAM_RANK, getTeamTheme } from "../../data/teams.js";
 import { ASSETS } from "../../data/assets.js";
 import { DEFAULT_ASSETS, GAME } from "../../logic/penaltyEngine.js";
-import { BrandMark, Flag, HamburgerIcon } from "../shared.jsx";
+import { Flag, HamburgerIcon } from "../shared.jsx";
 import { GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
 
 function HomeTopBar() {
   return (
     <div className="relative h-[54px] shrink-0 bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_54%,#ADD2EC_100%)]">
-      <div className="absolute inset-y-0 right-4 flex items-center">
-        <button type="button" aria-label="Menu" className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#DDF2FF]/68 text-[#0B5F35] shadow-[inset_0_0_0_1px_rgba(11,95,53,0.16)]">
-          <span className="scale-[1.05]"><HamburgerIcon /></span>
-        </button>
-      </div>
+      <button type="button" aria-label="Menu" className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[0.95rem] bg-[#DDF2FF]/42 text-[#0B5F35] shadow-[inset_0_0_0_1px_rgba(11,95,53,0.14)]">
+        <span className="scale-90"><HamburgerIcon /></span>
+      </button>
     </div>
   );
 }
@@ -113,56 +111,52 @@ function HomePitchBackdrop() {
 }
 
 function HomeSkyFlag({ x, country }) {
-  const roofTop = 18;
-  const poleHeight = 30;
-  const flagTop = roofTop - poleHeight + 2;
+  const roofY = 166;
+  const poleTop = 116;
+  const flagTop = 119;
+  const flagW = 34;
+  const flagH = 18;
   const commonPole = (
     <>
-      <rect x={x - 1.5} y={flagTop - 4} width="3" height={poleHeight + 4} rx="1.5" fill="#D7DEE1" />
-      <circle cx={x} cy={flagTop - 5} r="3.4" fill="#F4F7F7" />
+      <rect x={x - 1.4} y={poleTop} width="2.8" height={roofY - poleTop} rx="1.4" fill="#D7DEE1" />
+      <circle cx={x} cy={poleTop - 2.5} r="3.3" fill="#F4F7F7" />
     </>
   );
-
-  const clothBase = `M${x + 2} ${flagTop} C${x + 12} ${flagTop - 3} ${x + 24} ${flagTop + 3} ${x + 34} ${flagTop} L${x + 34} ${flagTop + 18} C${x + 24} ${flagTop + 21} ${x + 12} ${flagTop + 15} ${x + 2} ${flagTop + 18} Z`;
+  const clothBase = `M${x + 2} ${flagTop} C${x + 12} ${flagTop - 3} ${x + 24} ${flagTop + 3} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + flagH} C${x + 24} ${flagTop + flagH + 3} ${x + 12} ${flagTop + flagH - 3} ${x + 2} ${flagTop + flagH} Z`;
 
   const flag = country === "canada"
-    ? <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 7} ${flagTop - 2} ${x + 12} ${flagTop - 2} ${x + 16} ${flagTop} L${x + 16} ${flagTop + 18} C${x + 12} ${flagTop + 16} ${x + 7} ${flagTop + 16} ${x + 2} ${flagTop + 18} Z`} fill="#E1251B" /><path d={`M${x + 20} ${flagTop} C${x + 25} ${flagTop - 1} ${x + 30} ${flagTop - 1} ${x + 34} ${flagTop} L${x + 34} ${flagTop + 18} C${x + 30} ${flagTop + 19} ${x + 25} ${flagTop + 19} ${x + 20} ${flagTop + 18} Z`} fill="#E1251B" /><path d={`M${x + 18} ${flagTop + 6} l2 4 h4 l-3 2 1 4 -4 -3 -4 3 1 -4 -3 -2 h4 Z`} fill="#E1251B" /></g>
+    ? <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 7} ${flagTop - 2} ${x + 12} ${flagTop - 2} ${x + 15} ${flagTop} L${x + 15} ${flagTop + flagH} C${x + 12} ${flagTop + flagH - 2} ${x + 7} ${flagTop + flagH - 2} ${x + 2} ${flagTop + flagH} Z`} fill="#E1251B" /><path d={`M${x + 21} ${flagTop} C${x + 26} ${flagTop + 1} ${x + 30} ${flagTop + 1} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + flagH} C${x + 30} ${flagTop + flagH + 1} ${x + 26} ${flagTop + flagH + 1} ${x + 21} ${flagTop + flagH} Z`} fill="#E1251B" /><path d={`M${x + 18} ${flagTop + 6} l2 4 h4 l-3 2 1 4 -4 -3 -4 3 1 -4 -3 -2 h4 Z`} fill="#E1251B" /></g>
     : country === "mexico"
-      ? <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 7} ${flagTop - 2} ${x + 12} ${flagTop - 2} ${x + 16} ${flagTop} L${x + 16} ${flagTop + 18} C${x + 12} ${flagTop + 16} ${x + 7} ${flagTop + 16} ${x + 2} ${flagTop + 18} Z`} fill="#006847" /><path d={`M${x + 20} ${flagTop} C${x + 25} ${flagTop - 1} ${x + 30} ${flagTop - 1} ${x + 34} ${flagTop} L${x + 34} ${flagTop + 18} C${x + 30} ${flagTop + 19} ${x + 25} ${flagTop + 19} ${x + 20} ${flagTop + 18} Z`} fill="#CE1126" /><circle cx={x + 18} cy={flagTop + 10} r="2.8" fill="#B48A2F" /></g>
-      : <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 12} ${flagTop - 3} ${x + 24} ${flagTop + 3} ${x + 34} ${flagTop} L${x + 34} ${flagTop + 4} C${x + 24} ${flagTop + 7} ${x + 12} ${flagTop + 1} ${x + 2} ${flagTop + 4} Z M${x + 2} ${flagTop + 7} C${x + 12} ${flagTop + 4} ${x + 24} ${flagTop + 10} ${x + 34} ${flagTop + 7} L${x + 34} ${flagTop + 11} C${x + 24} ${flagTop + 14} ${x + 12} ${flagTop + 8} ${x + 2} ${flagTop + 11} Z M${x + 2} ${flagTop + 14} C${x + 12} ${flagTop + 11} ${x + 24} ${flagTop + 17} ${x + 34} ${flagTop + 14} L${x + 34} ${flagTop + 18} C${x + 24} ${flagTop + 21} ${x + 12} ${flagTop + 15} ${x + 2} ${flagTop + 18} Z`} fill="#B22234" /><path d={`M${x + 2} ${flagTop} C${x + 8} ${flagTop - 1} ${x + 14} ${flagTop - 1} ${x + 18} ${flagTop} L${x + 18} ${flagTop + 10} C${x + 14} ${flagTop + 9} ${x + 8} ${flagTop + 9} ${x + 2} ${flagTop + 10} Z`} fill="#224184" /></g>;
+      ? <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 7} ${flagTop - 2} ${x + 12} ${flagTop - 2} ${x + 15} ${flagTop} L${x + 15} ${flagTop + flagH} C${x + 12} ${flagTop + flagH - 2} ${x + 7} ${flagTop + flagH - 2} ${x + 2} ${flagTop + flagH} Z`} fill="#006847" /><path d={`M${x + 21} ${flagTop} C${x + 26} ${flagTop + 1} ${x + 30} ${flagTop + 1} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + flagH} C${x + 30} ${flagTop + flagH + 1} ${x + 26} ${flagTop + flagH + 1} ${x + 21} ${flagTop + flagH} Z`} fill="#CE1126" /><circle cx={x + 18} cy={flagTop + 10} r="2.8" fill="#B48A2F" /></g>
+      : <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 12} ${flagTop - 3} ${x + 24} ${flagTop + 3} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + 4} C${x + 24} ${flagTop + 7} ${x + 12} ${flagTop + 1} ${x + 2} ${flagTop + 4} Z M${x + 2} ${flagTop + 7} C${x + 12} ${flagTop + 4} ${x + 24} ${flagTop + 10} ${x + flagW} ${flagTop + 7} L${x + flagW} ${flagTop + 11} C${x + 24} ${flagTop + 14} ${x + 12} ${flagTop + 8} ${x + 2} ${flagTop + 11} Z M${x + 2} ${flagTop + 14} C${x + 12} ${flagTop + 11} ${x + 24} ${flagTop + 17} ${x + flagW} ${flagTop + 14} L${x + flagW} ${flagTop + flagH} C${x + 24} ${flagTop + flagH + 3} ${x + 12} ${flagTop + flagH - 3} ${x + 2} ${flagTop + flagH} Z`} fill="#B22234" /><path d={`M${x + 2} ${flagTop} C${x + 8} ${flagTop - 1} ${x + 14} ${flagTop - 1} ${x + 18} ${flagTop} L${x + 18} ${flagTop + 10} C${x + 14} ${flagTop + 9} ${x + 8} ${flagTop + 9} ${x + 2} ${flagTop + 10} Z`} fill="#224184" /></g>;
 
   return <g>{commonPole}{flag}</g>;
 }
 
 function ScoreboardPlaceholder() {
   return (
-    <div className="relative h-[calc((100dvh-54px)*0.208)] shrink-0 overflow-hidden">
-      <div className="relative h-[79.4%] overflow-hidden bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_54%,#ADD2EC_100%)]">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[70%] w-auto object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.12)]" draggable={false} />
-        </div>
-      </div>
-      <div className="relative h-[20.6%] overflow-visible bg-[linear-gradient(180deg,#314451_0%,#22313B_100%)]">
-        <svg className="absolute inset-x-0 bottom-0 h-[132%] w-full" viewBox="0 0 1000 170" preserveAspectRatio="none" aria-hidden="true">
-          <rect x="0" y="18" width="1000" height="74" fill="#243541" />
-          <rect x="0" y="18" width="1000" height="6" fill="#495B67" opacity="0.9" />
-          <rect x="0" y="80" width="1000" height="12" fill="#15212A" />
-          <HomeSkyFlag x={220} country="canada" />
-          <HomeSkyFlag x={500} country="mexico" />
-          <HomeSkyFlag x={780} country="usa" />
-          <g>
-            {[[130,55],[315,55],[500,55],[685,55],[870,55]].map(([cx, cy], idx) => (
-              <g key={idx}>
-                <rect x={cx - 28} y={cy - 4} width="56" height="8" rx="4" fill="#FFF1A8" opacity="0.96" />
-                <rect x={cx - 20} y={cy - 2} width="40" height="4" rx="2" fill="#FFF9D6" opacity="0.95" />
-                <rect x={cx - 2} y={cy + 4} width="4" height="17" rx="2" fill="#6F808A" />
-                <ellipse cx={cx} cy={cy + 1} rx="44" ry="14" fill="rgba(255,212,72,0.18)" />
-                <ellipse cx={cx} cy={cy + 2} rx="64" ry="22" fill="rgba(255,212,72,0.10)" />
-              </g>
-            ))}
-          </g>
-          <rect x="0" y="162" width="1000" height="8" fill="#10181E" />
-        </svg>
+    <div className="relative h-[calc((100dvh-54px)*0.208)] shrink-0 overflow-hidden bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_54%,#ADD2EC_100%)]">
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 214" preserveAspectRatio="none" aria-hidden="true">
+        <HomeSkyFlag x={220} country="canada" />
+        <HomeSkyFlag x={500} country="mexico" />
+        <HomeSkyFlag x={780} country="usa" />
+        <rect x="0" y="166" width="1000" height="44" fill="#243541" />
+        <rect x="0" y="166" width="1000" height="5" fill="#4A5F69" opacity="0.9" />
+        <rect x="0" y="204" width="1000" height="10" fill="#111D25" />
+        <g>
+          {[[140,188],[320,188],[500,188],[680,188],[860,188]].map(([cx, cy], idx) => (
+            <g key={idx}>
+              <ellipse cx={cx} cy={cy + 1} rx="62" ry="18" fill="rgba(255,212,72,0.16)" />
+              <ellipse cx={cx} cy={cy + 2} rx="90" ry="27" fill="rgba(255,212,72,0.08)" />
+              <rect x={cx - 34} y={cy - 4} width="68" height="8" rx="4" fill="#F6DE67" />
+              <rect x={cx - 24} y={cy - 2} width="48" height="4" rx="2" fill="#FFF9D6" />
+              <rect x={cx - 2} y={cy + 4} width="4" height="18" rx="2" fill="#6F808A" />
+            </g>
+          ))}
+        </g>
+      </svg>
+      <div className="absolute inset-x-0 top-0 flex h-[77%] items-center justify-center">
+        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[66%] w-auto object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.12)]" draggable={false} />
       </div>
     </div>
   );
@@ -171,7 +165,7 @@ function ScoreboardPlaceholder() {
 function HomeFooter() {
   return (
     <div className="relative z-10 flex justify-center pb-5 pt-2">
-      <BrandMark />
+      <img src={ASSETS.myMundialLogo} alt="myMUNDIAL" className="h-8 w-auto object-contain opacity-90" draggable={false} />
     </div>
   );
 }
@@ -199,13 +193,13 @@ function HomeLayout({ children }) {
 function ActionButton({ children, eyebrow, onClick, variant = "light", disabled = false }) {
   const styles = variant === "green"
     ? "border-[#F5F0E6]/20 bg-[#0B5F35] text-[#F5F0E6]"
-    : variant === "outline"
-      ? "border-[#0B5F35]/18 bg-[#F5F0E6]/55 text-[#0B5F35]"
+    : variant === "account"
+      ? "border-[#F5F0E6]/18 bg-[#F5F0E6]/18 text-[#F5F0E6]/60"
       : "border-[#D4AF37]/50 bg-[#F5F0E6] text-[#0B5F35]";
 
-  return <button onClick={onClick} disabled={disabled} className={`w-full rounded-[1.15rem] border px-4 py-3 text-center shadow-inner transition ${styles} ${disabled ? "opacity-45" : "active:scale-[0.99]"}`}>
-    {eyebrow && <div className="text-[8px] font-black uppercase tracking-[0.22em] opacity-55">{eyebrow}</div>}
-    <div className="mt-1 text-[17px] font-black uppercase leading-none tracking-[0.02em]">{children}</div>
+  return <button onClick={onClick} disabled={disabled} className={`w-full rounded-[1.35rem] border px-4 py-4 text-center shadow-inner transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
+    {eyebrow && <div className="text-[8px] font-black uppercase tracking-[0.24em] opacity-50">{eyebrow}</div>}
+    <div className="mt-1 text-[18px] font-black uppercase leading-none tracking-[0.02em]">{children}</div>
   </button>;
 }
 
@@ -223,7 +217,7 @@ function SavedCampaignCard({ summary, onContinue }) {
   </button>;
 }
 
-function LandingPanel({ savedCampaign, onContinueCampaign, onNewCampaign, onPlayAsGuest }) {
+function LandingPanel({ onSelectGroup }) {
   return <div className="space-y-3">
     <GreenCard>
       <div className="text-center">
@@ -231,15 +225,10 @@ function LandingPanel({ savedCampaign, onContinueCampaign, onNewCampaign, onPlay
         <p className="mx-auto mt-3 max-w-[248px] text-[10px] font-bold uppercase leading-[1.45] tracking-[0.09em] text-[#F5F0E6]/58">Choose a host nation and chase the final.</p>
       </div>
       <div className="mt-5 space-y-2.5">
-        <SavedCampaignCard summary={savedCampaign} onContinue={onContinueCampaign} />
-        <ActionButton onClick={onNewCampaign} eyebrow={savedCampaign ? "START FRESH" : "START"}>NEW CAMPAIGN</ActionButton>
-        <ActionButton onClick={onPlayAsGuest} eyebrow="NO ACCOUNT NEEDED" variant="outline">PLAY AS GUEST</ActionButton>
+        <ActionButton onClick={() => onSelectGroup("A")} eyebrow="NO ACCOUNT NEEDED">PLAY AS GUEST</ActionButton>
+        <ActionButton disabled eyebrow="COMING SOON" variant="account">SIGN IN / REGISTER</ActionButton>
       </div>
     </GreenCard>
-    <div className="grid grid-cols-2 gap-2">
-      <ActionButton disabled eyebrow="COMING SOON" variant="outline">REGISTER</ActionButton>
-      <ActionButton disabled eyebrow="COMING SOON" variant="outline">SIGN IN</ActionButton>
-    </div>
   </div>;
 }
 
@@ -258,6 +247,6 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam }) {
   return <GreenCard><div className="mb-3 flex items-center justify-between"><ArrowButton direction="left" onClick={previousGroup} /><div className="text-[24px] font-black uppercase tracking-[-0.02em] text-[#F5F0E6]">GROUP {group}</div><ArrowButton direction="right" onClick={nextGroup} /></div><div className="grid gap-2">{GROUPS[group].map((name) => <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[38px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] bg-[#F5F0E6] px-4 text-left text-[15px] font-black tracking-[-0.02em] text-[#0B5F35] shadow-inner"><Flag team={name} className="h-5 w-7" /><span className="truncate text-center uppercase tracking-[-0.01em]">{name}</span><span className="text-right text-[11px] font-black tabular-nums tracking-[0.06em] text-[#0B5F35]/45">#{TEAM_RANK[name]}</span></button>)}</div></GreenCard>;
 }
 
-export function HomeScreen(props) { return <HomeLayout><LandingPanel {...props} /></HomeLayout>; }
+export function HomeScreen({ onSelectGroup }) { return <HomeLayout><LandingPanel onSelectGroup={onSelectGroup} /></HomeLayout>; }
 export function HostSelectScreen(props) { return <SelectionLayout><HostPanel {...props} /></SelectionLayout>; }
 export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam }) { return <SelectionLayout><TeamPanel group={selectedGroup} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></SelectionLayout>; }
