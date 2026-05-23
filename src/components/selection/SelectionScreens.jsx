@@ -112,10 +112,29 @@ function HomePitchBackdrop() {
 
 function ScoreboardPlaceholder() {
   return (
-    <div className="relative h-[calc((100dvh-54px)*0.165)] shrink-0 overflow-hidden bg-[#050505]">
-      <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
+    <div className="relative h-[calc((100dvh-54px)*0.208)] shrink-0 overflow-hidden">
+      <div className="relative h-[20.6%] overflow-hidden bg-[linear-gradient(180deg,#516979_0%,#3D5361_48%,#1F2D36_100%)]">
+        <div className="absolute inset-x-0 top-0 h-[28%] bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0))]" />
+        <div className="absolute inset-x-0 bottom-0 h-[36%] bg-[linear-gradient(180deg,rgba(0,0,0,0),rgba(5,5,5,0.32))]" />
+        <div className="absolute inset-x-0 bottom-0 h-[2px] bg-[#2B3942]" />
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 52 L110 24 L230 40 L350 18 L470 34 L600 18 L730 42 L860 24 L1000 48 L1000 120 L0 120 Z" fill="#23323B" opacity="0.96" />
+          <path d="M0 64 L150 34 L300 50 L440 28 L590 48 L740 26 L890 46 L1000 36 L1000 120 L0 120 Z" fill="#19252D" opacity="0.95" />
+          {[[120,56,18],[250,44,22],[395,58,18],[520,40,22],[665,56,18],[810,44,22]].map(([cx,cy,r],idx)=>(<g key={idx} opacity="0.98"><circle cx={cx} cy={cy} r={r} fill="#F5F0E6" /><circle cx={cx} cy={cy} r={r*0.82} fill="#FFF6BF" /><circle cx={cx} cy={cy} r={r*0.48} fill="#FFFDF2" /></g>))}
+        </svg>
+      </div>
+      <div className="relative h-[79.4%] overflow-hidden bg-[linear-gradient(180deg,#DAF1FF_0%,#BFE3FF_46%,#A8D5F5_100%)]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.48),transparent_40%)]" />
+        <div className="absolute inset-x-0 top-[16%] h-[34%] opacity-90">
+          <div className="absolute left-[5%] top-[8%] h-[34px] w-[132px] rounded-full bg-white/78 blur-[1px]" />
+          <div className="absolute left-[13%] top-[3%] h-[28px] w-[96px] rounded-full bg-white/82 blur-[1px]" />
+          <div className="absolute left-[24%] top-[14%] h-[26px] w-[118px] rounded-full bg-white/72 blur-[1px]" />
+          <div className="absolute right-[18%] top-[2%] h-[32px] w-[128px] rounded-full bg-white/80 blur-[1px]" />
+          <div className="absolute right-[8%] top-[14%] h-[24px] w-[94px] rounded-full bg-white/76 blur-[1px]" />
+          <div className="absolute right-[29%] top-[19%] h-[22px] w-[76px] rounded-full bg-white/68 blur-[1px]" />
+        </div>
+        <div className="absolute inset-x-0 bottom-0 h-[16%] bg-[linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,0.18))]" />
+      </div>
     </div>
   );
 }
