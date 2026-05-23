@@ -104,7 +104,7 @@ function HomeFlagPanel({ type }) {
   const isCup = type === "cup";
   const flagSrc = type === "canada" ? "/flags/CAN.png" : type === "mexico" ? "/flags/MEX.png" : "/flags/USA.png";
   return (
-    <div className="relative flex h-[58%] w-[17.5%] items-center justify-center rounded-sm shadow-[0_4px_10px_rgba(0,0,0,0.22)]">
+    <div className="relative flex h-[82%] aspect-[2/1] shrink-0 items-center justify-center overflow-hidden rounded-sm shadow-[0_3px_8px_rgba(0,0,0,0.24)]">
       <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-sm ${isCup ? "bg-[#7D8581]" : "bg-[#F5F0E6]"}`}>
         {isCup ? (
           <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[92%] w-auto object-contain" draggable={false} />
@@ -125,7 +125,7 @@ function ScoreboardPlaceholder() {
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
       </div>
       <div className="relative h-[calc((100dvh-54px)*0.043)] overflow-hidden bg-[#072D1D]">
-        <div className="relative flex h-full items-center justify-evenly overflow-hidden bg-[#072D1D] px-[4%] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]">
+        <div className="relative flex h-full items-center justify-center gap-[2.4%] overflow-hidden bg-[#072D1D] px-[2%] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]">
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035)_0%,rgba(0,0,0,0.12)_100%)]" />
           <HomeFlagPanel type="cup" />
           <HomeFlagPanel type="canada" />
