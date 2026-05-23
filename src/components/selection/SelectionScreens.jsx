@@ -123,53 +123,7 @@ function RoofBanner({ x, y, type }) {
 }
 
 function ScoreboardPlaceholder() {
-  const roofTop = 226;
-  return (
-    <div className="relative h-[calc(54px+((100dvh-54px)*0.208))] shrink-0 overflow-hidden bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_56%,#ADD2EC_100%)]">
-      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 274" preserveAspectRatio="none" aria-hidden="true">
-        <rect x="0" y={roofTop - 66} width="1000" height="18" fill="#11181D" opacity="0.96" />
-        <rect x="0" y={roofTop - 50} width="1000" height="8" fill="#2B343A" opacity="0.9" />
-        <rect x="0" y={roofTop - 40} width="1000" height="5" fill="#060B0E" opacity="0.98" />
-        <rect x="0" y={roofTop - 28} width="1000" height="6" fill="#1A242A" opacity="0.96" />
-        <rect x="0" y={roofTop - 3} width="1000" height="51" fill="#111A20" />
-        <rect x="0" y={roofTop + 35} width="1000" height="13" fill="#071015" />
-        <g opacity="0.74" stroke="#BFC8CA" strokeWidth="2.2" fill="none">
-          <path d={`M0 ${roofTop - 8} H1000`} />
-          <path d={`M0 ${roofTop + 21} H1000`} opacity="0.55" />
-          {Array.from({ length: 9 }).map((_, i) => {
-            const x = i * 125;
-            return <g key={i} opacity="0.7">
-              <path d={`M${x} ${roofTop + 22} L${x + 62.5} ${roofTop - 8} L${x + 125} ${roofTop + 22}`} />
-              <path d={`M${x} ${roofTop - 8} L${x + 62.5} ${roofTop + 22} L${x + 125} ${roofTop - 8}`} opacity="0.55" />
-            </g>;
-          })}
-        </g>
-        <g>
-          {[[120, roofTop - 17], [245, roofTop - 16], [370, roofTop - 17], [495, roofTop - 15], [620, roofTop - 17], [745, roofTop - 16], [870, roofTop - 17]].map(([cx, cy], idx) => (
-            <g key={idx}>
-              <rect x={cx - 13} y={cy - 8} width="26" height="16" rx="2.5" fill="#F9FCFF" />
-              <rect x={cx - 9} y={cy - 5} width="18" height="10" rx="1.8" fill="#FFFFFF" />
-              <ellipse cx={cx} cy={cy + 1} rx="31" ry="13" fill="rgba(255,255,255,0.10)" />
-              <line x1={cx} y1={cy + 9} x2={cx} y2={roofTop + 20} stroke="#C7CED1" strokeWidth="1.2" opacity="0.55" />
-            </g>
-          ))}
-        </g>
-        <RoofBanner x={105} y={roofTop + 4} type="monday" />
-        <RoofBanner x={300} y={roofTop + 4} type="canada" />
-        <RoofBanner x={500} y={roofTop + 4} type="cup" />
-        <RoofBanner x={700} y={roofTop + 4} type="mexico" />
-        <RoofBanner x={895} y={roofTop + 4} type="usa" />
-      </svg>
-      <div className="absolute inset-x-0 top-0 flex h-[58%] items-center justify-center px-6">
-        <img
-          src={ASSETS.mondayLogo}
-          alt="Monday Cup"
-          className="max-h-[82%] w-auto object-contain drop-shadow-[0_5px_12px_rgba(0,0,0,0.14)]"
-          draggable={false}
-        />
-      </div>
-    </div>
-  );
+  return <div className="h-[calc(54px+((100dvh-54px)*0.208))] shrink-0" aria-hidden="true" />;
 }
 
 function HomeFooter() {
@@ -183,7 +137,7 @@ function HomeFooter() {
 function HomeLayout({ children }) {
   return (
     <Shell>
-      <div className="flex h-[100dvh] flex-col overflow-hidden bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_18%,#ADD2EC_32%,#0D6C3D_32%,#0D6C3D_100%)] text-[#072D1D]">
+      <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#EFE7D8] text-[#072D1D]">
         <ScoreboardPlaceholder />
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
