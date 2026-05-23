@@ -41,19 +41,21 @@ function HomeCrowdBackdrop() {
     opacity,
   }));
   const crowdRows = [
-    ...makeRow({ count: 42, startX: 0.5, step: 2.35, y: 4, scale: 0.4, opacity: 0.18, stagger: 0.35, wave: 0.35 }),
-    ...makeRow({ count: 38, startX: 1, step: 2.6, y: 9, scale: 0.46, opacity: 0.26, stagger: 0.45, wave: 0.4, shirtOffset: 1 }),
-    ...makeRow({ count: 36, startX: 1.5, step: 2.85, y: 16, scale: 0.54, opacity: 0.34, stagger: 0.55, wave: 0.5, shirtOffset: 2, skinOffset: 1 }),
-    ...makeRow({ count: 34, startX: 2, step: 3.05, y: 25, scale: 0.62, opacity: 0.42, stagger: 0.65, wave: 0.55, shirtOffset: 3, skinOffset: 2 }),
-    ...makeRow({ count: 32, startX: 2.5, step: 3.25, y: 36, scale: 0.7, opacity: 0.54, stagger: 0.75, wave: 0.65, shirtOffset: 4, skinOffset: 1 }),
-    ...makeRow({ count: 30, startX: 3, step: 3.45, y: 49, scale: 0.78, opacity: 0.66, stagger: 0.9, wave: 0.8, shirtOffset: 0, skinOffset: 3 }),
-    ...makeRow({ count: 28, startX: 3.5, step: 3.75, y: 64, scale: 0.86, opacity: 0.8, stagger: 1, wave: 0.9, shirtOffset: 2, skinOffset: 0 }),
-    ...makeRow({ count: 26, startX: 4, step: 4.05, y: 80, scale: 0.94, opacity: 0.92, stagger: 1.1, wave: 0.9, shirtOffset: 1, skinOffset: 2 }),
-    ...makeRow({ count: 24, startX: 4.5, step: 4.35, y: 91, scale: 0.98, opacity: 1, stagger: 1.2, wave: 0.45, shirtOffset: 3, skinOffset: 1 }),
+    ...makeRow({ count: 42, startX: 0.5, step: 2.35, y: 18, scale: 0.4, opacity: 0.18, stagger: 0.35, wave: 0.35 }),
+    ...makeRow({ count: 38, startX: 1, step: 2.6, y: 23, scale: 0.46, opacity: 0.26, stagger: 0.45, wave: 0.4, shirtOffset: 1 }),
+    ...makeRow({ count: 36, startX: 1.5, step: 2.85, y: 30, scale: 0.54, opacity: 0.34, stagger: 0.55, wave: 0.5, shirtOffset: 2, skinOffset: 1 }),
+    ...makeRow({ count: 34, startX: 2, step: 3.05, y: 39, scale: 0.62, opacity: 0.42, stagger: 0.65, wave: 0.55, shirtOffset: 3, skinOffset: 2 }),
+    ...makeRow({ count: 32, startX: 2.5, step: 3.25, y: 50, scale: 0.7, opacity: 0.54, stagger: 0.75, wave: 0.65, shirtOffset: 4, skinOffset: 1 }),
+    ...makeRow({ count: 30, startX: 3, step: 3.45, y: 63, scale: 0.78, opacity: 0.66, stagger: 0.9, wave: 0.8, shirtOffset: 0, skinOffset: 3 }),
+    ...makeRow({ count: 28, startX: 3.5, step: 3.75, y: 78, scale: 0.86, opacity: 0.8, stagger: 1, wave: 0.9, shirtOffset: 2, skinOffset: 0 }),
+    ...makeRow({ count: 26, startX: 4, step: 4.05, y: 92, scale: 0.94, opacity: 0.92, stagger: 1.1, wave: 0.9, shirtOffset: 1, skinOffset: 2 }),
+    ...makeRow({ count: 24, startX: 4.5, step: 4.35, y: 101, scale: 0.98, opacity: 1, stagger: 1.2, wave: 0.45, shirtOffset: 3, skinOffset: 1 }),
   ];
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden bg-[#123822]" style={{ height: `${boardTop}%` }}>
-      <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 20% 6%, rgba(245,241,232,0.08), transparent 20%), radial-gradient(circle at 80% 8%, rgba(255,214,0,0.05), transparent 18%), linear-gradient(180deg, rgba(4,22,14,0.4), rgba(4,22,14,0.1))" }} />
+      <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 20% 6%, rgba(245,241,232,0.08), transparent 20%), radial-gradient(circle at 80% 8%, rgba(255,214,0,0.05), transparent 18%), linear-gradient(180deg, rgba(4,22,14,0.56), rgba(4,22,14,0.1))" }} />
+      <div className="absolute inset-x-0 top-0 h-[17%] bg-[#071B15]/72" />
+      <div className="absolute inset-x-0 top-[14%] h-[1px] bg-[#F5F0E6]/10" />
       <div className="absolute inset-x-0 top-[5%] h-[10%] bg-[#0b2d1d]/12" />
       <div className="absolute inset-x-0 top-[18%] h-[11%] bg-[#0b2d1d]/10" />
       <div className="absolute inset-x-0 top-[33%] h-[12%] bg-[#0b2d1d]/12" />
@@ -100,26 +102,24 @@ function HomePitchBackdrop() {
   );
 }
 
-function HomeSkyFlag({ x, roofTop, country }) {
-  const poleTop = roofTop - 62;
-  const flagTop = poleTop + 4;
-  const flagW = 62;
-  const flagH = 22;
-  const commonPole = (
-    <>
-      <rect x={x - 1.5} y={poleTop} width="3" height={roofTop - poleTop} rx="1.5" fill="#E6EEF1" />
-      <circle cx={x} cy={poleTop - 2.8} r="3.6" fill="#F9FBFB" />
-    </>
+function RoofBanner({ x, y, type }) {
+  const wireTop = y - 30;
+  const w = 118;
+  const h = 44;
+  const left = x - w / 2;
+  const fill = type === "canada" ? "#E1251B" : type === "mexico" ? "#006847" : type === "usa" ? "#224184" : type === "cup" ? "#0B5F35" : "#108EAD";
+  const label = type === "monday" ? "MONDAY" : type === "cup" ? "CUP" : "HOSTS";
+  return (
+    <g>
+      <line x1={left + 10} y1={wireTop} x2={left + 10} y2={y} stroke="#D7DEE1" strokeWidth="1.4" opacity="0.75" />
+      <line x1={left + w - 10} y1={wireTop} x2={left + w - 10} y2={y} stroke="#D7DEE1" strokeWidth="1.4" opacity="0.75" />
+      <rect x={left} y={y} width={w} height={h} rx="3" fill={fill} />
+      {type === "canada" && <><rect x={left + 40} y={y} width="38" height={h} fill="#F5F0E6" /><path d={`M${x} ${y + 14} l4 8 h7 l-6 4 2 8 -7 -5 -7 5 2 -8 -6 -4 h7 Z`} fill="#E1251B" /></>}
+      {type === "mexico" && <><rect x={left + 39} y={y} width="40" height={h} fill="#F5F0E6" /><rect x={left + 79} y={y} width="39" height={h} fill="#CE1126" /><circle cx={x} cy={y + h / 2} r="8" fill="#B48A2F" /></>}
+      {type === "usa" && <><rect x={left} y={y} width="52" height="25" fill="#224184" />{Array.from({ length: 4 }).map((_, i) => <rect key={i} x={left + 52} y={y + i * 10} width="66" height="5" fill="#F5F0E6" />)}{Array.from({ length: 5 }).map((_, i) => <rect key={`r${i}`} x={left} y={y + 5 + i * 9} width={w} height="4" fill="#B22234" opacity="0.95" />)}</>}
+      {(type === "monday" || type === "cup") && <text x={x} y={y + 28} textAnchor="middle" fill="#F5F0E6" fontSize="18" fontWeight="900" letterSpacing="2">{label}</text>}
+    </g>
   );
-  const clothBase = `M${x + 2} ${flagTop} C${x + 14} ${flagTop - 3} ${x + 31} ${flagTop + 3} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + flagH} C${x + 31} ${flagTop + flagH + 3} ${x + 14} ${flagTop + flagH - 3} ${x + 2} ${flagTop + flagH} Z`;
-
-  const flag = country === "canada"
-    ? <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 9} ${flagTop - 2} ${x + 14} ${flagTop - 2} ${x + 18} ${flagTop} L${x + 18} ${flagTop + flagH} C${x + 14} ${flagTop + flagH - 2} ${x + 9} ${flagTop + flagH - 2} ${x + 2} ${flagTop + flagH} Z`} fill="#E1251B" /><path d={`M${x + 30} ${flagTop} C${x + 36} ${flagTop + 1} ${x + 41} ${flagTop + 1} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + flagH} C${x + 41} ${flagTop + flagH + 1} ${x + 36} ${flagTop + flagH + 1} ${x + 30} ${flagTop + flagH} Z`} fill="#E1251B" /><path d={`M${x + 24} ${flagTop + 6} l2.5 4.5 h4.5 l-3.5 2.2 1.2 4.3 -4.4 -3.1 -4.4 3.1 1.2 -4.3 -3.5 -2.2 h4.5 Z`} fill="#E1251B" /></g>
-    : country === "mexico"
-      ? <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 9} ${flagTop - 2} ${x + 14} ${flagTop - 2} ${x + 18} ${flagTop} L${x + 18} ${flagTop + flagH} C${x + 14} ${flagTop + flagH - 2} ${x + 9} ${flagTop + flagH - 2} ${x + 2} ${flagTop + flagH} Z`} fill="#006847" /><path d={`M${x + 30} ${flagTop} C${x + 36} ${flagTop + 1} ${x + 41} ${flagTop + 1} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + flagH} C${x + 41} ${flagTop + flagH + 1} ${x + 36} ${flagTop + flagH + 1} ${x + 30} ${flagTop + flagH} Z`} fill="#CE1126" /><circle cx={x + 24} cy={flagTop + 10.5} r="3.1" fill="#B48A2F" /></g>
-      : <g><path d={clothBase} fill="#F5F0E6" /><path d={`M${x + 2} ${flagTop} C${x + 14} ${flagTop - 3} ${x + 31} ${flagTop + 3} ${x + flagW} ${flagTop} L${x + flagW} ${flagTop + 4.6} C${x + 31} ${flagTop + 7} ${x + 14} ${flagTop + 1} ${x + 2} ${flagTop + 4.6} Z M${x + 2} ${flagTop + 7.7} C${x + 14} ${flagTop + 4.8} ${x + 31} ${flagTop + 10.8} ${x + flagW} ${flagTop + 7.7} L${x + flagW} ${flagTop + 12.4} C${x + 31} ${flagTop + 15} ${x + 14} ${flagTop + 9} ${x + 2} ${flagTop + 12.4} Z M${x + 2} ${flagTop + 15.4} C${x + 14} ${flagTop + 12.2} ${x + 31} ${flagTop + 18.2} ${x + flagW} ${flagTop + 15.4} L${x + flagW} ${flagTop + flagH} C${x + 31} ${flagTop + flagH + 3} ${x + 14} ${flagTop + flagH - 3} ${x + 2} ${flagTop + flagH} Z`} fill="#B22234" /><path d={`M${x + 2} ${flagTop} C${x + 10} ${flagTop - 1} ${x + 17} ${flagTop - 1} ${x + 24} ${flagTop} L${x + 24} ${flagTop + 11} C${x + 17} ${flagTop + 10} ${x + 10} ${flagTop + 10} ${x + 2} ${flagTop + 11} Z`} fill="#224184" /></g>;
-
-  return <g>{commonPole}{flag}</g>;
 }
 
 function ScoreboardPlaceholder() {
@@ -127,14 +127,38 @@ function ScoreboardPlaceholder() {
   return (
     <div className="relative h-[calc(54px+((100dvh-54px)*0.208))] shrink-0 overflow-hidden bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_56%,#ADD2EC_100%)]">
       <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 274" preserveAspectRatio="none" aria-hidden="true">
-        <rect x="0" y={roofTop} width="1000" height="48" fill="#243541" />
-        <rect x="0" y={roofTop + 42} width="1000" height="6" fill="#16212A" />
+        <rect x="0" y={roofTop - 64} width="1000" height="24" fill="#D4D4C8" opacity="0.78" />
+        <rect x="0" y={roofTop - 42} width="1000" height="5" fill="#1F2D34" opacity="0.82" />
+        <rect x="0" y={roofTop - 34} width="1000" height="4" fill="#243541" opacity="0.95" />
+        <rect x="0" y={roofTop - 22} width="1000" height="4" fill="#18242C" opacity="0.92" />
+        <rect x="0" y={roofTop - 2} width="1000" height="50" fill="#202D35" />
+        <path d="M0 226 L1000 226 L1000 274 L0 274 Z" fill="#18242C" />
+        <g opacity="0.72" stroke="#43525A" strokeWidth="3" fill="none">
+          {Array.from({ length: 8 }).map((_, i) => {
+            const x = i * 140;
+            return <path key={i} d={`M${x} ${roofTop + 35} L${x + 70} ${roofTop - 2} L${x + 140} ${roofTop + 35}`} />;
+          })}
+        </g>
+        <g>
+          {[[110, roofTop - 18], [230, roofTop - 16], [350, roofTop - 17], [470, roofTop - 15], [590, roofTop - 16], [710, roofTop - 17], [830, roofTop - 16], [950, roofTop - 18]].map(([cx, cy], idx) => (
+            <g key={idx} transform={`rotate(${idx % 2 === 0 ? -10 : 10} ${cx} ${cy})`}>
+              <rect x={cx - 14} y={cy - 8} width="28" height="16" rx="3" fill="#F8FBFF" />
+              <rect x={cx - 10} y={cy - 5} width="20" height="10" rx="2" fill="#FFFFFF" />
+              <ellipse cx={cx} cy={cy} rx="35" ry="15" fill="rgba(255,255,255,0.10)" />
+            </g>
+          ))}
+        </g>
+        <RoofBanner x={105} y={roofTop + 4} type="monday" />
+        <RoofBanner x={300} y={roofTop + 4} type="canada" />
+        <RoofBanner x={500} y={roofTop + 4} type="cup" />
+        <RoofBanner x={700} y={roofTop + 4} type="mexico" />
+        <RoofBanner x={895} y={roofTop + 4} type="usa" />
       </svg>
-      <div className="absolute inset-x-0 top-0 flex h-[82%] items-center justify-center px-6">
+      <div className="absolute inset-x-0 top-0 flex h-[58%] items-center justify-center px-6">
         <img
           src={ASSETS.mondayLogo}
           alt="Monday Cup"
-          className="max-h-[88%] w-auto object-contain drop-shadow-[0_5px_12px_rgba(0,0,0,0.14)]"
+          className="max-h-[82%] w-auto object-contain drop-shadow-[0_5px_12px_rgba(0,0,0,0.14)]"
           draggable={false}
         />
       </div>
