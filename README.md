@@ -1,33 +1,33 @@
-# MONDAY CUP Vite app
+# Monday Cup home fonts + UI update
 
-Updated for Tailwind CSS v4 / Vercel builds.
+Drop these folders into your project root:
 
-## Run locally
+- `src/components/selection/SelectionScreens.jsx`
+- `src/index.css`
+- `scripts/install-fonts.sh`
+- `public/fonts/` folder structure
+
+Then place your two uploaded fontkit zip files in the project root:
+
+- `webfontkit-intodotmatrix.zip`
+- `webfontkit-sumpfdeutschensportschriftsdin.zip`
+
+Run:
 
 ```bash
-npm install
-npm run dev
+bash scripts/install-fonts.sh
+npm run build
 ```
 
-## Deploy on Vercel
-
-1. Push this folder to GitHub.
-2. In Vercel, choose **Add New Project** or redeploy the existing project.
-3. Framework preset: **Vite**.
-4. Build command: `npm run build`.
-5. Output directory: `dist`.
-
-## Tailwind v4 config
-
-This package uses:
+Expected final font paths:
 
 ```txt
-@tailwindcss/postcss
-tailwindcss
-```
-
-`postcss.config.js` uses `@tailwindcss/postcss`, and `src/index.css` uses:
-
-```css
-@import "tailwindcss";
+public/fonts/intodotmatrix/intodotmatrix-webfont.woff2
+public/fonts/intodotmatrix/intodotmatrix-webfont.woff
+public/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-light-webfont.woff2
+public/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-light-webfont.woff
+public/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-regular-webfont.woff2
+public/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-regular-webfont.woff
+public/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-bold-webfont.woff2
+public/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-bold-webfont.woff
 ```
