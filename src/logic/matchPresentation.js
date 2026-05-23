@@ -31,7 +31,7 @@ export function modalHeaderColour(result) {
 }
 
 export function modalButton(result) {
-  if (!result) return "MATCH COMPLETE";
+  if (!result) return "FULL TIME";
   if (["eliminated", "champion", "runnerUp", "third", "fourth"].includes(result.status)) return "PLAY AGAIN";
   return "NEXT MATCH";
 }

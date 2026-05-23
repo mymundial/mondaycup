@@ -153,7 +153,7 @@ export function MatchScreen({
             campaignId={campaignId}
             onMatchComplete={onMatchComplete || onQuickWin}
             completedResult={completedResult}
-            endActionLabel={matchResult && modalDismissed ? modalButton(matchResult) : "MATCH COMPLETE"}
+            endActionLabel={matchResult && modalDismissed ? modalButton(matchResult) : "FULL TIME"}
             endActionEnabled={Boolean(matchResult && modalDismissed)}
             onEndAction={onNextMatch}
             onBusyChange={setMatchBusy}

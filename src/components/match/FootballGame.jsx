@@ -233,7 +233,7 @@ function ConfirmButton({ onClick, disabled = false, children }) {
   );
 }
 
-function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMeter, accuracyMeter, opponentTeam, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction }) {
+function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMeter, accuracyMeter, opponentTeam, endActionLabel = "FULL TIME", endActionEnabled = false, onEndAction }) {
   const canChoose = phase === PHASE.DIRECTION;
   const canPower = phase === PHASE.POWER;
   const canAccuracy = phase === PHASE.ACCURACY;
@@ -267,7 +267,7 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
       {!canChoose && !canPower && !canAccuracy && (
         <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%]">
           <ConfirmButton onClick={endActionEnabled ? onEndAction : undefined} disabled={!endActionEnabled}>
-            {phase === PHASE.SHOT ? "SHOT IN PROGRESS" : phase === PHASE.AI_WAIT ? `${opponentTeam.name.toUpperCase()} TAKING PENALTY` : endActionLabel}
+            {phase === PHASE.SHOT ? "SHOT IN PROGRESS" : phase === PHASE.AI_WAIT ? `${opponentTeam?.name?.toUpperCase?.() || "OPPONENT"} SHOOTING` : endActionLabel}
           </ConfirmButton>
         </div>
       )}
@@ -275,7 +275,7 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
   );
 }
 
-export default function FootballGame({ userTeam, opponentTeam, fixture, campaignId = "default", assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction, onBusyChange }) {
+export default function FootballGame({ userTeam, opponentTeam, fixture, campaignId = "default", assets = {}, onMatchComplete, completedResult = null, endActionLabel = "FULL TIME", endActionEnabled = false, onEndAction, onBusyChange }) {
   const user = useMemo(() => normaliseTeam(userTeam, "Team A"), [userTeam]);
   const opponent = useMemo(() => normaliseTeam(opponentTeam, "Team B"), [opponentTeam]);
   const mergedAssets = useMemo(() => ({ ...DEFAULT_ASSETS, ...assets, sounds: { ...DEFAULT_ASSETS.sounds, ...(assets?.sounds || {}) } }), [assets]);
@@ -504,7 +504,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, campaign
       animation: "goalFlashBar 0.82s steps(1, end) 1 forwards",
       "--goal-bg": activeTeam.primaryColour,
       "--goal-fg": activeTeam.textColour,
-      "--goal-alt-bg": "#050505",
+      "--goal-alt-bg": activeTeam.textColour,
       "--goal-alt-fg": activeTeam.primaryColour,
     };
     if (ticker === COMMENTARY.save) return { background: defenderTeam.primaryColour, color: defenderTeam.textColour };
