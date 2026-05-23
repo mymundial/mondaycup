@@ -104,10 +104,10 @@ function HomeFlagPanel({ type }) {
   const isCup = type === "cup";
   const flagSrc = type === "canada" ? "/flags/CAN.png" : type === "mexico" ? "/flags/MEX.png" : "/flags/USA.png";
   return (
-    <div className="relative flex h-[64%] aspect-[250/167] items-center justify-center rounded-sm shadow-[0_4px_10px_rgba(0,0,0,0.22)]">
+    <div className="relative flex h-[54%] aspect-[250/167] items-center justify-center rounded-sm shadow-[0_3px_8px_rgba(0,0,0,0.24)]">
       <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-sm ${isCup ? "bg-[#7D8581]" : "bg-[#F5F0E6]"}`}>
         {isCup ? (
-          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[88%] w-auto object-contain" draggable={false} />
+          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[86%] w-[86%] object-contain" draggable={false} />
         ) : (
           <img src={flagSrc} alt="" className="h-full w-full object-contain" draggable={false} />
         )}
@@ -117,8 +117,8 @@ function HomeFlagPanel({ type }) {
 }
 
 function ScoreboardPlaceholder() {
-  const flagCenters = [18, 34, 50, 66, 82];
-  const lightCenters = [180, 340, 500, 660, 820];
+  const flagCenters = [14, 32, 50, 68, 86];
+  const lightCenters = [140, 320, 500, 680, 860];
   const flagItems = ["canada", "cup", "mexico", "cup", "usa"];
   const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
   const flashHeight = "calc((100dvh - 54px) * 0.165 * 0.26)";
@@ -134,46 +134,51 @@ function ScoreboardPlaceholder() {
       </div>
 
       <div className="relative overflow-hidden bg-[#11161C]" style={{ height: flashHeight }}>
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,#2D343C_0%,#1A222A_18%,#131A21_58%,#0C1116_100%)]" />
-        <div className="absolute inset-x-0 top-0 h-[18%] bg-[linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0))]" />
-        <div className="absolute inset-x-0 top-[10%] h-[16%] bg-[#4D545A]/65" />
-        <div className="absolute inset-x-0 top-[16%] h-[5%] bg-[#83888C]/40" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#2F363E_0%,#1A222A_18%,#12191F_58%,#0A0E13_100%)]" />
+        <div className="absolute inset-x-0 top-0 h-[16%] bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0))]" />
+        <div className="absolute inset-x-0 top-[12%] h-[11%] bg-[#535960]/55" />
+        <div className="absolute inset-x-0 top-[19%] h-[4%] bg-[#9AA0A4]/28" />
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
           <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M0 26 H1000" stroke="rgba(25,30,36,0.75)" strokeWidth="16" />
-            <path d="M0 30 H1000" stroke="rgba(210,215,220,0.12)" strokeWidth="2" />
-            <path d="M0 82 H1000" stroke="rgba(8,11,15,0.8)" strokeWidth="8" />
-            {Array.from({ length: 6 }).map((_, idx) => {
-              const left = idx * 200;
-              const center = left + 100;
+            <path d="M0 28 H1000" stroke="rgba(20,24,29,0.82)" strokeWidth="15" />
+            <path d="M0 31 H1000" stroke="rgba(245,241,232,0.10)" strokeWidth="2" />
+            <path d="M0 82 H1000" stroke="rgba(5,8,11,0.84)" strokeWidth="8" />
+            {Array.from({ length: 7 }).map((_, idx) => {
+              const left = idx * 166 - 30;
+              const center = left + 83;
               return (
                 <g key={idx}>
-                  <path d={`M${left + 22} 82 L${center} 30 L${left + 178} 82`} stroke="rgba(90,98,106,0.34)" strokeWidth="8" />
-                  <path d={`M${left + 38} 82 L${center} 38 L${left + 162} 82`} stroke="rgba(245,241,232,0.08)" strokeWidth="3" />
+                  <path d={`M${left} 82 L${center} 32 L${left + 166} 82`} stroke="rgba(87,96,104,0.32)" strokeWidth="8" />
+                  <path d={`M${left + 18} 82 L${center} 40 L${left + 148} 82`} stroke="rgba(245,241,232,0.08)" strokeWidth="3" />
                 </g>
               );
             })}
-            <path d="M88 64 H912" stroke="rgba(168,174,179,0.30)" strokeWidth="4" />
+            <path d="M80 64 H920" stroke="rgba(168,174,179,0.28)" strokeWidth="4" />
           </g>
         </svg>
       </div>
 
       <div className="relative overflow-hidden bg-[#0A3321]" style={{ height: mergedBarHeight }}>
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(0,0,0,0.24))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
+
         <div className="absolute inset-x-0 top-0" style={{ height: trussHeight }}>
           <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
             <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M120 24 H880" stroke="rgba(196,201,205,0.52)" strokeWidth="5" />
-              <path d="M120 76 H880" stroke="rgba(196,201,205,0.52)" strokeWidth="5" />
+              <path d="M80 22 H920" stroke="rgba(196,201,205,0.58)" strokeWidth="5" />
+              <path d="M80 76 H920" stroke="rgba(196,201,205,0.50)" strokeWidth="5" />
               {lightCenters.map((cx) => (
-                <path key={`x-${cx}`} d={`M${cx - 54} 76 L${cx + 54} 24 M${cx - 54} 24 L${cx + 54} 76`} stroke="rgba(217,222,226,0.42)" strokeWidth="3.5" />
+                <g key={`bay-${cx}`}>
+                  <path d={`M${cx - 78} 76 L${cx} 22 L${cx + 78} 76`} stroke="rgba(217,222,226,0.36)" strokeWidth="3.5" />
+                  <path d={`M${cx - 78} 22 L${cx} 76 L${cx + 78} 22`} stroke="rgba(217,222,226,0.24)" strokeWidth="2.5" />
+                </g>
               ))}
+              {lightCenters.map((cx) => <path key={`post-${cx}`} d={`M${cx} 22 V76`} stroke="rgba(196,201,205,0.28)" strokeWidth="3" />)}
             </g>
             <g>
               {lightCenters.map((cx) => (
                 <g key={cx}>
-                  <rect x={cx - 18} y={33} width="36" height="24" rx="2" fill="#F4F1E6" />
-                  <rect x={cx - 10} y={39} width="20" height="12" rx="1.5" fill="#FFFFFF" />
+                  <rect x={cx - 18} y={35} width="36" height="22" rx="2" fill="#F4F1E6" />
+                  <rect x={cx - 10} y={40} width="20" height="12" rx="1.5" fill="#FFFFFF" />
                   <rect x={cx - 3} y={57} width="6" height="10" rx="1.5" fill="rgba(220,226,222,0.78)" />
                 </g>
               ))}
@@ -182,16 +187,13 @@ function ScoreboardPlaceholder() {
         </div>
 
         <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1000 150" preserveAspectRatio="none" aria-hidden="true">
-          <g stroke="rgba(220,226,222,0.70)" strokeWidth="2.25" strokeLinecap="round">
-            {flagCenters.map((leftPct) => {
-              const cx = leftPct * 10;
-              return (
-                <g key={`rope-${cx}`}>
-                  <path d={`M${cx - 27} 50 L${cx - 27} 96`} />
-                  <path d={`M${cx + 27} 50 L${cx + 27} 96`} />
-                </g>
-              );
-            })}
+          <g stroke="rgba(220,226,222,0.72)" strokeWidth="2.25" strokeLinecap="round">
+            {lightCenters.map((cx) => (
+              <g key={`rope-${cx}`}>
+                <path d={`M${cx - 27} 50 L${cx - 27} 96`} />
+                <path d={`M${cx + 27} 50 L${cx + 27} 96`} />
+              </g>
+            ))}
           </g>
         </svg>
 
