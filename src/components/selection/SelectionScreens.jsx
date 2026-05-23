@@ -5,13 +5,7 @@ import { Flag } from "../shared.jsx";
 import { Footer, GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
 
 function HomeTopBar() {
-  return (
-    <div className="relative flex h-[54px] shrink-0 items-center justify-center bg-[#EFE7D8] text-[#0B5F35]">
-      <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain" draggable={false} />
-      <div className="text-[24px] font-black uppercase tracking-[-0.02em]">MONDAY CUP</div>
-      <div className="absolute right-3 top-1/2 h-10 w-10 -translate-y-1/2" aria-hidden="true" />
-    </div>
-  );
+  return <div className="relative h-[54px] shrink-0 bg-[#EFE7D8]" />;
 }
 
 
@@ -113,28 +107,19 @@ function HomePitchBackdrop() {
 function ScoreboardPlaceholder() {
   return (
     <div className="relative h-[calc((100dvh-54px)*0.208)] shrink-0 overflow-hidden">
-      <div className="relative h-[79.4%] overflow-hidden bg-[linear-gradient(180deg,#DFF2FF_0%,#CBE5FB_52%,#B7D8F2_100%)]" />
+      <div className="relative h-[79.4%] overflow-hidden bg-[linear-gradient(180deg,#DFF2FF_0%,#CBE5FB_52%,#B7D8F2_100%)]">
+        <img
+          src={ASSETS.mondayLogo}
+          alt="Monday Cup"
+          className="absolute left-1/2 top-1/2 h-[82%] max-h-[82%] w-auto -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_8px_18px_rgba(7,45,29,0.22)]"
+          draggable={false}
+        />
+      </div>
       <div className="relative h-[20.6%] overflow-hidden bg-[linear-gradient(180deg,#314451_0%,#22313B_100%)]">
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true">
           <path d="M0 58 L96 44 L188 52 L286 34 L372 48 L482 30 L594 50 L706 36 L804 48 L900 28 L1000 46 L1000 120 L0 120 Z" fill="#2A3944" />
           <path d="M0 72 L108 58 L228 68 L330 48 L456 66 L570 50 L688 70 L804 56 L920 66 L1000 58 L1000 120 L0 120 Z" fill="#18242C" />
           <path d="M0 88 L136 80 L244 84 L360 74 L474 86 L594 76 L730 88 L848 78 L1000 86 L1000 120 L0 120 Z" fill="#132029" opacity="0.96" />
-          <g>
-            {[
-              [104, 30, '#F5F0E6', '#0B5F35'],
-              [226, 22, '#F7D117', '#0B5F35'],
-              [348, 28, '#F5F0E6', '#0B5F35'],
-              [500, 18, '#F7D117', '#0B5F35'],
-              [652, 28, '#F5F0E6', '#0B5F35'],
-              [774, 22, '#F7D117', '#0B5F35'],
-              [896, 30, '#F5F0E6', '#0B5F35'],
-            ].map(([x, top, flag, pole], idx) => (
-              <g key={idx}>
-                <rect x={x} y={top} width="3" height="34" rx="1.5" fill={pole} />
-                <path d={`M${x + 3} ${top + 3} L${x + 24} ${top + 9} L${x + 3} ${top + 17} Z`} fill={flag} />
-              </g>
-            ))}
-          </g>
           <rect x="0" y="114" width="1000" height="6" fill="#10181E" />
         </svg>
         <div className="absolute inset-x-0 top-0 h-[16%] bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0))]" />
@@ -153,9 +138,6 @@ function HomeLayout({ children }) {
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
           <div className="relative z-10 flex h-full flex-col px-5 pb-0 pt-4">
-            <div className="flex justify-center pb-2">
-              <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[76px] w-[76px] object-contain drop-shadow-[0_8px_20px_rgba(7,45,29,0.35)]" draggable={false} />
-            </div>
             <div className="flex min-h-0 flex-1 flex-col justify-center py-2">
               {children}
             </div>
