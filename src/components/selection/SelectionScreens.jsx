@@ -100,52 +100,16 @@ function HomePitchBackdrop() {
   );
 }
 
-function MiniOfficialFlag({ type }) {
-  if (type === "canada") {
-    return (
-      <svg viewBox="0 0 120 60" className="h-full w-full" preserveAspectRatio="none" aria-hidden="true">
-        <rect width="120" height="60" fill="#F5F0E6" />
-        <rect width="30" height="60" fill="#E1251B" />
-        <rect x="90" width="30" height="60" fill="#E1251B" />
-        <path d="M60 13l4.8 10h9.4l-7.7 5.6 3 10.6L60 33l-9.5 7.2 3-10.6-7.7-5.6h9.4z" fill="#E1251B" />
-        <rect x="58.4" y="32" width="3.2" height="16" fill="#E1251B" />
-      </svg>
-    );
-  }
-
-  if (type === "mexico") {
-    return (
-      <svg viewBox="0 0 120 60" className="h-full w-full" preserveAspectRatio="none" aria-hidden="true">
-        <rect width="40" height="60" fill="#006847" />
-        <rect x="40" width="40" height="60" fill="#F5F0E6" />
-        <rect x="80" width="40" height="60" fill="#CE1126" />
-        <circle cx="60" cy="30" r="7" fill="#B48A2F" />
-        <path d="M55 31q5 6 11 0" fill="none" stroke="#0B5F35" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 120 60" className="h-full w-full" preserveAspectRatio="none" aria-hidden="true">
-      <rect width="120" height="60" fill="#F5F0E6" />
-      {Array.from({ length: 7 }).map((_, i) => <rect key={i} y={i * 9} width="120" height="5" fill="#B22234" />)}
-      <rect width="52" height="32" fill="#224184" />
-      {Array.from({ length: 15 }).map((_, i) => <circle key={i} cx={7 + (i % 5) * 9} cy={6 + Math.floor(i / 5) * 9} r="1.3" fill="#F5F0E6" />)}
-    </svg>
-  );
-}
-
 function HomeFlagPanel({ type }) {
   const isCup = type === "cup";
+  const flagSrc = type === "canada" ? "/flags/CAN.png" : type === "mexico" ? "/flags/MEX.png" : "/flags/USA.png";
   return (
-    <div className="relative flex h-[clamp(24px,4.9vh,42px)] w-[17.5%] items-center justify-center rounded-sm shadow-[0_8px_18px_rgba(0,0,0,0.22)]">
-      <span className="absolute left-[16%] top-[-19px] h-[19px] w-px bg-[#C9D2D0]/70" />
-      <span className="absolute right-[16%] top-[-19px] h-[19px] w-px bg-[#C9D2D0]/70" />
+    <div className="relative flex h-[58%] w-[17.5%] items-center justify-center rounded-sm shadow-[0_4px_10px_rgba(0,0,0,0.22)]">
       <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-sm ${isCup ? "bg-[#7D8581]" : "bg-[#F5F0E6]"}`}>
         {isCup ? (
           <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[92%] w-auto object-contain" draggable={false} />
         ) : (
-          <MiniOfficialFlag type={type} />
+          <img src={flagSrc} alt="" className="h-full w-full object-cover" draggable={false} />
         )}
       </div>
     </div>
@@ -154,40 +118,8 @@ function HomeFlagPanel({ type }) {
 
 function ScoreboardPlaceholder() {
   return (
-    <div className="relative h-[calc(54px+((100dvh-54px)*0.165))] shrink-0 overflow-hidden bg-[#050807]" aria-hidden="true">
-      <div className="relative h-1/4 overflow-hidden bg-[#161B19]">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,#202622_0%,#121716_100%)]" />
-        <div className="absolute inset-x-0 top-0 h-[26%] bg-[#2C332F]/70" />
-        <div className="absolute inset-x-0 bottom-0 h-px bg-[#39423D]/70" />
-      </div>
-
-      <div className="relative h-1/4 overflow-hidden bg-[#050807]">
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
-          <rect width="1000" height="100" fill="#050807" />
-          <g stroke="#AEB8B4" strokeWidth="3.2" opacity="0.78">
-            <line x1="0" y1="15" x2="1000" y2="15" />
-            <line x1="0" y1="85" x2="1000" y2="85" />
-            <line x1="500" y1="15" x2="500" y2="85" opacity="0.9" />
-            <line x1="0" y1="85" x2="125" y2="15" />
-            <line x1="125" y1="15" x2="250" y2="85" />
-            <line x1="250" y1="85" x2="375" y2="15" />
-            <line x1="375" y1="15" x2="500" y2="85" />
-            <line x1="500" y1="85" x2="625" y2="15" />
-            <line x1="625" y1="15" x2="750" y2="85" />
-            <line x1="750" y1="85" x2="875" y2="15" />
-            <line x1="875" y1="15" x2="1000" y2="85" />
-            <line x1="375" y1="15" x2="625" y2="85" strokeWidth="4" />
-            <line x1="375" y1="85" x2="625" y2="15" strokeWidth="4" />
-          </g>
-          <g stroke="#EEF2EF" strokeWidth="1.1" opacity="0.42">
-            <line x1="0" y1="50" x2="1000" y2="50" />
-            <line x1="250" y1="15" x2="250" y2="85" />
-            <line x1="750" y1="15" x2="750" y2="85" />
-          </g>
-        </svg>
-      </div>
-
-      <div className="relative flex h-1/2 items-center justify-evenly overflow-hidden bg-[#072D1D] px-[4%] shadow-[inset_0_8px_18px_rgba(0,0,0,0.26)]">
+    <div className="relative h-[calc((100dvh-54px)*0.043)] shrink-0 overflow-hidden bg-[#072D1D]" aria-hidden="true">
+      <div className="relative flex h-full items-center justify-evenly overflow-hidden bg-[#072D1D] px-[4%] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]">
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035)_0%,rgba(0,0,0,0.12)_100%)]" />
         <HomeFlagPanel type="cup" />
         <HomeFlagPanel type="canada" />
