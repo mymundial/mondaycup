@@ -58,6 +58,7 @@ function HomeCrowdBackdrop() {
       <div className="absolute inset-x-0 top-[18%] h-[11%] bg-[#0b2d1d]/10" />
       <div className="absolute inset-x-0 top-[33%] h-[12%] bg-[#0b2d1d]/12" />
       {crowdRows.map((person, index) => <HomeCrowdPerson key={index} {...person} />)}
+      <div className="absolute inset-x-0 top-0 z-[2] h-[15%] bg-[#072D1D] shadow-[0_10px_18px_rgba(7,45,29,0.46)]" />
     </div>
   );
 }
@@ -104,10 +105,10 @@ function HomeFlagPanel({ type }) {
   const isCup = type === "cup";
   const flagSrc = type === "canada" ? "/flags/CAN.png" : type === "mexico" ? "/flags/MEX.png" : "/flags/USA.png";
   return (
-    <div className="relative flex h-[61.5%] aspect-[2/1] shrink-0 items-center justify-center overflow-hidden rounded-sm shadow-[0_3px_8px_rgba(0,0,0,0.22)]">
+    <div className="relative flex h-[56%] shrink-0 items-center justify-center rounded-sm shadow-[0_3px_8px_rgba(0,0,0,0.24)]" style={{ aspectRatio: "2 / 1" }}>
       <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-sm ${isCup ? "bg-[#7D8581]" : "bg-[#F5F0E6]"}`}>
         {isCup ? (
-          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[92%] w-auto object-contain" draggable={false} />
+          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[90%] w-auto object-contain" draggable={false} />
         ) : (
           <img src={flagSrc} alt="" className="h-full w-full object-contain" draggable={false} />
         )}
@@ -118,21 +119,15 @@ function HomeFlagPanel({ type }) {
 
 function ScoreboardPlaceholder() {
   return (
-    <div className="relative shrink-0 overflow-hidden" aria-hidden="true">
-      <div className="relative h-[calc(54px+((100dvh-54px)*0.165))] overflow-hidden bg-[#050505]">
-        <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
-      </div>
-      <div className="relative h-[calc((100dvh-54px)*0.043)] overflow-hidden bg-[#072D1D]">
-        <div className="relative flex h-full items-center justify-center gap-[2.4%] overflow-hidden bg-[#072D1D] px-[2%] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]">
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035)_0%,rgba(0,0,0,0.12)_100%)]" />
-          <HomeFlagPanel type="cup" />
-          <HomeFlagPanel type="canada" />
-          <HomeFlagPanel type="mexico" />
-          <HomeFlagPanel type="usa" />
-          <HomeFlagPanel type="cup" />
-        </div>
+    <div className="relative h-[calc((100dvh-54px)*0.0645)] shrink-0 overflow-hidden bg-[#072D1D]" aria-hidden="true">
+      <div className="h-1/3 w-full bg-[#050505] shadow-[inset_0_-1px_0_rgba(245,240,230,0.04)]" />
+      <div className="relative flex h-2/3 items-center justify-center gap-[5.5%] overflow-hidden bg-[#072D1D] px-[4%] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035)_0%,rgba(0,0,0,0.12)_100%)]" />
+        <HomeFlagPanel type="canada" />
+        <HomeFlagPanel type="cup" />
+        <HomeFlagPanel type="mexico" />
+        <HomeFlagPanel type="cup" />
+        <HomeFlagPanel type="usa" />
       </div>
     </div>
   );
