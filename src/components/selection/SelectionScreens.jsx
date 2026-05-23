@@ -112,50 +112,28 @@ function HomePitchBackdrop() {
 
 function ScoreboardPlaceholder() {
   return (
-    <div className="relative h-[calc((100dvh-54px)*0.208)] shrink-0 overflow-hidden bg-[#BFE3F5]">
-      <div className="relative h-[79.4%] overflow-hidden bg-[#BFE3F5]">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 12% 18%, rgba(255,255,255,0.34) 0 9%, transparent 20%), radial-gradient(circle at 80% 15%, rgba(255,255,255,0.26) 0 8%, transparent 18%), radial-gradient(circle at 54% 76%, rgba(42,158,188,0.14) 0 18%, transparent 42%), radial-gradient(circle at 24% 86%, rgba(30,126,170,0.10) 0 15%, transparent 38%), linear-gradient(180deg, #D9F0FF 0%, #B9DDF4 52%, #9FCBE6 100%)",
-          }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.22] mix-blend-soft-light"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 8% 12%, rgba(255,255,255,0.65) 0 1px, transparent 2px), radial-gradient(circle at 42% 32%, rgba(255,255,255,0.52) 0 1px, transparent 2px), radial-gradient(circle at 74% 62%, rgba(2,81,112,0.42) 0 1px, transparent 2px), radial-gradient(circle at 22% 70%, rgba(2,81,112,0.32) 0 1px, transparent 2px)",
-            backgroundSize: "23px 19px, 31px 27px, 29px 23px, 37px 31px",
-          }}
-        />
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
-          <g opacity="0.82" fill="none" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M-30 92 C58 42 116 104 200 72 C292 37 365 78 455 58 C535 40 623 78 717 52 C814 25 880 58 1030 32" stroke="rgba(255,255,255,0.48)" strokeWidth="18" />
-            <path d="M-20 111 C70 72 138 121 231 95 C334 66 404 107 495 86 C583 66 673 106 765 81 C859 56 928 82 1030 65" stroke="rgba(255,255,255,0.32)" strokeWidth="10" />
-            <path d="M36 166 C128 132 206 171 292 148 C386 122 452 158 545 139 C628 121 692 154 778 134 C862 114 923 142 996 126" stroke="rgba(255,255,255,0.42)" strokeWidth="12" />
-            <path d="M28 181 C102 158 178 190 255 170 C347 146 424 178 510 160 C606 139 674 177 768 153 C850 132 930 161 1005 145" stroke="rgba(255,255,255,0.26)" strokeWidth="7" />
-          </g>
-          <g opacity="0.96">
-            <path d="M70 132 C96 106 133 105 162 123 C184 106 222 105 250 124 C282 118 312 135 322 158 C284 172 245 169 211 161 C174 178 129 173 99 154 C82 154 68 149 58 142 C61 138 65 135 70 132Z" fill="rgba(250,250,242,0.76)" />
-            <path d="M394 125 C421 98 458 101 484 121 C506 106 542 110 564 130 C596 125 622 143 630 165 C595 178 558 174 528 164 C494 180 452 174 422 156 C404 156 390 150 380 142 C383 135 388 130 394 125Z" fill="rgba(250,250,242,0.68)" />
-            <path d="M672 116 C708 84 762 91 796 117 C823 99 872 105 900 133 C935 130 962 149 970 174 C930 188 884 183 848 170 C803 191 747 181 709 156 C687 158 671 152 660 143 C662 132 666 123 672 116Z" fill="rgba(250,250,242,0.72)" />
-          </g>
-          <g fill="rgba(19,58,75,0.38)" opacity="0.45">
-            <path d="M870 86 q8 -7 16 0 q-8 -3 -16 0" />
-            <path d="M903 112 q6 -5 12 0 q-6 -2 -12 0" />
-            <path d="M130 66 q7 -6 14 0 q-7 -2 -14 0" />
-          </g>
-        </svg>
-        <div className="absolute inset-x-0 bottom-0 h-[18%] bg-[linear-gradient(180deg,rgba(191,227,245,0),rgba(141,193,223,0.44))]" />
-      </div>
+    <div className="relative h-[calc((100dvh-54px)*0.208)] shrink-0 overflow-hidden">
+      <div className="relative h-[79.4%] overflow-hidden bg-[linear-gradient(180deg,#DFF2FF_0%,#CBE5FB_52%,#B7D8F2_100%)]" />
       <div className="relative h-[20.6%] overflow-hidden bg-[linear-gradient(180deg,#314451_0%,#22313B_100%)]">
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true">
           <path d="M0 58 L96 44 L188 52 L286 34 L372 48 L482 30 L594 50 L706 36 L804 48 L900 28 L1000 46 L1000 120 L0 120 Z" fill="#2A3944" />
           <path d="M0 72 L108 58 L228 68 L330 48 L456 66 L570 50 L688 70 L804 56 L920 66 L1000 58 L1000 120 L0 120 Z" fill="#18242C" />
-          <path d="M0 88 L136 80 L244 84 L360 74 L474 86 L594 76 L730 88 L848 78 L1000 86 L1000 120 L0 120 Z" fill="#132029" opacity="0.95" />
+          <path d="M0 88 L136 80 L244 84 L360 74 L474 86 L594 76 L730 88 L848 78 L1000 86 L1000 120 L0 120 Z" fill="#132029" opacity="0.96" />
           <g>
-            {[[118,58,18],[255,42,22],[398,60,18],[520,38,22],[666,56,18],[810,42,22]].map(([cx,cy,r],idx)=>(<g key={idx}><rect x={cx-2} y={cy+r-1} width="4" height="16" rx="2" fill="#5E6F79" /><circle cx={cx} cy={cy} r={r+2} fill="#6E7E86" opacity="0.55" /><circle cx={cx} cy={cy} r={r} fill="#F3E7B8" /><circle cx={cx} cy={cy} r={r*0.56} fill="#FFFDF3" /></g>))}
+            {[
+              [104, 30, '#F5F0E6', '#0B5F35'],
+              [226, 22, '#F7D117', '#0B5F35'],
+              [348, 28, '#F5F0E6', '#0B5F35'],
+              [500, 18, '#F7D117', '#0B5F35'],
+              [652, 28, '#F5F0E6', '#0B5F35'],
+              [774, 22, '#F7D117', '#0B5F35'],
+              [896, 30, '#F5F0E6', '#0B5F35'],
+            ].map(([x, top, flag, pole], idx) => (
+              <g key={idx}>
+                <rect x={x} y={top} width="3" height="34" rx="1.5" fill={pole} />
+                <path d={`M${x + 3} ${top + 3} L${x + 24} ${top + 9} L${x + 3} ${top + 17} Z`} fill={flag} />
+              </g>
+            ))}
           </g>
           <rect x="0" y="114" width="1000" height="6" fill="#10181E" />
         </svg>
