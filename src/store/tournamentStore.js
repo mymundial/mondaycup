@@ -57,10 +57,12 @@ export const flattenTournamentState = (state) => ({
 
 export const tournamentActions = {
   patch: (patch) => ({ type: "patch", patch }),
+  hydrate: (state) => ({ type: "hydrate", state }),
   patchDomains: (patch) => ({ type: "patch-domains", patch }),
   toggleMenu: () => ({ type: "toggle-menu" }),
   closeMenu: () => ({ type: "patch-domains", patch: { navigation: { menuOpen: false } } }),
   reset: () => ({ type: "reset" }),
+  resetToHostSelect: () => ({ type: "reset-to-host-select" }),
 };
 
 const flatStateDomains = {
@@ -115,6 +117,8 @@ function mergeDomains(state, patch = {}) {
 
 export function tournamentReducer(state, action) {
   switch (action.type) {
+    case "hydrate":
+      return action.state || state;
     case "patch":
       return mergeDomains(state, normalisePatch(action.patch));
     case "patch-domains":
@@ -123,6 +127,8 @@ export function tournamentReducer(state, action) {
       return mergeDomains(state, { navigation: { menuOpen: !state.navigation.menuOpen } });
     case "reset":
       return createInitialTournamentState();
+    case "reset-to-host-select":
+      return mergeDomains(createInitialTournamentState(), { navigation: { screen: "hosts" } });
     default:
       return state;
   }

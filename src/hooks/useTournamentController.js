@@ -1,4 +1,4 @@
-import { useMemo, useReducer } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import { buildQualifiers } from "../logic/tournament.js";
 import { matchLifecycleReducer } from "../logic/matchLifecycleReducer.js";
 import { selectScheduleFocus } from "../logic/schedulePositioningSelectors.js";
@@ -12,6 +12,7 @@ import {
   selectVisibleKnockoutFixtures,
 } from "../logic/tournamentSelectors.js";
 import { createInitialTournamentState, flattenTournamentState, tournamentActions, tournamentReducer } from "../store/tournamentStore.js";
+import { clearSavedCampaign, loadCampaignState, loadCampaignSummary, saveCampaignState } from "../logic/campaignStorage.js";
 
 function clearSavedMatchState() {
   if (typeof window === "undefined") return;
@@ -22,6 +23,7 @@ function clearSavedMatchState() {
 
 export function useTournamentController() {
   const [state, dispatch] = useReducer(tournamentReducer, undefined, createInitialTournamentState);
+  const [savedCampaign, setSavedCampaign] = useState(() => loadCampaignSummary());
   const patch = (updates) => dispatch(tournamentActions.patch(updates));
 
   const {
@@ -45,6 +47,12 @@ export function useTournamentController() {
     userForm,
     campaignId,
   } = flattenTournamentState(state);
+
+  useEffect(() => {
+    if (!state.campaign.team) return;
+    saveCampaignState(state);
+    setSavedCampaign(loadCampaignSummary());
+  }, [state]);
 
   const groupStageComplete = isGroupStageComplete(schedule);
   const visibleKnockoutFixtures = selectVisibleKnockoutFixtures({ schedule, knockoutFixtures, table });
@@ -83,13 +91,37 @@ export function useTournamentController() {
 
   const resetTournament = () => {
     clearSavedMatchState();
+    clearSavedCampaign();
     dispatch(tournamentActions.reset());
+    setSavedCampaign(null);
+  };
+
+  const openHostSelect = () => patch({ screen: "hosts", drawer: null, menuOpen: false });
+
+  const newCampaign = () => {
+    clearSavedMatchState();
+    clearSavedCampaign();
+    dispatch(tournamentActions.resetToHostSelect());
+    setSavedCampaign(null);
+  };
+
+  const playAsGuest = () => openHostSelect();
+
+  const continueCampaign = () => {
+    const saved = loadCampaignState();
+    if (!saved) {
+      setSavedCampaign(null);
+      return;
+    }
+    dispatch(tournamentActions.hydrate(saved));
+    setSavedCampaign(loadCampaignSummary());
   };
 
   const selectGroup = (group) => patch({ selectedGroup: group, screen: "teams" });
 
   const startTeam = (name, groupOverride = selectedGroup) => {
     clearSavedMatchState();
+    clearSavedCampaign();
     const fixture = schedule.find((item) => !item.played && item.group === groupOverride && (item.home === name || item.away === name))
       || schedule.find((item) => item.group === groupOverride && (item.home === name || item.away === name));
 
@@ -173,9 +205,13 @@ export function useTournamentController() {
     campaignId,
     podium,
     scheduleFocus,
+    savedCampaign,
     menuProps,
     selectGroup,
     startTeam,
+    continueCampaign,
+    newCampaign,
+    playAsGuest,
     setSelectedGroup: (group) => patch({ selectedGroup: group }),
     setFixtureView: (view) => patch({ fixtureView: view }),
     setStandingsView: (view) => patch({ standingsView: view }),

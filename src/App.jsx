@@ -1,6 +1,6 @@
 import { runSelfTests } from "./logic/tournament.js";
 import { DrawerShell } from "./components/layout/Layout.jsx";
-import { HomeScreen, TeamSelectScreen } from "./components/selection/SelectionScreens.jsx";
+import { HomeScreen, HostSelectScreen, TeamSelectScreen } from "./components/selection/SelectionScreens.jsx";
 import { FixturesScreen } from "./components/schedule/ScheduleScreens.jsx";
 import { GroupsScreen } from "./components/standings/StandingsScreens.jsx";
 import { MatchScreen } from "./components/match/MatchScreen.jsx";
@@ -12,7 +12,18 @@ export default function App() {
   const tournament = useTournamentController();
 
   if (tournament.screen === "home") {
-    return <HomeScreen onSelectGroup={tournament.selectGroup} onSelectTeam={tournament.startTeam} />;
+    return (
+      <HomeScreen
+        savedCampaign={tournament.savedCampaign}
+        onContinueCampaign={tournament.continueCampaign}
+        onNewCampaign={tournament.newCampaign}
+        onPlayAsGuest={tournament.playAsGuest}
+      />
+    );
+  }
+
+  if (tournament.screen === "hosts") {
+    return <HostSelectScreen onSelectGroup={tournament.selectGroup} onSelectTeam={tournament.startTeam} />;
   }
 
   if (tournament.screen === "teams") {
