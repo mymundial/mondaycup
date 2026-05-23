@@ -53,12 +53,12 @@ function HomeCrowdBackdrop() {
   ];
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden bg-[#123822]" style={{ height: `${boardTop}%` }}>
-      <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 20% 6%, rgba(245,241,232,0.08), transparent 20%), radial-gradient(circle at 80% 8%, rgba(255,214,0,0.05), transparent 18%), linear-gradient(180deg, rgba(4,22,14,0.56), rgba(4,22,14,0.1))" }} />
-      <div className="absolute inset-x-0 top-0 h-[17%] bg-[#071B15]/72" />
+      <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 20% 6%, rgba(245,241,232,0.08), transparent 20%), radial-gradient(circle at 80% 8%, rgba(255,214,0,0.05), transparent 18%), linear-gradient(180deg, rgba(2,10,12,0.74), rgba(4,22,14,0.20))" }} />
+      <div className="absolute inset-x-0 top-0 h-[17%] bg-[#061014]/78" />
       <div className="absolute inset-x-0 top-[14%] h-[1px] bg-[#F5F0E6]/10" />
-      <div className="absolute inset-x-0 top-[5%] h-[10%] bg-[#0b2d1d]/12" />
-      <div className="absolute inset-x-0 top-[18%] h-[11%] bg-[#0b2d1d]/10" />
-      <div className="absolute inset-x-0 top-[33%] h-[12%] bg-[#0b2d1d]/12" />
+      <div className="absolute inset-x-0 top-[5%] h-[10%] bg-[#081A17]/18" />
+      <div className="absolute inset-x-0 top-[18%] h-[11%] bg-[#081A17]/14" />
+      <div className="absolute inset-x-0 top-[33%] h-[12%] bg-[#081A17]/18" />
       {crowdRows.map((person, index) => <HomeCrowdPerson key={index} {...person} />)}
     </div>
   );
@@ -127,24 +127,30 @@ function ScoreboardPlaceholder() {
   return (
     <div className="relative h-[calc(54px+((100dvh-54px)*0.208))] shrink-0 overflow-hidden bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_56%,#ADD2EC_100%)]">
       <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 274" preserveAspectRatio="none" aria-hidden="true">
-        <rect x="0" y={roofTop - 64} width="1000" height="24" fill="#D4D4C8" opacity="0.78" />
-        <rect x="0" y={roofTop - 42} width="1000" height="5" fill="#1F2D34" opacity="0.82" />
-        <rect x="0" y={roofTop - 34} width="1000" height="4" fill="#243541" opacity="0.95" />
-        <rect x="0" y={roofTop - 22} width="1000" height="4" fill="#18242C" opacity="0.92" />
-        <rect x="0" y={roofTop - 2} width="1000" height="50" fill="#202D35" />
-        <path d="M0 226 L1000 226 L1000 274 L0 274 Z" fill="#18242C" />
-        <g opacity="0.72" stroke="#43525A" strokeWidth="3" fill="none">
-          {Array.from({ length: 8 }).map((_, i) => {
-            const x = i * 140;
-            return <path key={i} d={`M${x} ${roofTop + 35} L${x + 70} ${roofTop - 2} L${x + 140} ${roofTop + 35}`} />;
+        <rect x="0" y={roofTop - 66} width="1000" height="18" fill="#11181D" opacity="0.96" />
+        <rect x="0" y={roofTop - 50} width="1000" height="8" fill="#2B343A" opacity="0.9" />
+        <rect x="0" y={roofTop - 40} width="1000" height="5" fill="#060B0E" opacity="0.98" />
+        <rect x="0" y={roofTop - 28} width="1000" height="6" fill="#1A242A" opacity="0.96" />
+        <rect x="0" y={roofTop - 3} width="1000" height="51" fill="#111A20" />
+        <rect x="0" y={roofTop + 35} width="1000" height="13" fill="#071015" />
+        <g opacity="0.74" stroke="#BFC8CA" strokeWidth="2.2" fill="none">
+          <path d={`M0 ${roofTop - 8} H1000`} />
+          <path d={`M0 ${roofTop + 21} H1000`} opacity="0.55" />
+          {Array.from({ length: 9 }).map((_, i) => {
+            const x = i * 125;
+            return <g key={i} opacity="0.7">
+              <path d={`M${x} ${roofTop + 22} L${x + 62.5} ${roofTop - 8} L${x + 125} ${roofTop + 22}`} />
+              <path d={`M${x} ${roofTop - 8} L${x + 62.5} ${roofTop + 22} L${x + 125} ${roofTop - 8}`} opacity="0.55" />
+            </g>;
           })}
         </g>
         <g>
-          {[[110, roofTop - 18], [230, roofTop - 16], [350, roofTop - 17], [470, roofTop - 15], [590, roofTop - 16], [710, roofTop - 17], [830, roofTop - 16], [950, roofTop - 18]].map(([cx, cy], idx) => (
-            <g key={idx} transform={`rotate(${idx % 2 === 0 ? -10 : 10} ${cx} ${cy})`}>
-              <rect x={cx - 14} y={cy - 8} width="28" height="16" rx="3" fill="#F8FBFF" />
-              <rect x={cx - 10} y={cy - 5} width="20" height="10" rx="2" fill="#FFFFFF" />
-              <ellipse cx={cx} cy={cy} rx="35" ry="15" fill="rgba(255,255,255,0.10)" />
+          {[[120, roofTop - 17], [245, roofTop - 16], [370, roofTop - 17], [495, roofTop - 15], [620, roofTop - 17], [745, roofTop - 16], [870, roofTop - 17]].map(([cx, cy], idx) => (
+            <g key={idx}>
+              <rect x={cx - 13} y={cy - 8} width="26" height="16" rx="2.5" fill="#F9FCFF" />
+              <rect x={cx - 9} y={cy - 5} width="18" height="10" rx="1.8" fill="#FFFFFF" />
+              <ellipse cx={cx} cy={cy + 1} rx="31" ry="13" fill="rgba(255,255,255,0.10)" />
+              <line x1={cx} y1={cy + 9} x2={cx} y2={roofTop + 20} stroke="#C7CED1" strokeWidth="1.2" opacity="0.55" />
             </g>
           ))}
         </g>
