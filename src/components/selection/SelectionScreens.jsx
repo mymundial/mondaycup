@@ -41,24 +41,22 @@ function HomeCrowdBackdrop() {
     opacity,
   }));
   const crowdRows = [
-    ...makeRow({ count: 42, startX: 0.5, step: 2.35, y: 18, scale: 0.4, opacity: 0.18, stagger: 0.35, wave: 0.35 }),
-    ...makeRow({ count: 38, startX: 1, step: 2.6, y: 23, scale: 0.46, opacity: 0.26, stagger: 0.45, wave: 0.4, shirtOffset: 1 }),
-    ...makeRow({ count: 36, startX: 1.5, step: 2.85, y: 30, scale: 0.54, opacity: 0.34, stagger: 0.55, wave: 0.5, shirtOffset: 2, skinOffset: 1 }),
-    ...makeRow({ count: 34, startX: 2, step: 3.05, y: 39, scale: 0.62, opacity: 0.42, stagger: 0.65, wave: 0.55, shirtOffset: 3, skinOffset: 2 }),
-    ...makeRow({ count: 32, startX: 2.5, step: 3.25, y: 50, scale: 0.7, opacity: 0.54, stagger: 0.75, wave: 0.65, shirtOffset: 4, skinOffset: 1 }),
-    ...makeRow({ count: 30, startX: 3, step: 3.45, y: 63, scale: 0.78, opacity: 0.66, stagger: 0.9, wave: 0.8, shirtOffset: 0, skinOffset: 3 }),
-    ...makeRow({ count: 28, startX: 3.5, step: 3.75, y: 78, scale: 0.86, opacity: 0.8, stagger: 1, wave: 0.9, shirtOffset: 2, skinOffset: 0 }),
-    ...makeRow({ count: 26, startX: 4, step: 4.05, y: 92, scale: 0.94, opacity: 0.92, stagger: 1.1, wave: 0.9, shirtOffset: 1, skinOffset: 2 }),
-    ...makeRow({ count: 24, startX: 4.5, step: 4.35, y: 101, scale: 0.98, opacity: 1, stagger: 1.2, wave: 0.45, shirtOffset: 3, skinOffset: 1 }),
+    ...makeRow({ count: 42, startX: 0.5, step: 2.35, y: 4, scale: 0.4, opacity: 0.18, stagger: 0.35, wave: 0.35 }),
+    ...makeRow({ count: 38, startX: 1, step: 2.6, y: 9, scale: 0.46, opacity: 0.26, stagger: 0.45, wave: 0.4, shirtOffset: 1 }),
+    ...makeRow({ count: 36, startX: 1.5, step: 2.85, y: 16, scale: 0.54, opacity: 0.34, stagger: 0.55, wave: 0.5, shirtOffset: 2, skinOffset: 1 }),
+    ...makeRow({ count: 34, startX: 2, step: 3.05, y: 25, scale: 0.62, opacity: 0.42, stagger: 0.65, wave: 0.55, shirtOffset: 3, skinOffset: 2 }),
+    ...makeRow({ count: 32, startX: 2.5, step: 3.25, y: 36, scale: 0.7, opacity: 0.54, stagger: 0.75, wave: 0.65, shirtOffset: 4, skinOffset: 1 }),
+    ...makeRow({ count: 30, startX: 3, step: 3.45, y: 49, scale: 0.78, opacity: 0.66, stagger: 0.9, wave: 0.8, shirtOffset: 0, skinOffset: 3 }),
+    ...makeRow({ count: 28, startX: 3.5, step: 3.75, y: 64, scale: 0.86, opacity: 0.8, stagger: 1, wave: 0.9, shirtOffset: 2, skinOffset: 0 }),
+    ...makeRow({ count: 26, startX: 4, step: 4.05, y: 80, scale: 0.94, opacity: 0.92, stagger: 1.1, wave: 0.9, shirtOffset: 1, skinOffset: 2 }),
+    ...makeRow({ count: 24, startX: 4.5, step: 4.35, y: 91, scale: 0.98, opacity: 1, stagger: 1.2, wave: 0.45, shirtOffset: 3, skinOffset: 1 }),
   ];
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden bg-[#123822]" style={{ height: `${boardTop}%` }}>
-      <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 20% 6%, rgba(245,241,232,0.08), transparent 20%), radial-gradient(circle at 80% 8%, rgba(255,214,0,0.05), transparent 18%), linear-gradient(180deg, rgba(2,10,12,0.74), rgba(4,22,14,0.20))" }} />
-      <div className="absolute inset-x-0 top-0 h-[17%] bg-[#061014]/78" />
-      <div className="absolute inset-x-0 top-[14%] h-[1px] bg-[#F5F0E6]/10" />
-      <div className="absolute inset-x-0 top-[5%] h-[10%] bg-[#081A17]/18" />
-      <div className="absolute inset-x-0 top-[18%] h-[11%] bg-[#081A17]/14" />
-      <div className="absolute inset-x-0 top-[33%] h-[12%] bg-[#081A17]/18" />
+      <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 20% 6%, rgba(245,241,232,0.08), transparent 20%), radial-gradient(circle at 80% 8%, rgba(255,214,0,0.05), transparent 18%), linear-gradient(180deg, rgba(4,22,14,0.4), rgba(4,22,14,0.1))" }} />
+      <div className="absolute inset-x-0 top-[5%] h-[10%] bg-[#0b2d1d]/12" />
+      <div className="absolute inset-x-0 top-[18%] h-[11%] bg-[#0b2d1d]/10" />
+      <div className="absolute inset-x-0 top-[33%] h-[12%] bg-[#0b2d1d]/12" />
       {crowdRows.map((person, index) => <HomeCrowdPerson key={index} {...person} />)}
     </div>
   );
@@ -123,7 +121,12 @@ function RoofBanner({ x, y, type }) {
 }
 
 function ScoreboardPlaceholder() {
-  return <div className="h-[calc(54px+((100dvh-54px)*0.208))] shrink-0" aria-hidden="true" />;
+  return (
+    <div className="relative h-[calc(54px+((100dvh-54px)*0.165))] shrink-0 overflow-hidden bg-[#717A76]" aria-hidden="true">
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,#858D89_0%,#6F7874_62%,#59625F_100%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-[calc(((100dvh-54px)*0.165)*0.26)] bg-[linear-gradient(180deg,#6F7774_0%,#515A57_100%)] shadow-[0_-8px_20px_rgba(7,45,29,0.16),inset_0_1px_0_rgba(245,240,230,0.10)]" />
+    </div>
+  );
 }
 
 function HomeFooter() {
