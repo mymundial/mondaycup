@@ -67,6 +67,7 @@ export function useTournamentController() {
     podium,
     matchStage,
     userForm,
+    campaignId,
   } = flattenTournamentState(state);
 
   const groupStageComplete = isGroupStageComplete(schedule);
@@ -115,11 +116,13 @@ export function useTournamentController() {
   const selectGroup = (group) => patch({ selectedGroup: group, screen: "teams" });
 
   const startTeam = (name, groupOverride = selectedGroup) => {
+    clearSavedMatchState();
     const fixture = schedule.find((item) => !item.played && item.group === groupOverride && (item.home === name || item.away === name))
       || schedule.find((item) => item.group === groupOverride && (item.home === name || item.away === name));
 
     patch({
       selectedGroup: groupOverride,
+      campaignId: `campaign-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       team: name,
       opponent: fixture?.home === name ? fixture.away : fixture?.home || "Opponent",
       screen: "match",
@@ -358,6 +361,7 @@ export function useTournamentController() {
     currentFixture,
     selectedGroupRows,
     userForm,
+    campaignId,
     podium,
     scheduleFocus,
     menuProps,

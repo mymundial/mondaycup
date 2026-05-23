@@ -249,12 +249,12 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
   );
 }
 
-export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction, onBusyChange }) {
+export default function FootballGame({ userTeam, opponentTeam, fixture, campaignId = "default", assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction, onBusyChange }) {
   const user = useMemo(() => normaliseTeam(userTeam, "Team A"), [userTeam]);
   const opponent = useMemo(() => normaliseTeam(opponentTeam, "Team B"), [opponentTeam]);
   const mergedAssets = useMemo(() => ({ ...DEFAULT_ASSETS, ...assets, sounds: { ...DEFAULT_ASSETS.sounds, ...(assets?.sounds || {}) } }), [assets]);
   const stageLabel = stageLabelForFixture(fixture);
-  const storageKey = `mondaycup-match-state:${fixture?.id ?? user.id + "-" + opponent.id}`;
+  const storageKey = `mondaycup-match-state:${campaignId}:${fixture?.id ?? user.id + "-" + opponent.id}`;
   const timeoutRefs = useRef([]);
 
   const [phase, setPhase] = useState(PHASE.DIRECTION);
@@ -346,15 +346,16 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     if (typeof window !== "undefined") {
       try {
         const saved = JSON.parse(window.sessionStorage.getItem(storageKey) || "null");
-        if (saved && saved.fixtureId === fixture?.id) {
-          setPhase(saved.hasCompleted ? PHASE.FINISHED : (saved.phase || PHASE.DIRECTION));
+        if (saved && saved.fixtureId === fixture?.id && saved.campaignId === campaignId) {
+          const restoredPhase = [PHASE.SHOT, PHASE.AI_WAIT].includes(saved.phase) ? PHASE.DIRECTION : (saved.phase || PHASE.DIRECTION);
+          setPhase(saved.hasCompleted ? PHASE.FINISHED : restoredPhase);
           setShootingSide(saved.shootingSide || "user");
           setSelected(getDirection(saved.selectedId || "CM"));
           setLockedDirection(saved.lockedDirectionId ? getDirection(saved.lockedDirectionId) : null);
           setLockedPower(saved.lockedPower ?? 50);
           setScore(saved.score || { user: 0, opponent: 0 });
           setAttempts(saved.attempts || { user: [], opponent: [] });
-          setShot(saved.shot || null);
+          setShot([PHASE.SHOT, PHASE.AI_WAIT].includes(saved.phase) ? null : (saved.shot || null));
           setTicker(saved.ticker || `${user.name.toUpperCase()} TO SHOOT`);
           setHasCompleted(Boolean(saved.hasCompleted));
           setWinnerSide(saved.winnerSide || null);
@@ -365,13 +366,14 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     resetGame();
     // The fixture id is the parent-controlled reset boundary.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fixture?.id, user.id, opponent.id, completedResult?.fixtureId, completedResult?.matchNo]);
+  }, [fixture?.id, user.id, opponent.id, campaignId, completedResult?.fixtureId, completedResult?.matchNo]);
 
   useEffect(() => {
     if (typeof window === "undefined" || completedResult) return;
     try {
       window.sessionStorage.setItem(storageKey, JSON.stringify({
         fixtureId: fixture?.id,
+        campaignId,
         phase,
         shootingSide,
         selectedId: selected.id,
@@ -385,7 +387,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         winnerSide,
       }));
     } catch {}
-  }, [storageKey, completedResult, fixture?.id, phase, shootingSide, selected.id, lockedDirection?.id, lockedPower, score, attempts, shot, ticker, hasCompleted, winnerSide]);
+  }, [storageKey, completedResult, fixture?.id, campaignId, phase, shootingSide, selected.id, lockedDirection?.id, lockedPower, score, attempts, shot, ticker, hasCompleted, winnerSide]);
 
   function trackTimeout(callback, delay) {
     const id = window.setTimeout(() => {

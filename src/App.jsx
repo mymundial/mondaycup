@@ -77,6 +77,7 @@ export default function App() {
       qualifiedTeams={tournament.qualifiedTeams}
       selectedGroup={tournament.selectedGroup}
       userForm={tournament.userForm}
+      campaignId={tournament.campaignId}
     />
   );
 }

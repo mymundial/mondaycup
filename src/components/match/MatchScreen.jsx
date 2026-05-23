@@ -129,6 +129,7 @@ export function MatchScreen({
   qualifiedTeams = new Set(),
   selectedGroup = "A",
   userForm = [],
+  campaignId = "default",
 }) {
   const [matchBusy, setMatchBusy] = useState(false);
   const userTeam = teamToGameTeam(team || "Team A");
@@ -153,6 +154,7 @@ export function MatchScreen({
             userTeam={userTeam}
             opponentTeam={opponentTeam}
             fixture={fallbackFixture}
+            campaignId={campaignId}
             onMatchComplete={onMatchComplete || onQuickWin}
             completedResult={completedResult}
             endActionLabel={matchResult && modalDismissed ? modalButton(matchResult) : "MATCH COMPLETE"}

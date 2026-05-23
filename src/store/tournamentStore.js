@@ -1,5 +1,7 @@
 import { blankTable, buildSchedule } from "../logic/tournament.js";
 
+const createCampaignId = () => `campaign-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
 const createNavigationState = () => ({
   screen: "home",
   drawer: null,
@@ -13,6 +15,7 @@ const createViewState = () => ({
 });
 
 const createCampaignState = () => ({
+  campaignId: createCampaignId(),
   team: null,
   opponent: "",
   matchStage: "GROUP STAGE",
@@ -67,6 +70,7 @@ const flatStateDomains = {
   fixtureView: "views",
   standingsView: "views",
   selectedGroup: "views",
+  campaignId: "campaign",
   team: "campaign",
   opponent: "campaign",
   matchStage: "campaign",
