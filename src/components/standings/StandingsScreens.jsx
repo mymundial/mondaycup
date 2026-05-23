@@ -27,8 +27,8 @@ function BracketFixture({ fixture, layout = "vertical", userTeam = null }) {
   const widthClass = layout === "horizontal" ? "w-[84px]" : "w-[48px]";
   const slotDirection = layout === "horizontal" ? "flex-row" : "flex-col";
   const isUserFixture = userTeam && (fixture?.home === userTeam || fixture?.away === userTeam);
-  const cardClass = isUserFixture ? "bg-[#7DAA8F] text-[#F5F0E6] ring-[#F5F0E6]/50" : "bg-[#F8F4EC] text-[#072D1D] ring-[#0B5F35]/8";
-  const labelClass = isUserFixture ? "text-[#F5F0E6]" : "text-[#0B5F35]/50";
+  const cardClass = isUserFixture ? "bg-[#DCE9DE] text-[#072D1D] ring-[#0B5F35]/18" : "bg-[#F8F4EC] text-[#072D1D] ring-[#0B5F35]/8";
+  const labelClass = isUserFixture ? "text-[#0B5F35]/70" : "text-[#0B5F35]/50";
   return <div className={`mx-auto flex ${widthClass} flex-col items-center rounded-[0.55rem] ${cardClass} px-[5px] py-[4px] ring-1`}>
     <div className={`mb-[2px] text-[5.5px] font-black uppercase tracking-[0.05em] ${labelClass}`}>M{fixture?.matchNo || ""}</div>
     <div className={`flex ${slotDirection} items-center gap-[6px]`}>

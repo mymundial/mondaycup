@@ -33,6 +33,17 @@ function clearSavedMatchState() {
     .forEach((key) => window.sessionStorage.removeItem(key));
 }
 
+function scheduleRoundForMatchNo(matchNo) {
+  if (!matchNo) return "Round of 32";
+  if (matchNo >= 73 && matchNo <= 88) return "Round of 32";
+  if (matchNo >= 89 && matchNo <= 96) return "Round of 16";
+  if (matchNo >= 97 && matchNo <= 100) return "Quarter-finals";
+  if (matchNo >= 101 && matchNo <= 102) return "Semi-finals";
+  if (matchNo === 103) return "3RD PLACE PLAY-OFF";
+  if (matchNo === 104) return "Final";
+  return "Round of 32";
+}
+
 export function useTournamentController() {
   const [state, dispatch] = useReducer(tournamentReducer, undefined, createInitialTournamentState);
   const patch = (updates) => dispatch(tournamentActions.patch(updates));
@@ -76,9 +87,24 @@ export function useTournamentController() {
   const currentFixture = selectCurrentGameFixture({ currentKnockoutMatch, activeGroupFixture });
   const selectedGroupRows = selectSelectedGroupRows({ allGroups, selectedGroup });
 
+  const getScheduleFocus = () => {
+    if (matchResult?.week) return { view: "group", week: matchResult.week };
+    if (matchResult?.matchNo) return { view: "knockout", round: scheduleRoundForMatchNo(matchResult.matchNo) };
+    if (currentKnockoutMatch?.matchNo) return { view: "knockout", round: scheduleRoundForMatchNo(currentKnockoutMatch.matchNo) };
+    if (activeGroupFixture?.week) return { view: "group", week: activeGroupFixture.week };
+    const upcomingGroupFixture = team ? schedule.find((fixture) => !fixture.played && fixture.group === selectedGroup && (fixture.home === team || fixture.away === team)) : null;
+    if (upcomingGroupFixture?.week) return { view: "group", week: upcomingGroupFixture.week };
+    return groupStageComplete ? { view: "knockout", round: "Round of 32" } : { view: "group", week: 1 };
+  };
+
+  const scheduleFocus = getScheduleFocus();
+
   const closeMenu = () => patch({ menuOpen: false });
   const openMatch = () => patch({ menuOpen: false, drawer: null });
-  const openFixtures = () => patch({ menuOpen: false, fixtureView: groupStageComplete ? "knockout" : "group", drawer: "fixtures" });
+  const openFixtures = () => {
+    const focus = getScheduleFocus();
+    patch({ menuOpen: false, fixtureView: focus.view, drawer: "fixtures" });
+  };
   const openGroups = () => patch({ menuOpen: false, standingsView: groupStageComplete ? "knockout" : standingsView, drawer: "groups" });
 
   const resetTournament = () => {
@@ -333,6 +359,7 @@ export function useTournamentController() {
     selectedGroupRows,
     userForm,
     podium,
+    scheduleFocus,
     menuProps,
     selectGroup,
     startTeam,

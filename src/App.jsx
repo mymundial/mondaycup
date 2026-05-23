@@ -53,6 +53,7 @@ export default function App() {
           menuProps={tournament.menuProps}
           knockoutFixtures={tournament.visibleKnockoutFixtures}
           userTeam={tournament.team}
+          scheduleFocus={tournament.scheduleFocus}
         />
       </DrawerShell>
     );
