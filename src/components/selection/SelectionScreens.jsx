@@ -128,34 +128,53 @@ function ScoreboardPlaceholder() {
 
   return (
     <div className="relative shrink-0 overflow-hidden" style={{ height: headerHeight }} aria-hidden="true">
-      <div className="relative overflow-hidden bg-[linear-gradient(180deg,#04070D_0%,#0A1321_42%,#11243C_78%,#18314A_100%)]" style={{ height: skyHeight }}>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.08),transparent_45%)]" />
-        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.55) 1px, transparent 1.8px)', backgroundSize: '44px 44px', backgroundPosition: '0 0, 22px 22px' }} />
+      <div className="relative overflow-hidden bg-[linear-gradient(180deg,#07111E_0%,#10243B_52%,#183854_100%)]" style={{ height: skyHeight }}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(255,255,255,0.10),transparent_46%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-[22%] bg-[linear-gradient(180deg,rgba(255,255,255,0),rgba(245,241,232,0.04))]" />
       </div>
 
-      <div className="relative overflow-hidden bg-[#0B0D10]" style={{ height: flashHeight }}>
-        <div className="absolute inset-x-0 top-0 h-[18%] bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0))]" />
-        <div className="absolute inset-x-0 bottom-0 h-[24%] bg-[linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.28))]" />
-        <div className="absolute inset-x-0 top-[24%] h-[8%] bg-[#2E333A]/78" />
+      <div className="relative overflow-hidden bg-[#11161C]" style={{ height: flashHeight }}>
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#2D343C_0%,#1A222A_18%,#131A21_58%,#0C1116_100%)]" />
+        <div className="absolute inset-x-0 top-0 h-[18%] bg-[linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0))]" />
+        <div className="absolute inset-x-0 top-[10%] h-[16%] bg-[#4D545A]/65" />
+        <div className="absolute inset-x-0 top-[16%] h-[5%] bg-[#83888C]/40" />
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
+          <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M0 26 H1000" stroke="rgba(25,30,36,0.75)" strokeWidth="16" />
+            <path d="M0 30 H1000" stroke="rgba(210,215,220,0.12)" strokeWidth="2" />
+            <path d="M0 82 H1000" stroke="rgba(8,11,15,0.8)" strokeWidth="8" />
+            {Array.from({ length: 6 }).map((_, idx) => {
+              const left = idx * 200;
+              const center = left + 100;
+              return (
+                <g key={idx}>
+                  <path d={`M${left + 22} 82 L${center} 30 L${left + 178} 82`} stroke="rgba(90,98,106,0.34)" strokeWidth="8" />
+                  <path d={`M${left + 38} 82 L${center} 38 L${left + 162} 82`} stroke="rgba(245,241,232,0.08)" strokeWidth="3" />
+                </g>
+              );
+            })}
+            <path d="M88 64 H912" stroke="rgba(168,174,179,0.30)" strokeWidth="4" />
+          </g>
+        </svg>
       </div>
 
-      <div className="relative overflow-hidden bg-[#072D1D]" style={{ height: mergedBarHeight }}>
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.20))]" />
+      <div className="relative overflow-hidden bg-[#0A3321]" style={{ height: mergedBarHeight }}>
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(0,0,0,0.24))]" />
         <div className="absolute inset-x-0 top-0" style={{ height: trussHeight }}>
           <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
             <g fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M100 18 H900 M100 82 H900" stroke="rgba(190,200,196,0.48)" strokeWidth="5" />
+              <path d="M120 24 H880" stroke="rgba(196,201,205,0.52)" strokeWidth="5" />
+              <path d="M120 76 H880" stroke="rgba(196,201,205,0.52)" strokeWidth="5" />
               {lightCenters.map((cx) => (
-                <path key={`x-${cx}`} d={`M${cx - 80} 82 L${cx + 80} 18 M${cx - 80} 18 L${cx + 80} 82`} stroke="rgba(220,226,222,0.50)" strokeWidth="4" />
+                <path key={`x-${cx}`} d={`M${cx - 54} 76 L${cx + 54} 24 M${cx - 54} 24 L${cx + 54} 76`} stroke="rgba(217,222,226,0.42)" strokeWidth="3.5" />
               ))}
             </g>
             <g>
               {lightCenters.map((cx) => (
                 <g key={cx}>
-                  <rect x={cx - 18} y={32} width="36" height="36" rx="2" fill="#FFFDF2" />
-                  <rect x={cx - 11} y={39} width="22" height="22" rx="1.5" fill="#FFFFFF" />
-                  <rect x={cx - 4} y={68} width="8" height="11" rx="2" fill="rgba(220,226,222,0.80)" />
-                  <rect x={cx - 24} y={26} width="48" height="48" rx="6" fill="none" stroke="rgba(255,253,242,0.22)" strokeWidth="2" />
+                  <rect x={cx - 18} y={33} width="36" height="24" rx="2" fill="#F4F1E6" />
+                  <rect x={cx - 10} y={39} width="20" height="12" rx="1.5" fill="#FFFFFF" />
+                  <rect x={cx - 3} y={57} width="6" height="10" rx="1.5" fill="rgba(220,226,222,0.78)" />
                 </g>
               ))}
             </g>
@@ -163,19 +182,21 @@ function ScoreboardPlaceholder() {
         </div>
 
         <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1000 150" preserveAspectRatio="none" aria-hidden="true">
-          <g stroke="rgba(220,226,222,0.74)" strokeWidth="2.5" strokeLinecap="round">
-            {lightCenters.map((cx) => (
-              <g key={cx}>
-                <path d={`M${cx - 36} 50 L${cx - 36} 94`} />
-                <path d={`M${cx + 36} 50 L${cx + 36} 94`} />
-              </g>
-            ))}
+          <g stroke="rgba(220,226,222,0.70)" strokeWidth="2.25" strokeLinecap="round">
+            {flagCenters.map((leftPct) => {
+              const cx = leftPct * 10;
+              return (
+                <g key={`rope-${cx}`}>
+                  <path d={`M${cx - 27} 50 L${cx - 27} 96`} />
+                  <path d={`M${cx + 27} 50 L${cx + 27} 96`} />
+                </g>
+              );
+            })}
           </g>
         </svg>
 
         <div className="absolute inset-x-0 bottom-0 flex h-[66.6667%] items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.025)_0%,rgba(0,0,0,0.11)_100%)]" />
-          <div className="absolute inset-x-0 bottom-0 h-[2px] bg-[#072D1D]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.015)_0%,rgba(0,0,0,0.10)_100%)]" />
           {flagItems.map((type, index) => (
             <div key={`${type}-${index}`} className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: `${flagCenters[index]}%` }}>
               <HomeFlagPanel type={type} />
