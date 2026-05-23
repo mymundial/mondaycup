@@ -104,25 +104,51 @@ function HomePitchBackdrop() {
   );
 }
 
+function HomeSkyFlag({ x, country }) {
+  const flagY = 35;
+  const poleTop = 20;
+  const poleBottom = 108;
+  const commonPole = <><rect x={x - 1.5} y={poleTop} width="3" height={poleBottom - poleTop} rx="1.5" fill="#D7DEE1" /><rect x={x + 2} y={poleTop + 6} width="1.5" height="74" rx="0.75" fill="rgba(7,19,27,0.32)" /><circle cx={x} cy={poleTop - 1} r="5" fill="#E9EEE9" /></>;
+
+  const flag = country === "canada"
+    ? <g><path d={`M${x + 3} ${flagY} C${x + 26} ${flagY - 9} ${x + 50} ${flagY + 4} ${x + 76} ${flagY - 4} L${x + 76} ${flagY + 31} C${x + 51} ${flagY + 39} ${x + 27} ${flagY + 25} ${x + 3} ${flagY + 34} Z`} fill="#F5F0E6" /><path d={`M${x + 3} ${flagY} C${x + 11} ${flagY - 3} ${x + 19} ${flagY - 3} ${x + 27} ${flagY - 1} L${x + 27} ${flagY + 33} C${x + 19} ${flagY + 30} ${x + 11} ${flagY + 31} ${x + 3} ${flagY + 34} Z`} fill="#E1251B" /><path d={`M${x + 58} ${flagY - 2} C${x + 64} ${flagY - 2} ${x + 70} ${flagY - 3} ${x + 76} ${flagY - 4} L${x + 76} ${flagY + 31} C${x + 70} ${flagY + 33} ${x + 64} ${flagY + 34} ${x + 58} ${flagY + 33} Z`} fill="#E1251B" /><path d={`M${x + 41} ${flagY + 9} l4 8 h7 l-6 4 2 8 -7 -5 -7 5 2 -8 -6 -4 h7 Z`} fill="#E1251B" /></g>
+    : country === "mexico"
+      ? <g><path d={`M${x + 3} ${flagY} C${x + 26} ${flagY - 9} ${x + 50} ${flagY + 4} ${x + 76} ${flagY - 4} L${x + 76} ${flagY + 31} C${x + 51} ${flagY + 39} ${x + 27} ${flagY + 25} ${x + 3} ${flagY + 34} Z`} fill="#F5F0E6" /><path d={`M${x + 3} ${flagY} C${x + 12} ${flagY - 3} ${x + 21} ${flagY - 3} ${x + 30} ${flagY - 1} L${x + 30} ${flagY + 33} C${x + 21} ${flagY + 30} ${x + 12} ${flagY + 31} ${x + 3} ${flagY + 34} Z`} fill="#006847" /><path d={`M${x + 52} ${flagY - 2} C${x + 60} ${flagY - 2} ${x + 68} ${flagY - 3} ${x + 76} ${flagY - 4} L${x + 76} ${flagY + 31} C${x + 68} ${flagY + 33} ${x + 60} ${flagY + 34} ${x + 52} ${flagY + 33} Z`} fill="#CE1126" /><circle cx={x + 41} cy={flagY + 17} r="6" fill="#C89A35" opacity="0.95" /><path d={`M${x + 37} ${flagY + 18} q4 5 9 0`} fill="none" stroke="#0B5F35" strokeWidth="2" strokeLinecap="round" /></g>
+      : <g><path d={`M${x + 3} ${flagY} C${x + 26} ${flagY - 9} ${x + 50} ${flagY + 4} ${x + 76} ${flagY - 4} L${x + 76} ${flagY + 31} C${x + 51} ${flagY + 39} ${x + 27} ${flagY + 25} ${x + 3} ${flagY + 34} Z`} fill="#F5F0E6" /><path d={`M${x + 3} ${flagY} C${x + 26} ${flagY - 9} ${x + 50} ${flagY + 4} ${x + 76} ${flagY - 4} L${x + 76} ${flagY + 1} C${x + 50} ${flagY + 9} ${x + 26} ${flagY - 4} ${x + 3} ${flagY + 5} Z M${x + 3} ${flagY + 11} C${x + 27} ${flagY + 3} ${x + 51} ${flagY + 16} ${x + 76} ${flagY + 8} L${x + 76} ${flagY + 13} C${x + 51} ${flagY + 21} ${x + 27} ${flagY + 8} ${x + 3} ${flagY + 16} Z M${x + 3} ${flagY + 22} C${x + 27} ${flagY + 14} ${x + 51} ${flagY + 27} ${x + 76} ${flagY + 19} L${x + 76} ${flagY + 24} C${x + 51} ${flagY + 32} ${x + 27} ${flagY + 19} ${x + 3} ${flagY + 27} Z`} fill="#B22234" /><path d={`M${x + 3} ${flagY} C${x + 14} ${flagY - 4} ${x + 26} ${flagY - 4} ${x + 38} ${flagY - 1} L${x + 38} ${flagY + 17} C${x + 26} ${flagY + 13} ${x + 14} ${flagY + 12} ${x + 3} ${flagY + 16} Z`} fill="#224184" /><g fill="#F5F0E6" opacity="0.95">{Array.from({ length: 12 }).map((_, i) => <circle key={i} cx={x + 10 + (i % 4) * 6} cy={flagY + 4 + Math.floor(i / 4) * 5} r="1.2" />)}</g></g>;
+
+  return <g>{commonPole}{flag}</g>;
+}
+
 function ScoreboardPlaceholder() {
   return (
     <div className="relative h-[calc((100dvh-54px)*0.208)] shrink-0 overflow-hidden">
-      <div className="relative h-[79.4%] overflow-hidden bg-[linear-gradient(180deg,#DFF2FF_0%,#CBE5FB_52%,#B7D8F2_100%)]">
-        <img
-          src={ASSETS.mondayLogo}
-          alt="Monday Cup"
-          className="absolute left-1/2 top-1/2 h-[82%] max-h-[82%] w-auto -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_8px_18px_rgba(7,45,29,0.22)]"
-          draggable={false}
-        />
-      </div>
-      <div className="relative h-[20.6%] overflow-hidden bg-[linear-gradient(180deg,#314451_0%,#22313B_100%)]">
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M0 58 L96 44 L188 52 L286 34 L372 48 L482 30 L594 50 L706 36 L804 48 L900 28 L1000 46 L1000 120 L0 120 Z" fill="#2A3944" />
-          <path d="M0 72 L108 58 L228 68 L330 48 L456 66 L570 50 L688 70 L804 56 L920 66 L1000 58 L1000 120 L0 120 Z" fill="#18242C" />
-          <path d="M0 88 L136 80 L244 84 L360 74 L474 86 L594 76 L730 88 L848 78 L1000 86 L1000 120 L0 120 Z" fill="#132029" opacity="0.96" />
-          <rect x="0" y="114" width="1000" height="6" fill="#10181E" />
+      <div className="relative h-[79.4%] overflow-hidden bg-[linear-gradient(180deg,#DDF2FF_0%,#C7E4FA_54%,#ADD2EC_100%)]">
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
+          <HomeSkyFlag x={182} country="canada" />
+          <HomeSkyFlag x={500} country="mexico" />
+          <HomeSkyFlag x={818} country="usa" />
         </svg>
-        <div className="absolute inset-x-0 top-0 h-[16%] bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0))]" />
+      </div>
+      <div className="relative h-[20.6%] overflow-visible bg-[linear-gradient(180deg,#314451_0%,#22313B_100%)]">
+        <svg className="absolute inset-x-0 bottom-0 h-[142%] w-full" viewBox="0 0 1000 170" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 70 C150 46 280 62 500 42 C720 62 850 46 1000 70 L1000 170 L0 170 Z" fill="#2C3D49" />
+          <path d="M0 86 C170 64 300 82 500 62 C700 82 830 64 1000 86 L1000 170 L0 170 Z" fill="#1B2A34" />
+          <path d="M0 108 C170 92 310 104 500 88 C690 104 830 92 1000 108 L1000 170 L0 170 Z" fill="#121E27" opacity="0.98" />
+          <path d="M0 72 C150 48 280 64 500 44 C720 64 850 48 1000 72" fill="none" stroke="#405460" strokeWidth="7" opacity="0.78" />
+          <g stroke="#2C3D49" strokeWidth="5" opacity="0.86">
+            <path d="M70 118 L145 88 L220 118 M220 118 L295 88 L370 118 M370 118 L445 88 L520 118 M520 118 L595 88 L670 118 M670 118 L745 88 L820 118 M820 118 L895 88 L970 118" fill="none" />
+          </g>
+          <g>
+            {[[105,102],[214,92],[323,100],[432,88],[500,96],[568,88],[677,100],[786,92],[895,102]].map(([cx, cy], idx) => (
+              <g key={idx}>
+                <circle cx={cx} cy={cy} r="8" fill="#F5F0E6" opacity="0.96" />
+                <circle cx={cx} cy={cy} r="14" fill="rgba(245,240,230,0.18)" />
+                <path d={`M${cx - 28} ${cy + 48} L${cx - 8} ${cy + 9} L${cx + 8} ${cy + 9} L${cx + 28} ${cy + 48} Z`} fill="rgba(245,240,230,0.08)" />
+              </g>
+            ))}
+          </g>
+          <rect x="0" y="162" width="1000" height="8" fill="#10181E" />
+        </svg>
       </div>
     </div>
   );
