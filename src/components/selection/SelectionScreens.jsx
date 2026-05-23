@@ -119,13 +119,30 @@ function HomeFlagPanel({ type }) {
 function ScoreboardPlaceholder() {
   return (
     <div className="relative shrink-0 overflow-hidden" aria-hidden="true">
-      <div className="relative h-[calc(54px+((100dvh-54px)*0.165)-((100dvh-54px)*0.0215))] overflow-hidden bg-[#050505]">
+      <div className="relative h-[calc(54px+((100dvh-54px)*0.165)-((100dvh-54px)*0.043))] overflow-hidden bg-[#050505]">
         <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.20) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.24))]" />
       </div>
-      <div className="relative h-[calc((100dvh-54px)*0.0215)] overflow-hidden bg-[#0A1E14]">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(0,0,0,0.16))]" />
+      <div className="relative h-[calc((100dvh-54px)*0.043)] overflow-hidden bg-[#050505]">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(0,0,0,0.20))]" />
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
+          <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M0 18 H1000 M0 82 H1000" stroke="rgba(190,200,196,0.48)" strokeWidth="5" />
+            <path d="M0 50 H1000" stroke="rgba(190,200,196,0.22)" strokeWidth="3" />
+            {Array.from({ length: 8 }).map((_, idx) => {
+              const x0 = idx * 125;
+              const x1 = x0 + 125;
+              return (
+                <g key={idx}>
+                  <path d={`M${x0} 82 L${x1} 18`} stroke="rgba(190,200,196,0.38)" strokeWidth="4" />
+                  <path d={`M${x0} 18 L${x1} 82`} stroke="rgba(190,200,196,0.38)" strokeWidth="4" />
+                </g>
+              );
+            })}
+            <path d="M500 14 V86" stroke="rgba(220,226,222,0.52)" strokeWidth="5" />
+          </g>
+        </svg>
       </div>
       <div className="relative flex h-[calc((100dvh-54px)*0.043)] items-center justify-evenly overflow-hidden bg-[#072D1D] px-[7%] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]">
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035)_0%,rgba(0,0,0,0.12)_100%)]" />
