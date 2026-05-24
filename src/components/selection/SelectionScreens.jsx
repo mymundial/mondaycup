@@ -226,18 +226,8 @@ function HomeLedGroupsTicker() {
 
 function HomeMenuBar() {
   return (
-    <div className="relative z-[3] flex h-[54px] shrink-0 items-center justify-between bg-[#F5F1E8] px-6 text-[#0B5F35] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-      <div className="flex h-full w-[54px] items-center justify-start">
-        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[42px] w-auto object-contain" draggable={false} />
-      </div>
-      <div className="home-copy-bold text-center text-[25px] uppercase leading-none tracking-[-0.02em] text-[#0B5F35]">MONDAY CUP</div>
-      <button type="button" className="flex h-[42px] w-[42px] items-center justify-center rounded-[0.95rem] bg-[#0B5F35] text-[#F5F1E8] shadow-inner" aria-label="Open menu">
-        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true">
-          <path d="M5 7h14" />
-          <path d="M5 12h14" />
-          <path d="M5 17h14" />
-        </svg>
-      </button>
+    <div className="relative z-[3] flex h-[54px] shrink-0 items-center justify-center bg-[#F5F1E8] px-6 text-[#0B5F35] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+      <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[46px] w-auto object-contain" draggable={false} />
     </div>
   );
 }
@@ -257,8 +247,9 @@ function ScoreboardPlaceholder() {
           <HomeHostFlagStrip />
         </div>
 
-        <div className="absolute inset-x-0 bottom-[36%] top-0 z-[3] flex items-center justify-center">
-          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative h-[82%] w-auto object-contain" draggable={false} />
+        <div className="absolute inset-x-0 bottom-[36%] top-0 z-[3] flex flex-col items-center justify-center text-[#F7D117] drop-shadow-[0_0_7px_rgba(247,209,23,0.40)]">
+          <div className="font-led text-[clamp(11px,2vh,18px)] uppercase leading-none tracking-[0.22em]">WELCOME TO</div>
+          <div className="font-led mt-[0.35em] text-[clamp(24px,5.2vh,52px)] uppercase leading-none tracking-[0.08em]">MONDAY CUP</div>
         </div>
       </div>
     </div>
@@ -293,13 +284,15 @@ function HomeLayout({ children }) {
 }
 
 function ActionButton({ children, eyebrow, onClick, variant = "light", disabled = false, type = "button" }) {
-  const styles = variant === "green"
-    ? "border-[#F5F0E6]/20 bg-[#0B5F35] text-[#F5F0E6]"
-    : variant === "account"
-      ? "border-[#F5F0E6]/18 bg-[#F5F0E6]/18 text-[#F5F0E6]"
-      : "border-[#D4AF37]/50 bg-[#F5F0E6] text-[#0B5F35]";
+  const styles = variant === "yellow"
+    ? "border-[#F7D117]/75 bg-[#F7D117] text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.24),inset_0_2px_8px_rgba(255,255,255,0.22)]"
+    : variant === "green"
+      ? "border-[#F5F0E6]/20 bg-[#0B5F35] text-[#F5F0E6]"
+      : variant === "account"
+        ? "border-[#F5F0E6]/18 bg-[#F5F0E6]/18 text-[#F5F0E6]"
+        : "border-[#D4AF37]/50 bg-[#F5F0E6] text-[#0B5F35]";
 
-  return <button type={type} onClick={onClick} disabled={disabled} className={`flex h-[58px] w-full items-center justify-center rounded-[1.35rem] border px-4 text-center shadow-inner transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
+  return <button type={type} onClick={onClick} disabled={disabled} className={`flex h-[58px] w-full items-center justify-center rounded-[1.35rem] border px-4 text-center transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
     {eyebrow && <span className="sr-only">{eyebrow}</span>}
     <div className="home-copy-bold text-[26px] uppercase leading-none tracking-[0.025em]">{children}</div>
   </button>;
@@ -363,13 +356,13 @@ function LandingPanel({ onPlayGuest }) {
   if (authMode) return <AuthPanel mode={authMode} setMode={setAuthMode} onBack={() => setAuthMode(null)} />;
 
   return <div className="space-y-3">
-    <div className="overflow-hidden rounded-[1.9rem] border border-[#0B5F35]/18 bg-[#F5F1E8] text-[#0B5F35] shadow-[0_18px_38px_rgba(0,0,0,0.24)]">
-      <div className="bg-[#0B5F35] px-5 py-5 text-center text-[#F5F1E8] shadow-[inset_0_-8px_16px_rgba(0,0,0,0.12)]">
-        <div className="home-copy-bold text-[34px] uppercase leading-[0.86] tracking-[-0.025em] text-[#F5F1E8]">MONDAY CUP</div>
+    <div className="overflow-hidden rounded-[1.9rem] border border-[#F5F1E8]/14 bg-[#0B5F35] text-[#F5F1E8] shadow-[0_18px_38px_rgba(0,0,0,0.24),inset_0_-10px_22px_rgba(0,0,0,0.18)]">
+      <div className="px-5 pb-5 pt-6 text-center shadow-[inset_0_10px_24px_rgba(255,255,255,0.035)]">
+        <div className="home-copy-bold text-[36px] uppercase leading-[0.86] tracking-[-0.025em] text-[#F5F1E8]">MONDAY CUP</div>
       </div>
-      <div className="space-y-2.5 px-5 py-5">
-        <ActionButton onClick={onPlayGuest} variant="green">PLAY NOW</ActionButton>
-        <ActionButton onClick={() => setAuthMode("signin")} variant="green">CLUBHOUSE</ActionButton>
+      <div className="space-y-2.5 px-5 pb-5">
+        <ActionButton onClick={onPlayGuest} variant="yellow">PLAY NOW</ActionButton>
+        <ActionButton onClick={() => setAuthMode("signin")} variant="yellow">CLUBHOUSE</ActionButton>
       </div>
     </div>
   </div>;
