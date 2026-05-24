@@ -541,7 +541,7 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
 
 function ConfirmButton({ onClick, disabled = false, children }) {
   return (
-    <button onClick={onClick} disabled={disabled} className="grid h-[clamp(40px,4.7vh,62px)] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] bg-[#F7D117] px-4 text-center text-[clamp(11px,1.6vh,19px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22)] disabled:cursor-default disabled:opacity-65">
+    <button onClick={onClick} disabled={disabled} className="grid h-[clamp(40px,4.7vh,62px)] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(11px,1.6vh,19px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22)] disabled:cursor-default disabled:opacity-65">
       <span className="block w-full whitespace-nowrap text-center">{children}</span>
     </button>
   );
@@ -551,7 +551,7 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
   const canChoose = phase === PHASE.DIRECTION;
   const canPower = phase === PHASE.POWER;
   const canAccuracy = phase === PHASE.ACCURACY;
-  const titleClass = "text-center text-[clamp(12px,1.8vh,22px)] font-black tracking-[0.08em] text-[#f5f1e8] drop-shadow-md";
+  const titleClass = "home-copy-bold text-center text-[clamp(12px,1.8vh,22px)] font-black tracking-[0.08em] text-[#f5f1e8] drop-shadow-md";
 
   return (
     <section className="pointer-events-none absolute bottom-[4.6%] left-[4%] right-[4%] z-30 h-[26%]">
@@ -561,7 +561,7 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
           <div className="h-[4%]" />
           <div className="grid flex-1 grid-cols-3 grid-rows-3 gap-[4%]">
             {DIRECTIONS.map((direction) => (
-              <button key={direction.id} onClick={() => setSelected(direction)} className={`grid min-h-0 place-items-center rounded-[clamp(14px,2.2vh,28px)] text-[clamp(17px,2.55vh,32px)] font-black leading-none shadow-lg transition-all ${selected.id === direction.id ? "bg-[#F7D117] text-[#0b2d1d]" : "bg-[#0b2d1d] text-[#f5f1e8]"}`}>{direction.arrow}</button>
+              <button key={direction.id} onClick={() => setSelected(direction)} className={`grid min-h-0 place-items-center rounded-[clamp(14px,2.2vh,28px)] home-copy-bold text-[clamp(17px,2.55vh,32px)] font-black leading-none shadow-lg transition-all ${selected.id === direction.id ? "bg-[#F7D117] text-[#0b2d1d]" : "bg-[#0b2d1d] text-[#f5f1e8]"}`}>{direction.arrow}</button>
             ))}
           </div>
           <div className="h-[4%]" />
@@ -750,7 +750,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   }
 
   return (
-    <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#0d6c3d] text-[#f5f1e8]">
+    <div className="home-main-font relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#0d6c3d] text-[#f5f1e8]">
       <style>{`
         .led-text-glow { color: #F7D117; text-shadow: 0 0 2px rgba(247,209,23,0.30), 0 0 5px rgba(247,209,23,0.13); }
         .pen-marker-goal { box-shadow: 0 0 5px rgba(34,197,94,0.72), 0 0 10px rgba(34,197,94,0.25); }

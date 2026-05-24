@@ -342,13 +342,13 @@ function ActionButton({ children, eyebrow, onClick, variant = "light", disabled 
 function SavedCampaignCard({ summary, onContinue }) {
   if (!summary) return null;
   return <button onClick={onContinue} className="w-full rounded-[1.35rem] border border-[#D4AF37]/55 bg-[#F5F0E6] p-4 text-left text-[#0B5F35] shadow-inner">
-    <div className="text-[8px] font-black uppercase tracking-[0.24em] text-[#0B5F35]/45">CONTINUE CAMPAIGN</div>
+    <div className="home-copy-bold text-[8px] uppercase tracking-[0.24em] text-[#0B5F35]/45">CONTINUE CAMPAIGN</div>
     <div className="mt-2 flex items-center justify-between gap-3">
       <div className="min-w-0">
-        <div className="truncate text-[21px] font-black uppercase leading-none tracking-[-0.02em]">{summary.team}</div>
-        <div className="mt-1 truncate text-[10px] font-black uppercase tracking-[0.12em] text-[#0B5F35]/50">{summary.matchStage} · v {summary.opponent}</div>
+        <div className="truncate home-copy-bold text-[21px] uppercase leading-none tracking-[-0.02em]">{summary.team}</div>
+        <div className="mt-1 truncate home-copy-bold text-[10px] uppercase tracking-[0.12em] text-[#0B5F35]/50">{summary.matchStage} · v {summary.opponent}</div>
       </div>
-      <div className="shrink-0 rounded-full bg-[#0B5F35] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-[#F5F0E6]">PLAY</div>
+      <div className="shrink-0 rounded-full bg-[#0B5F35] px-3 py-1.5 home-copy-bold text-[10px] uppercase tracking-[0.1em] text-[#F5F0E6]">PLAY</div>
     </div>
   </button>;
 }

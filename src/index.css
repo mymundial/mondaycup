@@ -53,3 +53,24 @@
 .home-copy-bold {
   font-family: "SportsDINBold", "SportsDINRegular", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
+
+
+body {
+  font-family: "SportsDINRegular", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button, input, textarea, select {
+  font-family: inherit;
+}
+
+.font-main {
+  font-family: "SportsDINRegular", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.font-main-bold {
+  font-family: "SportsDINBold", "SportsDINRegular", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.font-main-light {
+  font-family: "SportsDINLight", "SportsDINRegular", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
