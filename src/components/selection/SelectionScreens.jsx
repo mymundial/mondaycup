@@ -38,7 +38,7 @@ function ScoreboardTrophy({ side }) {
     <img
       src={TROPHY_PIXEL_SRC}
       alt=""
-      className={`h-[clamp(32px,6.3vh,72px)] w-auto object-contain opacity-95 drop-shadow-[0_0_8px_rgba(247,209,23,0.42)] ${side === "left" ? "scale-x-[-1]" : ""}`}
+      className={`h-[clamp(24px,4.8vh,52px)] w-auto object-contain opacity-95 drop-shadow-[0_0_7px_rgba(247,209,23,0.38)] ${side === "left" ? "scale-x-[-1]" : ""}`}
       draggable={false}
       aria-hidden="true"
     />
@@ -179,10 +179,8 @@ function HomeLedAdvertisingHoard() {
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
       <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" />
-      <div className="relative mx-auto grid h-full max-w-[78%] grid-cols-[minmax(0,0.9fr)_minmax(0,4.5fr)_minmax(0,0.9fr)] items-center gap-[3.5%]">
-        <img src={TROPHY_AD_SRC} alt="" className="h-[72%] w-full object-contain drop-shadow-[0_0_6px_rgba(247,209,23,0.22)]" draggable={false} aria-hidden="true" />
-        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="h-[68%] w-full object-contain drop-shadow-[0_0_7px_rgba(245,241,232,0.18)]" draggable={false} />
-        <img src={TROPHY_AD_SRC} alt="" className="h-[72%] w-full object-contain drop-shadow-[0_0_6px_rgba(247,209,23,0.22)]" draggable={false} aria-hidden="true" />
+      <div className="relative mx-auto flex h-full max-w-[76%] items-center justify-center">
+        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="h-[82%] w-full object-contain drop-shadow-[0_0_7px_rgba(245,241,232,0.18)]" draggable={false} />
       </div>
     </div>
   );
@@ -285,11 +283,11 @@ function ScoreboardPlaceholder() {
           <HomeHostFlagStrip />
         </div>
 
-        <div className="absolute inset-x-0 bottom-[36%] top-0 z-[3] flex items-center justify-center gap-[clamp(10px,3vw,24px)] text-[#F7D117] drop-shadow-[0_0_7px_rgba(247,209,23,0.40)]">
+        <div className="absolute inset-x-0 bottom-[36%] top-0 z-[3] flex items-center justify-center gap-[clamp(8px,2.2vw,18px)] text-[#F7D117] drop-shadow-[0_0_7px_rgba(247,209,23,0.40)]">
           <ScoreboardTrophy side="left" />
           <div className="flex min-w-0 flex-col items-center justify-center text-center">
-            <div className="font-led text-[clamp(11px,2vh,18px)] uppercase leading-none tracking-[0.22em]">WELCOME TO</div>
-            <div className="font-led mt-[0.35em] text-[clamp(16px,3.2vh,32px)] uppercase leading-none tracking-[0.08em]">MONDAY CUP</div>
+            <div className="font-led text-[clamp(10px,1.8vh,16px)] uppercase leading-none tracking-[0.22em] text-[#F7D117]">WELCOME TO</div>
+            <div className="font-led mt-[0.32em] text-[clamp(15px,2.8vh,27px)] uppercase leading-none tracking-[0.07em] text-[#F7D117]">MONDAY CUP</div>
           </div>
           <ScoreboardTrophy side="right" />
         </div>
@@ -362,10 +360,10 @@ function HomeMenuShell({ children, className = "", onBack }) {
         <button
           type="button"
           onClick={onBack}
-          className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[#F5F1E8]/30 bg-[#F5F1E8]/12 text-[#F5F1E8] shadow-[0_4px_12px_rgba(0,0,0,0.22)] active:scale-[0.98]"
+          className="absolute left-4 top-5 z-20 flex h-7 w-7 items-center justify-center text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.35)] active:scale-[0.96]"
           aria-label="Back"
         >
-          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5L8 12L15 19" /></svg>
+          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5L8 12L15 19" /></svg>
         </button>
       )}
       <div className="px-5 py-5 shadow-[inset_0_10px_24px_rgba(255,255,255,0.035)]">
@@ -377,7 +375,7 @@ function HomeMenuShell({ children, className = "", onBack }) {
 
 function FloatingHomeLogo() {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-[5.5%] z-[8] flex justify-center" aria-hidden="true">
+    <div className="pointer-events-none absolute inset-x-0 top-[15%] z-[8] flex justify-center" aria-hidden="true">
       <div className="relative flex h-[184px] w-[440px] max-w-[92vw] items-center justify-center">
         <div className="absolute inset-x-8 bottom-9 h-20 rounded-full bg-[#F7D117]/34 blur-3xl" />
         <div className="absolute inset-x-14 bottom-11 h-16 rounded-full bg-[#F5F1E8]/30 blur-2xl" />
@@ -387,7 +385,7 @@ function FloatingHomeLogo() {
   );
 }
 
-function AuthInput({ icon, type = "text", placeholder }) {
+function AuthInput({ icon, type = "text", placeholder, value, onChange }) {
   return (
     <label className="block text-left">
       <span className="sr-only">{placeholder}</span>
@@ -396,6 +394,8 @@ function AuthInput({ icon, type = "text", placeholder }) {
         <input
           type={type}
           placeholder={placeholder}
+          value={value}
+          onChange={onChange}
           className="home-copy-regular h-12 w-full rounded-[1rem] border border-[#F5F0E6]/18 bg-[#F5F0E6]/94 py-0 pl-12 pr-4 text-[14px] uppercase tracking-[0.04em] text-[#0B5F35] outline-none placeholder:text-[#0B5F35]/34 focus:border-[#F7D117]"
         />
       </div>
@@ -404,10 +404,29 @@ function AuthInput({ icon, type = "text", placeholder }) {
 }
 
 function AuthPanel({ mode, setMode, onBack }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [forgotPassword, setForgotPassword] = useState(false);
   const isRegister = mode === "register";
+
+  if (forgotPassword) {
+    return <div className="space-y-3">
+      <HomeMenuShell onBack={() => setForgotPassword(false)}>
+        <div className="flex min-h-[32px] items-center justify-center text-center">
+          <div className="home-copy-bold text-[30px] uppercase leading-none tracking-[-0.02em] text-[#F5F1E8]">RESET PASSWORD</div>
+        </div>
+        <form className="mt-5 space-y-3" onSubmit={(event) => event.preventDefault()}>
+          <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Confirm email address" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+          <ActionButton type="submit" variant="yellow">SEND RESET LINK</ActionButton>
+        </form>
+      </HomeMenuShell>
+    </div>;
+  }
+
   return <div className="space-y-3">
     <HomeMenuShell onBack={onBack}>
-      <div className="text-center">
+      <div className="flex min-h-[32px] items-center justify-center text-center">
         <div className="home-copy-bold text-[32px] uppercase leading-none tracking-[-0.02em] text-[#F5F1E8]">CLUBHOUSE</div>
       </div>
       <div className="mt-4 grid grid-cols-2 rounded-[1.15rem] border border-[#F5F1E8]/20 bg-[#072D1D]/42 p-1 shadow-inner">
@@ -415,9 +434,14 @@ function AuthPanel({ mode, setMode, onBack }) {
         <button type="button" onClick={() => setMode("register")} className={`home-copy-bold h-10 rounded-[0.9rem] text-[14px] uppercase tracking-[0.05em] transition ${isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>REGISTER</button>
       </div>
       <form className="mt-4 space-y-2.5" onSubmit={(event) => event.preventDefault()}>
-        {isRegister && <AuthInput icon="★" placeholder="Username" />}
-        <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Email address" type="email" />
-        <AuthInput icon={<PadlockIcon className="h-5 w-5" />} placeholder="Password" type="password" />
+        {isRegister && <AuthInput icon="★" placeholder="Username" value={username} onChange={(event) => setUsername(event.target.value)} />}
+        <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Email address" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+        <AuthInput icon={<PadlockIcon className="h-5 w-5" />} placeholder="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+        {!isRegister && (
+          <button type="button" onClick={() => setForgotPassword(true)} className="home-copy-bold mx-auto block text-[10px] uppercase tracking-[0.16em] text-[#F7D117] underline-offset-4 active:scale-[0.98]">
+            FORGOT PASSWORD?
+          </button>
+        )}
         {isRegister && (
           <label className="home-copy-light flex items-start gap-2 rounded-[0.9rem] bg-[#F5F0E6]/8 p-3 text-left text-[8px] uppercase leading-[1.25] tracking-[0.12em] text-[#F5F0E6]/62">
             <input type="checkbox" className="mt-[1px] h-4 w-4 shrink-0 accent-[#F7D117]" />
@@ -463,7 +487,7 @@ function HostPanel({ onSelectGroup, onSelectTeam }) {
 }
 
 function ArrowButton({ direction, onClick }) {
-  return <button onClick={onClick} className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F5F0E6] text-[#0B5F35]"><svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{direction === "left" ? <path d="M15 5L8 12L15 19" /> : <path d="M9 5L16 12L9 19" />}</svg></button>;
+  return <button onClick={onClick} className="flex h-8 w-8 items-center justify-center text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.32)] active:scale-[0.96]"><svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{direction === "left" ? <path d="M15 5L8 12L15 19" /> : <path d="M9 5L16 12L9 19" />}</svg></button>;
 }
 
 function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
@@ -471,7 +495,7 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
   const previousGroup = () => onSelectGroup(GROUP_LETTERS[(currentIndex - 1 + GROUP_LETTERS.length) % GROUP_LETTERS.length]);
   const nextGroup = () => onSelectGroup(GROUP_LETTERS[(currentIndex + 1) % GROUP_LETTERS.length]);
   return <HomeMenuShell onBack={onBack}>
-    <div className="mb-3 flex items-center justify-between">
+    <div className="mb-3 flex items-center justify-center gap-4">
       <ArrowButton direction="left" onClick={previousGroup} />
       <div className="home-copy-bold text-[28px] uppercase tracking-[-0.02em] text-[#F5F1E8]">GROUP {group}</div>
       <ArrowButton direction="right" onClick={nextGroup} />
@@ -479,7 +503,7 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
     <div className="grid gap-2">
       {GROUPS[group].map((name) => {
         const theme = getTeamTheme(name);
-        return <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[42px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] border border-[#F5F1E8]/18 px-4 text-left shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><Flag team={name} className="h-5 w-7" /><span className="home-copy-bold truncate text-center text-[15px] uppercase tracking-[-0.01em]">{name}</span><span className="home-copy-bold text-right text-[11px] tabular-nums tracking-[0.06em] opacity-65">#{TEAM_RANK[name]}</span></button>;
+        return <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[42px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] border border-[#F5F1E8]/18 px-4 text-left shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-6 w-8 items-center justify-center overflow-hidden rounded-[0.25rem] border border-[#F5F1E8]/24 bg-[#F5F1E8]/90 shadow-[0_2px_5px_rgba(0,0,0,0.18)]"><Flag team={name} className="h-full w-full object-contain" /></span><span className="home-copy-bold truncate text-center text-[15px] uppercase tracking-[-0.01em]">{name}</span><span className="home-copy-bold text-right text-[11px] tabular-nums tracking-[0.06em] opacity-65">#{TEAM_RANK[name]}</span></button>;
       })}
     </div>
   </HomeMenuShell>;
