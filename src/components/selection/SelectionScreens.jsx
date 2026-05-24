@@ -11,6 +11,8 @@ const GAME = {
 
 
 const TROPHY_PIXEL_SRC = "/trophy_pixel.png";
+const MONDAY_CUP_AD_SRC = "/monday-cup-ad.png";
+const TROPHY_AD_SRC = "/trophy-ad.png";
 
 function AtIcon({ className = "" }) {
   return (
@@ -173,11 +175,14 @@ function HomeLedAdvertisingHoard() {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = 8;
   return (
-    <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-hidden border-t border-[#2d2d2d] bg-[#050505] shadow-[0_-8px_24px_rgba(0,0,0,0.45)]" style={{ top: `${goalLine - boardHeight}%`, height: `${boardHeight}%` }}>
-      <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(36,168,87,0.16),rgba(255,255,255,0.04),rgba(36,168,87,0.16))]" />
-      <div className="relative flex h-full items-center justify-center">
-        <img src={ASSETS.myMundialLogo} alt="myMUNDIAL" className="h-[72%] max-w-[82%] object-contain opacity-95 drop-shadow-[0_0_8px_rgba(245,241,232,0.58)]" draggable={false} />
+    <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-hidden border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)]" style={{ top: `${goalLine - boardHeight}%`, height: `${boardHeight}%` }}>
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
+      <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" />
+      <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" />
+      <div className="relative mx-auto grid h-full max-w-[78%] grid-cols-[minmax(0,0.9fr)_minmax(0,4.5fr)_minmax(0,0.9fr)] items-center gap-[3.5%]">
+        <img src={TROPHY_AD_SRC} alt="" className="h-[72%] w-full object-contain drop-shadow-[0_0_6px_rgba(247,209,23,0.22)]" draggable={false} aria-hidden="true" />
+        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="h-[68%] w-full object-contain drop-shadow-[0_0_7px_rgba(245,241,232,0.18)]" draggable={false} />
+        <img src={TROPHY_AD_SRC} alt="" className="h-[72%] w-full object-contain drop-shadow-[0_0_6px_rgba(247,209,23,0.22)]" draggable={false} aria-hidden="true" />
       </div>
     </div>
   );
