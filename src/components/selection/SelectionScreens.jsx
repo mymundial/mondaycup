@@ -10,6 +10,39 @@ const GAME = {
 };
 
 
+const TROPHY_PIXEL_SRC = "/trophy_pixel.png";
+
+function AtIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.1" />
+      <path d="M16.1 8.1v5.2c0 1.2.7 2 1.8 2 1.5 0 2.6-1.6 2.6-3.6 0-4.7-3.4-8.2-8.2-8.2-5.2 0-8.8 3.8-8.8 8.8 0 5.1 3.8 8.2 8.9 8.2 1.7 0 3.2-.3 4.6-.9" />
+    </svg>
+  );
+}
+
+function PadlockIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="5" y="10" width="14" height="10" rx="2.4" />
+      <path d="M8.4 10V7.6C8.4 5.4 10 4 12 4s3.6 1.4 3.6 3.6V10" />
+      <path d="M12 14.2v2.3" />
+    </svg>
+  );
+}
+
+function ScoreboardTrophy({ side }) {
+  return (
+    <img
+      src={TROPHY_PIXEL_SRC}
+      alt=""
+      className={`h-[clamp(32px,6.3vh,72px)] w-auto object-contain opacity-95 drop-shadow-[0_0_8px_rgba(247,209,23,0.42)] ${side === "left" ? "scale-x-[-1]" : ""}`}
+      draggable={false}
+      aria-hidden="true"
+    />
+  );
+}
+
 function HomeCrowdPerson({ x, y, scale = 1, shirt = "#0d6c3d", skin = "#c98f65", pose = "down", opacity = 1 }) {
   const armLeft = pose === "up" ? "M5 13 L1 6" : "M5 13 L2 20";
   const armRight = pose === "up" ? "M13 13 L17 6" : "M13 13 L16 20";
@@ -247,9 +280,13 @@ function ScoreboardPlaceholder() {
           <HomeHostFlagStrip />
         </div>
 
-        <div className="absolute inset-x-0 bottom-[36%] top-0 z-[3] flex flex-col items-center justify-center text-[#F7D117] drop-shadow-[0_0_7px_rgba(247,209,23,0.40)]">
-          <div className="font-led text-[clamp(11px,2vh,18px)] uppercase leading-none tracking-[0.22em]">WELCOME TO</div>
-          <div className="font-led mt-[0.35em] text-[clamp(18px,3.8vh,38px)] uppercase leading-none tracking-[0.08em]">MONDAY CUP</div>
+        <div className="absolute inset-x-0 bottom-[36%] top-0 z-[3] flex items-center justify-center gap-[clamp(10px,3vw,24px)] text-[#F7D117] drop-shadow-[0_0_7px_rgba(247,209,23,0.40)]">
+          <ScoreboardTrophy side="left" />
+          <div className="flex min-w-0 flex-col items-center justify-center text-center">
+            <div className="font-led text-[clamp(11px,2vh,18px)] uppercase leading-none tracking-[0.22em]">WELCOME TO</div>
+            <div className="font-led mt-[0.35em] text-[clamp(16px,3.2vh,32px)] uppercase leading-none tracking-[0.08em]">MONDAY CUP</div>
+          </div>
+          <ScoreboardTrophy side="right" />
         </div>
       </div>
     </div>
@@ -350,7 +387,7 @@ function AuthInput({ icon, type = "text", placeholder }) {
     <label className="block text-left">
       <span className="sr-only">{placeholder}</span>
       <div className="relative">
-        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[18px] font-black leading-none text-[#0B5F35]/78">{icon}</span>
+        <span className="pointer-events-none absolute left-4 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center text-[#0B5F35]/82">{icon}</span>
         <input
           type={type}
           placeholder={placeholder}
@@ -374,8 +411,8 @@ function AuthPanel({ mode, setMode, onBack }) {
       </div>
       <form className="mt-4 space-y-2.5" onSubmit={(event) => event.preventDefault()}>
         {isRegister && <AuthInput icon="★" placeholder="Username" />}
-        <AuthInput icon="@" placeholder="Email address" type="email" />
-        <AuthInput icon="🔒" placeholder="Password" type="password" />
+        <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Email address" type="email" />
+        <AuthInput icon={<PadlockIcon className="h-5 w-5" />} placeholder="Password" type="password" />
         {isRegister && (
           <label className="home-copy-light flex items-start gap-2 rounded-[0.9rem] bg-[#F5F0E6]/8 p-3 text-left text-[8px] uppercase leading-[1.25] tracking-[0.12em] text-[#F5F0E6]/62">
             <input type="checkbox" className="mt-[1px] h-4 w-4 shrink-0 accent-[#F7D117]" />
@@ -402,19 +439,20 @@ function LandingPanel({ onPlayGuest }) {
   </div>;
 }
 
-function HostPanel({ onSelectGroup, onSelectTeam, onBack }) {
-  return <HomeMenuShell onBack={onBack}>
+function HostPanel({ onSelectGroup, onSelectTeam }) {
+  return <HomeMenuShell>
     <div className="mb-4 text-center text-[32px] home-copy-bold uppercase leading-none tracking-[-0.02em] text-[#F5F1E8]">CHOOSE YOUR TEAM</div>
     <div className="grid grid-cols-3 gap-2">
       {HOST_TEAMS.map((host) => {
         const theme = getTeamTheme(host.name);
         const label = host.name === "United States" ? "USA" : host.name;
-        return <button key={host.name} onClick={() => onSelectTeam(host.name, host.group)} className="h-[50px] rounded-[1rem] border-2 border-[#F5F1E8]/88 shadow-[0_0_12px_rgba(245,241,232,0.12),inset_0_2px_8px_rgba(255,255,255,0.16)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-full items-center justify-center text-[12px] home-copy-bold uppercase tracking-[0.04em]">{label}</span></button>;
+        return <button key={host.name} onClick={() => onSelectTeam(host.name, host.group)} className="h-[50px] rounded-[1rem] border border-[#F5F1E8]/22 shadow-[0_0_8px_rgba(245,241,232,0.06),inset_0_2px_8px_rgba(255,255,255,0.10)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-full items-center justify-center text-[12px] home-copy-bold uppercase tracking-[0.04em]">{label}</span></button>;
       })}
     </div>
-    <button onClick={() => onSelectGroup("A")} className="mt-3 flex h-[72px] w-full items-center justify-between rounded-[1.15rem] border-2 border-[#F5F1E8]/88 bg-[#F7D117] px-5 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.24),inset_0_2px_8px_rgba(255,255,255,0.22)] active:scale-[0.99]">
-      <div className="text-left"><div className="home-copy-bold text-[22px] uppercase leading-none tracking-[0.02em]">ALL 48 TEAMS</div><div className="home-copy-light mt-1 text-[8px] uppercase tracking-[0.18em] opacity-70">Unlock full tournament</div></div>
-      <div className="home-copy-bold text-[18px] uppercase tracking-[0.04em]">£0.99</div>
+    <button onClick={() => onSelectGroup("A")} className="mt-3 grid h-[72px] w-full grid-cols-[34px_minmax(0,1fr)_58px] items-center gap-3 rounded-[1.15rem] border-2 border-[#F7D117]/85 bg-[#072D1D]/34 px-5 text-[#F7D117] shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]">
+      <PadlockIcon className="h-7 w-7" />
+      <div className="home-copy-bold min-w-0 truncate text-center text-[21px] uppercase leading-none tracking-[0.02em]">UNLOCK ALL 48 TEAMS</div>
+      <div className="home-copy-bold text-right text-[18px] uppercase tracking-[0.04em]">£0.99</div>
     </button>
   </HomeMenuShell>;
 }
@@ -436,7 +474,7 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
     <div className="grid gap-2">
       {GROUPS[group].map((name) => {
         const theme = getTeamTheme(name);
-        return <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[42px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] border-2 border-[#F5F1E8]/88 px-4 text-left shadow-[0_0_10px_rgba(245,241,232,0.10),inset_0_2px_8px_rgba(255,255,255,0.16)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><Flag team={name} className="h-5 w-7" /><span className="home-copy-bold truncate text-center text-[15px] uppercase tracking-[-0.01em]">{name}</span><span className="home-copy-bold text-right text-[11px] tabular-nums tracking-[0.06em] opacity-65">#{TEAM_RANK[name]}</span></button>;
+        return <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[42px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] border border-[#F5F1E8]/18 px-4 text-left shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><Flag team={name} className="h-5 w-7" /><span className="home-copy-bold truncate text-center text-[15px] uppercase tracking-[-0.01em]">{name}</span><span className="home-copy-bold text-right text-[11px] tabular-nums tracking-[0.06em] opacity-65">#{TEAM_RANK[name]}</span></button>;
       })}
     </div>
   </HomeMenuShell>;
@@ -444,7 +482,7 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
 
 export function HomeScreen({ onSelectGroup, onSelectTeam }) {
   const [homeMode, setHomeMode] = useState("landing");
-  if (homeMode === "hosts") return <HomeLayout><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>;
+  if (homeMode === "hosts") return <HomeLayout><HostPanel onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>;
   return <HomeLayout><LandingPanel onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
 }
 export function HostSelectScreen(props) { return <HomeLayout><HostPanel {...props} /></HomeLayout>; }
