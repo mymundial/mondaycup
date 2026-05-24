@@ -12,6 +12,8 @@ const DEFAULT_ASSETS = {
 };
 
 const LED_YELLOW = "#F7D117";
+const MONDAY_CUP_AD_SRC = "/monday-cup-ad.png";
+const TROPHY_AD_SRC = "/trophy-ad.png";
 
 const GAME = {
   regulationPens: 5,
@@ -372,11 +374,11 @@ function TeamFlag({ team, className = "h-4 w-6" }) {
 function PenaltyMarkers({ attempts, totalSlots = GAME.regulationPens }) {
   const visible = visiblePenaltyMarkers(attempts);
   return (
-    <div className="flex w-full justify-center gap-1">
+    <div className="flex w-full justify-center gap-[3px]">
       {Array.from({ length: totalSlots }).map((_, idx) => {
         const value = visible[idx];
         const color = value === "G" ? "bg-green-500 pen-marker-goal" : value === "S" ? "bg-red-500 pen-marker-save" : "bg-[#F7D117] pen-marker-empty";
-        return <span key={idx} className={`h-2 w-2 rounded-full ${color}`} />;
+        return <span key={idx} className={`h-[6px] w-[6px] rounded-full ${color}`} />;
       })}
     </div>
   );
@@ -486,15 +488,18 @@ function CrowdBackdrop({ crowdColours = [] }) {
   );
 }
 
-function LedAdvertisingHoard({ logo }) {
+function LedAdvertisingHoard() {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = 8;
   return (
-    <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-hidden border-t border-[#2d2d2d] bg-[#050505] shadow-[0_-8px_24px_rgba(0,0,0,0.45)]" style={{ top: `${goalLine - boardHeight}%`, height: `${boardHeight}%` }}>
-      <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(36,168,87,0.16),rgba(255,255,255,0.04),rgba(36,168,87,0.16))]" />
-      <div className="relative flex h-full items-center justify-center">
-        <img src={logo} alt="myMUNDIAL" className="h-[72%] max-w-[82%] object-contain opacity-95 drop-shadow-[0_0_8px_rgba(245,241,232,0.58)]" draggable={false} />
+    <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-hidden border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)]" style={{ top: `${goalLine - boardHeight}%`, height: `${boardHeight}%` }}>
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
+      <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" />
+      <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" />
+      <div className="relative mx-auto grid h-full max-w-[78%] grid-cols-[18%_1fr_18%] items-center gap-[4%]">
+        <img src={TROPHY_AD_SRC} alt="" className="h-[76%] w-full object-contain drop-shadow-[0_0_5px_rgba(247,209,23,0.20)]" draggable={false} aria-hidden="true" />
+        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="h-[78%] w-full object-contain drop-shadow-[0_0_7px_rgba(245,241,232,0.18)]" draggable={false} />
+        <img src={TROPHY_AD_SRC} alt="" className="h-[76%] w-full object-contain drop-shadow-[0_0_5px_rgba(247,209,23,0.20)]" draggable={false} aria-hidden="true" />
       </div>
     </div>
   );
@@ -520,7 +525,7 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
   return (
     <section className="relative flex-1 shrink overflow-hidden bg-[#0d6c3d]">
       <CrowdBackdrop crowdColours={assets.crowdColours} />
-      <LedAdvertisingHoard logo={assets.logo} />
+      <LedAdvertisingHoard />
       <div className="absolute bottom-0 left-0 right-0" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
       <div
@@ -541,7 +546,7 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
 
 function ConfirmButton({ onClick, disabled = false, children }) {
   return (
-    <button onClick={onClick} disabled={disabled} className="grid h-[clamp(40px,4.7vh,62px)] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(11px,1.6vh,19px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22)] disabled:cursor-default disabled:opacity-65">
+    <button onClick={onClick} disabled={disabled} className="grid h-[clamp(40px,4.7vh,62px)] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(13px,1.9vh,23px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22)] disabled:cursor-default disabled:opacity-65">
       <span className="block w-full whitespace-nowrap text-center">{children}</span>
     </button>
   );
@@ -551,7 +556,7 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
   const canChoose = phase === PHASE.DIRECTION;
   const canPower = phase === PHASE.POWER;
   const canAccuracy = phase === PHASE.ACCURACY;
-  const titleClass = "home-copy-bold text-center text-[clamp(12px,1.8vh,22px)] font-black tracking-[0.08em] text-[#f5f1e8] drop-shadow-md";
+  const titleClass = "home-copy-bold text-center text-[clamp(14px,2.05vh,25px)] font-black tracking-[0.08em] text-[#f5f1e8] drop-shadow-md";
 
   return (
     <section className="pointer-events-none absolute bottom-[4.6%] left-[4%] right-[4%] z-30 h-[26%]">
@@ -561,7 +566,7 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
           <div className="h-[4%]" />
           <div className="grid flex-1 grid-cols-3 grid-rows-3 gap-[4%]">
             {DIRECTIONS.map((direction) => (
-              <button key={direction.id} onClick={() => setSelected(direction)} className={`grid min-h-0 place-items-center rounded-[clamp(14px,2.2vh,28px)] home-copy-bold text-[clamp(17px,2.55vh,32px)] font-black leading-none shadow-lg transition-all ${selected.id === direction.id ? "bg-[#F7D117] text-[#0b2d1d]" : "bg-[#0b2d1d] text-[#f5f1e8]"}`}>{direction.arrow}</button>
+              <button key={direction.id} onClick={() => setSelected(direction)} className={`grid min-h-0 place-items-center rounded-[clamp(14px,2.2vh,28px)] home-copy-bold text-[clamp(19px,2.7vh,34px)] font-black leading-none shadow-lg transition-all ${selected.id === direction.id ? "bg-[#F7D117] text-[#0b2d1d]" : "bg-[#0b2d1d] text-[#f5f1e8]"}`}>{direction.arrow}</button>
             ))}
           </div>
           <div className="h-[4%]" />
@@ -581,7 +586,7 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
       {!canChoose && !canPower && !canAccuracy && (
         <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%]">
           <ConfirmButton onClick={endActionEnabled ? onEndAction : undefined} disabled={!endActionEnabled}>
-            {phase === PHASE.SHOT ? "SHOT IN PROGRESS" : phase === PHASE.AI_WAIT ? `${opponentTeam.name.toUpperCase()} TAKING PENALTY` : endActionLabel}
+            {phase === PHASE.SHOT ? "SHOT IN PROGRESS" : phase === PHASE.AI_WAIT ? `${opponentTeam.name.toUpperCase()} SHOOTING` : endActionLabel}
           </ConfirmButton>
         </div>
       )}
