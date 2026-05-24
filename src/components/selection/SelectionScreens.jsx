@@ -174,6 +174,24 @@ function HomePitchBackdrop() {
   );
 }
 
+
+function HomeHostFlagStrip() {
+  const flags = [
+    { src: "/flags/CAN.png", alt: "Canada" },
+    { src: "/flags/MEX.png", alt: "Mexico" },
+    { src: "/flags/USA.png", alt: "United States" },
+  ];
+  return (
+    <div className="absolute inset-0 flex items-center justify-center gap-5">
+      {flags.map((flag) => (
+        <div key={flag.alt} className="flex h-[58%] aspect-[250/167] items-center justify-center overflow-hidden rounded-[0.35rem] border border-[#F5F1E8]/18 bg-[#F5F1E8] shadow-[0_5px_12px_rgba(0,0,0,0.28)]">
+          <img src={flag.src} alt={flag.alt} className="h-full w-full object-contain" draggable={false} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function HomeLedGroupsTicker() {
   const groupsTicker = GROUP_LETTERS.map((group) => ({ label: `GROUP ${group}:`, teams: GROUPS[group] || [] }));
   return (
@@ -218,6 +236,7 @@ function ScoreboardPlaceholder() {
 
       <div className="absolute inset-x-0 bottom-0 z-[2] h-[26%] bg-[#0B5F35] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]">
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(0,0,0,0.14)_100%)]" />
+        <HomeHostFlagStrip />
       </div>
 
       <div className="absolute inset-x-0 bottom-[26%] top-[26%] z-[3] flex items-center justify-center">
@@ -326,17 +345,16 @@ function LandingPanel({ onPlayGuest }) {
   if (authMode) return <AuthPanel mode={authMode} setMode={setAuthMode} onBack={() => setAuthMode(null)} />;
 
   return <div className="space-y-3">
-    <GreenCard>
-      <div className="text-center">
-        <div className="home-copy-regular whitespace-nowrap text-[24px] uppercase leading-none tracking-[-0.025em] text-[#F5F0E6]">
-          IF ONLY EVERYDAY WAS MONDAY
-        </div>
+    <div className="overflow-hidden rounded-[1.9rem] border border-[#0B5F35]/18 bg-[#F5F1E8] text-[#0B5F35] shadow-[0_18px_38px_rgba(0,0,0,0.24)]">
+      <div className="bg-[#0B5F35] px-5 py-5 text-center text-[#F5F1E8] shadow-[inset_0_-8px_16px_rgba(0,0,0,0.12)]">
+        <div className="home-copy-regular text-[11px] uppercase leading-none tracking-[0.22em] text-[#F5F1E8]/72">WELCOME TO</div>
+        <div className="home-copy-bold mt-2 text-[32px] uppercase leading-[0.86] tracking-[-0.025em] text-[#F5F1E8]">MONDAY CUP</div>
       </div>
-      <div className="mt-5 space-y-2.5">
-        <ActionButton onClick={onPlayGuest}>PLAY NOW</ActionButton>
-        <ActionButton onClick={() => setAuthMode("signin")} variant="account">CLUBHOUSE</ActionButton>
+      <div className="space-y-2.5 px-5 py-5">
+        <ActionButton onClick={onPlayGuest} variant="green">PLAY NOW</ActionButton>
+        <ActionButton onClick={() => setAuthMode("signin")} variant="green">CLUBHOUSE</ActionButton>
       </div>
-    </GreenCard>
+    </div>
   </div>;
 }
 
