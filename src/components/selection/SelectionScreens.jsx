@@ -313,9 +313,19 @@ function SavedCampaignCard({ summary, onContinue }) {
   </button>;
 }
 
-function HomeMenuShell({ children, className = "" }) {
+function HomeMenuShell({ children, className = "", onBack }) {
   return (
-    <div className={`overflow-hidden rounded-[1.9rem] border border-[#F5F1E8]/14 bg-[#0B5F35] text-[#F5F1E8] shadow-[0_18px_38px_rgba(0,0,0,0.24),inset_0_-10px_22px_rgba(0,0,0,0.18)] ${className}`}>
+    <div className={`relative overflow-hidden rounded-[1.9rem] border border-[#F5F1E8]/14 bg-[#0B5F35] text-[#F5F1E8] shadow-[0_18px_38px_rgba(0,0,0,0.24),inset_0_-10px_22px_rgba(0,0,0,0.18)] ${className}`}>
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[#F5F1E8]/30 bg-[#F5F1E8]/12 text-[#F5F1E8] shadow-[0_4px_12px_rgba(0,0,0,0.22)] active:scale-[0.98]"
+          aria-label="Back"
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5L8 12L15 19" /></svg>
+        </button>
+      )}
       <div className="px-5 py-5 shadow-[inset_0_10px_24px_rgba(255,255,255,0.035)]">
         {children}
       </div>
@@ -325,21 +335,28 @@ function HomeMenuShell({ children, className = "" }) {
 
 function FloatingHomeLogo() {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-[8%] z-[8] flex justify-center" aria-hidden="true">
-      <div className="relative flex h-[92px] w-[220px] items-center justify-center">
-        <div className="absolute inset-x-3 bottom-2 h-12 rounded-full bg-[#F7D117]/32 blur-2xl" />
-        <div className="absolute inset-x-6 bottom-3 h-10 rounded-full bg-[#F5F1E8]/28 blur-xl" />
-        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative z-10 h-[88px] w-auto object-contain drop-shadow-[0_8px_22px_rgba(0,0,0,0.42)]" draggable={false} />
+    <div className="pointer-events-none absolute inset-x-0 top-[5.5%] z-[8] flex justify-center" aria-hidden="true">
+      <div className="relative flex h-[184px] w-[440px] max-w-[92vw] items-center justify-center">
+        <div className="absolute inset-x-8 bottom-9 h-20 rounded-full bg-[#F7D117]/34 blur-3xl" />
+        <div className="absolute inset-x-14 bottom-11 h-16 rounded-full bg-[#F5F1E8]/30 blur-2xl" />
+        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative z-10 h-[176px] max-h-[18vh] w-auto object-contain drop-shadow-[0_12px_30px_rgba(0,0,0,0.48)]" draggable={false} />
       </div>
     </div>
   );
 }
 
-function AuthInput({ label, type = "text" }) {
+function AuthInput({ icon, type = "text", placeholder }) {
   return (
     <label className="block text-left">
-      <span className="home-copy-light mb-1 block text-[8px] uppercase tracking-[0.22em] text-[#F5F0E6]/58">{label}</span>
-      <input type={type} className="home-copy-regular h-11 w-full rounded-[1rem] border border-[#F5F0E6]/14 bg-[#F5F0E6]/92 px-4 text-[14px] uppercase tracking-[0.04em] text-[#0B5F35] outline-none placeholder:text-[#0B5F35]/30 focus:border-[#F7D117]" />
+      <span className="sr-only">{placeholder}</span>
+      <div className="relative">
+        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[18px] font-black leading-none text-[#0B5F35]/78">{icon}</span>
+        <input
+          type={type}
+          placeholder={placeholder}
+          className="home-copy-regular h-12 w-full rounded-[1rem] border border-[#F5F0E6]/18 bg-[#F5F0E6]/94 py-0 pl-12 pr-4 text-[14px] uppercase tracking-[0.04em] text-[#0B5F35] outline-none placeholder:text-[#0B5F35]/34 focus:border-[#F7D117]"
+        />
+      </div>
     </label>
   );
 }
@@ -347,14 +364,18 @@ function AuthInput({ label, type = "text" }) {
 function AuthPanel({ mode, setMode, onBack }) {
   const isRegister = mode === "register";
   return <div className="space-y-3">
-    <HomeMenuShell>
+    <HomeMenuShell onBack={onBack}>
       <div className="text-center">
-        <div className="home-copy-regular text-[27px] uppercase leading-[0.92] tracking-[-0.02em] text-[#F5F0E6]">{isRegister ? "REGISTER" : "CLUBHOUSE"}</div>
+        <div className="home-copy-bold text-[32px] uppercase leading-none tracking-[-0.02em] text-[#F5F1E8]">CLUBHOUSE</div>
+      </div>
+      <div className="mt-4 grid grid-cols-2 rounded-[1.15rem] border border-[#F5F1E8]/20 bg-[#072D1D]/42 p-1 shadow-inner">
+        <button type="button" onClick={() => setMode("signin")} className={`home-copy-bold h-10 rounded-[0.9rem] text-[14px] uppercase tracking-[0.05em] transition ${!isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN IN</button>
+        <button type="button" onClick={() => setMode("register")} className={`home-copy-bold h-10 rounded-[0.9rem] text-[14px] uppercase tracking-[0.05em] transition ${isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>REGISTER</button>
       </div>
       <form className="mt-4 space-y-2.5" onSubmit={(event) => event.preventDefault()}>
-        {isRegister && <AuthInput label="Username" />}
-        <AuthInput label="Email address" type="email" />
-        <AuthInput label="Password" type="password" />
+        {isRegister && <AuthInput icon="★" placeholder="Username" />}
+        <AuthInput icon="@" placeholder="Email address" type="email" />
+        <AuthInput icon="🔒" placeholder="Password" type="password" />
         {isRegister && (
           <label className="home-copy-light flex items-start gap-2 rounded-[0.9rem] bg-[#F5F0E6]/8 p-3 text-left text-[8px] uppercase leading-[1.25] tracking-[0.12em] text-[#F5F0E6]/62">
             <input type="checkbox" className="mt-[1px] h-4 w-4 shrink-0 accent-[#F7D117]" />
@@ -363,10 +384,6 @@ function AuthPanel({ mode, setMode, onBack }) {
         )}
         <ActionButton type="submit" variant="yellow">{isRegister ? "CREATE ACCOUNT" : "SIGN IN"}</ActionButton>
       </form>
-      <button type="button" onClick={() => setMode(isRegister ? "signin" : "register")} className="home-copy-light mt-3 w-full text-center text-[9px] uppercase tracking-[0.16em] text-[#F5F0E6]/64 underline-offset-4 active:scale-[0.99]">
-        {isRegister ? "Already a user? Sign in" : "Not already a user? Register"}
-      </button>
-      <button type="button" onClick={onBack} className="home-copy-light mt-2 w-full text-center text-[8px] uppercase tracking-[0.18em] text-[#F5F0E6]/45">Back</button>
     </HomeMenuShell>
   </div>;
 }
@@ -385,16 +402,17 @@ function LandingPanel({ onPlayGuest }) {
   </div>;
 }
 
-function HostPanel({ onSelectGroup, onSelectTeam }) {
-  return <HomeMenuShell>
-    <div className="mb-3 text-center text-[24px] home-copy-bold uppercase tracking-[-0.02em] text-[#F5F1E8]">HOST NATIONS</div>
+function HostPanel({ onSelectGroup, onSelectTeam, onBack }) {
+  return <HomeMenuShell onBack={onBack}>
+    <div className="mb-4 text-center text-[32px] home-copy-bold uppercase leading-none tracking-[-0.02em] text-[#F5F1E8]">CHOOSE YOUR TEAM</div>
     <div className="grid grid-cols-3 gap-2">
       {HOST_TEAMS.map((host) => {
         const theme = getTeamTheme(host.name);
-        return <button key={host.name} onClick={() => onSelectTeam(host.name, host.group)} className="h-[46px] rounded-[1rem] border border-[#F7D117]/60 shadow-[0_0_12px_rgba(247,209,23,0.10),inset_0_2px_8px_rgba(255,255,255,0.16)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-full items-center justify-center text-[20px] home-copy-bold tracking-[0.04em]">{host.code}</span></button>;
+        const label = host.name === "United States" ? "USA" : host.name;
+        return <button key={host.name} onClick={() => onSelectTeam(host.name, host.group)} className="h-[50px] rounded-[1rem] border-2 border-[#F5F1E8]/88 shadow-[0_0_12px_rgba(245,241,232,0.12),inset_0_2px_8px_rgba(255,255,255,0.16)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-full items-center justify-center text-[12px] home-copy-bold uppercase tracking-[0.04em]">{label}</span></button>;
       })}
     </div>
-    <button onClick={() => onSelectGroup("A")} className="mt-3 flex h-[72px] w-full items-center justify-between rounded-[1.15rem] border border-[#F7D117]/75 bg-[#F7D117] px-5 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.24),inset_0_2px_8px_rgba(255,255,255,0.22)] active:scale-[0.99]">
+    <button onClick={() => onSelectGroup("A")} className="mt-3 flex h-[72px] w-full items-center justify-between rounded-[1.15rem] border-2 border-[#F5F1E8]/88 bg-[#F7D117] px-5 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.24),inset_0_2px_8px_rgba(255,255,255,0.22)] active:scale-[0.99]">
       <div className="text-left"><div className="home-copy-bold text-[22px] uppercase leading-none tracking-[0.02em]">ALL 48 TEAMS</div><div className="home-copy-light mt-1 text-[8px] uppercase tracking-[0.18em] opacity-70">Unlock full tournament</div></div>
       <div className="home-copy-bold text-[18px] uppercase tracking-[0.04em]">£0.99</div>
     </button>
@@ -405,26 +423,29 @@ function ArrowButton({ direction, onClick }) {
   return <button onClick={onClick} className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F5F0E6] text-[#0B5F35]"><svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{direction === "left" ? <path d="M15 5L8 12L15 19" /> : <path d="M9 5L16 12L9 19" />}</svg></button>;
 }
 
-function TeamPanel({ group, onSelectGroup, onSelectTeam }) {
+function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
   const currentIndex = GROUP_LETTERS.indexOf(group);
   const previousGroup = () => onSelectGroup(GROUP_LETTERS[(currentIndex - 1 + GROUP_LETTERS.length) % GROUP_LETTERS.length]);
   const nextGroup = () => onSelectGroup(GROUP_LETTERS[(currentIndex + 1) % GROUP_LETTERS.length]);
-  return <HomeMenuShell>
+  return <HomeMenuShell onBack={onBack}>
     <div className="mb-3 flex items-center justify-between">
       <ArrowButton direction="left" onClick={previousGroup} />
-      <div className="home-copy-bold text-[24px] uppercase tracking-[-0.02em] text-[#F5F1E8]">GROUP {group}</div>
+      <div className="home-copy-bold text-[28px] uppercase tracking-[-0.02em] text-[#F5F1E8]">GROUP {group}</div>
       <ArrowButton direction="right" onClick={nextGroup} />
     </div>
     <div className="grid gap-2">
-      {GROUPS[group].map((name) => <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[42px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] border border-[#F7D117]/28 bg-[#F7D117] px-4 text-left text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.12),inset_0_2px_8px_rgba(255,255,255,0.18)] active:scale-[0.99]"><Flag team={name} className="h-5 w-7" /><span className="home-copy-bold truncate text-center text-[15px] uppercase tracking-[-0.01em]">{name}</span><span className="home-copy-bold text-right text-[11px] tabular-nums tracking-[0.06em] opacity-55">#{TEAM_RANK[name]}</span></button>)}
+      {GROUPS[group].map((name) => {
+        const theme = getTeamTheme(name);
+        return <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[42px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] border-2 border-[#F5F1E8]/88 px-4 text-left shadow-[0_0_10px_rgba(245,241,232,0.10),inset_0_2px_8px_rgba(255,255,255,0.16)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><Flag team={name} className="h-5 w-7" /><span className="home-copy-bold truncate text-center text-[15px] uppercase tracking-[-0.01em]">{name}</span><span className="home-copy-bold text-right text-[11px] tabular-nums tracking-[0.06em] opacity-65">#{TEAM_RANK[name]}</span></button>;
+      })}
     </div>
   </HomeMenuShell>;
 }
 
 export function HomeScreen({ onSelectGroup, onSelectTeam }) {
   const [homeMode, setHomeMode] = useState("landing");
-  if (homeMode === "hosts") return <HomeLayout><HostPanel onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>;
+  if (homeMode === "hosts") return <HomeLayout><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>;
   return <HomeLayout><LandingPanel onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
 }
 export function HostSelectScreen(props) { return <HomeLayout><HostPanel {...props} /></HomeLayout>; }
-export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam }) { return <HomeLayout><TeamPanel group={selectedGroup} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>; }
+export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam, onBack }) { return <HomeLayout><TeamPanel group={selectedGroup} onBack={onBack} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>; }
