@@ -325,7 +325,7 @@ function AuthPanel({ mode, setMode, onBack }) {
   </div>;
 }
 
-function LandingPanel({ onPlayGuest }) {
+function LandingPanel({ onPlayNow }) {
   const [authMode, setAuthMode] = useState(null);
   if (authMode) return <AuthPanel mode={authMode} setMode={setAuthMode} onBack={() => setAuthMode(null)} />;
 
@@ -337,7 +337,7 @@ function LandingPanel({ onPlayGuest }) {
         </div>
       </div>
       <div className="mt-5 space-y-2.5">
-        <ActionButton onClick={onPlayGuest}>PLAY NOW</ActionButton>
+        <ActionButton onClick={onPlayNow}>PLAY NOW</ActionButton>
         <ActionButton onClick={() => setAuthMode("signin")} variant="account">CLUBHOUSE</ActionButton>
       </div>
     </GreenCard>
@@ -345,7 +345,14 @@ function LandingPanel({ onPlayGuest }) {
 }
 
 function HostPanel({ onSelectGroup, onSelectTeam }) {
-  return <GreenCard><div className="mb-2 text-center text-[22px] font-black uppercase tracking-[-0.02em]">HOST NATIONS</div><div className="grid grid-cols-3 gap-2">{HOST_TEAMS.map((host) => { const theme = getTeamTheme(host.name); return <button key={host.name} onClick={() => onSelectTeam(host.name, host.group)} className="h-[38px] rounded-[1rem] shadow-inner" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-full items-center justify-center text-[18px] font-black tracking-[0.04em]">{host.code}</span></button>; })}</div><button onClick={() => onSelectGroup("A")} className="mt-3 flex h-[96px] w-full items-center justify-center rounded-[1.15rem] border-[2px] border-[#D4AF37] bg-[#F5F0E6] px-4 text-[#0B5F35] shadow-inner"><div className="text-center"><div className="text-[9px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/45">UNLOCK THE FULL TOURNAMENT</div><div className="mt-2 text-[20px] font-black uppercase leading-[0.9] tracking-[-0.02em]">ALL 48 TEAMS</div><div className="mt-2 inline-flex rounded-full bg-[#0B5F35] px-4 py-1.5 text-[12px] font-black uppercase tracking-[0.08em] text-[#F5F0E6]">£2.99</div></div></button></GreenCard>;
+  const chooseHost = (host) => {
+    if (typeof onSelectTeam === "function") onSelectTeam(host.name, host.group);
+  };
+  const openFullTeamSelect = () => {
+    if (typeof onSelectGroup === "function") onSelectGroup("A");
+  };
+
+  return <GreenCard><div className="mb-2 text-center text-[22px] font-black uppercase tracking-[-0.02em]">HOST NATIONS</div><div className="grid grid-cols-3 gap-2">{HOST_TEAMS.map((host) => { const theme = getTeamTheme(host.name); return <button type="button" key={host.name} onClick={() => chooseHost(host)} className="h-[38px] rounded-[1rem] shadow-inner active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-full items-center justify-center text-[18px] font-black tracking-[0.04em]">{host.code}</span></button>; })}</div><button type="button" onClick={openFullTeamSelect} className="mt-3 flex h-[96px] w-full items-center justify-center rounded-[1.15rem] border-[2px] border-[#D4AF37] bg-[#F5F0E6] px-4 text-[#0B5F35] shadow-inner active:scale-[0.99]"><div className="text-center"><div className="text-[9px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/45">UNLOCK THE FULL TOURNAMENT</div><div className="mt-2 text-[20px] font-black uppercase leading-[0.9] tracking-[-0.02em]">ALL 48 TEAMS</div><div className="mt-2 inline-flex rounded-full bg-[#0B5F35] px-4 py-1.5 text-[12px] font-black uppercase tracking-[0.08em] text-[#F5F0E6]">£2.99</div></div></button></GreenCard>;
 }
 
 function ArrowButton({ direction, onClick }) {
@@ -362,7 +369,7 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam }) {
 export function HomeScreen({ onSelectGroup, onSelectTeam }) {
   const [homeMode, setHomeMode] = useState("landing");
   if (homeMode === "hosts") return <HomeLayout><HostPanel onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>;
-  return <HomeLayout><LandingPanel onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
+  return <HomeLayout><LandingPanel onPlayNow={() => setHomeMode("hosts")} /></HomeLayout>;
 }
 export function HostSelectScreen(props) { return <SelectionLayout><HostPanel {...props} /></SelectionLayout>; }
 export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam }) { return <SelectionLayout><TeamPanel group={selectedGroup} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></SelectionLayout>; }
