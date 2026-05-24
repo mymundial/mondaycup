@@ -181,7 +181,7 @@ function HomeLedGroupsTicker() {
       <style>{`
         @keyframes homeLedTickerScroll {
           0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+          100% { transform: translateX(-33.3333%); }
         }
         .home-led-ticker-track { animation: homeLedTickerScroll 78s linear infinite; }
       `}</style>
@@ -189,7 +189,7 @@ function HomeLedGroupsTicker() {
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(36,168,87,0.18),rgba(255,255,255,0.04),rgba(36,168,87,0.18))]" />
       <div className="relative flex h-full items-center overflow-hidden">
         <div className="home-led-ticker-track flex w-max items-center whitespace-nowrap will-change-transform">
-          {[0, 1].map((copy) => (
+          {[0, 1, 2].map((copy) => (
             <div key={copy} className="flex shrink-0 items-center pr-12">
               {groupsTicker.map(({ label, teams }) => (
                 <span key={`${copy}-${label}`} className="font-led flex items-center text-[clamp(9px,1.35vh,15px)] uppercase tracking-[0.18em] text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]">
@@ -221,9 +221,7 @@ function ScoreboardPlaceholder() {
       </div>
 
       <div className="absolute inset-x-0 bottom-[26%] top-[26%] z-[3] flex items-center justify-center">
-        <div className="absolute h-[clamp(120px,24vh,248px)] w-[clamp(120px,24vh,248px)] rounded-full bg-[#F5F1E8]/42 blur-3xl" />
-        <div className="absolute h-[clamp(92px,18vh,190px)] w-[clamp(92px,18vh,190px)] rounded-full bg-[#F5F1E8]/28 blur-xl" />
-        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative h-[86%] max-h-[150%] w-auto object-contain drop-shadow-[0_0_20px_rgba(245,241,232,0.58)] drop-shadow-[0_8px_16px_rgba(0,0,0,0.58)]" draggable={false} />
+        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative h-[86%] max-h-[150%] w-auto object-contain" draggable={false} />
       </div>
     </div>
   );
@@ -343,7 +341,7 @@ function LandingPanel({ onPlayGuest }) {
 }
 
 function HostPanel({ onSelectGroup, onSelectTeam }) {
-  return <GreenCard><div className="mb-2 text-center text-[22px] font-black uppercase tracking-[-0.02em]">HOST NATIONS</div><div className="grid grid-cols-3 gap-2">{HOST_TEAMS.map((host) => { const theme = getTeamTheme(host.name); return <button key={host.name} onClick={() => onSelectTeam(host.name, host.group)} className="h-[38px] rounded-[1rem] shadow-inner" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-full items-center justify-center text-[18px] font-black tracking-[0.04em]">{host.code}</span></button>; })}</div><button onClick={() => onSelectGroup("A")} className="mt-3 flex h-[96px] w-full items-center justify-center rounded-[1.15rem] border-[2px] border-[#D4AF37] bg-[#F5F0E6] px-4 text-[#0B5F35] shadow-inner"><div className="text-center"><div className="text-[9px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/45">UNLOCK THE FULL TOURNAMENT</div><div className="mt-2 text-[20px] font-black uppercase leading-[0.9] tracking-[-0.02em]">ALL 48 TEAMS</div><div className="mt-2 inline-flex rounded-full bg-[#0B5F35] px-4 py-1.5 text-[12px] font-black uppercase tracking-[0.08em] text-[#F5F0E6]">£2.99</div></div></button></GreenCard>;
+  return <GreenCard><div className="mb-2 text-center text-[22px] font-black uppercase tracking-[-0.02em]">HOST NATIONS</div><div className="grid grid-cols-3 gap-2">{HOST_TEAMS.map((host) => { const theme = getTeamTheme(host.name); return <button key={host.name} onClick={() => onSelectTeam(host.name, host.group)} className="h-[38px] rounded-[1rem] shadow-inner" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-full items-center justify-center text-[18px] font-black tracking-[0.04em]">{host.code}</span></button>; })}</div><button onClick={() => onSelectGroup("A")} className="mt-3 flex h-[96px] w-full items-center justify-center rounded-[1.15rem] border-[2px] border-[#D4AF37] bg-[#F5F0E6] px-4 text-[#0B5F35] shadow-inner"><div className="text-center"><div className="text-[9px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/45">UNLOCK THE FULL TOURNAMENT</div><div className="mt-2 text-[20px] font-black uppercase leading-[0.9] tracking-[-0.02em]">ALL 48 TEAMS</div><div className="mt-2 inline-flex rounded-full bg-[#0B5F35] px-4 py-1.5 text-[12px] font-black uppercase tracking-[0.08em] text-[#F5F0E6]">£0.99</div></div></button></GreenCard>;
 }
 
 function ArrowButton({ direction, onClick }) {
