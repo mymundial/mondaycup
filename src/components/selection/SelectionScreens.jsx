@@ -224,28 +224,46 @@ function HomeLedGroupsTicker() {
   );
 }
 
-function ScoreboardPlaceholder() {
-  const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
+function HomeMenuBar() {
   return (
-    <div className="relative z-[1] shrink-0 overflow-hidden bg-[#050505]" style={{ height: headerHeight }} aria-hidden="true">
-      <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.20) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.24))]" />
-
-      <HomeLedGroupsTicker />
-
-      <div className="absolute inset-x-0 bottom-0 z-[2] h-[26%] bg-[#0B5F35] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(0,0,0,0.14)_100%)]" />
-        <HomeHostFlagStrip />
+    <div className="relative z-[3] flex h-[54px] shrink-0 items-center justify-between bg-[#F5F1E8] px-6 text-[#0B5F35] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+      <div className="flex h-full w-[54px] items-center justify-start">
+        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[42px] w-auto object-contain" draggable={false} />
       </div>
-
-      <div className="absolute inset-x-0 bottom-[26%] top-[26%] z-[3] flex items-center justify-center">
-        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative h-[86%] max-h-[150%] w-auto object-contain" draggable={false} />
-      </div>
+      <div className="home-copy-bold text-center text-[25px] uppercase leading-none tracking-[-0.02em] text-[#0B5F35]">MONDAY CUP</div>
+      <button type="button" className="flex h-[42px] w-[42px] items-center justify-center rounded-[0.95rem] bg-[#0B5F35] text-[#F5F1E8] shadow-inner" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true">
+          <path d="M5 7h14" />
+          <path d="M5 12h14" />
+          <path d="M5 17h14" />
+        </svg>
+      </button>
     </div>
   );
 }
 
+function ScoreboardPlaceholder() {
+  const scoreboardHeight = "calc((100dvh - 54px) * 0.165)";
+  return (
+    <div className="relative z-[1] shrink-0 overflow-hidden bg-[#050505]" style={{ height: `calc(54px + ${scoreboardHeight})` }} aria-hidden="true">
+      <HomeMenuBar />
+      <div className="relative overflow-hidden bg-[#050505]" style={{ height: scoreboardHeight }}>
+        <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.20) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.24))]" />
+
+        <div className="absolute inset-x-0 bottom-0 z-[2] h-[36%] bg-[#0B5F35] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]">
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(0,0,0,0.14)_100%)]" />
+          <HomeHostFlagStrip />
+        </div>
+
+        <div className="absolute inset-x-0 bottom-[36%] top-0 z-[3] flex items-center justify-center">
+          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative h-[82%] w-auto object-contain" draggable={false} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function HomeFooter() {
   return (
@@ -347,8 +365,7 @@ function LandingPanel({ onPlayGuest }) {
   return <div className="space-y-3">
     <div className="overflow-hidden rounded-[1.9rem] border border-[#0B5F35]/18 bg-[#F5F1E8] text-[#0B5F35] shadow-[0_18px_38px_rgba(0,0,0,0.24)]">
       <div className="bg-[#0B5F35] px-5 py-5 text-center text-[#F5F1E8] shadow-[inset_0_-8px_16px_rgba(0,0,0,0.12)]">
-        <div className="home-copy-regular text-[11px] uppercase leading-none tracking-[0.22em] text-[#F5F1E8]/72">WELCOME TO</div>
-        <div className="home-copy-bold mt-2 text-[32px] uppercase leading-[0.86] tracking-[-0.025em] text-[#F5F1E8]">MONDAY CUP</div>
+        <div className="home-copy-bold text-[34px] uppercase leading-[0.86] tracking-[-0.025em] text-[#F5F1E8]">MONDAY CUP</div>
       </div>
       <div className="space-y-2.5 px-5 py-5">
         <ActionButton onClick={onPlayGuest} variant="green">PLAY NOW</ActionButton>
