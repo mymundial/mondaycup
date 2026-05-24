@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { HOST_TEAMS, GROUPS, GROUP_LETTERS, TEAM_RANK, getTeamTheme } from "../../data/teams.js";
 import { ASSETS } from "../../data/assets.js";
-import { DEFAULT_ASSETS, GAME } from "../../logic/penaltyEngine.js";
 import { Flag } from "../shared.jsx";
 import { GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
+
+const GAME = {
+  goal: { left: 10, top: 8, width: 80, height: 30 },
+  spot: { x: 50, y: 54.5 },
+};
 
 
 function HomeCrowdPerson({ x, y, scale = 1, shirt = "#0d6c3d", skin = "#c98f65", pose = "down", opacity = 1 }) {
@@ -140,7 +144,7 @@ function HomeLedAdvertisingHoard() {
       <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(36,168,87,0.16),rgba(255,255,255,0.04),rgba(36,168,87,0.16))]" />
       <div className="relative flex h-full items-center justify-center">
-        <img src={DEFAULT_ASSETS.logo} alt="myMUNDIAL" className="h-[72%] max-w-[82%] object-contain opacity-95 drop-shadow-[0_0_8px_rgba(245,241,232,0.58)]" draggable={false} />
+        <img src={ASSETS.myMundialLogo} alt="myMUNDIAL" className="h-[72%] max-w-[82%] object-contain opacity-95 drop-shadow-[0_0_8px_rgba(245,241,232,0.58)]" draggable={false} />
       </div>
     </div>
   );
@@ -158,9 +162,10 @@ function HomeGoalFrame() {
 function HomePitchBackdrop() {
   const goalLine = GAME.goal.top + GAME.goal.height;
   return (
-    <div className="absolute inset-0 overflow-hidden bg-transparent">
+    <div className="absolute inset-0 overflow-hidden bg-[#0d6c3d]">
+      <HomeCrowdBackdrop />
       <HomeLedAdvertisingHoard />
-      <div className="absolute bottom-0 left-0 right-0 bg-[#0d6c3d]" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
+      <div className="absolute bottom-0 left-0 right-0" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
       <div className="pointer-events-none absolute z-[3] rounded-b-[999px] border-b-[8px] border-l-[8px] border-r-[8px] border-[#f5f1e8]" style={{ left: "5%", top: `${goalLine}%`, width: "90%", height: "24.2%" }} />
       <HomeGoalFrame />
@@ -169,22 +174,10 @@ function HomePitchBackdrop() {
   );
 }
 
-function ScoreboardPlaceholder() {
-  const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
-  return <div className="relative z-[1] shrink-0" style={{ height: headerHeight }} aria-hidden="true" />;
-}
-
-
-function HomeTopLedAdvertisingHoard() {
-  const mainHeight = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
-  const boardHeight = `calc(${mainHeight} * 0.08)`;
-  const groupsTicker = GROUP_LETTERS.map((group) => ({
-    label: `GROUP ${group}:`,
-    teams: GROUPS[group] || [],
-  }));
-
+function HomeLedGroupsTicker() {
+  const groupsTicker = GROUP_LETTERS.map((group) => ({ label: `GROUP ${group}:`, teams: GROUPS[group] || [] }));
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-[3] overflow-hidden border-b border-[#2d2d2d] bg-[#050505] shadow-[0_6px_16px_rgba(0,0,0,0.36)]" style={{ height: boardHeight }} aria-hidden="true">
+    <div className="absolute inset-x-0 bottom-0 z-[2] h-[26%] overflow-hidden bg-[#050505]">
       <style>{`
         @keyframes homeLedTickerScroll {
           0% { transform: translateX(0); }
@@ -193,7 +186,7 @@ function HomeTopLedAdvertisingHoard() {
         .home-led-ticker-track { animation: homeLedTickerScroll 78s linear infinite; }
       `}</style>
       <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(36,168,87,0.20),rgba(255,255,255,0.04),rgba(36,168,87,0.20))]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(36,168,87,0.18),rgba(255,255,255,0.04),rgba(36,168,87,0.18))]" />
       <div className="relative flex h-full items-center overflow-hidden">
         <div className="home-led-ticker-track flex w-max items-center whitespace-nowrap will-change-transform">
           {[0, 1].map((copy) => (
@@ -213,17 +206,19 @@ function HomeTopLedAdvertisingHoard() {
   );
 }
 
-
-function HomeCentreLogoOverlay() {
+function ScoreboardPlaceholder() {
   const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
-  const mainHeight = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
-  const topLedHeight = `calc(${mainHeight} * 0.08)`;
-  const crossbarTop = `calc(${headerHeight} + (${mainHeight} * ${GAME.goal.top / 100}))`;
   return (
-    <div className="pointer-events-none absolute inset-x-0 z-[2] flex items-center justify-center" style={{ top: topLedHeight, height: `calc(${crossbarTop} - ${topLedHeight})` }} aria-hidden="true">
-      <div className="absolute h-[clamp(120px,24vh,248px)] w-[clamp(120px,24vh,248px)] rounded-full bg-[#F5F1E8]/42 blur-3xl" />
-      <div className="absolute h-[clamp(92px,18vh,190px)] w-[clamp(92px,18vh,190px)] rounded-full bg-[#F5F1E8]/28 blur-xl" />
-      <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative h-[clamp(89px,16.5vh,182px)] w-auto object-contain drop-shadow-[0_0_20px_rgba(245,241,232,0.58)] drop-shadow-[0_8px_16px_rgba(0,0,0,0.58)]" draggable={false} />
+    <div className="relative z-[1] shrink-0 overflow-hidden bg-[#050505]" style={{ height: headerHeight }} aria-hidden="true">
+      <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.20) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.24))]" />
+      <div className="absolute inset-x-0 top-0 bottom-[26%] flex items-center justify-center">
+        <div className="absolute h-[clamp(120px,24vh,248px)] w-[clamp(120px,24vh,248px)] rounded-full bg-[#F5F1E8]/42 blur-3xl" />
+        <div className="absolute h-[clamp(92px,18vh,190px)] w-[clamp(92px,18vh,190px)] rounded-full bg-[#F5F1E8]/28 blur-xl" />
+        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative h-[72%] max-h-[150%] w-auto object-contain drop-shadow-[0_0_20px_rgba(245,241,232,0.58)] drop-shadow-[0_8px_16px_rgba(0,0,0,0.58)]" draggable={false} />
+      </div>
+      <HomeLedGroupsTicker />
     </div>
   );
 }
@@ -240,10 +235,7 @@ function HomeFooter() {
 function HomeLayout({ children }) {
   return (
     <Shell>
-      <div className="home-main-font relative flex h-[100dvh] flex-col overflow-hidden bg-[#123822] text-[#072D1D]">
-        <HomeUnifiedCrowdBackdrop />
-        <HomeTopLedAdvertisingHoard />
-        <HomeCentreLogoOverlay />
+      <div className="home-main-font relative flex h-[100dvh] flex-col overflow-hidden bg-[#0d6c3d] text-[#072D1D]">
         <ScoreboardPlaceholder />
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
@@ -325,7 +317,7 @@ function AuthPanel({ mode, setMode, onBack }) {
   </div>;
 }
 
-function LandingPanel({ onPlayNow }) {
+function LandingPanel({ onPlayGuest }) {
   const [authMode, setAuthMode] = useState(null);
   if (authMode) return <AuthPanel mode={authMode} setMode={setAuthMode} onBack={() => setAuthMode(null)} />;
 
@@ -337,7 +329,7 @@ function LandingPanel({ onPlayNow }) {
         </div>
       </div>
       <div className="mt-5 space-y-2.5">
-        <ActionButton onClick={onPlayNow}>PLAY NOW</ActionButton>
+        <ActionButton onClick={onPlayGuest}>PLAY NOW</ActionButton>
         <ActionButton onClick={() => setAuthMode("signin")} variant="account">CLUBHOUSE</ActionButton>
       </div>
     </GreenCard>
@@ -345,14 +337,7 @@ function LandingPanel({ onPlayNow }) {
 }
 
 function HostPanel({ onSelectGroup, onSelectTeam }) {
-  const chooseHost = (host) => {
-    if (typeof onSelectTeam === "function") onSelectTeam(host.name, host.group);
-  };
-  const openFullTeamSelect = () => {
-    if (typeof onSelectGroup === "function") onSelectGroup("A");
-  };
-
-  return <GreenCard><div className="mb-2 text-center text-[22px] font-black uppercase tracking-[-0.02em]">HOST NATIONS</div><div className="grid grid-cols-3 gap-2">{HOST_TEAMS.map((host) => { const theme = getTeamTheme(host.name); return <button type="button" key={host.name} onClick={() => chooseHost(host)} className="h-[38px] rounded-[1rem] shadow-inner active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-full items-center justify-center text-[18px] font-black tracking-[0.04em]">{host.code}</span></button>; })}</div><button type="button" onClick={openFullTeamSelect} className="mt-3 flex h-[96px] w-full items-center justify-center rounded-[1.15rem] border-[2px] border-[#D4AF37] bg-[#F5F0E6] px-4 text-[#0B5F35] shadow-inner active:scale-[0.99]"><div className="text-center"><div className="text-[9px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/45">UNLOCK THE FULL TOURNAMENT</div><div className="mt-2 text-[20px] font-black uppercase leading-[0.9] tracking-[-0.02em]">ALL 48 TEAMS</div><div className="mt-2 inline-flex rounded-full bg-[#0B5F35] px-4 py-1.5 text-[12px] font-black uppercase tracking-[0.08em] text-[#F5F0E6]">£2.99</div></div></button></GreenCard>;
+  return <GreenCard><div className="mb-2 text-center text-[22px] font-black uppercase tracking-[-0.02em]">HOST NATIONS</div><div className="grid grid-cols-3 gap-2">{HOST_TEAMS.map((host) => { const theme = getTeamTheme(host.name); return <button key={host.name} onClick={() => onSelectTeam(host.name, host.group)} className="h-[38px] rounded-[1rem] shadow-inner" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-full items-center justify-center text-[18px] font-black tracking-[0.04em]">{host.code}</span></button>; })}</div><button onClick={() => onSelectGroup("A")} className="mt-3 flex h-[96px] w-full items-center justify-center rounded-[1.15rem] border-[2px] border-[#D4AF37] bg-[#F5F0E6] px-4 text-[#0B5F35] shadow-inner"><div className="text-center"><div className="text-[9px] font-black uppercase tracking-[0.22em] text-[#0B5F35]/45">UNLOCK THE FULL TOURNAMENT</div><div className="mt-2 text-[20px] font-black uppercase leading-[0.9] tracking-[-0.02em]">ALL 48 TEAMS</div><div className="mt-2 inline-flex rounded-full bg-[#0B5F35] px-4 py-1.5 text-[12px] font-black uppercase tracking-[0.08em] text-[#F5F0E6]">£2.99</div></div></button></GreenCard>;
 }
 
 function ArrowButton({ direction, onClick }) {
@@ -369,7 +354,7 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam }) {
 export function HomeScreen({ onSelectGroup, onSelectTeam }) {
   const [homeMode, setHomeMode] = useState("landing");
   if (homeMode === "hosts") return <HomeLayout><HostPanel onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>;
-  return <HomeLayout><LandingPanel onPlayNow={() => setHomeMode("hosts")} /></HomeLayout>;
+  return <HomeLayout><LandingPanel onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
 }
 export function HostSelectScreen(props) { return <SelectionLayout><HostPanel {...props} /></SelectionLayout>; }
 export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam }) { return <SelectionLayout><TeamPanel group={selectedGroup} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></SelectionLayout>; }
