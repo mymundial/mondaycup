@@ -177,7 +177,7 @@ function HomePitchBackdrop() {
 function HomeLedGroupsTicker() {
   const groupsTicker = GROUP_LETTERS.map((group) => ({ label: `GROUP ${group}:`, teams: GROUPS[group] || [] }));
   return (
-    <div className="absolute inset-x-0 bottom-0 z-[2] h-[26%] overflow-hidden bg-[#050505]">
+    <div className="absolute inset-x-0 top-0 z-[2] h-[26%] overflow-hidden bg-[#050505]">
       <style>{`
         @keyframes homeLedTickerScroll {
           0% { transform: translateX(0); }
@@ -213,12 +213,18 @@ function ScoreboardPlaceholder() {
       <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.20) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.24))]" />
-      <div className="absolute inset-x-0 top-0 bottom-[26%] flex items-center justify-center">
+
+      <HomeLedGroupsTicker />
+
+      <div className="absolute inset-x-0 bottom-0 z-[2] h-[26%] bg-[#0B5F35] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(0,0,0,0.14)_100%)]" />
+      </div>
+
+      <div className="absolute inset-x-0 bottom-[26%] top-[26%] z-[3] flex items-center justify-center">
         <div className="absolute h-[clamp(120px,24vh,248px)] w-[clamp(120px,24vh,248px)] rounded-full bg-[#F5F1E8]/42 blur-3xl" />
         <div className="absolute h-[clamp(92px,18vh,190px)] w-[clamp(92px,18vh,190px)] rounded-full bg-[#F5F1E8]/28 blur-xl" />
-        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative h-[72%] max-h-[150%] w-auto object-contain drop-shadow-[0_0_20px_rgba(245,241,232,0.58)] drop-shadow-[0_8px_16px_rgba(0,0,0,0.58)]" draggable={false} />
+        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative h-[86%] max-h-[150%] w-auto object-contain drop-shadow-[0_0_20px_rgba(245,241,232,0.58)] drop-shadow-[0_8px_16px_rgba(0,0,0,0.58)]" draggable={false} />
       </div>
-      <HomeLedGroupsTicker />
     </div>
   );
 }
