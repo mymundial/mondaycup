@@ -271,6 +271,7 @@ function HomeLayout({ children }) {
         <ScoreboardPlaceholder />
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
+          <FloatingHomeLogo />
           <div className="relative z-10 flex h-full flex-col px-5 pb-0 pt-4">
             <div className="flex min-h-0 flex-1 flex-col justify-center py-2">
               {children}
@@ -322,11 +323,14 @@ function HomeMenuShell({ children, className = "" }) {
   );
 }
 
-function MenuLogo() {
+function FloatingHomeLogo() {
   return (
-    <div className="relative mb-4 flex items-center justify-center">
-      <div className="absolute bottom-0 h-8 w-36 rounded-full bg-[#F5F1E8]/18 blur-xl" />
-      <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative z-10 h-[92px] w-auto object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.34)]" draggable={false} />
+    <div className="pointer-events-none absolute inset-x-0 top-[8%] z-[8] flex justify-center" aria-hidden="true">
+      <div className="relative flex h-[92px] w-[220px] items-center justify-center">
+        <div className="absolute inset-x-3 bottom-2 h-12 rounded-full bg-[#F7D117]/32 blur-2xl" />
+        <div className="absolute inset-x-6 bottom-3 h-10 rounded-full bg-[#F5F1E8]/28 blur-xl" />
+        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative z-10 h-[88px] w-auto object-contain drop-shadow-[0_8px_22px_rgba(0,0,0,0.42)]" draggable={false} />
+      </div>
     </div>
   );
 }
@@ -344,7 +348,6 @@ function AuthPanel({ mode, setMode, onBack }) {
   const isRegister = mode === "register";
   return <div className="space-y-3">
     <HomeMenuShell>
-      <MenuLogo />
       <div className="text-center">
         <div className="home-copy-regular text-[27px] uppercase leading-[0.92] tracking-[-0.02em] text-[#F5F0E6]">{isRegister ? "REGISTER" : "CLUBHOUSE"}</div>
       </div>
@@ -374,7 +377,6 @@ function LandingPanel({ onPlayGuest }) {
 
   return <div className="space-y-3">
     <HomeMenuShell>
-      <MenuLogo />
       <div className="space-y-2.5">
         <ActionButton onClick={onPlayGuest} variant="yellow">PLAY NOW</ActionButton>
         <ActionButton onClick={() => setAuthMode("signin")} variant="yellow">CLUBHOUSE</ActionButton>
@@ -385,7 +387,6 @@ function LandingPanel({ onPlayGuest }) {
 
 function HostPanel({ onSelectGroup, onSelectTeam }) {
   return <HomeMenuShell>
-    <MenuLogo />
     <div className="mb-3 text-center text-[24px] home-copy-bold uppercase tracking-[-0.02em] text-[#F5F1E8]">HOST NATIONS</div>
     <div className="grid grid-cols-3 gap-2">
       {HOST_TEAMS.map((host) => {
@@ -409,7 +410,6 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam }) {
   const previousGroup = () => onSelectGroup(GROUP_LETTERS[(currentIndex - 1 + GROUP_LETTERS.length) % GROUP_LETTERS.length]);
   const nextGroup = () => onSelectGroup(GROUP_LETTERS[(currentIndex + 1) % GROUP_LETTERS.length]);
   return <HomeMenuShell>
-    <MenuLogo />
     <div className="mb-3 flex items-center justify-between">
       <ArrowButton direction="left" onClick={previousGroup} />
       <div className="home-copy-bold text-[24px] uppercase tracking-[-0.02em] text-[#F5F1E8]">GROUP {group}</div>
