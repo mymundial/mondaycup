@@ -181,16 +181,16 @@ function HomeLedGroupsTicker() {
       <style>{`
         @keyframes homeLedTickerScroll {
           0% { transform: translateX(0); }
-          100% { transform: translateX(-33.3333%); }
+          100% { transform: translateX(-12.5%); }
         }
-        .home-led-ticker-track { animation: homeLedTickerScroll 78s linear infinite; }
+        .home-led-ticker-track { animation: homeLedTickerScroll 156s linear infinite; }
       `}</style>
       <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(36,168,87,0.18),rgba(255,255,255,0.04),rgba(36,168,87,0.18))]" />
       <div className="relative flex h-full items-center overflow-hidden">
         <div className="home-led-ticker-track flex w-max items-center whitespace-nowrap will-change-transform">
-          {[0, 1, 2].map((copy) => (
-            <div key={copy} className="flex shrink-0 items-center pr-12">
+          {Array.from({ length: 8 }).map((_, copy) => (
+            <div key={copy} className="flex min-w-max shrink-0 items-center pr-24">
               {groupsTicker.map(({ label, teams }) => (
                 <span key={`${copy}-${label}`} className="font-led flex items-center text-[clamp(9px,1.35vh,15px)] uppercase tracking-[0.18em] text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]">
                   <span className="mx-4 text-[#F7D117]">{label}</span>

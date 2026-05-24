@@ -397,12 +397,12 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
           {stageLabel || "GROUP STAGE"}
         </div>
         <div className="h-[52%] px-[3.5%] pt-[1%]">
-          <div className="grid h-full grid-cols-[11%_minmax(62px,1fr)_30px_12px_30px_minmax(62px,1fr)_11%] grid-rows-[58%_42%] items-center">
+          <div className="grid h-full grid-cols-[11%_minmax(58px,1fr)_38px_26px_38px_minmax(58px,1fr)_11%] grid-rows-[58%_42%] items-center">
             <div className="col-start-1 row-start-1 flex items-center justify-center"><TeamFlag team={userTeam} className="h-4 w-6" /></div>
             <div className="col-start-2 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">{userTeam.code}</div></div>
-            <div className="led-text-glow font-led col-start-3 row-start-1 flex items-center justify-center text-[clamp(18px,3.25vh,36px)] font-black leading-none tracking-tight text-[#F7D117] tabular-nums">{score.user}</div>
-            <div className="led-text-glow font-led col-start-4 row-start-1 flex items-center justify-center text-[clamp(18px,3.25vh,36px)] font-black leading-none tracking-tight text-[#F7D117]">-</div>
-            <div className="led-text-glow font-led col-start-5 row-start-1 flex items-center justify-center text-[clamp(18px,3.25vh,36px)] font-black leading-none tracking-tight text-[#F7D117] tabular-nums">{score.opponent}</div>
+            <div className="led-text-glow font-led col-start-3 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.user}</div>
+            <div className="led-text-glow font-led col-start-4 row-start-1 flex items-center justify-center px-[4px] text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117]">-</div>
+            <div className="led-text-glow font-led col-start-5 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.opponent}</div>
             <div className="col-start-6 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">{opponentTeam.code}</div></div>
             <div className="col-start-7 row-start-1 flex items-center justify-center"><TeamFlag team={opponentTeam} className="h-4 w-6" /></div>
             <div className="col-start-2 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><PenaltyMarkers attempts={attempts.user} totalSlots={totalMarkerSlots} /></div></div>
