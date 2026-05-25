@@ -311,8 +311,8 @@ function HomeLedGroupsTicker() {
 
 function HomeMenuBar() {
   return (
-    <div className="relative z-[3] flex h-[54px] shrink-0 items-center justify-center bg-[#F5F1E8] px-6 text-[#0B5F35] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-      <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-[46px] w-auto object-contain" draggable={false} />
+    <div className="relative z-[3] flex h-[54px] shrink-0 items-center justify-center bg-[#062817] px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+      <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="h-[46px] w-auto object-contain" draggable={false} />
     </div>
   );
 }
@@ -419,7 +419,7 @@ function SavedCampaignCard({ summary, onContinue }) {
 
 function HomeMenuShell({ children, className = "", onBack }) {
   return (
-    <div className={`relative overflow-hidden rounded-[1.65rem] border border-[#F5F1E8]/14 bg-[#062817]/88 text-[#F5F1E8] shadow-[0_8px_18px_rgba(0,0,0,0.16),inset_0_-2px_6px_rgba(0,0,0,0.06)] ${className}`}>
+    <div className={`relative overflow-hidden rounded-[1.65rem] border border-[#F5F1E8]/14 bg-[#0B5F35]/88 text-[#F5F1E8] shadow-[0_8px_18px_rgba(0,0,0,0.16),inset_0_-2px_6px_rgba(0,0,0,0.06)] ${className}`}>
       {onBack && (
         <button
           type="button"
