@@ -227,18 +227,30 @@ function HomePitchBackdrop() {
 
 function HomeHostFlagStrip() {
   const flags = [
-    { src: "/flags/CAN.png", alt: "Canada" },
-    { src: MONDAY_CUP_AD_SRC, alt: "Monday Cup" },
-    { src: "/flags/MEX.png", alt: "Mexico" },
-    { src: MONDAY_CUP_AD_SRC, alt: "Monday Cup" },
-    { src: "/flags/USA.png", alt: "United States" },
+    { id: "mc-left", src: MONDAY_CUP_AD_SRC, alt: "Monday Cup", custom: true },
+    { id: "can", src: "/flags/CAN.png", alt: "Canada" },
+    { id: "mc-can-mex", src: MONDAY_CUP_AD_SRC, alt: "Monday Cup", custom: true },
+    { id: "mex", src: "/flags/MEX.png", alt: "Mexico" },
+    { id: "mc-mex-usa", src: MONDAY_CUP_AD_SRC, alt: "Monday Cup", custom: true },
+    { id: "usa", src: "/flags/USA.png", alt: "United States" },
+    { id: "mc-right", src: MONDAY_CUP_AD_SRC, alt: "Monday Cup", custom: true },
   ];
   return (
-    <div className="absolute inset-0 flex items-center justify-center gap-5">
+    <div className="absolute inset-0 flex items-center justify-center gap-[clamp(8px,2.8vw,20px)] px-2">
       {flags.map((flag) => (
-        <div key={flag.alt} className={`flex h-[64%] aspect-[250/167] items-center justify-center overflow-hidden rounded-[0.35rem] border border-[#F5F1E8]/18 ${flag.alt === "Monday Cup" ? "bg-[#072D1D] p-[3px]" : "bg-[#F5F1E8]"} shadow-[0_5px_12px_rgba(0,0,0,0.28)]`}>
+        <div key={flag.id} className={`flex h-[62%] aspect-[250/167] items-center justify-center overflow-hidden rounded-[0.35rem] border-2 border-[#F5F1E8]/92 ${flag.custom ? "bg-[#072D1D] p-[3px]" : "bg-[#F5F1E8]"} shadow-[0_5px_12px_rgba(0,0,0,0.28)]`}>
           <img src={flag.src} alt={flag.alt} className="h-full w-full object-contain" draggable={false} />
         </div>
+      ))}
+    </div>
+  );
+}
+
+function HomePenaltyMarkers() {
+  return (
+    <div className="flex w-full justify-center gap-[3px]">
+      {Array.from({ length: 5 }).map((_, idx) => (
+        <span key={idx} className="h-[6px] w-[6px] rounded-full bg-[#F7D117] shadow-[0_0_5px_rgba(247,209,23,0.42),0_0_9px_rgba(247,209,23,0.18)]" />
       ))}
     </div>
   );
@@ -299,14 +311,25 @@ function ScoreboardPlaceholder() {
           <HomeHostFlagStrip />
         </div>
 
-        <div className="absolute inset-x-0 bottom-[26%] top-0 z-[3] flex items-center justify-center gap-[clamp(10px,7.5vw,34px)] text-[#F7D117] drop-shadow-[0_0_7px_rgba(247,209,23,0.40)]">
-          <ScoreboardTrophy side="left" />
-          <div className="flex min-w-0 flex-col items-center justify-center text-center">
-            <div className={SCOREBOARD_STAGE_TEXT}>WELCOME TO</div>
-            <div className={`${SCOREBOARD_MAIN_TEXT} mt-[0.28em]`}>MONDAY CUP</div>
-            <div className={`${SCOREBOARD_MARKER_TEXT} mt-[0.72em]`}>GLOBAL PENALTY KICK TOURNAMENT</div>
+        <div className="absolute inset-x-0 bottom-[26%] top-0 z-[3] text-[#F7D117]">
+          <div className="relative z-[1] h-full">
+            <div className="led-text-glow font-led grid h-[22%] place-items-center py-[2%] text-center text-[clamp(9px,1.35vh,16px)] font-black uppercase tracking-[0.14em] text-[#F7D117]">
+              GROUP STAGE
+            </div>
+            <div className="h-[52%] px-[3.5%] pt-[1%]">
+              <div className="grid h-full grid-cols-[11%_minmax(58px,1fr)_38px_26px_38px_minmax(58px,1fr)_11%] grid-rows-[58%_42%] items-center">
+                <div className="col-start-1 row-start-1 flex items-center justify-center"><Flag team="Canada" className="h-4 w-6" /></div>
+                <div className="col-start-2 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">CAN</div></div>
+                <div className="led-text-glow font-led col-start-3 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">0</div>
+                <div className="led-text-glow font-led col-start-4 row-start-1 flex items-center justify-center px-[4px] text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117]">-</div>
+                <div className="led-text-glow font-led col-start-5 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">0</div>
+                <div className="col-start-6 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">USA</div></div>
+                <div className="col-start-7 row-start-1 flex items-center justify-center"><Flag team="United States" className="h-4 w-6" /></div>
+                <div className="col-start-2 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><HomePenaltyMarkers /></div></div>
+                <div className="col-start-6 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><HomePenaltyMarkers /></div></div>
+              </div>
+            </div>
           </div>
-          <ScoreboardTrophy side="right" />
         </div>
       </div>
     </div>
@@ -350,9 +373,9 @@ function ActionButton({ children, eyebrow, onClick, variant = "light", disabled 
         ? "border-[#F5F0E6]/18 bg-[#F5F0E6]/18 text-[#F5F0E6]"
         : "border-[#D4AF37]/50 bg-[#F5F0E6] text-[#0B5F35]";
 
-  return <button type={type} onClick={onClick} disabled={disabled} className={`flex h-[58px] w-full items-center justify-center rounded-[1.35rem] border px-4 text-center transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
+  return <button type={type} onClick={onClick} disabled={disabled} className={`flex h-[50px] w-full items-center justify-center rounded-[1.1rem] border px-4 text-center transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
     {eyebrow && <span className="sr-only">{eyebrow}</span>}
-    <div className="home-copy-bold w-full truncate whitespace-nowrap text-[clamp(18px,4.9vw,26px)] uppercase leading-none tracking-[0.055em]">{children}</div>
+    <div className="home-copy-bold w-full truncate whitespace-nowrap text-[clamp(15px,4.35vw,24px)] uppercase leading-none tracking-[0.055em]">{children}</div>
   </button>;
 }
 
@@ -383,7 +406,7 @@ function HomeMenuShell({ children, className = "", onBack }) {
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5L8 12L15 19" /></svg>
         </button>
       )}
-      <div className="px-5 py-4 shadow-[inset_0_10px_24px_rgba(255,255,255,0.035)]">
+      <div className="px-4 py-3 shadow-[inset_0_10px_24px_rgba(255,255,255,0.035)]">
         {children}
       </div>
     </div>
@@ -407,13 +430,13 @@ function AuthInput({ icon, type = "text", placeholder, value, onChange }) {
     <label className="block text-left">
       <span className="sr-only">{placeholder}</span>
       <div className="relative">
-        <span className="pointer-events-none absolute left-4 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center text-[#0B5F35]/82">{icon}</span>
+        <span className="pointer-events-none absolute left-3.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-[#0B5F35]/82">{icon}</span>
         <input
           type={type}
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className="home-copy-regular h-12 w-full rounded-[1rem] border border-[#F5F0E6]/18 bg-[#F5F0E6]/94 py-0 pl-12 pr-4 text-[16px] uppercase tracking-[0.055em] text-[#0B5F35] outline-none placeholder:text-[#0B5F35]/34 focus:border-[#F7D117]"
+          className="home-copy-regular h-10 w-full rounded-[0.9rem] border border-[#F5F0E6]/18 bg-[#F5F0E6]/94 py-0 pl-11 pr-4 text-[15px] uppercase tracking-[0.055em] text-[#0B5F35] outline-none placeholder:text-[#0B5F35]/34 focus:border-[#F7D117]"
         />
       </div>
     </label>
@@ -542,10 +565,10 @@ function AuthPanel({ mode, setMode, onBack }) {
   if (forgotPassword) {
     return <div className="space-y-3">
       <HomeMenuShell onBack={() => { resetMessages(); setForgotPassword(false); }}>
-        <div className="flex min-h-[32px] items-center justify-center text-center">
-          <div className="home-copy-bold text-[32px] uppercase leading-none tracking-[0.055em] text-[#F5F1E8]">RESET PASSWORD</div>
+        <div className="flex min-h-[30px] items-center justify-center text-center">
+          <div className="home-copy-bold text-[29px] uppercase leading-none tracking-[0.055em] text-[#F5F1E8]">RESET PASSWORD</div>
         </div>
-        <form className="mt-5 space-y-3" onSubmit={handleForgotPassword}>
+        <form className="mt-4 space-y-2.5" onSubmit={handleForgotPassword}>
           <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Confirm email address" type="email" value={email} onChange={(event) => { resetMessages(); setEmail(event.target.value); }} />
           {authError && <div className="home-copy-regular rounded-[0.8rem] bg-red-500/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-red-100">{authError}</div>}
           {authSuccess && <div className="home-copy-regular rounded-[0.8rem] bg-[#B7FF3C]/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-[#B7FF3C]">{authSuccess}</div>}
@@ -557,14 +580,14 @@ function AuthPanel({ mode, setMode, onBack }) {
 
   return <div className="space-y-3">
     <HomeMenuShell onBack={onBack}>
-      <div className="flex min-h-[32px] items-center justify-center text-center">
-        <div className="home-copy-bold text-[34px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]">{isRegister ? "SIGN UP" : "CLUBHOUSE"}</div>
+      <div className="flex min-h-[30px] items-center justify-center text-center">
+        <div className="home-copy-bold text-[31px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]">{isRegister ? "SIGN UP" : "CLUBHOUSE"}</div>
       </div>
-      <div className="mt-3 grid grid-cols-2 rounded-[1.0rem] border border-[#F5F1E8]/20 bg-[#072D1D]/42 p-0.5 shadow-inner">
-        <button type="button" onClick={() => switchMode("signin")} className={`home-copy-bold h-8 rounded-[0.75rem] text-[15px] uppercase tracking-[0.05em] transition ${!isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN IN</button>
-        <button type="button" onClick={() => switchMode("register")} className={`home-copy-bold h-8 rounded-[0.75rem] text-[15px] uppercase tracking-[0.05em] transition ${isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN UP</button>
+      <div className="mt-2.5 grid grid-cols-2 rounded-[0.85rem] border border-[#F5F1E8]/20 bg-[#072D1D]/42 p-0.5 shadow-inner">
+        <button type="button" onClick={() => switchMode("signin")} className={`home-copy-bold h-7 rounded-[0.65rem] text-[14px] uppercase tracking-[0.05em] transition ${!isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN IN</button>
+        <button type="button" onClick={() => switchMode("register")} className={`home-copy-bold h-7 rounded-[0.65rem] text-[14px] uppercase tracking-[0.05em] transition ${isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN UP</button>
       </div>
-      <form className="mt-4 space-y-2.5" onSubmit={handleSubmit}>
+      <form className="mt-3 space-y-2" onSubmit={handleSubmit}>
         {isRegister && <AuthInput icon={<StarIcon className="h-5 w-5" />} placeholder="Username" value={username} onChange={(event) => { resetMessages(); setUsername(event.target.value); }} />}
         <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Email address" type="email" value={email} onChange={(event) => { resetMessages(); setEmail(event.target.value); }} />
         <AuthInput icon={<PadlockIcon className="h-5 w-5" />} placeholder="Password" type="password" value={password} onChange={(event) => { resetMessages(); setPassword(event.target.value); }} />
