@@ -55,16 +55,16 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
         const isQualified = qualifiedTeams.has(row.team);
         return (
           <div key={row.team} className={`mb-1 grid items-center gap-[3px] rounded-xl border px-2 py-[5px] text-center text-[12px] leading-none last:mb-0 ring-1 ${isUser ? "border-[#F5F1E8]/22 bg-[#072D1D] text-[#F5F1E8] ring-[#0B5F35]/45 shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`} style={{ gridTemplateColumns: tableColumns }}>
-            <span className="home-copy-regular">{index + 1}</span>
+            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{index + 1}</span>
             <span className="flex justify-center"><Flag team={row.team} className="h-4 w-6" /></span>
-            <span className={`min-w-0 truncate text-left uppercase home-copy-regular ${isUser ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(row.team)}>{row.team}</span>
-            <span className={`text-[11px] home-copy-bold ${isUser ? "text-[#F7D117]" : "text-[#0B5F35]"}`}>{isQualified ? "Q" : ""}</span>
-            <span className="home-copy-regular">{row.played}</span>
-            <span className="home-copy-regular">{row.won}</span>
-            <span className="home-copy-regular">{row.drawn}</span>
-            <span className="home-copy-regular">{row.lost}</span>
-            <span className="home-copy-regular">{row.gd}</span>
-            <span className="home-copy-bold">{row.pts}</span>
+            <span className={`min-w-0 truncate text-left uppercase home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#26352E]"}`} style={tightTeamStyle(row.team)}>{row.team}</span>
+            <span className={`flex h-full items-center justify-center self-center text-[11px] home-copy-bold leading-none ${isUser ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{isQualified ? "Q" : ""}</span>
+            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.played}</span>
+            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.won}</span>
+            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.drawn}</span>
+            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.lost}</span>
+            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.gd}</span>
+            <span className={`home-copy-bold ${isUser ? "text-[#F7D117]" : ""}`}>{row.pts}</span>
           </div>
         );
       })}
