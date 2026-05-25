@@ -90,7 +90,7 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
 
 function Meter({ value, ideal }) {
   return (
-    <div className="h-8 rounded-[clamp(14px,2.2vh,28px)] bg-[#0b2d1d] p-1">
+    <div className="h-8 rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/22 bg-[#0b2d1d] p-1 shadow-[0_8px_18px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#0B5F35]/50">
       <div className="relative h-full overflow-hidden rounded-[clamp(14px,2.2vh,28px)] bg-[#0b2d1d]">
         <div className="absolute top-0 h-full bg-[#0d6c3d]" style={{ left: `${ideal[0]}%`, width: `${ideal[1] - ideal[0]}%` }} />
         <div className="absolute left-1/2 top-0 z-[3] h-full w-[2px] -translate-x-1/2 bg-[#f5f1e8] shadow-[0_0_4px_rgba(245,241,232,0.7)]" />
