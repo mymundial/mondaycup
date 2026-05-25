@@ -1,7 +1,7 @@
 export const DEFAULT_ASSETS = {
   logo: "https://raw.githubusercontent.com/mymundial/mymundial/ad679ee2973445fc1c1c856603f6baf5695d90c6/LOGO-wht.png",
-  ball: "https://raw.githubusercontent.com/mymundial/mymundial/3cd00c542143f4f8f1be14d7428f422ca329da49/ball.png",
-  goalkeeper: "https://raw.githubusercontent.com/mymundial/mymundial/9234c87039f1954da79be54541aba9cac9cfbcdc/gk.png",
+  ball: "/ball1.png",
+  goalkeeper: "/gk1.png",
   sounds: {
     userShot: "https://raw.githubusercontent.com/mymundial/mymundial/415282fcde8c537de643f76e83d168f413ee6735/shot2mon.wav",
     opponentShot: "https://raw.githubusercontent.com/mymundial/mymundial/415282fcde8c537de643f76e83d168f413ee6735/Shot5.wav",
