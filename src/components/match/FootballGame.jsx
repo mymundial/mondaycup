@@ -215,7 +215,7 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
 
 function ConfirmButton({ onClick, disabled = false, children }) {
   return (
-    <button onClick={onClick} disabled={disabled} className="grid h-[clamp(40px,4.7vh,62px)] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(15px,2.1vh,25px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22)] disabled:cursor-default disabled:opacity-65">
+    <button onClick={onClick} disabled={disabled} className="grid h-[clamp(40px,4.7vh,62px)] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(15px,2.1vh,25px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65">
       <span className="block w-full whitespace-nowrap text-center">{children}</span>
     </button>
   );
@@ -235,7 +235,7 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
           <div className="h-[4%]" />
           <div className="grid flex-1 grid-cols-3 grid-rows-3 gap-[4%]">
             {DIRECTIONS.map((direction) => (
-              <button key={direction.id} onClick={() => setSelected(direction)} className={`flex min-h-0 items-center justify-center rounded-[clamp(14px,2.2vh,28px)] home-copy-bold text-[clamp(22px,3vh,38px)] font-black leading-none shadow-lg transition-all ${selected.id === direction.id ? "bg-[#F7D117] text-[#0b2d1d]" : "bg-[#0b2d1d] text-[#f5f1e8]"}`}>
+              <button key={direction.id} onClick={() => setSelected(direction)} className={`flex min-h-0 items-center justify-center rounded-[clamp(14px,2.2vh,28px)] border home-copy-bold text-[clamp(22px,3vh,38px)] font-black leading-none shadow-lg ring-1 transition-all ${selected.id === direction.id ? "border-[#F5F1E8]/55 bg-[#F7D117] text-[#0b2d1d] ring-[#F7D117]/35 shadow-[0_0_12px_rgba(247,209,23,0.20),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.18)]" : "border-[#F5F1E8]/22 bg-[#0b2d1d] text-[#f5f1e8] ring-[#0B5F35]/50 shadow-[0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(245,241,232,0.08)]"}`}>
                 <span className="flex h-full w-full items-center justify-center leading-none">{direction.arrow}</span>
               </button>
             ))}
