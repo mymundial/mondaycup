@@ -44,17 +44,17 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
 
   return (
     <div className="mt-1 overflow-visible">
-      <div className="grid grid-cols-[22px_30px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] gap-1 px-2 pb-1.5 text-center text-[7px] font-black uppercase tracking-[0.08em] text-[#0B5F35]/45">
+      <div className="grid grid-cols-[22px_30px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] gap-1 px-2 pb-1.5 text-center text-[8px] home-copy-bold uppercase tracking-[0.1em] text-[#0B5F35]/45">
         <span>#</span><span className="text-center">Team</span><span aria-hidden="true" /><span aria-hidden="true" /><span>P</span><span>W</span><span>D</span><span>L</span><span>Pts</span>
       </div>
       {rows.map((row, index) => {
         const isUser = row.team === userTeam;
         const isQualified = qualifiedTeams.has(row.team);
         return (
-          <div key={row.team} className={`mb-1 grid grid-cols-[22px_30px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] items-center gap-1 rounded-xl px-2 py-[5px] text-center text-[9px] text-[#072D1D]/80 last:mb-0 ring-1 ${isUser ? "bg-[#DCE9DE] font-black ring-[#CFE2D3]" : "bg-[#F8F4EC] font-bold ring-[#0B5F35]/5"}`}>
+          <div key={row.team} className={`mb-1 grid grid-cols-[22px_30px_minmax(0,1fr)_18px_24px_24px_24px_24px_28px] items-center gap-1 rounded-xl px-2 py-[5px] text-center text-[11px] text-[#072D1D]/80 last:mb-0 ring-1 ${isUser ? "bg-[#DCE9DE] home-copy-regular ring-[#CFE2D3]" : "bg-[#F8F4EC] home-copy-light ring-[#0B5F35]/5"}`}>
             <span>{index + 1}</span>
             <span className="flex justify-center"><Flag team={row.team} className="h-4 w-6" /></span>
-            <span className={`min-w-0 truncate text-left uppercase ${isUser ? "font-black" : "font-bold"}`}>{row.team}</span>
+            <span className={`min-w-0 truncate text-left uppercase ${isUser ? "home-copy-regular" : "home-copy-light"}`}>{row.team}</span>
             <span className="text-[10px] font-black text-[#0B5F35]">{isQualified ? "Q" : ""}</span>
             <span>{row.played}</span><span>{row.won}</span><span>{row.drawn}</span><span>{row.lost}</span><span className="font-black">{row.pts}</span>
           </div>
@@ -75,7 +75,7 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
             <div className="flex h-9 w-9 items-center justify-center">
               <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-full w-full object-contain" draggable={false} />
             </div>
-            <div className="text-center text-[23px] font-black uppercase leading-[0.95] tracking-[-0.02em] text-[#F5F0E6]">{modalHeaderTitle({ isKnockout, stageLabel, selectedGroup })}</div>
+            <div className="text-center home-copy-bold text-[25px] uppercase leading-[0.95] tracking-[0.06em] text-[#F5F0E6]">{modalHeaderTitle({ isKnockout, stageLabel, selectedGroup })}</div>
             <button onClick={onDismiss} aria-label="Close result" className="flex h-9 w-9 items-center justify-center justify-self-end text-[#F5F0E6]">
               <CloseIcon className="h-6 w-6" />
             </button>
@@ -86,11 +86,11 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
           {isKnockout ? (
             <>
               <div className={`mt-1 rounded-[1.25rem] bg-[#DCE9DE] px-2.5 py-3 ${(result.home === userTeam || result.away === userTeam) ? "ring-1 ring-[#CFE2D3]" : ""}`}>
-                <div className="grid min-h-[32px] grid-cols-[28px_minmax(0,1fr)_34px_minmax(0,1fr)_28px] items-center gap-1 text-[clamp(11px,3vw,13px)] uppercase leading-none text-[#3E4F46]">
+                <div className="grid min-h-[32px] grid-cols-[28px_minmax(0,1fr)_34px_minmax(0,1fr)_28px] items-center gap-1 home-main-font text-[clamp(13px,3.4vw,15px)] uppercase leading-none text-[#3E4F46]">
                   <div className="flex items-center justify-center"><Flag team={result.home} className="h-5 w-7" /></div>
-                  <span className={`block min-w-0 truncate text-center tracking-[0.005em] ${result.home === userTeam ? "font-black" : "font-bold"}`} title={result.home}>{result.home}</span>
+                  <span className={`block min-w-0 truncate text-center tracking-[0.005em] ${result.home === userTeam ? "home-copy-regular" : "home-copy-light"}`} title={result.home}>{result.home}</span>
                   <span className="flex items-center justify-center font-black tabular-nums leading-none text-[#0B5F35]">{result.homeGoals}-{result.awayGoals}</span>
-                  <span className={`block min-w-0 truncate text-center tracking-[0.005em] ${result.away === userTeam ? "font-black" : "font-bold"}`} title={result.away}>{result.away}</span>
+                  <span className={`block min-w-0 truncate text-center tracking-[0.005em] ${result.away === userTeam ? "home-copy-regular" : "home-copy-light"}`} title={result.away}>{result.away}</span>
                   <div className="flex items-center justify-center"><Flag team={result.away} className="h-5 w-7" /></div>
                 </div>
               </div>
@@ -101,7 +101,7 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
             </>
           )}
 
-          <button onClick={onNext} className="mx-auto mt-2.5 flex h-10 w-full items-center justify-center rounded-full bg-[#0B5F35] text-[13px] font-black uppercase tracking-[0.12em] text-[#F5F0E6]">{modalButton(result)}</button>
+          <button onClick={onNext} className="mx-auto mt-2.5 flex h-10 w-full items-center justify-center rounded-full bg-[#0B5F35] home-copy-bold text-[15px] uppercase tracking-[0.14em] text-[#F5F0E6]">{modalButton(result)}</button>
         </div>
       </div>
     </div>

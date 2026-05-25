@@ -39,6 +39,14 @@ function PadlockIcon({ className = "" }) {
   );
 }
 
+function StarIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M12 2.75l2.72 5.52 6.1.89-4.41 4.3 1.04 6.07L12 16.66l-5.45 2.87 1.04-6.07-4.41-4.3 6.1-.89L12 2.75z" />
+    </svg>
+  );
+}
+
 function ScoreboardTrophy({ side }) {
   return (
     <img
@@ -226,9 +234,9 @@ function HomeHostFlagStrip() {
     { src: "/flags/USA.png", alt: "United States" },
   ];
   return (
-    <div className="absolute inset-0 flex items-center justify-center gap-3">
+    <div className="absolute inset-0 flex items-center justify-center gap-5">
       {flags.map((flag) => (
-        <div key={flag.alt} className="flex h-[64%] aspect-[250/167] items-center justify-center overflow-hidden rounded-[0.35rem] border border-[#F5F1E8]/18 bg-[#F5F1E8] shadow-[0_5px_12px_rgba(0,0,0,0.28)]">
+        <div key={flag.alt} className={`flex h-[64%] aspect-[250/167] items-center justify-center overflow-hidden rounded-[0.35rem] border border-[#F5F1E8]/18 ${flag.alt === "Monday Cup" ? "bg-[#072D1D] p-[3px]" : "bg-[#F5F1E8]"} shadow-[0_5px_12px_rgba(0,0,0,0.28)]`}>
           <img src={flag.src} alt={flag.alt} className="h-full w-full object-contain" draggable={false} />
         </div>
       ))}
@@ -295,8 +303,8 @@ function ScoreboardPlaceholder() {
           <ScoreboardTrophy side="left" />
           <div className="flex min-w-0 flex-col items-center justify-center text-center">
             <div className={SCOREBOARD_STAGE_TEXT}>WELCOME TO</div>
-            <div className={`${SCOREBOARD_MAIN_TEXT} mt-[0.18em]`}>MONDAY CUP</div>
-            <div className={`${SCOREBOARD_MARKER_TEXT} mt-[0.42em]`}>GLOBAL PENALTY KICK TOURNAMENT</div>
+            <div className={`${SCOREBOARD_MAIN_TEXT} mt-[0.28em]`}>MONDAY CUP</div>
+            <div className={`${SCOREBOARD_MARKER_TEXT} mt-[0.72em]`}>GLOBAL PENALTY KICK TOURNAMENT</div>
           </div>
           <ScoreboardTrophy side="right" />
         </div>
@@ -344,7 +352,7 @@ function ActionButton({ children, eyebrow, onClick, variant = "light", disabled 
 
   return <button type={type} onClick={onClick} disabled={disabled} className={`flex h-[58px] w-full items-center justify-center rounded-[1.35rem] border px-4 text-center transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
     {eyebrow && <span className="sr-only">{eyebrow}</span>}
-    <div className="home-copy-bold text-[26px] uppercase leading-none tracking-[0.025em]">{children}</div>
+    <div className="home-copy-bold w-full truncate whitespace-nowrap text-[clamp(18px,4.9vw,26px)] uppercase leading-none tracking-[0.055em]">{children}</div>
   </button>;
 }
 
@@ -369,7 +377,7 @@ function HomeMenuShell({ children, className = "", onBack }) {
         <button
           type="button"
           onClick={onBack}
-          className="absolute left-4 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.35)] active:scale-[0.96]"
+          className="absolute left-4 top-4 z-20 flex h-9 w-9 items-center justify-center text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.35)] active:scale-[0.96]"
           aria-label="Back"
         >
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5L8 12L15 19" /></svg>
@@ -384,7 +392,7 @@ function HomeMenuShell({ children, className = "", onBack }) {
 
 function FloatingHomeLogo() {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-[22%] z-[8] flex justify-center" aria-hidden="true">
+    <div className="pointer-events-none absolute inset-x-0 top-[13.5%] z-[8] flex justify-center" aria-hidden="true">
       <div className="relative flex h-[168px] w-[420px] max-w-[92vw] items-center justify-center">
         <div className="absolute inset-x-8 bottom-9 h-20 rounded-full bg-[#F7D117]/34 blur-3xl" />
         <div className="absolute inset-x-14 bottom-11 h-16 rounded-full bg-[#F5F1E8]/30 blur-2xl" />
@@ -405,7 +413,7 @@ function AuthInput({ icon, type = "text", placeholder, value, onChange }) {
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className="home-copy-regular h-12 w-full rounded-[1rem] border border-[#F5F0E6]/18 bg-[#F5F0E6]/94 py-0 pl-12 pr-4 text-[14px] uppercase tracking-[0.04em] text-[#0B5F35] outline-none placeholder:text-[#0B5F35]/34 focus:border-[#F7D117]"
+          className="home-copy-regular h-12 w-full rounded-[1rem] border border-[#F5F0E6]/18 bg-[#F5F0E6]/94 py-0 pl-12 pr-4 text-[16px] uppercase tracking-[0.055em] text-[#0B5F35] outline-none placeholder:text-[#0B5F35]/34 focus:border-[#F7D117]"
         />
       </div>
     </label>
@@ -414,12 +422,12 @@ function AuthInput({ icon, type = "text", placeholder, value, onChange }) {
 
 function authErrorMessage(error) {
   const code = error?.code || "";
-  if (code === "auth/email-already-in-use") return "That email is already registered.";
-  if (code === "auth/invalid-email") return "Please enter a valid email address.";
-  if (code === "auth/missing-password") return "Please enter a password.";
-  if (code === "auth/weak-password") return "Password should be at least 6 characters.";
-  if (code === "auth/user-not-found" || code === "auth/wrong-password" || code === "auth/invalid-credential") return "Email or password not recognised.";
-  return error?.message || "Something went wrong. Please try again.";
+  if (code === "auth/email-already-in-use") return "That email is already registered";
+  if (code === "auth/invalid-email") return "Please enter a valid email address";
+  if (code === "auth/missing-password") return "Please enter a password";
+  if (code === "auth/weak-password") return "Password should be at least 6 characters";
+  if (code === "auth/user-not-found" || code === "auth/wrong-password" || code === "auth/invalid-credential") return "Email or password not recognised";
+  return error?.message || "Something went wrong please try again";
 }
 
 function AuthPanel({ mode, setMode, onBack }) {
@@ -448,7 +456,7 @@ function AuthPanel({ mode, setMode, onBack }) {
     const trimmedEmail = email.trim();
 
     if (!trimmedUsername) {
-      setAuthError("Please enter a username.");
+      setAuthError("Please enter a username");
       return;
     }
 
@@ -481,7 +489,7 @@ function AuthPanel({ mode, setMode, onBack }) {
         updatedAt: serverTimestamp(),
       });
 
-      setAuthSuccess("Account created. Welcome to the Clubhouse.");
+      setAuthSuccess("Account created welcome to the Clubhouse");
     } catch (error) {
       setAuthError(authErrorMessage(error));
     } finally {
@@ -494,7 +502,7 @@ function AuthPanel({ mode, setMode, onBack }) {
       setAuthLoading(true);
       resetMessages();
       await signInWithEmailAndPassword(auth, email.trim(), password);
-      setAuthSuccess("Signed in. Welcome back.");
+      setAuthSuccess("Signed in welcome back");
     } catch (error) {
       setAuthError(authErrorMessage(error));
     } finally {
@@ -514,7 +522,7 @@ function AuthPanel({ mode, setMode, onBack }) {
     const trimmedEmail = email.trim();
 
     if (!trimmedEmail) {
-      setAuthError("Please enter your email address first.");
+      setAuthError("Please enter your email address first");
       setAuthSuccess("");
       return;
     }
@@ -523,7 +531,7 @@ function AuthPanel({ mode, setMode, onBack }) {
       setAuthLoading(true);
       resetMessages();
       await sendPasswordResetEmail(auth, trimmedEmail);
-      setAuthSuccess("Password reset link sent.");
+      setAuthSuccess("Password reset link sent");
     } catch (error) {
       setAuthError(authErrorMessage(error));
     } finally {
@@ -535,7 +543,7 @@ function AuthPanel({ mode, setMode, onBack }) {
     return <div className="space-y-3">
       <HomeMenuShell onBack={() => { resetMessages(); setForgotPassword(false); }}>
         <div className="flex min-h-[32px] items-center justify-center text-center">
-          <div className="home-copy-bold text-[30px] uppercase leading-none tracking-[-0.02em] text-[#F5F1E8]">RESET PASSWORD</div>
+          <div className="home-copy-bold text-[32px] uppercase leading-none tracking-[0.055em] text-[#F5F1E8]">RESET PASSWORD</div>
         </div>
         <form className="mt-5 space-y-3" onSubmit={handleForgotPassword}>
           <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Confirm email address" type="email" value={email} onChange={(event) => { resetMessages(); setEmail(event.target.value); }} />
@@ -550,23 +558,23 @@ function AuthPanel({ mode, setMode, onBack }) {
   return <div className="space-y-3">
     <HomeMenuShell onBack={onBack}>
       <div className="flex min-h-[32px] items-center justify-center text-center">
-        <div className="home-copy-bold text-[32px] uppercase leading-none tracking-[0.04em] text-[#F5F1E8]">{isRegister ? "SIGN UP" : "CLUBHOUSE"}</div>
+        <div className="home-copy-bold text-[34px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]">{isRegister ? "SIGN UP" : "CLUBHOUSE"}</div>
       </div>
-      <div className="mt-4 grid grid-cols-2 rounded-[1.15rem] border border-[#F5F1E8]/20 bg-[#072D1D]/42 p-1 shadow-inner">
-        <button type="button" onClick={() => switchMode("signin")} className={`home-copy-bold h-10 rounded-[0.9rem] text-[14px] uppercase tracking-[0.05em] transition ${!isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN IN</button>
-        <button type="button" onClick={() => switchMode("register")} className={`home-copy-bold h-10 rounded-[0.9rem] text-[14px] uppercase tracking-[0.05em] transition ${isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN UP</button>
+      <div className="mt-3 grid grid-cols-2 rounded-[1.0rem] border border-[#F5F1E8]/20 bg-[#072D1D]/42 p-0.5 shadow-inner">
+        <button type="button" onClick={() => switchMode("signin")} className={`home-copy-bold h-8 rounded-[0.75rem] text-[15px] uppercase tracking-[0.05em] transition ${!isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN IN</button>
+        <button type="button" onClick={() => switchMode("register")} className={`home-copy-bold h-8 rounded-[0.75rem] text-[15px] uppercase tracking-[0.05em] transition ${isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN UP</button>
       </div>
       <form className="mt-4 space-y-2.5" onSubmit={handleSubmit}>
-        {isRegister && <AuthInput icon="★" placeholder="Username" value={username} onChange={(event) => { resetMessages(); setUsername(event.target.value); }} />}
+        {isRegister && <AuthInput icon={<StarIcon className="h-5 w-5" />} placeholder="Username" value={username} onChange={(event) => { resetMessages(); setUsername(event.target.value); }} />}
         <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Email address" type="email" value={email} onChange={(event) => { resetMessages(); setEmail(event.target.value); }} />
         <AuthInput icon={<PadlockIcon className="h-5 w-5" />} placeholder="Password" type="password" value={password} onChange={(event) => { resetMessages(); setPassword(event.target.value); }} />
+        <ActionButton type="submit" variant="yellow">{authError || authSuccess || (authLoading ? "LOADING..." : isRegister ? "CREATE ACCOUNT" : "SIGN IN")}</ActionButton>
         {isRegister && (
-          <label className="home-copy-light flex items-center justify-center gap-2 rounded-[0.9rem] bg-[#0B5F35] p-2 text-center text-[9px] uppercase leading-none tracking-[0.12em] text-[#F5F0E6]/75">
+          <label className="home-copy-light flex items-center justify-center gap-2 rounded-[0.9rem] bg-[#0B5F35] p-1.5 text-center text-[10px] uppercase leading-none tracking-[0.14em] text-[#F5F0E6]/78">
             <input type="checkbox" checked={emailOptIn} onChange={(event) => setEmailOptIn(event.target.checked)} className="h-4 w-4 shrink-0 accent-[#F7D117]" />
             <span>Receive email communications</span>
           </label>
         )}
-        <ActionButton type="submit" variant="yellow">{authError || authSuccess || (authLoading ? "LOADING..." : isRegister ? "CREATE ACCOUNT" : "SIGN IN")}</ActionButton>
         {!isRegister && (
           <button type="button" onClick={() => { resetMessages(); setForgotPassword(true); }} className="home-copy-bold mx-auto mt-2 block text-[11px] uppercase tracking-[0.16em] text-[#F5F1E8] underline-offset-4 active:scale-[0.98]">
             FORGOT PASSWORD?
@@ -598,13 +606,13 @@ function HostPanel({ onSelectGroup, onSelectTeam }) {
       {HOST_TEAMS.map((host) => {
         const theme = getTeamTheme(host.name);
         const label = host.name === "United States" ? "USA" : host.name;
-        return <button key={host.name} onClick={() => onSelectTeam(host.name, host.group)} className="h-[50px] rounded-[1rem] border border-[#F5F1E8]/22 shadow-[0_0_8px_rgba(245,241,232,0.06),inset_0_2px_8px_rgba(255,255,255,0.10)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-full items-center justify-center text-[18px] home-copy-bold uppercase tracking-[0.06em]">{label}</span></button>;
+        return <button key={host.name} onClick={() => onSelectTeam(host.name, host.group)} className="h-[50px] rounded-[1rem] border border-[#F5F1E8]/22 shadow-[0_0_8px_rgba(245,241,232,0.06),inset_0_2px_8px_rgba(255,255,255,0.10)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-full items-center justify-center text-[22px] home-copy-bold uppercase tracking-[0.075em]">{label}</span></button>;
       })}
     </div>
     <button onClick={() => onSelectGroup("A")} className="mt-3 grid h-[72px] w-full grid-cols-[42px_minmax(0,1fr)_64px] items-center gap-3 rounded-[1.15rem] border-2 border-[#F7D117]/85 bg-[#F7D117] px-5 text-[#0B5F35] shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]">
       <PadlockIcon className="h-7 w-7" />
-      <div className="home-copy-bold min-w-0 truncate text-center text-[21px] uppercase leading-none tracking-[0.06em]">UNLOCK ALL 48 TEAMS</div>
-      <div className="home-copy-bold text-right text-[18px] uppercase tracking-[0.04em]">£0.99</div>
+      <div className="home-copy-bold min-w-0 truncate text-center text-[23px] uppercase leading-none tracking-[0.075em]">UNLOCK ALL 48 TEAMS</div>
+      <div className="home-copy-bold text-right text-[19px] uppercase tracking-[0.06em]">£0.99</div>
     </button>
   </HomeMenuShell>;
 }
@@ -620,13 +628,13 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
   return <HomeMenuShell onBack={onBack}>
     <div className="mb-3 flex items-center justify-center gap-4">
       <ArrowButton direction="left" onClick={previousGroup} />
-      <div className="home-copy-bold text-[34px] uppercase tracking-[0.05em] text-[#F5F1E8]">GROUP {group}</div>
+      <div className="home-copy-bold text-[36px] uppercase tracking-[0.08em] text-[#F5F1E8]">GROUP {group}</div>
       <ArrowButton direction="right" onClick={nextGroup} />
     </div>
     <div className="grid gap-2">
       {GROUPS[group].map((name) => {
         const theme = getTeamTheme(name);
-        return <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[42px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] border border-[#F5F1E8]/18 px-4 text-left shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-6 w-8 items-center justify-center overflow-hidden rounded-[0.25rem] border border-[#F5F1E8]/24 bg-[#F5F1E8]/90 shadow-[0_2px_5px_rgba(0,0,0,0.18)]"><Flag team={name} className="h-full w-full object-contain" /></span><span className="home-copy-bold truncate text-center text-[18px] uppercase tracking-[0.04em]">{name}</span><span className="home-copy-bold text-right text-[11px] tabular-nums tracking-[0.06em] opacity-65">#{TEAM_RANK[name]}</span></button>;
+        return <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[42px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] border border-[#F5F1E8]/18 px-4 text-left shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-6 w-8 items-center justify-center overflow-hidden rounded-[0.25rem] border border-[#F5F1E8]/24 bg-[#F5F1E8]/90 shadow-[0_2px_5px_rgba(0,0,0,0.18)]"><Flag team={name} className="h-full w-full object-contain" /></span><span className="home-copy-bold truncate text-center text-[19px] uppercase tracking-[0.06em]">{name}</span><span className="home-copy-bold text-right text-[12px] tabular-nums tracking-[0.08em] opacity-65">#{TEAM_RANK[name]}</span></button>;
       })}
     </div>
   </HomeMenuShell>;
