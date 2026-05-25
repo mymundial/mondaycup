@@ -58,7 +58,7 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
             <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{index + 1}</span>
             <span className="flex justify-center"><Flag team={row.team} className="h-4 w-6" /></span>
             <span className={`min-w-0 truncate text-left uppercase home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#26352E]"}`} style={tightTeamStyle(row.team)}>{row.team}</span>
-            <span className={`flex h-full items-center justify-center self-center text-[11px] home-copy-bold leading-none ${isUser ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{isQualified ? "Q" : ""}</span>
+            <span className={`grid h-full place-items-center self-center text-[12px] home-copy-bold leading-none ${isUser ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}><span className="block leading-none">{isQualified ? "Q" : ""}</span></span>
             <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.played}</span>
             <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.won}</span>
             <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.drawn}</span>
