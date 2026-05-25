@@ -30,6 +30,7 @@ import {
 
 const MONDAY_CUP_AD_SRC = "/monday-cup-ad.png";
 const TROPHY_AD_SRC = "/trophy-ad.png";
+const CHAMPIONS_BADGE_SRC = "/mc-champs2.png";
 
 function TeamFlag({ team, className = "h-4 w-6" }) {
   if (team.flag) return <img src={team.flag} alt={`${team.name} flag`} className={`${className} rounded-sm object-cover`} draggable={false} />;
@@ -189,12 +190,28 @@ function GoalFrame({ showAim, aimDirection }) {
   );
 }
 
-function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderTeam, showAim, aimDirection, assets }) {
+function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderTeam, showAim, aimDirection, assets, showChampionsBadge = false }) {
   const goalLine = GAME.goal.top + GAME.goal.height;
   return (
     <section className="relative flex-1 shrink overflow-hidden bg-[#0d6c3d]">
       <CrowdBackdrop crowdColours={assets.crowdColours} />
       <LedAdvertisingHoard />
+      {showChampionsBadge && (
+        <div
+          className="pointer-events-none absolute left-1/2 z-[7] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
+          style={{ top: `${(goalLine - 8) / 2}%`, width: "64%", height: "48%" }}
+          aria-hidden="true"
+        >
+          <div className="absolute left-1/2 top-1/2 h-[76%] w-[82%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/26 blur-2xl" />
+          <div className="absolute left-1/2 top-1/2 h-[54%] w-[62%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FFD54A]/26 blur-xl" />
+          <img
+            src={CHAMPIONS_BADGE_SRC}
+            alt="Monday Cup Champions"
+            className="relative z-[1] h-full w-full object-contain drop-shadow-[0_0_18px_rgba(247,209,23,0.46)]"
+            draggable={false}
+          />
+        </div>
+      )}
       <div className="absolute bottom-0 left-0 right-0" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
       <div
@@ -265,7 +282,7 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
   );
 }
 
-export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction }) {
+export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction, showChampionsBadge = false }) {
   const user = useMemo(() => normaliseTeam(userTeam, "Team A"), [userTeam]);
   const opponent = useMemo(() => normaliseTeam(opponentTeam, "Team B"), [opponentTeam]);
   const mergedAssets = useMemo(() => ({ ...DEFAULT_ASSETS, ...assets, sounds: { ...DEFAULT_ASSETS.sounds, ...(assets?.sounds || {}) } }), [assets]);
@@ -441,7 +458,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         }
       `}</style>
       <Scoreboard userTeam={user} opponentTeam={opponent} score={score} attempts={attempts} ticker={ticker} tickerStyle={tickerStyle()} stageLabel={stageLabel} totalMarkerSlots={suddenDeathMarkerSlots} />
-      <Pitch ballPoint={ballPoint} keeperPoint={keeperPoint} shot={shot} shotActive={shotActive} activeTeam={activeTeam} defenderTeam={defenderTeam} showAim={showAim} aimDirection={aimDirection} assets={mergedAssets} />
+      <Pitch ballPoint={ballPoint} keeperPoint={keeperPoint} shot={shot} shotActive={shotActive} activeTeam={activeTeam} defenderTeam={defenderTeam} showAim={showAim} aimDirection={aimDirection} assets={mergedAssets} showChampionsBadge={showChampionsBadge} />
       <ControlOverlay
         phase={phase}
         selected={selected}

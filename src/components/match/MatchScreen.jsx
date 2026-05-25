@@ -142,12 +142,14 @@ export function MatchScreen({
   selectedGroup = "A",
   userForm = [],
   campaignId = "default",
+  podium = null,
 }) {
   const [matchBusy, setMatchBusy] = useState(false);
   const userTeam = teamToGameTeam(team || "Team A");
   const opponentTeam = teamToGameTeam(opponent || "Team B");
   const fallbackFixture = fixture || createFallbackFixture({ team, opponent });
   const completedResult = toCompletedGameResult(matchResult, fallbackFixture);
+  const showChampionsBadge = matchResult?.status === "champion" || podium?.champion === team;
 
   return (
     <Shell>
@@ -174,6 +176,7 @@ export function MatchScreen({
             endActionEnabled={Boolean(matchResult && modalDismissed)}
             onEndAction={onNextMatch}
             onBusyChange={setMatchBusy}
+            showChampionsBadge={showChampionsBadge}
           />
         </div>
 
