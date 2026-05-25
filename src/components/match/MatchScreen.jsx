@@ -27,7 +27,7 @@ function FormTracker({ form = [] }) {
     if (value === "W") return "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.85),0_0_22px_rgba(34,197,94,0.32)]";
     if (value === "L") return "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.85),0_0_22px_rgba(239,68,68,0.32)]";
     if (value === "D") return "bg-[#F7D117] shadow-[0_0_10px_rgba(247,209,23,0.9),0_0_22px_rgba(247,209,23,0.34)]";
-    return "bg-[#6b6223] shadow-none";
+    return "bg-[#F7D117]/28 shadow-[0_0_6px_rgba(247,209,23,0.25)]";
   };
 
   return (
@@ -42,21 +42,28 @@ function FormTracker({ form = [] }) {
 function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = null }) {
   if (!rows.length) return null;
 
+  const tableColumns = "20px 28px minmax(0, 1fr) 14px 18px 18px 18px 18px 20px 24px";
+
   return (
-    <div className="mt-1 overflow-visible">
-      <div className="grid grid-cols-[20px_28px_minmax(0,1fr)_16px_22px_22px_22px_22px_24px_28px] gap-1 px-2 pb-1.5 text-center text-[8px] home-copy-bold uppercase tracking-[0.1em] text-[#F5F1E8]/58">
+    <div className="mt-0 overflow-visible">
+      <div className="grid gap-[3px] px-2 pb-[2px] text-center text-[9px] home-copy-bold uppercase tracking-[0.08em] text-[#F5F1E8]" style={{ gridTemplateColumns: tableColumns }}>
         <span>#</span><span className="text-center">Team</span><span aria-hidden="true" /><span aria-hidden="true" /><span>P</span><span>W</span><span>D</span><span>L</span><span>GD</span><span>Pts</span>
       </div>
       {rows.map((row, index) => {
         const isUser = row.team === userTeam;
         const isQualified = qualifiedTeams.has(row.team);
         return (
-          <div key={row.team} className={`mb-1 grid grid-cols-[20px_28px_minmax(0,1fr)_16px_22px_22px_22px_22px_24px_28px] items-center gap-1 rounded-xl px-2 py-[5px] text-center text-[11px] last:mb-0 ring-1 ${isUser ? "bg-[#F7D117] text-[#072D1D] home-copy-regular ring-[#F5F1E8]/40" : "bg-[#F5F1E8]/90 text-[#072D1D]/78 home-copy-light ring-[#F5F1E8]/10"}`}>
-            <span>{index + 1}</span>
-            <span className="flex justify-center"><Flag team={row.team} className="h-4 w-6" /></span>
-            <span className={`min-w-0 truncate text-left uppercase ${isUser ? "home-copy-regular" : "home-copy-light"}`}>{row.team}</span>
-            <span className="text-[10px] font-black text-[#0B5F35]">{isQualified ? "Q" : ""}</span>
-            <span>{row.played}</span><span>{row.won}</span><span>{row.drawn}</span><span>{row.lost}</span><span>{row.gd}</span><span className="font-black">{row.pts}</span>
+          <div key={row.team} className={`mb-1 grid items-center gap-[3px] rounded-xl border px-2 py-[5px] text-center text-[12px] leading-none last:mb-0 ring-1 ${isUser ? "border-[#F7D117]/85 bg-[#F7D117] text-[#072D1D] home-copy-bold ring-[#F7D117]/75 shadow-[0_0_12px_rgba(247,209,23,0.22)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#072D1D] home-copy-regular ring-[#F5F1E8]/18"}`} style={{ gridTemplateColumns: tableColumns }}>
+            <span className={isUser ? "home-copy-bold" : "home-copy-regular"}>{index + 1}</span>
+            <span className="flex justify-center"><Flag team={row.team} className="h-4 w-6 ring-1 ring-[#F5F1E8]/85" /></span>
+            <span className={`min-w-0 truncate text-left uppercase ${isUser ? "home-copy-bold" : "home-copy-regular"}`}>{row.team}</span>
+            <span className={`text-[11px] text-[#0B5F35] ${isQualified || isUser ? "home-copy-bold" : "home-copy-regular"}`}>{isQualified ? "Q" : ""}</span>
+            <span className={isUser ? "home-copy-bold" : "home-copy-regular"}>{row.played}</span>
+            <span className={isUser ? "home-copy-bold" : "home-copy-regular"}>{row.won}</span>
+            <span className={isUser ? "home-copy-bold" : "home-copy-regular"}>{row.drawn}</span>
+            <span className={isUser ? "home-copy-bold" : "home-copy-regular"}>{row.lost}</span>
+            <span className={isUser ? "home-copy-bold" : "home-copy-regular"}>{row.gd}</span>
+            <span className="home-copy-bold">{row.pts}</span>
           </div>
         );
       })}
@@ -70,19 +77,11 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/48 px-5 pt-14">
       <div className="relative w-full max-w-sm overflow-visible rounded-[2rem] border border-[#F5F1E8]/14 bg-[#0B5F35]/92 text-center text-[#F5F1E8] shadow-[0_10px_26px_rgba(0,0,0,0.22),inset_0_-2px_6px_rgba(0,0,0,0.06)]">
         <div className="absolute left-1/2 top-[-52px] z-[3] -translate-x-1/2 overflow-hidden rounded-full border border-[#F5F1E8]/22 bg-[#050505] px-4 py-2.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_0_14px_rgba(7,45,29,0.38)]">
-          <div
-            className="absolute inset-[6px] opacity-100"
-            style={{
-              backgroundImage: "radial-gradient(circle, #6b6223 0.78px, transparent 1.55px)",
-              backgroundSize: "7px 7px",
-              backgroundPosition: "center center",
-            }}
-          />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
           <div className="relative z-[1]"><FormTracker form={userForm} /></div>
         </div>
-        <div className="overflow-hidden rounded-t-[2rem] bg-[#0B5F35]/0 px-5 py-2 text-[#F5F0E6]">
+        <div className="overflow-hidden rounded-t-[2rem] bg-[#0B5F35]/0 px-5 pb-1.5 pt-2 text-[#F5F0E6]">
           <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center">
               <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-full w-full object-contain" draggable={false} />
@@ -94,16 +93,16 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
           </div>
         </div>
 
-        <div className="px-5 pb-4 pt-3">
+        <div className="px-5 pb-4 pt-1.5">
           {isKnockout ? (
             <>
               <div className={`mt-1 rounded-[1.25rem] px-2.5 py-3 ${(result.home === userTeam || result.away === userTeam) ? "bg-[#F7D117] text-[#072D1D] ring-1 ring-[#F5F1E8]/40" : "bg-[#F5F1E8]/90 text-[#072D1D] ring-1 ring-[#F5F1E8]/10"}`}>
                 <div className="grid min-h-[32px] grid-cols-[28px_minmax(0,1fr)_34px_minmax(0,1fr)_28px] items-center gap-1 home-main-font text-[clamp(13px,3.4vw,15px)] uppercase leading-none text-[#3E4F46]">
-                  <div className="flex items-center justify-center"><Flag team={result.home} className="h-5 w-7" /></div>
-                  <span className={`block min-w-0 truncate text-center tracking-[0.005em] ${result.home === userTeam ? "home-copy-regular" : "home-copy-light"}`} title={result.home}>{result.home}</span>
+                  <div className="flex items-center justify-center"><Flag team={result.home} className="h-5 w-7 ring-1 ring-[#F5F1E8]/85" /></div>
+                  <span className={`block min-w-0 truncate text-center tracking-[0.005em] ${result.home === userTeam ? "home-copy-bold" : "home-copy-regular"}`} title={result.home}>{result.home}</span>
                   <span className="flex items-center justify-center font-black tabular-nums leading-none text-[#0B5F35]">{result.homeGoals}-{result.awayGoals}</span>
-                  <span className={`block min-w-0 truncate text-center tracking-[0.005em] ${result.away === userTeam ? "home-copy-regular" : "home-copy-light"}`} title={result.away}>{result.away}</span>
-                  <div className="flex items-center justify-center"><Flag team={result.away} className="h-5 w-7" /></div>
+                  <span className={`block min-w-0 truncate text-center tracking-[0.005em] ${result.away === userTeam ? "home-copy-bold" : "home-copy-regular"}`} title={result.away}>{result.away}</span>
+                  <div className="flex items-center justify-center"><Flag team={result.away} className="h-5 w-7 ring-1 ring-[#F5F1E8]/85" /></div>
                 </div>
               </div>
             </>

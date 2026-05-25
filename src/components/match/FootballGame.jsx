@@ -235,7 +235,9 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
           <div className="h-[4%]" />
           <div className="grid flex-1 grid-cols-3 grid-rows-3 gap-[4%]">
             {DIRECTIONS.map((direction) => (
-              <button key={direction.id} onClick={() => setSelected(direction)} className={`grid min-h-0 place-items-center rounded-[clamp(14px,2.2vh,28px)] home-copy-bold text-[clamp(22px,3vh,38px)] font-black leading-none shadow-lg transition-all ${selected.id === direction.id ? "bg-[#F7D117] text-[#0b2d1d]" : "bg-[#0b2d1d] text-[#f5f1e8]"}`}>{direction.arrow}</button>
+              <button key={direction.id} onClick={() => setSelected(direction)} className={`flex min-h-0 items-center justify-center rounded-[clamp(14px,2.2vh,28px)] home-copy-bold text-[clamp(22px,3vh,38px)] font-black leading-none shadow-lg transition-all ${selected.id === direction.id ? "bg-[#F7D117] text-[#0b2d1d]" : "bg-[#0b2d1d] text-[#f5f1e8]"}`}>
+                <span className="flex h-full w-full items-center justify-center leading-none">{direction.arrow}</span>
+              </button>
             ))}
           </div>
           <div className="h-[4%]" />
