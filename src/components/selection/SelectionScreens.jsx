@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { auth, db } from "../../firebase";
 import { HOST_TEAMS, GROUPS, GROUP_LETTERS, TEAM_RANK, getTeamTheme } from "../../data/teams.js";
 import { ASSETS } from "../../data/assets.js";
 import { Flag } from "../shared.jsx";
@@ -403,22 +406,136 @@ function AuthInput({ icon, type = "text", placeholder, value, onChange }) {
   );
 }
 
+function authErrorMessage(error) {
+  const code = error?.code || "";
+  if (code === "auth/email-already-in-use") return "That email is already registered.";
+  if (code === "auth/invalid-email") return "Please enter a valid email address.";
+  if (code === "auth/missing-password") return "Please enter a password.";
+  if (code === "auth/weak-password") return "Password should be at least 6 characters.";
+  if (code === "auth/user-not-found" || code === "auth/wrong-password" || code === "auth/invalid-credential") return "Email or password not recognised.";
+  return error?.message || "Something went wrong. Please try again.";
+}
+
 function AuthPanel({ mode, setMode, onBack }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [emailOptIn, setEmailOptIn] = useState(false);
   const [forgotPassword, setForgotPassword] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [authSuccess, setAuthSuccess] = useState("");
   const isRegister = mode === "register";
+
+  const resetMessages = () => {
+    setAuthError("");
+    setAuthSuccess("");
+  };
+
+  const switchMode = (nextMode) => {
+    resetMessages();
+    setMode(nextMode);
+  };
+
+  const handleRegister = async () => {
+    const trimmedUsername = username.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedUsername) {
+      setAuthError("Please enter a username.");
+      return;
+    }
+
+    try {
+      setAuthLoading(true);
+      resetMessages();
+
+      const credential = await createUserWithEmailAndPassword(auth, trimmedEmail, password);
+
+      await updateProfile(credential.user, { displayName: trimmedUsername });
+
+      await setDoc(doc(db, "users", credential.user.uid), {
+        username: trimmedUsername,
+        email: trimmedEmail,
+        favouriteTeam: "",
+        emailOptIn,
+        worldCupsWon: 0,
+        goalsScored: 0,
+        matchesWon: 0,
+        bestCampaignPoints: 0,
+        leaderboardRank: null,
+        unlockedTeams: false,
+        upgrades: {
+          power: 0,
+          accuracy: 0,
+          goalkeeper: 0,
+          brownEnvelope: 0,
+        },
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      setAuthSuccess("Account created. Welcome to the Clubhouse.");
+    } catch (error) {
+      setAuthError(authErrorMessage(error));
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleSignIn = async () => {
+    try {
+      setAuthLoading(true);
+      resetMessages();
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      setAuthSuccess("Signed in. Welcome back.");
+    } catch (error) {
+      setAuthError(authErrorMessage(error));
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (authLoading) return;
+    if (isRegister) await handleRegister();
+    else await handleSignIn();
+  };
+
+  const handleForgotPassword = async (event) => {
+    event.preventDefault();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      setAuthError("Please enter your email address first.");
+      setAuthSuccess("");
+      return;
+    }
+
+    try {
+      setAuthLoading(true);
+      resetMessages();
+      await sendPasswordResetEmail(auth, trimmedEmail);
+      setAuthSuccess("Password reset link sent.");
+    } catch (error) {
+      setAuthError(authErrorMessage(error));
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   if (forgotPassword) {
     return <div className="space-y-3">
-      <HomeMenuShell onBack={() => setForgotPassword(false)}>
+      <HomeMenuShell onBack={() => { resetMessages(); setForgotPassword(false); }}>
         <div className="flex min-h-[32px] items-center justify-center text-center">
           <div className="home-copy-bold text-[30px] uppercase leading-none tracking-[-0.02em] text-[#F5F1E8]">RESET PASSWORD</div>
         </div>
-        <form className="mt-5 space-y-3" onSubmit={(event) => event.preventDefault()}>
+        <form className="mt-5 space-y-3" onSubmit={handleForgotPassword}>
           <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Confirm email address" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-          <ActionButton type="submit" variant="yellow">SEND RESET LINK</ActionButton>
+          {authError && <div className="home-copy-regular rounded-[0.8rem] bg-red-500/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-red-100">{authError}</div>}
+          {authSuccess && <div className="home-copy-regular rounded-[0.8rem] bg-[#B7FF3C]/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-[#B7FF3C]">{authSuccess}</div>}
+          <ActionButton type="submit" variant="yellow">{authLoading ? "SENDING..." : "SEND RESET LINK"}</ActionButton>
         </form>
       </HomeMenuShell>
     </div>;
@@ -430,25 +547,27 @@ function AuthPanel({ mode, setMode, onBack }) {
         <div className="home-copy-bold text-[32px] uppercase leading-none tracking-[-0.02em] text-[#F5F1E8]">CLUBHOUSE</div>
       </div>
       <div className="mt-4 grid grid-cols-2 rounded-[1.15rem] border border-[#F5F1E8]/20 bg-[#072D1D]/42 p-1 shadow-inner">
-        <button type="button" onClick={() => setMode("signin")} className={`home-copy-bold h-10 rounded-[0.9rem] text-[14px] uppercase tracking-[0.05em] transition ${!isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN IN</button>
-        <button type="button" onClick={() => setMode("register")} className={`home-copy-bold h-10 rounded-[0.9rem] text-[14px] uppercase tracking-[0.05em] transition ${isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>REGISTER</button>
+        <button type="button" onClick={() => switchMode("signin")} className={`home-copy-bold h-10 rounded-[0.9rem] text-[14px] uppercase tracking-[0.05em] transition ${!isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN IN</button>
+        <button type="button" onClick={() => switchMode("register")} className={`home-copy-bold h-10 rounded-[0.9rem] text-[14px] uppercase tracking-[0.05em] transition ${isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>REGISTER</button>
       </div>
-      <form className="mt-4 space-y-2.5" onSubmit={(event) => event.preventDefault()}>
+      <form className="mt-4 space-y-2.5" onSubmit={handleSubmit}>
         {isRegister && <AuthInput icon="★" placeholder="Username" value={username} onChange={(event) => setUsername(event.target.value)} />}
         <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Email address" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
         <AuthInput icon={<PadlockIcon className="h-5 w-5" />} placeholder="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
         {!isRegister && (
-          <button type="button" onClick={() => setForgotPassword(true)} className="home-copy-bold mx-auto block text-[10px] uppercase tracking-[0.16em] text-[#F7D117] underline-offset-4 active:scale-[0.98]">
+          <button type="button" onClick={() => { resetMessages(); setForgotPassword(true); }} className="home-copy-bold mx-auto block text-[10px] uppercase tracking-[0.16em] text-[#F7D117] underline-offset-4 active:scale-[0.98]">
             FORGOT PASSWORD?
           </button>
         )}
         {isRegister && (
           <label className="home-copy-light flex items-start gap-2 rounded-[0.9rem] bg-[#F5F0E6]/8 p-3 text-left text-[8px] uppercase leading-[1.25] tracking-[0.12em] text-[#F5F0E6]/62">
-            <input type="checkbox" className="mt-[1px] h-4 w-4 shrink-0 accent-[#F7D117]" />
+            <input type="checkbox" checked={emailOptIn} onChange={(event) => setEmailOptIn(event.target.checked)} className="mt-[1px] h-4 w-4 shrink-0 accent-[#F7D117]" />
             <span>Receive Monday Cup email communications</span>
           </label>
         )}
-        <ActionButton type="submit" variant="yellow">{isRegister ? "CREATE ACCOUNT" : "SIGN IN"}</ActionButton>
+        {authError && <div className="home-copy-regular rounded-[0.8rem] bg-red-500/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-red-100">{authError}</div>}
+        {authSuccess && <div className="home-copy-regular rounded-[0.8rem] bg-[#B7FF3C]/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-[#B7FF3C]">{authSuccess}</div>}
+        <ActionButton type="submit" variant="yellow">{authLoading ? "LOADING..." : isRegister ? "CREATE ACCOUNT" : "SIGN IN"}</ActionButton>
       </form>
     </HomeMenuShell>
   </div>;
