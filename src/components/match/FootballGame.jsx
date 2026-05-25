@@ -65,18 +65,18 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
       <div className="absolute inset-x-0 bottom-[26%] z-[2] h-px bg-[#F5F1E8]/20 shadow-[0_0_6px_rgba(245,241,232,0.10)]" />
       <div className="relative z-[1] h-full">
-        <div className="led-text-glow font-led grid h-[22%] place-items-center py-[2%] text-center text-[clamp(9px,1.35vh,16px)] font-black uppercase tracking-[0.14em] text-[#F7D117]">
+        <div className="led-text-glow home-copy-bold grid h-[22%] place-items-center py-[2%] text-center text-[clamp(9px,1.35vh,16px)] font-black uppercase tracking-[0.14em] text-[#F7D117]">
           {stageLabel || "GROUP STAGE"}
         </div>
         <div className="h-[52%] px-[3.5%] pt-[1%]">
           <div className="grid h-full grid-cols-[11%_minmax(58px,1fr)_38px_26px_38px_minmax(58px,1fr)_11%] grid-rows-[58%_42%] items-center">
-            <div className="col-start-1 row-start-1 flex items-center justify-center"><TeamFlag team={userTeam} className="h-4 w-6 ring-1 ring-[#F7D117]/85 shadow-[0_0_6px_rgba(247,209,23,0.22)]" /></div>
-            <div className="col-start-2 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">{userTeam.code}</div></div>
-            <div className="led-text-glow font-led col-start-3 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.user}</div>
-            <div className="led-text-glow font-led col-start-4 row-start-1 flex items-center justify-center px-[4px] text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117]">-</div>
-            <div className="led-text-glow font-led col-start-5 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.opponent}</div>
-            <div className="col-start-6 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">{opponentTeam.code}</div></div>
-            <div className="col-start-7 row-start-1 flex items-center justify-center"><TeamFlag team={opponentTeam} className="h-4 w-6 ring-1 ring-[#F7D117]/85 shadow-[0_0_6px_rgba(247,209,23,0.22)]" /></div>
+            <div className="col-start-1 row-start-1 flex items-center justify-center"><TeamFlag team={userTeam} className="h-4 w-6 ring-1 ring-[#F7D117]/85 shadow-[0_0_10px_rgba(247,209,23,0.45)] drop-shadow-[0_0_7px_rgba(247,209,23,0.42)]" /></div>
+            <div className="col-start-2 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow home-copy-bold w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">{userTeam.code}</div></div>
+            <div className="led-text-glow home-copy-bold col-start-3 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.user}</div>
+            <div className="led-text-glow home-copy-bold col-start-4 row-start-1 flex items-center justify-center px-[4px] text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117]">-</div>
+            <div className="led-text-glow home-copy-bold col-start-5 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.opponent}</div>
+            <div className="col-start-6 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow home-copy-bold w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">{opponentTeam.code}</div></div>
+            <div className="col-start-7 row-start-1 flex items-center justify-center"><TeamFlag team={opponentTeam} className="h-4 w-6 ring-1 ring-[#F7D117]/85 shadow-[0_0_10px_rgba(247,209,23,0.45)] drop-shadow-[0_0_7px_rgba(247,209,23,0.42)]" /></div>
             <div className="col-start-2 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><PenaltyMarkers attempts={attempts.user} totalSlots={totalMarkerSlots} /></div></div>
             <div className="col-start-6 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><PenaltyMarkers attempts={attempts.opponent} totalSlots={totalMarkerSlots} /></div></div>
           </div>
@@ -199,7 +199,7 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
       {showChampionsBadge && (
         <div
           className="pointer-events-none absolute left-1/2 z-[7] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
-          style={{ top: `${(goalLine - 8) / 2}%`, width: "64%", height: "48%" }}
+          style={{ top: `${(goalLine - 8) / 2}%`, width: "32%", height: "24%" }}
           aria-hidden="true"
         >
           <div className="absolute left-1/2 top-1/2 h-[76%] w-[82%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/26 blur-2xl" />
