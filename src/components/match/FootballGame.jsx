@@ -7,6 +7,7 @@ import {
   GAME,
   DIRECTIONS,
   PHASE,
+  COMMENTARY,
   clamp,
   getDirection,
   randomDirection,

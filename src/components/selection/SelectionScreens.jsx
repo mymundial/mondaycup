@@ -296,7 +296,7 @@ function ScoreboardPlaceholder() {
           <div className="flex min-w-0 flex-col items-center justify-center text-center">
             <div className={SCOREBOARD_STAGE_TEXT}>WELCOME TO</div>
             <div className={`${SCOREBOARD_MAIN_TEXT} mt-[0.18em]`}>MONDAY CUP</div>
-            <div className={`${SCOREBOARD_MARKER_TEXT} mt-[0.42em]`}>48 TEAM PENALTY KICK KNOCKOUT TOURNAMENT</div>
+            <div className={`${SCOREBOARD_MARKER_TEXT} mt-[0.42em]`}>GLOBAL PENALTY KICK TOURNAMENT</div>
           </div>
           <ScoreboardTrophy side="right" />
         </div>
