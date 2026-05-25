@@ -19,11 +19,12 @@ const TROPHY_AD_SRC = "/trophy-ad.png";
 const SCOREBOARD_STAGE_TEXT = "font-led text-[clamp(9px,1.35vh,16px)] font-black uppercase leading-none tracking-[0.14em] text-[#F7D117]";
 const SCOREBOARD_MAIN_TEXT = "font-led text-[clamp(17px,3.05vh,34px)] font-black uppercase leading-none tracking-normal text-[#F7D117]";
 const SCOREBOARD_MARKER_TEXT = "font-led text-[clamp(6px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.12em] text-[#F7D117]";
-const MENU_TITLE_CLASS = "home-copy-bold text-[29px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]";
+const MENU_TITLE_CLASS = "home-copy-bold text-[28px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]";
 const HOME_MAIN_HEIGHT = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
-const HOME_LOGO_TOP_RATIO = 0.085;
-const HOME_LOGO_GAP = "clamp(10px,1.3vh,16px)";
-const HOME_MENU_TOP_OFFSET = `calc((${HOME_MAIN_HEIGHT} * ${HOME_LOGO_TOP_RATIO}) + ((168px + min(160px, 16vh)) * 0.5) + ${HOME_LOGO_GAP})`;
+const HOME_LOGO_TOP_RATIO = 0;
+const HOME_LOGO_HEIGHT = "min(152px,14.5vh)";
+const HOME_LOGO_GAP = "clamp(6px,0.85vh,10px)";
+const HOME_MENU_TOP_OFFSET = `calc((${HOME_MAIN_HEIGHT} * ${HOME_LOGO_TOP_RATIO}) + ${HOME_LOGO_HEIGHT} + ${HOME_LOGO_GAP})`;
 
 function AtIcon({ className = "" }) {
   return (
@@ -246,18 +247,18 @@ function HomeFlashCommentaryBar() {
 
   return (
     <div
-      className="absolute inset-x-0 bottom-0 z-[0] h-[26%] w-full overflow-hidden px-[10%] transition-colors duration-150"
+      className="absolute inset-x-0 bottom-0 z-[0] h-[26%] w-full overflow-hidden px-[12%] transition-colors duration-150"
       style={{ background: theme.bg, color: theme.text }}
       aria-live="off"
     >
-      <div className="grid h-full grid-cols-[8.5%_minmax(0,1fr)_8.5%] items-end gap-[2.5%] pb-[1.15%]">
-        <span className="flex h-[clamp(14px,2.35vh,24px)] w-[clamp(22px,3.7vh,38px)] items-center justify-center overflow-hidden rounded-[0.22rem] border border-[#F5F1E8]/78 bg-[#F5F1E8]/94 shadow-[0_2px_5px_rgba(0,0,0,0.24)]">
-          <Flag team={activeTeam} className="h-full w-full" />
+      <div className="grid h-full grid-cols-[34px_minmax(0,1fr)_34px] items-center gap-[3%]">
+        <span className="flex h-[clamp(12px,2.05vh,21px)] w-[clamp(18px,3.2vh,32px)] items-center justify-center self-center overflow-hidden rounded-[0.2rem] border border-[#F5F1E8]/78 bg-[#F5F1E8]/94 shadow-[0_2px_5px_rgba(0,0,0,0.24)]">
+          <Flag team={activeTeam} className="h-full w-full object-cover" />
         </span>
-        <span className="home-copy-bold min-w-0 truncate text-center text-[clamp(12px,2.25vh,27px)] uppercase leading-none tracking-[0.085em]">
+        <span className="home-copy-bold flex min-w-0 items-center justify-center truncate text-center text-[clamp(13px,2.3vh,28px)] uppercase leading-none tracking-[0.085em]">
           {activeTeam}
         </span>
-        <span className="home-copy-bold text-right text-[clamp(9px,1.55vh,16px)] uppercase leading-none tracking-[0.09em] opacity-[0.72] tabular-nums">
+        <span className="home-copy-bold flex items-center justify-end text-right text-[clamp(9px,1.55vh,16px)] uppercase leading-none tracking-[0.09em] opacity-[0.72] tabular-nums">
           #{TEAM_RANK[activeTeam]}
         </span>
       </div>
@@ -340,7 +341,7 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false }) {
                 <div className="led-text-glow font-led w-full whitespace-nowrap text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">MONDAY CUP</div>
               </div>
               <div className="col-start-7 row-start-1 flex items-center justify-center"><ScoreboardTrophy side="right" /></div>
-              <div className="col-start-2 col-span-5 row-start-2 flex items-start justify-center pt-[2%]">
+              <div className="col-start-2 col-span-5 row-start-2 flex h-full items-center justify-center">
                 <div className="led-text-glow font-led whitespace-nowrap text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117]">
                   GLOBAL PENALTY KICK TOURNAMENT
                 </div>
@@ -383,7 +384,7 @@ function HomeLayout({ children, allTeamsUnlocked = false }) {
   );
 }
 
-function ActionButton({ children, eyebrow, onClick, variant = "light", disabled = false, type = "button" }) {
+function ActionButton({ children, eyebrow, onClick, variant = "light", disabled = false, type = "button", size = "normal" }) {
   const styles = variant === "yellow"
     ? "border-[#F7D117]/75 bg-[#F7D117] text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.24),inset_0_2px_8px_rgba(255,255,255,0.22)]"
     : variant === "green"
@@ -392,9 +393,12 @@ function ActionButton({ children, eyebrow, onClick, variant = "light", disabled 
         ? "border-[#F5F0E6]/18 bg-[#F5F0E6]/18 text-[#F5F0E6]"
         : "border-[#D4AF37]/50 bg-[#F5F0E6] text-[#0B5F35]";
 
-  return <button type={type} onClick={onClick} disabled={disabled} className={`flex h-[44px] w-full items-center justify-center rounded-[1rem] border px-4 text-center transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
+  const heightClass = size === "hero" ? "h-[54px]" : "h-[44px]";
+  const textClass = size === "hero" ? "text-[clamp(20px,5.4vw,30px)] tracking-[0.075em]" : "text-[clamp(12px,3.45vw,20px)] tracking-[0.055em]";
+
+  return <button type={type} onClick={onClick} disabled={disabled} className={`flex ${heightClass} w-full items-center justify-center rounded-[1rem] border px-4 text-center transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
     {eyebrow && <span className="sr-only">{eyebrow}</span>}
-    <div className="home-copy-bold w-full truncate whitespace-nowrap text-[clamp(12px,3.45vw,20px)] uppercase leading-none tracking-[0.055em]">{children}</div>
+    <div className={`home-copy-bold w-full truncate whitespace-nowrap ${textClass} uppercase leading-none`}>{children}</div>
   </button>;
 }
 
@@ -414,18 +418,18 @@ function SavedCampaignCard({ summary, onContinue }) {
 
 function HomeMenuShell({ children, className = "", onBack }) {
   return (
-    <div className={`relative overflow-hidden rounded-[1.65rem] border border-[#F5F1E8]/14 bg-[#0B5F35] text-[#F5F1E8] shadow-[0_18px_38px_rgba(0,0,0,0.24),inset_0_-10px_22px_rgba(0,0,0,0.18)] ${className}`}>
+    <div className={`relative overflow-hidden rounded-[1.65rem] border border-[#F5F1E8]/14 bg-[#0B5F35] text-[#F5F1E8] shadow-[0_10px_22px_rgba(0,0,0,0.20),inset_0_-3px_8px_rgba(0,0,0,0.08)] ${className}`}>
       {onBack && (
         <button
           type="button"
           onClick={onBack}
-          className="absolute left-3 top-2.5 z-20 flex h-[34px] w-[34px] items-center justify-center text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.35)] active:scale-[0.96]"
+          className="absolute left-3 top-2 z-20 flex h-[34px] w-[34px] items-center justify-center text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.35)] active:scale-[0.96]"
           aria-label="Back"
         >
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5L8 12L15 19" /></svg>
         </button>
       )}
-      <div className="px-4 py-2.5 shadow-[inset_0_10px_24px_rgba(255,255,255,0.035)]">
+      <div className="px-4 py-2 shadow-[inset_0_6px_14px_rgba(255,255,255,0.025)]">
         {children}
       </div>
     </div>
@@ -435,10 +439,10 @@ function HomeMenuShell({ children, className = "", onBack }) {
 function FloatingHomeLogo() {
   return (
     <div className="pointer-events-none absolute inset-x-0 z-[20] flex justify-center" style={{ top: `${HOME_LOGO_TOP_RATIO * 100}%` }} aria-hidden="true">
-      <div className="relative flex h-[168px] w-[420px] max-w-[92vw] items-center justify-center">
-        <div className="absolute inset-x-8 bottom-9 h-20 rounded-full bg-[#F7D117]/34 blur-3xl" />
-        <div className="absolute inset-x-14 bottom-11 h-16 rounded-full bg-[#F5F1E8]/30 blur-2xl" />
-        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative z-10 h-[160px] max-h-[16vh] w-auto object-contain drop-shadow-[0_12px_30px_rgba(0,0,0,0.48)]" draggable={false} />
+      <div className="relative flex w-[420px] max-w-[92vw] items-start justify-center" style={{ height: HOME_LOGO_HEIGHT }}>
+        <div className="absolute inset-x-10 bottom-2 h-[42%] rounded-full bg-[#F7D117]/28 blur-3xl" />
+        <div className="absolute inset-x-14 bottom-3 h-[36%] rounded-full bg-[#F5F1E8]/24 blur-2xl" />
+        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative z-10 h-full w-auto object-contain drop-shadow-[0_10px_24px_rgba(0,0,0,0.44)]" draggable={false} />
       </div>
     </div>
   );
@@ -606,13 +610,13 @@ function AuthPanel({ mode, setMode, onBack }) {
         <button type="button" onClick={() => switchMode("signin")} className={`home-copy-bold h-6 rounded-[0.55rem] text-[14px] uppercase tracking-[0.05em] transition ${!isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN IN</button>
         <button type="button" onClick={() => switchMode("register")} className={`home-copy-bold h-6 rounded-[0.55rem] text-[14px] uppercase tracking-[0.05em] transition ${isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN UP</button>
       </div>
-      <form className="mt-2.5 space-y-1.5" onSubmit={handleSubmit}>
+      <form className="mt-2 space-y-1.5" onSubmit={handleSubmit}>
         {isRegister && <AuthInput icon={<StarIcon className="h-5 w-5" />} placeholder="Username" value={username} onChange={(event) => { resetMessages(); setUsername(event.target.value); }} />}
         <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Email address" type="email" value={email} onChange={(event) => { resetMessages(); setEmail(event.target.value); }} />
         <AuthInput icon={<PadlockIcon className="h-5 w-5" />} placeholder="Password" type="password" value={password} onChange={(event) => { resetMessages(); setPassword(event.target.value); }} />
         <ActionButton type="submit" variant="yellow">{authError || authSuccess || (authLoading ? "LOADING..." : isRegister ? "REGISTER" : "SIGN IN")}</ActionButton>
         {isRegister && (
-          <label className="home-copy-bold flex items-center justify-center gap-2 bg-transparent py-1 text-center text-[11px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]">
+          <label className="home-copy-bold flex items-center justify-center gap-2 bg-transparent py-0.5 text-center text-[11px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]">
             <input type="checkbox" checked={emailOptIn} onChange={(event) => setEmailOptIn(event.target.checked)} className="h-4 w-4 shrink-0 accent-[#F7D117]" />
             <span>Receive email communications</span>
           </label>
@@ -634,8 +638,8 @@ function LandingPanel({ onPlayGuest }) {
   return <div className="space-y-3">
     <HomeMenuShell>
       <div className="space-y-2.5">
-        <ActionButton onClick={onPlayGuest} variant="yellow">PLAY NOW</ActionButton>
-        <ActionButton onClick={() => setAuthMode("signin")} variant="yellow">CLUBHOUSE</ActionButton>
+        <ActionButton onClick={onPlayGuest} variant="yellow" size="hero">PLAY NOW</ActionButton>
+        <ActionButton onClick={() => setAuthMode("signin")} variant="yellow" size="hero">CLUBHOUSE</ActionButton>
       </div>
     </HomeMenuShell>
   </div>;
@@ -643,7 +647,7 @@ function LandingPanel({ onPlayGuest }) {
 
 function HostPanel({ onSelectGroup, onSelectTeam, onBack }) {
   return <HomeMenuShell onBack={onBack}>
-    <div className={`${MENU_TITLE_CLASS} mb-3 text-center`}>CHOOSE YOUR TEAM</div>
+    <div className={`mb-3 flex min-h-[34px] items-center justify-center text-center ${MENU_TITLE_CLASS}`}>CHOOSE YOUR TEAM</div>
     <div className="grid grid-cols-3 gap-2">
       {HOST_TEAMS.map((host) => {
         const theme = getTeamTheme(host.name);
@@ -668,7 +672,7 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
   const previousGroup = () => onSelectGroup(GROUP_LETTERS[(currentIndex - 1 + GROUP_LETTERS.length) % GROUP_LETTERS.length]);
   const nextGroup = () => onSelectGroup(GROUP_LETTERS[(currentIndex + 1) % GROUP_LETTERS.length]);
   return <HomeMenuShell onBack={onBack}>
-    <div className="mb-3 flex items-center justify-center gap-4">
+    <div className="mb-3 flex min-h-[34px] items-center justify-center gap-4">
       <ArrowButton direction="left" onClick={previousGroup} />
       <div className={MENU_TITLE_CLASS}>GROUP {group}</div>
       <ArrowButton direction="right" onClick={nextGroup} />
