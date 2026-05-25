@@ -21,7 +21,9 @@ const SCOREBOARD_MAIN_TEXT = "font-led text-[clamp(17px,3.05vh,34px)] font-black
 const SCOREBOARD_MARKER_TEXT = "font-led text-[clamp(6px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.12em] text-[#F7D117]";
 const MENU_TITLE_CLASS = "home-copy-bold text-[29px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]";
 const HOME_MAIN_HEIGHT = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
-const HOME_MENU_TOP_OFFSET = `calc((${HOME_MAIN_HEIGHT} * 0.135) + ((168px + min(160px, 16vh)) * 0.5) + 16px)`;
+const HOME_LOGO_TOP_RATIO = 0.085;
+const HOME_LOGO_GAP = "clamp(10px,1.3vh,16px)";
+const HOME_MENU_TOP_OFFSET = `calc((${HOME_MAIN_HEIGHT} * ${HOME_LOGO_TOP_RATIO}) + ((168px + min(160px, 16vh)) * 0.5) + ${HOME_LOGO_GAP})`;
 
 function AtIcon({ className = "" }) {
   return (
@@ -244,18 +246,18 @@ function HomeFlashCommentaryBar() {
 
   return (
     <div
-      className="absolute inset-x-0 bottom-0 z-[0] h-[26%] w-full overflow-hidden px-[6%] transition-colors duration-150"
+      className="absolute inset-x-0 bottom-0 z-[0] h-[26%] w-full overflow-hidden px-[10%] transition-colors duration-150"
       style={{ background: theme.bg, color: theme.text }}
       aria-live="off"
     >
-      <div className="grid h-full grid-cols-[11%_minmax(0,1fr)_11%] items-center gap-[2%]">
-        <span className="flex h-[clamp(18px,3vh,31px)] w-[clamp(28px,4.65vh,48px)] items-center justify-center overflow-hidden rounded-[0.24rem] border border-[#F5F1E8]/78 bg-[#F5F1E8]/94 shadow-[0_2px_5px_rgba(0,0,0,0.24)]">
+      <div className="grid h-full grid-cols-[8.5%_minmax(0,1fr)_8.5%] items-end gap-[2.5%] pb-[1.15%]">
+        <span className="flex h-[clamp(14px,2.35vh,24px)] w-[clamp(22px,3.7vh,38px)] items-center justify-center overflow-hidden rounded-[0.22rem] border border-[#F5F1E8]/78 bg-[#F5F1E8]/94 shadow-[0_2px_5px_rgba(0,0,0,0.24)]">
           <Flag team={activeTeam} className="h-full w-full" />
         </span>
-        <span className="home-copy-bold min-w-0 translate-y-[1px] truncate text-center text-[clamp(12px,2.25vh,27px)] uppercase leading-none tracking-[0.085em]">
+        <span className="home-copy-bold min-w-0 truncate text-center text-[clamp(12px,2.25vh,27px)] uppercase leading-none tracking-[0.085em]">
           {activeTeam}
         </span>
-        <span className="home-copy-bold translate-y-[1px] text-right text-[clamp(9px,1.55vh,16px)] uppercase leading-none tracking-[0.09em] opacity-[0.72] tabular-nums">
+        <span className="home-copy-bold text-right text-[clamp(9px,1.55vh,16px)] uppercase leading-none tracking-[0.09em] opacity-[0.72] tabular-nums">
           #{TEAM_RANK[activeTeam]}
         </span>
       </div>
@@ -432,7 +434,7 @@ function HomeMenuShell({ children, className = "", onBack }) {
 
 function FloatingHomeLogo() {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-[13.5%] z-[20] flex justify-center" aria-hidden="true">
+    <div className="pointer-events-none absolute inset-x-0 z-[20] flex justify-center" style={{ top: `${HOME_LOGO_TOP_RATIO * 100}%` }} aria-hidden="true">
       <div className="relative flex h-[168px] w-[420px] max-w-[92vw] items-center justify-center">
         <div className="absolute inset-x-8 bottom-9 h-20 rounded-full bg-[#F7D117]/34 blur-3xl" />
         <div className="absolute inset-x-14 bottom-11 h-16 rounded-full bg-[#F5F1E8]/30 blur-2xl" />
