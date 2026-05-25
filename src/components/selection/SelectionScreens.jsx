@@ -320,7 +320,7 @@ function HomeMenuBar() {
       <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
       <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[34px] w-[168px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5F1E8]/16 blur-xl" aria-hidden="true" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[26px] w-[132px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/12 blur-lg" aria-hidden="true" />
-      <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[25.5px] w-auto object-contain drop-shadow-[0_0_11px_rgba(245,241,232,0.36)]" draggable={false} />
+      <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[40px] w-auto object-contain drop-shadow-[0_0_14px_rgba(245,241,232,0.42)]" draggable={false} />
       <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute right-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
     </div>
   );
@@ -345,13 +345,11 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false }) {
             WELCOME TO
           </div>
           <div className="h-[52%] px-[3.5%] pt-[1%]">
-            <div className="grid h-full grid-cols-[11%_minmax(58px,1fr)_38px_26px_38px_minmax(58px,1fr)_11%] grid-rows-[58%_42%] items-center">
-              <div className="col-start-1 row-start-1 flex items-center justify-center"><ScoreboardTrophy side="left" /></div>
-              <div className="col-start-2 col-span-5 row-start-1 flex min-w-0 items-center justify-center px-[2%]">
+            <div className="grid h-full grid-cols-1 grid-rows-[58%_42%] items-center">
+              <div className="row-start-1 flex min-w-0 items-center justify-center px-[2%]">
                 <div className="led-text-glow font-led w-full whitespace-nowrap text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">MONDAY CUP</div>
               </div>
-              <div className="col-start-7 row-start-1 flex items-center justify-center"><ScoreboardTrophy side="right" /></div>
-              <div className="col-start-2 col-span-5 row-start-2 flex h-full items-center justify-center">
+              <div className="row-start-2 flex h-full items-center justify-center">
                 <div className="led-text-glow font-led whitespace-nowrap text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117]">
                   GLOBAL PENALTY KICK TOURNAMENT
                 </div>
