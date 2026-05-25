@@ -331,14 +331,14 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false }) {
   return (
     <div className="relative z-[1] shrink-0 overflow-hidden bg-[#050505]" style={{ height: `calc(54px + ${scoreboardHeight})` }} aria-hidden="true">
       <HomeMenuBar />
-      <div className="relative overflow-hidden bg-[#050505]" style={{ height: scoreboardHeight }}>
+      <div className="relative overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]" style={{ height: scoreboardHeight }}>
         <div
           className="absolute inset-0 opacity-50"
           style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }}
         />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
-        <div className="absolute inset-x-0 bottom-[26%] z-[2] h-px bg-[#F7D117]/16" />
+        <div className="absolute inset-x-0 bottom-[26%] z-[2] h-px bg-[#F5F1E8]/20 shadow-[0_0_6px_rgba(245,241,232,0.10)]" />
         <HomeFlashCommentaryBar allTeamsUnlocked={allTeamsUnlocked} />
         <div className="relative z-[1] h-full">
           <div className="led-text-glow font-led grid h-[22%] place-items-center py-[2%] text-center text-[clamp(9px,1.35vh,16px)] font-black uppercase tracking-[0.14em] text-[#F7D117]">
