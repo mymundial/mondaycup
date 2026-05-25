@@ -663,14 +663,14 @@ function HostPanel({ onSelectGroup, onSelectTeam, onBack }) {
           <button
             key={host.name}
             onClick={() => onSelectTeam(host.name, host.group)}
-            className="grid h-[50px] grid-cols-[28px_minmax(0,1fr)_26px] items-center gap-1.5 rounded-[1rem] border border-[#F5F1E8]/22 px-2.5 shadow-[0_0_8px_rgba(245,241,232,0.06),inset_0_2px_8px_rgba(255,255,255,0.10)] active:scale-[0.99]"
+            className="relative flex h-[50px] items-center justify-center overflow-hidden rounded-[1rem] border border-[#F5F1E8]/22 px-3 shadow-[0_0_8px_rgba(245,241,232,0.06),inset_0_2px_8px_rgba(255,255,255,0.10)] active:scale-[0.99]"
             style={{ backgroundColor: theme.bg, color: theme.text }}
           >
-            <span className="flex h-[19px] w-[26px] shrink-0 items-center justify-center justify-self-start overflow-hidden rounded-[0.2rem] border border-[#F5F1E8]/82 bg-[#F5F1E8] shadow-[0_2px_5px_rgba(0,0,0,0.16)]">
+            <span className="home-copy-bold absolute left-[13%] top-1/2 min-w-[2.4em] -translate-y-1/2 text-left text-[clamp(12px,3vw,15px)] uppercase leading-none tracking-[0.07em]">{label}</span>
+            <span className="absolute left-1/2 top-1/2 flex h-[18px] w-[25px] -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden rounded-[0.2rem] border border-[#F5F1E8]/82 bg-[#F5F1E8] shadow-[0_2px_5px_rgba(0,0,0,0.16)]">
               <Flag team={host.name} className="h-full w-full object-contain" />
             </span>
-            <span className="home-copy-bold min-w-0 truncate text-center text-[clamp(13px,3.15vw,16px)] uppercase leading-none tracking-[0.07em]">{label}</span>
-            <span className="home-copy-bold justify-self-end text-right text-[clamp(8px,2.25vw,11px)] uppercase leading-none tracking-[0.06em] opacity-70 tabular-nums">#{TEAM_RANK[host.name]}</span>
+            <span className="home-copy-bold absolute right-[11%] top-1/2 -translate-y-1/2 text-right text-[clamp(12px,3vw,15px)] uppercase leading-none tracking-[0.06em] opacity-78 tabular-nums">#{TEAM_RANK[host.name]}</span>
           </button>
         );
       })}
