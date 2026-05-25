@@ -311,8 +311,13 @@ function HomeLedGroupsTicker() {
 
 function HomeMenuBar() {
   return (
-    <div className="relative z-[3] flex h-[54px] shrink-0 items-center justify-center bg-[#062817] px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
-      <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="h-[23px] w-auto object-contain" draggable={false} />
+    <div className="relative z-[3] flex h-[54px] shrink-0 items-center justify-center overflow-hidden border-b border-[#05150E] bg-[#072D1D] px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-black/25" aria-hidden="true" />
+      <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
+      <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[23px] w-auto object-contain drop-shadow-[0_0_7px_rgba(245,241,232,0.18)]" draggable={false} />
+      <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute right-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
     </div>
   );
 }
