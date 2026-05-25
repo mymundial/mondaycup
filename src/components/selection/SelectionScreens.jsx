@@ -250,7 +250,7 @@ function HomeFlashCommentaryBar() {
 
   return (
     <div
-      className="absolute inset-x-0 bottom-0 z-[0] h-[26%] w-full overflow-hidden rounded-[1.05rem] border border-[#F5F1E8]/24 px-[12%] shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)] transition-colors duration-150"
+      className="absolute inset-x-0 bottom-0 z-[0] h-[26%] w-full overflow-hidden border-y border-[#F5F1E8]/24 px-[12%] shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)] transition-colors duration-150"
       style={{ background: theme.bg, color: theme.text }}
       aria-live="off"
     >
@@ -333,8 +333,12 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false }) {
       <HomeMenuBar />
       <div className="relative overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]" style={{ height: scoreboardHeight }}>
         <div
-          className="absolute inset-[3px] opacity-50"
-          style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 1.05px, transparent 2.15px)", backgroundSize: "7px 7px" }}
+          className="absolute inset-x-[5px] inset-y-[5px] opacity-50"
+          style={{
+            backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 0.95px, transparent 2.25px)",
+            backgroundSize: "7px 7px",
+            backgroundPosition: "center center",
+          }}
         />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
