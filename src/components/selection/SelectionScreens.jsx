@@ -20,6 +20,8 @@ const SCOREBOARD_STAGE_TEXT = "font-led text-[clamp(9px,1.35vh,16px)] font-black
 const SCOREBOARD_MAIN_TEXT = "font-led text-[clamp(17px,3.05vh,34px)] font-black uppercase leading-none tracking-normal text-[#F7D117]";
 const SCOREBOARD_MARKER_TEXT = "font-led text-[clamp(6px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.12em] text-[#F7D117]";
 const MENU_TITLE_CLASS = "home-copy-bold text-[29px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]";
+const HOME_MAIN_HEIGHT = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
+const HOME_MENU_TOP_OFFSET = `calc((${HOME_MAIN_HEIGHT} * 0.135) + ((168px + min(160px, 16vh)) * 0.5) + 16px)`;
 
 function AtIcon({ className = "" }) {
   return (
@@ -365,9 +367,11 @@ function HomeLayout({ children, allTeamsUnlocked = false }) {
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
           <FloatingHomeLogo />
-          <div className="relative z-10 flex h-full flex-col px-5 pb-0 pt-4">
-            <div className="flex min-h-0 flex-1 flex-col justify-center py-2">
-              {children}
+          <div className="relative z-10 flex h-full flex-col px-5 pb-0" style={{ paddingTop: HOME_MENU_TOP_OFFSET }}>
+            <div className="min-h-0 flex-1 overflow-y-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex min-h-full flex-col justify-start">
+                {children}
+              </div>
             </div>
             <HomeFooter />
           </div>
@@ -428,7 +432,7 @@ function HomeMenuShell({ children, className = "", onBack }) {
 
 function FloatingHomeLogo() {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-[13.5%] z-[8] flex justify-center" aria-hidden="true">
+    <div className="pointer-events-none absolute inset-x-0 top-[13.5%] z-[20] flex justify-center" aria-hidden="true">
       <div className="relative flex h-[168px] w-[420px] max-w-[92vw] items-center justify-center">
         <div className="absolute inset-x-8 bottom-9 h-20 rounded-full bg-[#F7D117]/34 blur-3xl" />
         <div className="absolute inset-x-14 bottom-11 h-16 rounded-full bg-[#F5F1E8]/30 blur-2xl" />
