@@ -53,7 +53,7 @@ function ScoreboardTrophy({ side }) {
     <img
       src={TROPHY_PIXEL_SRC}
       alt=""
-      className={`h-[clamp(22px,3.6vh,38px)] w-auto object-contain opacity-95 drop-shadow-[0_0_7px_rgba(247,209,23,0.38)] ${side === "left" ? "scale-x-[-1]" : ""}`}
+      className={`h-[clamp(28px,4.55vh,48px)] w-auto object-contain opacity-95 drop-shadow-[0_0_7px_rgba(247,209,23,0.38)] ${side === "left" ? "scale-x-[-1]" : ""}`}
       draggable={false}
       aria-hidden="true"
     />
@@ -226,16 +226,9 @@ function HomePitchBackdrop() {
 }
 
 
-function HomeFlashCommentaryBar({ allTeamsUnlocked = false }) {
-  const teams = useMemo(() => {
-    if (allTeamsUnlocked) return Object.values(GROUPS).flat().slice().sort((a, b) => a.localeCompare(b));
-    return ["Canada", "Mexico", "United States"];
-  }, [allTeamsUnlocked]);
+function HomeFlashCommentaryBar() {
+  const teams = useMemo(() => GROUP_LETTERS.flatMap((group) => GROUPS[group] || []), []);
   const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [allTeamsUnlocked]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -244,16 +237,26 @@ function HomeFlashCommentaryBar({ allTeamsUnlocked = false }) {
     return () => window.clearInterval(interval);
   }, [teams.length]);
 
-  const activeTeam = teams[activeIndex] || teams[0] || "Canada";
+  const activeTeam = teams[activeIndex] || teams[0] || "Mexico";
   const theme = getTeamTheme(activeTeam);
 
   return (
     <div
-      className="absolute inset-x-0 bottom-0 z-[0] grid h-[26%] w-full place-items-center overflow-hidden px-[3%] text-center home-copy-bold text-[clamp(13px,2.3vh,28px)] font-black uppercase leading-none tracking-tight transition-colors duration-150"
+      className="absolute inset-x-0 bottom-0 z-[0] h-[26%] w-full overflow-hidden px-[6%] transition-colors duration-150"
       style={{ background: theme.bg, color: theme.text }}
       aria-live="off"
     >
-      <span className="block translate-y-[1px] whitespace-nowrap">{activeTeam}</span>
+      <div className="grid h-full grid-cols-[11%_minmax(0,1fr)_11%] items-center gap-[2%]">
+        <span className="flex h-[clamp(18px,3vh,31px)] w-[clamp(28px,4.65vh,48px)] items-center justify-center overflow-hidden rounded-[0.24rem] border border-[#F5F1E8]/78 bg-[#F5F1E8]/94 shadow-[0_2px_5px_rgba(0,0,0,0.24)]">
+          <Flag team={activeTeam} className="h-full w-full" />
+        </span>
+        <span className="home-copy-bold min-w-0 translate-y-[1px] truncate text-center text-[clamp(12px,2.25vh,27px)] uppercase leading-none tracking-[0.085em]">
+          {activeTeam}
+        </span>
+        <span className="home-copy-bold translate-y-[1px] text-right text-[clamp(9px,1.55vh,16px)] uppercase leading-none tracking-[0.09em] opacity-[0.72] tabular-nums">
+          #{TEAM_RANK[activeTeam]}
+        </span>
+      </div>
     </div>
   );
 }
@@ -591,7 +594,7 @@ function AuthPanel({ mode, setMode, onBack }) {
   return <div className="space-y-3">
     <HomeMenuShell onBack={onBack}>
       <div className="flex min-h-[30px] items-center justify-center text-center">
-        <div className={MENU_TITLE_CLASS}>{isRegister ? "SIGN UP" : "CLUBHOUSE"}</div>
+        <div className={MENU_TITLE_CLASS}>CLUBHOUSE</div>
       </div>
       <div className="mt-2 grid grid-cols-2 rounded-[0.75rem] border border-[#F5F1E8]/20 bg-[#072D1D]/42 p-0.5 shadow-inner">
         <button type="button" onClick={() => switchMode("signin")} className={`home-copy-bold h-6 rounded-[0.55rem] text-[14px] uppercase tracking-[0.05em] transition ${!isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN IN</button>
@@ -601,7 +604,7 @@ function AuthPanel({ mode, setMode, onBack }) {
         {isRegister && <AuthInput icon={<StarIcon className="h-5 w-5" />} placeholder="Username" value={username} onChange={(event) => { resetMessages(); setUsername(event.target.value); }} />}
         <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Email address" type="email" value={email} onChange={(event) => { resetMessages(); setEmail(event.target.value); }} />
         <AuthInput icon={<PadlockIcon className="h-5 w-5" />} placeholder="Password" type="password" value={password} onChange={(event) => { resetMessages(); setPassword(event.target.value); }} />
-        <ActionButton type="submit" variant="yellow">{authError || authSuccess || (authLoading ? "LOADING..." : isRegister ? "CREATE ACCOUNT" : "SIGN IN")}</ActionButton>
+        <ActionButton type="submit" variant="yellow">{authError || authSuccess || (authLoading ? "LOADING..." : isRegister ? "REGISTER" : "SIGN IN")}</ActionButton>
         {isRegister && (
           <label className="home-copy-bold flex items-center justify-center gap-2 bg-transparent py-1 text-center text-[11px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]">
             <input type="checkbox" checked={emailOptIn} onChange={(event) => setEmailOptIn(event.target.checked)} className="h-4 w-4 shrink-0 accent-[#F7D117]" />
