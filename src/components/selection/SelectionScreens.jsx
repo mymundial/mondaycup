@@ -313,10 +313,8 @@ function HomeLedGroupsTicker() {
 
 function HomeMenuBar() {
   return (
-    <div className="relative z-[3] flex h-[54px] shrink-0 items-center justify-center overflow-hidden bg-[#072D1D] px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.18))]" aria-hidden="true" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" aria-hidden="true" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[#F5F1E8]/10" aria-hidden="true" />
+    <div className="relative z-[3] flex h-[54px] shrink-0 items-center justify-center overflow-hidden bg-[#072D1D] px-6 text-[#F5F1E8]">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.16))]" aria-hidden="true" />
       <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
       <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[30px] w-auto object-contain" draggable={false} />
       <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute right-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
@@ -331,11 +329,11 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false }) {
       <HomeMenuBar />
       <div className="relative overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]" style={{ height: scoreboardHeight }}>
         <div
-          className="absolute inset-x-[6px] top-[2px] bottom-[7px] opacity-50"
+          className="absolute inset-x-0 top-[4px] bottom-[4px] opacity-50"
           style={{
-            backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 0.82px, transparent 1.95px)",
-            backgroundSize: "6px 6px",
-            backgroundPosition: "3px 1px",
+            backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 0.78px, transparent 1.55px)",
+            backgroundSize: "7px 7px",
+            backgroundPosition: "3.5px 3.5px",
           }}
         />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
