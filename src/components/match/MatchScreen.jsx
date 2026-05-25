@@ -69,7 +69,19 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/45 px-5 pt-14">
       <div className="relative w-full max-w-sm overflow-visible rounded-[2rem] bg-[#EFE7D8] text-center text-[#0B5F35] shadow-[0_20px_60px_rgba(7,45,29,0.22)]">
-        <div className="absolute left-1/2 top-[-52px] z-[3] -translate-x-1/2 rounded-full bg-[#072D1D]/32 px-3.5 py-2 shadow-[0_0_14px_rgba(7,45,29,0.38)] backdrop-blur-[1px]"><FormTracker form={userForm} /></div>
+        <div className="absolute left-1/2 top-[-52px] z-[3] -translate-x-1/2 overflow-hidden rounded-full border border-[#F5F1E8]/18 bg-[#050505] px-4 py-2.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_0_14px_rgba(7,45,29,0.38)]">
+          <div
+            className="absolute inset-x-0 top-[3px] bottom-[3px] opacity-45"
+            style={{
+              backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 0.78px, transparent 1.55px)",
+              backgroundSize: "7px 7px",
+              backgroundPosition: "3.5px 3.5px",
+            }}
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
+          <div className="relative z-[1]"><FormTracker form={userForm} /></div>
+        </div>
         <div className="overflow-hidden rounded-t-[2rem] bg-[#0B5F35] px-5 py-2 text-[#F5F0E6]">
           <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center">
@@ -136,10 +148,11 @@ export function MatchScreen({
   return (
     <Shell>
       <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#EFE7D8]">
-        <div className="relative flex h-[54px] shrink-0 items-center justify-center bg-[#EFE7D8] text-[#0B5F35]">
-          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain" draggable={false} />
-          <div className="text-[24px] font-black uppercase tracking-[-0.02em]">LIVE MATCH</div>
-          <button onClick={menuProps.onToggleMenu} disabled={matchBusy} aria-disabled={matchBusy} title={matchBusy ? "Menu available after the shot" : "Open menu"} className={`absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-[#0B5F35] text-[#F5F0E6] ${matchBusy ? "cursor-not-allowed opacity-45" : ""}`}>
+        <div className="relative z-[3] flex h-[54px] shrink-0 items-center justify-center overflow-hidden bg-[#072D1D] px-6 text-[#F5F1E8]">
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.16))]" aria-hidden="true" />
+          <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 z-[1] h-12 w-12 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
+          <div className="relative z-[1] home-copy-bold text-[clamp(30px,7.2vw,38px)] font-black uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">MATCH</div>
+          <button onClick={menuProps.onToggleMenu} disabled={matchBusy} aria-disabled={matchBusy} title={matchBusy ? "Menu available after the shot" : "Open menu"} className={`absolute right-3 top-1/2 z-[2] flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-[#F5F1E8] text-[#0B5F35] shadow-[0_4px_10px_rgba(0,0,0,0.20)] ${matchBusy ? "cursor-not-allowed opacity-45" : ""}`}>
             <HamburgerIcon />
           </button>
           {menuProps.menuOpen && <MenuDropdown onClose={menuProps.onToggleMenu} onMatch={menuProps.onMatch} onFixtures={menuProps.onFixtures} onGroups={menuProps.onGroups} onRestart={menuProps.onRestart} />}
