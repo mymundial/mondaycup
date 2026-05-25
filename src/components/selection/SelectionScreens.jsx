@@ -23,7 +23,7 @@ const MENU_TITLE_CLASS = "home-copy-bold text-[28px] uppercase leading-none trac
 const HOME_MAIN_HEIGHT = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
 const HOME_LOGO_TOP_RATIO = 0;
 const HOME_LOGO_TOP_PADDING = "clamp(18px,3vh,28px)";
-const HOME_LOGO_HEIGHT = "min(152px,14.5vh)";
+const HOME_LOGO_HEIGHT = "min(167px,15.95vh)";
 const HOME_LOGO_GAP = "clamp(18px,2.6vh,30px)";
 const HOME_MENU_TOP_OFFSET = `calc(${HOME_LOGO_TOP_PADDING} + (${HOME_MAIN_HEIGHT} * ${HOME_LOGO_TOP_RATIO}) + ${HOME_LOGO_HEIGHT} + ${HOME_LOGO_GAP})`;
 
@@ -201,7 +201,9 @@ function HomeLedAdvertisingHoard() {
       <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" />
       <div className="relative mx-auto flex h-full max-w-[76%] items-center justify-center">
-        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="h-[82%] w-full object-contain drop-shadow-[0_0_7px_rgba(245,241,232,0.18)]" draggable={false} />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[70%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5F1E8]/16 blur-xl" aria-hidden="true" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[48%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/12 blur-lg" aria-hidden="true" />
+        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[82%] w-full object-contain drop-shadow-[0_0_11px_rgba(245,241,232,0.34)]" draggable={false} />
       </div>
     </div>
   );
@@ -316,7 +318,9 @@ function HomeMenuBar() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" aria-hidden="true" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-black/25" aria-hidden="true" />
       <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
-      <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[23px] w-auto object-contain drop-shadow-[0_0_7px_rgba(245,241,232,0.18)]" draggable={false} />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[34px] w-[168px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5F1E8]/16 blur-xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[26px] w-[132px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/12 blur-lg" aria-hidden="true" />
+      <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[25.5px] w-auto object-contain drop-shadow-[0_0_11px_rgba(245,241,232,0.36)]" draggable={false} />
       <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute right-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
     </div>
   );
