@@ -43,21 +43,21 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
   if (!rows.length) return null;
 
   const tableColumns = "20px 28px minmax(0, 1fr) 14px 18px 18px 18px 18px 20px 24px";
-  const tightTeamStyle = (team) => (/bosnia/i.test(team || "") ? { letterSpacing: "-0.075em" } : undefined);
+  const tightTeamStyle = (team) => (/bosnia/i.test(team || "") ? { letterSpacing: "-0.02em" } : undefined);
 
   return (
     <div className="mt-0 overflow-visible">
-      <div className="grid gap-[3px] px-2 pb-[2px] text-center text-[9px] home-copy-bold uppercase tracking-[0.08em] text-[#F5F1E8]" style={{ gridTemplateColumns: tableColumns }}>
+      <div className="grid gap-[3px] px-2 pb-[2px] text-center text-[9px] home-copy-regular uppercase tracking-[0.08em] text-[#F5F1E8]" style={{ gridTemplateColumns: tableColumns }}>
         <span>#</span><span className="text-center">Team</span><span aria-hidden="true" /><span aria-hidden="true" /><span>P</span><span>W</span><span>D</span><span>L</span><span>GD</span><span>Pts</span>
       </div>
       {rows.map((row, index) => {
         const isUser = row.team === userTeam;
         const isQualified = qualifiedTeams.has(row.team);
         return (
-          <div key={row.team} className={`mb-1 grid items-center gap-[3px] rounded-xl border px-2 py-[5px] text-center text-[12px] leading-none last:mb-0 ring-1 ${isUser ? "border-[#F5F1E8]/65 bg-[#072D1D] text-[#F5F1E8] ring-[#F5F1E8]/18 shadow-[0_0_10px_rgba(245,241,232,0.10),inset_0_1px_0_rgba(245,241,232,0.12)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`} style={{ gridTemplateColumns: tableColumns }}>
-            <span className="home-copy-bold">{index + 1}</span>
+          <div key={row.team} className={`mb-1 grid items-center gap-[3px] rounded-xl border px-2 py-[5px] text-center text-[12px] leading-none last:mb-0 ring-1 ${isUser ? "border-[#F5F1E8]/22 bg-[#072D1D] text-[#F5F1E8] ring-[#0B5F35]/45 shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`} style={{ gridTemplateColumns: tableColumns }}>
+            <span className="home-copy-regular">{index + 1}</span>
             <span className="flex justify-center"><Flag team={row.team} className="h-4 w-6" /></span>
-            <span className={`min-w-0 truncate text-left uppercase home-copy-bold ${isUser ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(row.team)}>{row.team}</span>
+            <span className={`min-w-0 truncate text-left uppercase home-copy-regular ${isUser ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(row.team)}>{row.team}</span>
             <span className={`text-[11px] home-copy-bold ${isUser ? "text-[#F7D117]" : "text-[#0B5F35]"}`}>{isQualified ? "Q" : ""}</span>
             <span className="home-copy-regular">{row.played}</span>
             <span className="home-copy-regular">{row.won}</span>
@@ -77,11 +77,11 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
   const userInKnockout = result.home === userTeam || result.away === userTeam;
   const homeIsUser = result.home === userTeam;
   const awayIsUser = result.away === userTeam;
-  const tightTeamStyle = (team) => (/bosnia/i.test(team || "") ? { letterSpacing: "-0.075em" } : undefined);
+  const tightTeamStyle = (team) => (/bosnia/i.test(team || "") ? { letterSpacing: "-0.02em" } : undefined);
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/48 px-5 pt-14">
       <div className="relative w-full max-w-sm overflow-visible rounded-[2rem] border border-[#F5F1E8]/14 bg-[#0B5F35]/92 text-center text-[#F5F1E8] shadow-[0_10px_26px_rgba(0,0,0,0.22),inset_0_-2px_6px_rgba(0,0,0,0.06)]">
-        <div className="absolute left-1/2 top-[-52px] z-[3] -translate-x-1/2 overflow-hidden rounded-full border border-[#F5F1E8]/65 bg-[#072D1D] px-4 py-2.5 shadow-[0_0_10px_rgba(245,241,232,0.10),inset_0_1px_0_rgba(245,241,232,0.12),inset_0_-1px_0_rgba(0,0,0,0.18)] ring-1 ring-[#F5F1E8]/18">
+        <div className="absolute left-1/2 top-[-52px] z-[3] -translate-x-1/2 overflow-hidden rounded-full border border-[#F5F1E8]/22 bg-[#072D1D] px-4 py-2.5 shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08),inset_0_-1px_0_rgba(0,0,0,0.14)] ring-1 ring-[#0B5F35]/45">
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.18),rgba(24,166,83,0.05),rgba(11,95,53,0.18))]" />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
           <div className="relative z-[1]"><FormTracker form={userForm} /></div>
@@ -101,12 +101,12 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
         <div className="px-5 pb-4 pt-1.5">
           {isKnockout ? (
             <>
-              <div className={`mt-1 rounded-[1.25rem] px-2.5 py-3 ${userInKnockout ? "border border-[#F5F1E8]/65 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F5F1E8]/18 shadow-[0_0_10px_rgba(245,241,232,0.10),inset_0_1px_0_rgba(245,241,232,0.12)]" : "bg-[#F5F1E8]/90 text-[#26352E] ring-1 ring-[#F5F1E8]/10"}`}>
+              <div className={`mt-1 rounded-[1.25rem] px-2.5 py-3 ${userInKnockout ? "border border-[#F5F1E8]/22 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#0B5F35]/45 shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "bg-[#F5F1E8]/90 text-[#26352E] ring-1 ring-[#F5F1E8]/10"}`}>
                 <div className={`grid min-h-[32px] grid-cols-[28px_minmax(0,1fr)_34px_minmax(0,1fr)_28px] items-center gap-1 home-main-font text-[clamp(13px,3.4vw,15px)] uppercase leading-none ${userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`}>
                   <div className="flex items-center justify-center"><Flag team={result.home} className="h-5 w-7" /></div>
-                  <span className={`block min-w-0 truncate text-center home-copy-bold ${homeIsUser ? "text-[#F7D117]" : userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(result.home)} title={result.home}>{result.home}</span>
+                  <span className={`block min-w-0 truncate text-center home-copy-regular ${homeIsUser ? "text-[#F7D117]" : userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(result.home)} title={result.home}>{result.home}</span>
                   <span className={`flex items-center justify-center home-copy-bold tabular-nums leading-none ${userInKnockout ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{result.homeGoals}-{result.awayGoals}</span>
-                  <span className={`block min-w-0 truncate text-center home-copy-bold ${awayIsUser ? "text-[#F7D117]" : userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(result.away)} title={result.away}>{result.away}</span>
+                  <span className={`block min-w-0 truncate text-center home-copy-regular ${awayIsUser ? "text-[#F7D117]" : userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(result.away)} title={result.away}>{result.away}</span>
                   <div className="flex items-center justify-center"><Flag team={result.away} className="h-5 w-7" /></div>
                 </div>
               </div>
