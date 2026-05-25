@@ -23,7 +23,7 @@ const MENU_TITLE_CLASS = "home-copy-bold text-[28px] uppercase leading-none trac
 const HOME_MAIN_HEIGHT = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
 const HOME_LOGO_TOP_RATIO = 0;
 const HOME_LOGO_TOP_PADDING = "clamp(18px,3vh,28px)";
-const HOME_LOGO_HEIGHT = "min(152px,14.5vh)";
+const HOME_LOGO_HEIGHT = "min(76px,7.25vh)";
 const HOME_LOGO_GAP = "clamp(18px,2.6vh,30px)";
 const HOME_MENU_TOP_OFFSET = `calc(${HOME_LOGO_TOP_PADDING} + (${HOME_MAIN_HEIGHT} * ${HOME_LOGO_TOP_RATIO}) + ${HOME_LOGO_HEIGHT} + ${HOME_LOGO_GAP})`;
 
@@ -646,6 +646,15 @@ function LandingPanel({ onPlayGuest }) {
   </div>;
 }
 
+function getTeamGroup(teamName) {
+  return GROUP_LETTERS.find((letter) => GROUPS[letter].includes(teamName)) || "A";
+}
+
+function pickRandomTeam() {
+  const teams = GROUP_LETTERS.flatMap((letter) => GROUPS[letter]);
+  return teams[Math.floor(Math.random() * teams.length)] || GROUPS.A[0];
+}
+
 function HostPanel({ onSelectGroup, onSelectTeam, onBack }) {
   const hostLabels = { Canada: "CAN", Mexico: "MEX", "United States": "USA" };
 
@@ -698,6 +707,16 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
         return <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[42px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] border border-[#F5F1E8]/18 px-4 text-left shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-6 w-8 items-center justify-center overflow-hidden rounded-[0.25rem] border border-[#F5F1E8]/24 bg-[#F5F1E8]/90 shadow-[0_2px_5px_rgba(0,0,0,0.18)]"><Flag team={name} className="h-full w-full object-contain" /></span><span className="home-copy-bold truncate text-center text-[19px] uppercase tracking-[0.06em]">{name}</span><span className="home-copy-bold text-right text-[12px] tabular-nums tracking-[0.08em] opacity-65">#{TEAM_RANK[name]}</span></button>;
       })}
     </div>
+    <button
+      type="button"
+      onClick={() => {
+        const randomTeam = pickRandomTeam();
+        onSelectTeam(randomTeam, getTeamGroup(randomTeam));
+      }}
+      className="home-copy-bold mx-auto mt-3 block text-[11px] uppercase tracking-[0.16em] text-[#F5F1E8] underline-offset-4 active:scale-[0.98]"
+    >
+      RANDOM
+    </button>
   </HomeMenuShell>;
 }
 
