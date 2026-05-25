@@ -53,11 +53,11 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
         const isUser = row.team === userTeam;
         const isQualified = qualifiedTeams.has(row.team);
         return (
-          <div key={row.team} className={`mb-1 grid items-center gap-[3px] rounded-xl border px-2 py-[5px] text-center text-[12px] leading-none last:mb-0 ring-1 ${isUser ? "border-[#F7D117]/85 bg-[#F7D117] text-[#072D1D] home-copy-bold ring-[#F7D117]/75 shadow-[0_0_12px_rgba(247,209,23,0.22)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#072D1D] home-copy-regular ring-[#F5F1E8]/18"}`} style={{ gridTemplateColumns: tableColumns }}>
+          <div key={row.team} className={`mb-1 grid items-center gap-[3px] rounded-xl border px-2 py-[5px] text-center text-[12px] leading-none last:mb-0 ring-1 ${isUser ? "border-[#F5F1E8]/70 bg-[#072D1D] text-[#F5F1E8] home-copy-bold ring-[#F5F1E8]/35 shadow-[0_0_12px_rgba(245,241,232,0.12),inset_0_1px_0_rgba(245,241,232,0.12)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#072D1D] home-copy-regular ring-[#F5F1E8]/18"}`} style={{ gridTemplateColumns: tableColumns }}>
             <span className={isUser ? "home-copy-bold" : "home-copy-regular"}>{index + 1}</span>
             <span className="flex justify-center"><Flag team={row.team} className="h-4 w-6 ring-1 ring-[#F5F1E8]/85" /></span>
             <span className={`min-w-0 truncate text-left uppercase ${isUser ? "home-copy-bold" : "home-copy-regular"}`}>{row.team}</span>
-            <span className={`text-[11px] text-[#0B5F35] ${isQualified || isUser ? "home-copy-bold" : "home-copy-regular"}`}>{isQualified ? "Q" : ""}</span>
+            <span className={`text-[11px] ${isUser ? "text-[#F5F1E8]" : "text-[#0B5F35]"} ${isQualified || isUser ? "home-copy-bold" : "home-copy-regular"}`}>{isQualified ? "Q" : ""}</span>
             <span className={isUser ? "home-copy-bold" : "home-copy-regular"}>{row.played}</span>
             <span className={isUser ? "home-copy-bold" : "home-copy-regular"}>{row.won}</span>
             <span className={isUser ? "home-copy-bold" : "home-copy-regular"}>{row.drawn}</span>
@@ -96,11 +96,11 @@ function FullTimeModal({ result, onNext, onDismiss, groupRows, qualifiedTeams, u
         <div className="px-5 pb-4 pt-1.5">
           {isKnockout ? (
             <>
-              <div className={`mt-1 rounded-[1.25rem] px-2.5 py-3 ${(result.home === userTeam || result.away === userTeam) ? "bg-[#F7D117] text-[#072D1D] ring-1 ring-[#F5F1E8]/40" : "bg-[#F5F1E8]/90 text-[#072D1D] ring-1 ring-[#F5F1E8]/10"}`}>
-                <div className="grid min-h-[32px] grid-cols-[28px_minmax(0,1fr)_34px_minmax(0,1fr)_28px] items-center gap-1 home-main-font text-[clamp(13px,3.4vw,15px)] uppercase leading-none text-[#3E4F46]">
+              <div className={`mt-1 rounded-[1.25rem] px-2.5 py-3 ${(result.home === userTeam || result.away === userTeam) ? "border border-[#F5F1E8]/70 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F5F1E8]/35 shadow-[0_0_12px_rgba(245,241,232,0.12),inset_0_1px_0_rgba(245,241,232,0.12)]" : "bg-[#F5F1E8]/90 text-[#072D1D] ring-1 ring-[#F5F1E8]/10"}`}>
+                <div className={`grid min-h-[32px] grid-cols-[28px_minmax(0,1fr)_34px_minmax(0,1fr)_28px] items-center gap-1 home-main-font text-[clamp(13px,3.4vw,15px)] uppercase leading-none ${(result.home === userTeam || result.away === userTeam) ? "text-[#F5F1E8]" : "text-[#3E4F46]"}`}>
                   <div className="flex items-center justify-center"><Flag team={result.home} className="h-5 w-7 ring-1 ring-[#F5F1E8]/85" /></div>
                   <span className={`block min-w-0 truncate text-center tracking-[0.005em] ${result.home === userTeam ? "home-copy-bold" : "home-copy-regular"}`} title={result.home}>{result.home}</span>
-                  <span className="flex items-center justify-center font-black tabular-nums leading-none text-[#0B5F35]">{result.homeGoals}-{result.awayGoals}</span>
+                  <span className={`flex items-center justify-center font-black tabular-nums leading-none ${(result.home === userTeam || result.away === userTeam) ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{result.homeGoals}-{result.awayGoals}</span>
                   <span className={`block min-w-0 truncate text-center tracking-[0.005em] ${result.away === userTeam ? "home-copy-bold" : "home-copy-regular"}`} title={result.away}>{result.away}</span>
                   <div className="flex items-center justify-center"><Flag team={result.away} className="h-5 w-7 ring-1 ring-[#F5F1E8]/85" /></div>
                 </div>
