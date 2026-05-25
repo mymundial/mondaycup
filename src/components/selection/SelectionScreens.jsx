@@ -22,9 +22,10 @@ const SCOREBOARD_MARKER_TEXT = "font-led text-[clamp(6px,0.95vh,10px)] font-blac
 const MENU_TITLE_CLASS = "home-copy-bold text-[28px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]";
 const HOME_MAIN_HEIGHT = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
 const HOME_LOGO_TOP_RATIO = 0;
+const HOME_LOGO_TOP_PADDING = "clamp(18px,3vh,28px)";
 const HOME_LOGO_HEIGHT = "min(152px,14.5vh)";
-const HOME_LOGO_GAP = "clamp(6px,0.85vh,10px)";
-const HOME_MENU_TOP_OFFSET = `calc((${HOME_MAIN_HEIGHT} * ${HOME_LOGO_TOP_RATIO}) + ${HOME_LOGO_HEIGHT} + ${HOME_LOGO_GAP})`;
+const HOME_LOGO_GAP = "clamp(18px,2.6vh,30px)";
+const HOME_MENU_TOP_OFFSET = `calc(${HOME_LOGO_TOP_PADDING} + (${HOME_MAIN_HEIGHT} * ${HOME_LOGO_TOP_RATIO}) + ${HOME_LOGO_HEIGHT} + ${HOME_LOGO_GAP})`;
 
 function AtIcon({ className = "" }) {
   return (
@@ -393,7 +394,7 @@ function ActionButton({ children, eyebrow, onClick, variant = "light", disabled 
         ? "border-[#F5F0E6]/18 bg-[#F5F0E6]/18 text-[#F5F0E6]"
         : "border-[#D4AF37]/50 bg-[#F5F0E6] text-[#0B5F35]";
 
-  const heightClass = size === "hero" ? "h-[54px]" : "h-[44px]";
+  const heightClass = size === "hero" ? "min-h-[62px] py-3" : "h-[44px]";
   const textClass = size === "hero" ? "text-[clamp(20px,5.4vw,30px)] tracking-[0.075em]" : "text-[clamp(12px,3.45vw,20px)] tracking-[0.055em]";
 
   return <button type={type} onClick={onClick} disabled={disabled} className={`flex ${heightClass} w-full items-center justify-center rounded-[1rem] border px-4 text-center transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
@@ -418,7 +419,7 @@ function SavedCampaignCard({ summary, onContinue }) {
 
 function HomeMenuShell({ children, className = "", onBack }) {
   return (
-    <div className={`relative overflow-hidden rounded-[1.65rem] border border-[#F5F1E8]/14 bg-[#0B5F35] text-[#F5F1E8] shadow-[0_10px_22px_rgba(0,0,0,0.20),inset_0_-3px_8px_rgba(0,0,0,0.08)] ${className}`}>
+    <div className={`relative overflow-hidden rounded-[1.65rem] border border-[#F5F1E8]/14 bg-[#062817]/88 text-[#F5F1E8] shadow-[0_8px_18px_rgba(0,0,0,0.16),inset_0_-2px_6px_rgba(0,0,0,0.06)] ${className}`}>
       {onBack && (
         <button
           type="button"
@@ -438,7 +439,7 @@ function HomeMenuShell({ children, className = "", onBack }) {
 
 function FloatingHomeLogo() {
   return (
-    <div className="pointer-events-none absolute inset-x-0 z-[20] flex justify-center" style={{ top: `${HOME_LOGO_TOP_RATIO * 100}%` }} aria-hidden="true">
+    <div className="pointer-events-none absolute inset-x-0 z-[20] flex justify-center" style={{ top: `calc(${HOME_LOGO_TOP_PADDING} + ${HOME_LOGO_TOP_RATIO * 100}%)` }} aria-hidden="true">
       <div className="relative flex w-[420px] max-w-[92vw] items-start justify-center" style={{ height: HOME_LOGO_HEIGHT }}>
         <div className="absolute inset-x-10 bottom-2 h-[42%] rounded-full bg-[#F7D117]/28 blur-3xl" />
         <div className="absolute inset-x-14 bottom-3 h-[36%] rounded-full bg-[#F5F1E8]/24 blur-2xl" />
@@ -646,19 +647,33 @@ function LandingPanel({ onPlayGuest }) {
 }
 
 function HostPanel({ onSelectGroup, onSelectTeam, onBack }) {
+  const hostLabels = { Canada: "CAN", Mexico: "MEX", "United States": "USA" };
+
   return <HomeMenuShell onBack={onBack}>
     <div className={`mb-3 flex min-h-[34px] items-center justify-center text-center ${MENU_TITLE_CLASS}`}>CHOOSE YOUR TEAM</div>
     <div className="grid grid-cols-3 gap-2">
       {HOST_TEAMS.map((host) => {
         const theme = getTeamTheme(host.name);
-        const label = host.name === "United States" ? "USA" : host.name;
-        return <button key={host.name} onClick={() => onSelectTeam(host.name, host.group)} className="h-[50px] rounded-[1rem] border border-[#F5F1E8]/22 shadow-[0_0_8px_rgba(245,241,232,0.06),inset_0_2px_8px_rgba(255,255,255,0.10)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-full items-center justify-center text-[22px] home-copy-bold uppercase tracking-[0.075em]">{label}</span></button>;
+        const label = hostLabels[host.name] || host.name.slice(0, 3).toUpperCase();
+        return (
+          <button
+            key={host.name}
+            onClick={() => onSelectTeam(host.name, host.group)}
+            className="flex h-[50px] items-center justify-center gap-2 rounded-[1rem] border border-[#F5F1E8]/22 px-2 shadow-[0_0_8px_rgba(245,241,232,0.06),inset_0_2px_8px_rgba(255,255,255,0.10)] active:scale-[0.99]"
+            style={{ backgroundColor: theme.bg, color: theme.text }}
+          >
+            <span className="flex h-[23px] w-[31px] shrink-0 items-center justify-center overflow-hidden rounded-[0.24rem] border border-[#F5F1E8]/80 bg-[#F5F1E8] shadow-[0_2px_5px_rgba(0,0,0,0.16)]">
+              <Flag team={host.name} className="h-full w-full object-contain" />
+            </span>
+            <span className="home-copy-bold min-w-0 truncate text-center text-[clamp(14px,3.5vw,17px)] uppercase leading-none tracking-[0.07em]">{label}</span>
+          </button>
+        );
       })}
     </div>
-    <button onClick={() => onSelectGroup("A")} className="mt-3 grid h-[60px] w-full grid-cols-[42px_minmax(0,1fr)_64px] items-center gap-3 rounded-[1.05rem] border-2 border-[#F7D117]/85 bg-[#F7D117] px-5 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]">
-      <PadlockIcon className="h-7 w-7" />
-      <div className="home-copy-bold min-w-0 truncate text-center text-[23px] uppercase leading-none tracking-[0.075em]">ALL TEAMS</div>
-      <div className="home-copy-bold text-right text-[19px] uppercase tracking-[0.06em]">£0.99</div>
+    <button onClick={() => onSelectGroup("A")} className="relative mt-3 flex h-[56px] w-full items-center justify-center rounded-[1.05rem] border-2 border-[#F7D117]/85 bg-[#F7D117] px-5 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]">
+      <PadlockIcon className="absolute left-5 h-7 w-7" />
+      <div className="home-copy-bold min-w-0 truncate text-center text-[clamp(13px,3.5vw,17px)] uppercase leading-none tracking-[0.075em]">ALL TEAMS</div>
+      <div className="home-copy-bold absolute right-5 text-right text-[19px] uppercase tracking-[0.06em]">£0.99</div>
     </button>
   </HomeMenuShell>;
 }
