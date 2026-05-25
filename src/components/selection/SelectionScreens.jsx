@@ -341,13 +341,13 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false }) {
         <div className="absolute inset-x-0 bottom-[26%] z-[2] h-px bg-[#F5F1E8]/20 shadow-[0_0_6px_rgba(245,241,232,0.10)]" />
         <HomeFlashCommentaryBar allTeamsUnlocked={allTeamsUnlocked} />
         <div className="relative z-[1] h-full">
-          <div className="led-text-glow home-copy-bold grid h-[22%] place-items-center py-[2%] text-center text-[clamp(9px,1.35vh,16px)] font-black uppercase tracking-[0.14em] text-[#F7D117]">
+          <div className="led-text-glow font-led grid h-[22%] place-items-center py-[2%] text-center text-[clamp(9px,1.35vh,16px)] font-black uppercase tracking-[0.14em] text-[#F7D117]">
             WELCOME TO
           </div>
           <div className="h-[52%] px-[3.5%] pt-[1%]">
             <div className="grid h-full grid-cols-1 grid-rows-[58%_42%] items-center">
               <div className="row-start-1 flex min-w-0 items-center justify-center px-[2%]">
-                <div className="led-text-glow home-copy-bold w-full whitespace-nowrap text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">MONDAY CUP</div>
+                <div className="led-text-glow font-led w-full whitespace-nowrap text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">MONDAY CUP</div>
               </div>
               <div className="row-start-2 flex h-full items-center justify-center">
                 <div className="led-text-glow font-led whitespace-nowrap text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117]">
