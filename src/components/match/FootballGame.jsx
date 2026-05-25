@@ -70,18 +70,18 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
         </div>
         <div className="h-[52%] px-[3.5%] pt-[1%]">
           <div className="grid h-full grid-cols-[11%_minmax(58px,1fr)_38px_26px_38px_minmax(58px,1fr)_11%] grid-rows-[58%_42%] items-center">
-            <div className="col-start-1 row-start-1 flex items-center justify-center"><TeamFlag team={userTeam} className="h-4 w-6 ring-1 ring-[#F7D117]/85 shadow-[0_0_10px_rgba(247,209,23,0.45)] drop-shadow-[0_0_7px_rgba(247,209,23,0.42)]" /></div>
+            <div className="col-start-1 row-start-1 flex items-center justify-center"><TeamFlag team={userTeam} className="h-4 w-6 ring-1 ring-[#F7D117]/38 shadow-[0_0_4px_rgba(247,209,23,0.16)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" /></div>
             <div className="col-start-2 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">{userTeam.code}</div></div>
             <div className="led-text-glow font-led col-start-3 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.user}</div>
             <div className="led-text-glow font-led col-start-4 row-start-1 flex items-center justify-center px-[4px] text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117]">-</div>
             <div className="led-text-glow font-led col-start-5 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.opponent}</div>
             <div className="col-start-6 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">{opponentTeam.code}</div></div>
-            <div className="col-start-7 row-start-1 flex items-center justify-center"><TeamFlag team={opponentTeam} className="h-4 w-6 ring-1 ring-[#F7D117]/85 shadow-[0_0_10px_rgba(247,209,23,0.45)] drop-shadow-[0_0_7px_rgba(247,209,23,0.42)]" /></div>
+            <div className="col-start-7 row-start-1 flex items-center justify-center"><TeamFlag team={opponentTeam} className="h-4 w-6 ring-1 ring-[#F7D117]/38 shadow-[0_0_4px_rgba(247,209,23,0.16)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" /></div>
             <div className="col-start-2 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><PenaltyMarkers attempts={attempts.user} totalSlots={totalMarkerSlots} /></div></div>
             <div className="col-start-6 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><PenaltyMarkers attempts={attempts.opponent} totalSlots={totalMarkerSlots} /></div></div>
           </div>
         </div>
-        <div className="grid h-[26%] w-full place-items-center overflow-hidden border-y border-[#F5F1E8]/24 px-[3%] text-center font-led text-[clamp(13px,2.3vh,28px)] font-black tracking-tight shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)]" style={tickerStyle}>
+        <div className="grid h-[26%] w-full place-items-center overflow-hidden border-y border-[#F5F1E8]/24 px-[3%] text-center home-copy-bold text-[clamp(13px,2.3vh,28px)] font-black tracking-tight shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)]" style={tickerStyle}>
           {ticker}
         </div>
       </div>
@@ -252,8 +252,8 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
           <div className="h-[4%]" />
           <div className="grid flex-1 grid-cols-3 grid-rows-3 gap-[4%]">
             {DIRECTIONS.map((direction) => (
-              <button key={direction.id} onClick={() => setSelected(direction)} className={`flex min-h-0 items-center justify-center rounded-[clamp(14px,2.2vh,28px)] border home-copy-bold text-[clamp(22px,3vh,38px)] font-black leading-none shadow-lg ring-1 transition-all ${selected.id === direction.id ? "border-[#F5F1E8]/55 bg-[#F7D117] text-[#0b2d1d] ring-[#F7D117]/35 shadow-[0_0_12px_rgba(247,209,23,0.20),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.18)]" : "border-[#F5F1E8]/22 bg-[#0b2d1d] text-[#f5f1e8] ring-[#0B5F35]/50 shadow-[0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(245,241,232,0.08)]"}`}>
-                <span className="flex h-full w-full items-center justify-center leading-none">{direction.arrow}</span>
+              <button key={direction.id} onClick={() => setSelected(direction)} className={`flex min-h-0 items-center justify-center overflow-hidden rounded-[clamp(14px,2.2vh,28px)] border home-copy-bold text-[clamp(16px,2.15vh,26px)] font-black leading-none shadow-lg ring-1 transition-all ${selected.id === direction.id ? "border-[#F5F1E8]/55 bg-[#F7D117] text-[#0b2d1d] ring-[#F7D117]/35 shadow-[0_0_12px_rgba(247,209,23,0.20),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.18)]" : "border-[#F5F1E8]/22 bg-[#0b2d1d] text-[#f5f1e8] ring-[#0B5F35]/50 shadow-[0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(245,241,232,0.08)]"}`}>
+                <span className="flex h-full w-full max-h-full max-w-full items-center justify-center leading-none">{direction.arrow}</span>
               </button>
             ))}
           </div>
