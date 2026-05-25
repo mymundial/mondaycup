@@ -250,7 +250,7 @@ function HomeFlashCommentaryBar() {
 
   return (
     <div
-      className="absolute inset-x-0 bottom-0 z-[0] h-[26%] w-full overflow-hidden px-[12%] transition-colors duration-150"
+      className="absolute inset-x-0 bottom-0 z-[0] h-[26%] w-full overflow-hidden rounded-[1.05rem] border border-[#F5F1E8]/24 px-[12%] shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)] transition-colors duration-150"
       style={{ background: theme.bg, color: theme.text }}
       aria-live="off"
     >
@@ -320,7 +320,7 @@ function HomeMenuBar() {
       <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
       <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[34px] w-[168px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5F1E8]/16 blur-xl" aria-hidden="true" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[26px] w-[132px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/12 blur-lg" aria-hidden="true" />
-      <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[40px] w-auto object-contain drop-shadow-[0_0_14px_rgba(245,241,232,0.42)]" draggable={false} />
+      <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[30px] w-auto object-contain drop-shadow-[0_0_14px_rgba(245,241,232,0.42)]" draggable={false} />
       <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute right-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
     </div>
   );
@@ -333,8 +333,8 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false }) {
       <HomeMenuBar />
       <div className="relative overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]" style={{ height: scoreboardHeight }}>
         <div
-          className="absolute inset-0 opacity-50"
-          style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }}
+          className="absolute inset-[3px] opacity-50"
+          style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 1.05px, transparent 2.15px)", backgroundSize: "7px 7px" }}
         />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
