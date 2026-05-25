@@ -22,9 +22,9 @@ const SCOREBOARD_MARKER_TEXT = "font-led text-[clamp(6px,0.95vh,10px)] font-blac
 const MENU_TITLE_CLASS = "home-copy-bold text-[28px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]";
 const HOME_MAIN_HEIGHT = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
 const HOME_LOGO_TOP_RATIO = 0;
-const HOME_LOGO_TOP_PADDING = "clamp(18px,3vh,28px)";
-const HOME_LOGO_HEIGHT = "min(167px,15.95vh)";
-const HOME_LOGO_GAP = "clamp(18px,2.6vh,30px)";
+const HOME_LOGO_TOP_PADDING = "0px";
+const HOME_LOGO_HEIGHT = `calc(${HOME_MAIN_HEIGHT} * 0.30)`;
+const HOME_LOGO_GAP = "clamp(12px,1.8vh,22px)";
 const HOME_MENU_TOP_OFFSET = `calc(${HOME_LOGO_TOP_PADDING} + (${HOME_MAIN_HEIGHT} * ${HOME_LOGO_TOP_RATIO}) + ${HOME_LOGO_HEIGHT} + ${HOME_LOGO_GAP})`;
 
 function AtIcon({ className = "" }) {
@@ -447,7 +447,7 @@ function HomeMenuShell({ children, className = "", onBack }) {
 function FloatingHomeLogo() {
   return (
     <div className="pointer-events-none absolute inset-x-0 z-[20] flex justify-center" style={{ top: `calc(${HOME_LOGO_TOP_PADDING} + ${HOME_LOGO_TOP_RATIO * 100}%)` }} aria-hidden="true">
-      <div className="relative flex w-[420px] max-w-[92vw] items-start justify-center" style={{ height: HOME_LOGO_HEIGHT }}>
+      <div className="relative flex w-[40vw] max-w-[420px] min-w-[220px] items-start justify-center" style={{ height: HOME_LOGO_HEIGHT }}>
         <div className="absolute inset-x-10 bottom-2 h-[42%] rounded-full bg-[#F7D117]/28 blur-3xl" />
         <div className="absolute inset-x-14 bottom-3 h-[36%] rounded-full bg-[#F5F1E8]/24 blur-2xl" />
         <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative z-10 h-full w-auto object-contain drop-shadow-[0_10px_24px_rgba(0,0,0,0.44)]" draggable={false} />
