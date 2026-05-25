@@ -123,6 +123,7 @@ export default function App() {
   const [fixtureView, setFixtureView] = useState("group");
   const [standingsView, setStandingsView] = useState("group");
   const [selectedGroup, setSelectedGroup] = useState("A");
+  const [allTeamsUnlocked, setAllTeamsUnlocked] = useState(false);
   const [team, setTeam] = useState(null);
   const [opponent, setOpponent] = useState("");
   const [score, setScore] = useState([0, 0]);
@@ -152,14 +153,14 @@ export default function App() {
   const currentFixture = currentKnockoutMatch ? toGameFixture(currentKnockoutMatch) : toGameFixture(activeGroupFixture);
 
   const closeMenu = () => setMenuOpen(false);
-  const resetTournament = () => { setScreen("home"); setDrawer(null); setMenuOpen(false); setFixtureView("group"); setStandingsView("group"); setSelectedGroup("A"); setTeam(null); setOpponent(""); setScore([0, 0]); setMatchResult(null); setModalDismissed(false); setTable(blankTable()); setSchedule(buildSchedule()); setKnockoutFixtures([]); setCurrentKnockoutMatch(null); setPodium({}); setMatchStage("GROUP STAGE"); setUserForm([]); };
+  const resetTournament = () => { setScreen("home"); setDrawer(null); setMenuOpen(false); setFixtureView("group"); setStandingsView("group"); setSelectedGroup("A"); setAllTeamsUnlocked(false); setTeam(null); setOpponent(""); setScore([0, 0]); setMatchResult(null); setModalDismissed(false); setTable(blankTable()); setSchedule(buildSchedule()); setKnockoutFixtures([]); setCurrentKnockoutMatch(null); setPodium({}); setMatchStage("GROUP STAGE"); setUserForm([]); };
   const openMatch = () => { closeMenu(); setDrawer(null); };
   const openFixtures = () => { closeMenu(); setFixtureView(groupStageComplete ? "knockout" : "group"); setDrawer("fixtures"); };
   const openGroups = () => { closeMenu(); setStandingsView(groupStageComplete ? "knockout" : standingsView); setDrawer("groups"); };
   const openClubhouse = () => { closeMenu(); setDrawer("clubhouse"); };
   const openTrophyCabinet = () => { closeMenu(); setDrawer("trophyCabinet"); };
   const openLeaderboard = () => { closeMenu(); setDrawer("leaderboard"); };
-  const selectGroup = (group) => { setSelectedGroup(group); setScreen("teams"); };
+  const selectGroup = (group) => { setAllTeamsUnlocked(true); setSelectedGroup(group); setScreen("teams"); };
 
   const startTeam = (name, groupOverride = selectedGroup) => {
     const fixture = schedule.find((item) => !item.played && item.group === groupOverride && (item.home === name || item.away === name)) || schedule.find((item) => item.group === groupOverride && (item.home === name || item.away === name));
@@ -364,8 +365,8 @@ export default function App() {
 
   const menuProps = { menuOpen, onToggleMenu: () => setMenuOpen((open) => !open), onMatch: openMatch, onFixtures: openFixtures, onGroups: openGroups, onClubhouse: openClubhouse, onTrophyCabinet: openTrophyCabinet, onLeaderboard: openLeaderboard, onRestart: resetTournament };
 
-  if (screen === "home") return <HomeScreen onSelectGroup={selectGroup} onSelectTeam={startTeam} />;
-  if (screen === "teams") return <TeamSelectScreen selectedGroup={selectedGroup} onSelectGroup={setSelectedGroup} onSelectTeam={startTeam} />;
+  if (screen === "home") return <HomeScreen allTeamsUnlocked={allTeamsUnlocked} onSelectGroup={selectGroup} onSelectTeam={startTeam} />;
+  if (screen === "teams") return <TeamSelectScreen allTeamsUnlocked={allTeamsUnlocked} selectedGroup={selectedGroup} onBack={() => setScreen("home")} onSelectGroup={setSelectedGroup} onSelectTeam={startTeam} />;
   if (drawer === "groups") return <DrawerShell><GroupsScreen allGroups={allGroups} qualifiers={qualifiers} menuProps={menuProps} standingsView={standingsView} onStandingsViewChange={setStandingsView} knockoutFixtures={visibleKnockoutFixtures} qualifiedTeams={qualifiedTeams} userTeam={team} podium={podium} /></DrawerShell>;
   if (drawer === "clubhouse") return <DrawerShell><ClubhouseScreen menuProps={menuProps} team={team} userForm={userForm} score={score} /></DrawerShell>;
   if (drawer === "trophyCabinet") return <DrawerShell><TrophyCabinetScreen menuProps={menuProps} /></DrawerShell>;

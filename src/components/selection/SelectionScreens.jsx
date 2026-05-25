@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "../../firebase";
@@ -225,23 +225,34 @@ function HomePitchBackdrop() {
 }
 
 
-function HomeHostFlagStrip() {
-  const flags = [
-    { id: "mc-left", src: MONDAY_CUP_AD_SRC, alt: "Monday Cup", custom: true },
-    { id: "can", src: "/flags/CAN.png", alt: "Canada" },
-    { id: "mc-can-mex", src: MONDAY_CUP_AD_SRC, alt: "Monday Cup", custom: true },
-    { id: "mex", src: "/flags/MEX.png", alt: "Mexico" },
-    { id: "mc-mex-usa", src: MONDAY_CUP_AD_SRC, alt: "Monday Cup", custom: true },
-    { id: "usa", src: "/flags/USA.png", alt: "United States" },
-    { id: "mc-right", src: MONDAY_CUP_AD_SRC, alt: "Monday Cup", custom: true },
-  ];
+function HomeFlashCommentaryBar({ allTeamsUnlocked = false }) {
+  const teams = useMemo(() => {
+    if (allTeamsUnlocked) return Object.values(GROUPS).flat().slice().sort((a, b) => a.localeCompare(b));
+    return ["Canada", "Mexico", "United States"];
+  }, [allTeamsUnlocked]);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [allTeamsUnlocked]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setActiveIndex((index) => (index + 1) % teams.length);
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [teams.length]);
+
+  const activeTeam = teams[activeIndex] || teams[0] || "Canada";
+  const theme = getTeamTheme(activeTeam);
+
   return (
-    <div className="absolute inset-0 flex items-center justify-center gap-[clamp(8px,2.8vw,20px)] px-2">
-      {flags.map((flag) => (
-        <div key={flag.id} className={`flex h-[62%] aspect-[250/167] items-center justify-center overflow-hidden rounded-[0.35rem] border-2 border-[#F5F1E8]/92 ${flag.custom ? "bg-[#072D1D] p-[3px]" : "bg-[#F5F1E8]"} shadow-[0_5px_12px_rgba(0,0,0,0.28)]`}>
-          <img src={flag.src} alt={flag.alt} className="h-full w-full object-contain" draggable={false} />
-        </div>
-      ))}
+    <div
+      className="grid h-[26%] w-full place-items-center overflow-hidden px-[3%] text-center home-copy-bold text-[clamp(13px,2.3vh,28px)] font-black uppercase tracking-tight transition-colors duration-150"
+      style={{ background: theme.bg, color: theme.text }}
+      aria-live="off"
+    >
+      {activeTeam}
     </div>
   );
 }
@@ -296,40 +307,37 @@ function HomeMenuBar() {
   );
 }
 
-function ScoreboardPlaceholder() {
+function ScoreboardPlaceholder({ allTeamsUnlocked = false }) {
   const scoreboardHeight = "calc((100dvh - 54px) * 0.165)";
   return (
     <div className="relative z-[1] shrink-0 overflow-hidden bg-[#050505]" style={{ height: `calc(54px + ${scoreboardHeight})` }} aria-hidden="true">
       <HomeMenuBar />
       <div className="relative overflow-hidden bg-[#050505]" style={{ height: scoreboardHeight }}>
-        <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.20) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }} />
+        <div
+          className="absolute inset-0 opacity-50"
+          style={{ backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 1px, transparent 1.8px)", backgroundSize: "6px 6px" }}
+        />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.24))]" />
-
-        <div className="absolute inset-x-0 bottom-0 z-[2] h-[26%] bg-[#0B5F35] shadow-[inset_0_5px_12px_rgba(0,0,0,0.24)]">
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(0,0,0,0.14)_100%)]" />
-          <HomeHostFlagStrip />
-        </div>
-
-        <div className="absolute inset-x-0 bottom-[26%] top-0 z-[3] text-[#F7D117]">
-          <div className="relative z-[1] h-full">
-            <div className="led-text-glow font-led grid h-[22%] place-items-center py-[2%] text-center text-[clamp(9px,1.35vh,16px)] font-black uppercase tracking-[0.14em] text-[#F7D117]">
-              GROUP STAGE
-            </div>
-            <div className="h-[52%] px-[3.5%] pt-[1%]">
-              <div className="grid h-full grid-cols-[11%_minmax(58px,1fr)_38px_26px_38px_minmax(58px,1fr)_11%] grid-rows-[58%_42%] items-center">
-                <div className="col-start-1 row-start-1 flex items-center justify-center"><Flag team="Canada" className="h-4 w-6" /></div>
-                <div className="col-start-2 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">CAN</div></div>
-                <div className="led-text-glow font-led col-start-3 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">0</div>
-                <div className="led-text-glow font-led col-start-4 row-start-1 flex items-center justify-center px-[4px] text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117]">-</div>
-                <div className="led-text-glow font-led col-start-5 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">0</div>
-                <div className="col-start-6 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">USA</div></div>
-                <div className="col-start-7 row-start-1 flex items-center justify-center"><Flag team="United States" className="h-4 w-6" /></div>
-                <div className="col-start-2 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><HomePenaltyMarkers /></div></div>
-                <div className="col-start-6 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><HomePenaltyMarkers /></div></div>
-              </div>
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
+        <div className="absolute inset-x-0 bottom-[26%] h-px bg-[#F7D117]/16" />
+        <div className="relative z-[1] h-full">
+          <div className="led-text-glow font-led grid h-[22%] place-items-center py-[2%] text-center text-[clamp(9px,1.35vh,16px)] font-black uppercase tracking-[0.14em] text-[#F7D117]">
+            GROUP STAGE
+          </div>
+          <div className="h-[52%] px-[3.5%] pt-[1%]">
+            <div className="grid h-full grid-cols-[11%_minmax(58px,1fr)_38px_26px_38px_minmax(58px,1fr)_11%] grid-rows-[58%_42%] items-center">
+              <div className="col-start-1 row-start-1 flex items-center justify-center"><Flag team="Canada" className="h-4 w-6" /></div>
+              <div className="col-start-2 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">CAN</div></div>
+              <div className="led-text-glow font-led col-start-3 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">0</div>
+              <div className="led-text-glow font-led col-start-4 row-start-1 flex items-center justify-center px-[4px] text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117]">-</div>
+              <div className="led-text-glow font-led col-start-5 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">0</div>
+              <div className="col-start-6 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">USA</div></div>
+              <div className="col-start-7 row-start-1 flex items-center justify-center"><Flag team="United States" className="h-4 w-6" /></div>
+              <div className="col-start-2 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><HomePenaltyMarkers /></div></div>
+              <div className="col-start-6 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><HomePenaltyMarkers /></div></div>
             </div>
           </div>
+          <HomeFlashCommentaryBar allTeamsUnlocked={allTeamsUnlocked} />
         </div>
       </div>
     </div>
@@ -344,11 +352,11 @@ function HomeFooter() {
   );
 }
 
-function HomeLayout({ children }) {
+function HomeLayout({ children, allTeamsUnlocked = false }) {
   return (
     <Shell>
       <div className="home-main-font relative flex h-[100dvh] flex-col overflow-hidden bg-[#0d6c3d] text-[#072D1D]">
-        <ScoreboardPlaceholder />
+        <ScoreboardPlaceholder allTeamsUnlocked={allTeamsUnlocked} />
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
           <FloatingHomeLogo />
@@ -373,9 +381,9 @@ function ActionButton({ children, eyebrow, onClick, variant = "light", disabled 
         ? "border-[#F5F0E6]/18 bg-[#F5F0E6]/18 text-[#F5F0E6]"
         : "border-[#D4AF37]/50 bg-[#F5F0E6] text-[#0B5F35]";
 
-  return <button type={type} onClick={onClick} disabled={disabled} className={`flex h-[50px] w-full items-center justify-center rounded-[1.1rem] border px-4 text-center transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
+  return <button type={type} onClick={onClick} disabled={disabled} className={`flex h-[44px] w-full items-center justify-center rounded-[1rem] border px-4 text-center transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
     {eyebrow && <span className="sr-only">{eyebrow}</span>}
-    <div className="home-copy-bold w-full truncate whitespace-nowrap text-[clamp(15px,4.35vw,24px)] uppercase leading-none tracking-[0.055em]">{children}</div>
+    <div className="home-copy-bold w-full truncate whitespace-nowrap text-[clamp(12px,3.45vw,20px)] uppercase leading-none tracking-[0.055em]">{children}</div>
   </button>;
 }
 
@@ -406,7 +414,7 @@ function HomeMenuShell({ children, className = "", onBack }) {
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5L8 12L15 19" /></svg>
         </button>
       )}
-      <div className="px-4 py-3 shadow-[inset_0_10px_24px_rgba(255,255,255,0.035)]">
+      <div className="px-4 py-2.5 shadow-[inset_0_10px_24px_rgba(255,255,255,0.035)]">
         {children}
       </div>
     </div>
@@ -436,7 +444,7 @@ function AuthInput({ icon, type = "text", placeholder, value, onChange }) {
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className="home-copy-regular h-10 w-full rounded-[0.9rem] border border-[#F5F0E6]/18 bg-[#F5F0E6]/94 py-0 pl-11 pr-4 text-[15px] uppercase tracking-[0.055em] text-[#0B5F35] outline-none placeholder:text-[#0B5F35]/34 focus:border-[#F7D117]"
+          className="home-copy-regular h-9 w-full rounded-[0.85rem] border border-[#F5F0E6]/18 bg-[#F5F0E6]/94 py-0 pl-11 pr-4 text-[15px] uppercase tracking-[0.055em] text-[#0B5F35] outline-none placeholder:text-[#0B5F35]/34 focus:border-[#F7D117]"
         />
       </div>
     </label>
@@ -568,7 +576,7 @@ function AuthPanel({ mode, setMode, onBack }) {
         <div className="flex min-h-[30px] items-center justify-center text-center">
           <div className="home-copy-bold text-[29px] uppercase leading-none tracking-[0.055em] text-[#F5F1E8]">RESET PASSWORD</div>
         </div>
-        <form className="mt-4 space-y-2.5" onSubmit={handleForgotPassword}>
+        <form className="mt-3 space-y-2" onSubmit={handleForgotPassword}>
           <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Confirm email address" type="email" value={email} onChange={(event) => { resetMessages(); setEmail(event.target.value); }} />
           {authError && <div className="home-copy-regular rounded-[0.8rem] bg-red-500/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-red-100">{authError}</div>}
           {authSuccess && <div className="home-copy-regular rounded-[0.8rem] bg-[#B7FF3C]/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-[#B7FF3C]">{authSuccess}</div>}
@@ -583,17 +591,17 @@ function AuthPanel({ mode, setMode, onBack }) {
       <div className="flex min-h-[30px] items-center justify-center text-center">
         <div className="home-copy-bold text-[31px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]">{isRegister ? "SIGN UP" : "CLUBHOUSE"}</div>
       </div>
-      <div className="mt-2.5 grid grid-cols-2 rounded-[0.85rem] border border-[#F5F1E8]/20 bg-[#072D1D]/42 p-0.5 shadow-inner">
-        <button type="button" onClick={() => switchMode("signin")} className={`home-copy-bold h-7 rounded-[0.65rem] text-[14px] uppercase tracking-[0.05em] transition ${!isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN IN</button>
-        <button type="button" onClick={() => switchMode("register")} className={`home-copy-bold h-7 rounded-[0.65rem] text-[14px] uppercase tracking-[0.05em] transition ${isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN UP</button>
+      <div className="mt-2 grid grid-cols-2 rounded-[0.75rem] border border-[#F5F1E8]/20 bg-[#072D1D]/42 p-0.5 shadow-inner">
+        <button type="button" onClick={() => switchMode("signin")} className={`home-copy-bold h-6 rounded-[0.55rem] text-[14px] uppercase tracking-[0.05em] transition ${!isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN IN</button>
+        <button type="button" onClick={() => switchMode("register")} className={`home-copy-bold h-6 rounded-[0.55rem] text-[14px] uppercase tracking-[0.05em] transition ${isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN UP</button>
       </div>
-      <form className="mt-3 space-y-2" onSubmit={handleSubmit}>
+      <form className="mt-2.5 space-y-1.5" onSubmit={handleSubmit}>
         {isRegister && <AuthInput icon={<StarIcon className="h-5 w-5" />} placeholder="Username" value={username} onChange={(event) => { resetMessages(); setUsername(event.target.value); }} />}
         <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Email address" type="email" value={email} onChange={(event) => { resetMessages(); setEmail(event.target.value); }} />
         <AuthInput icon={<PadlockIcon className="h-5 w-5" />} placeholder="Password" type="password" value={password} onChange={(event) => { resetMessages(); setPassword(event.target.value); }} />
         <ActionButton type="submit" variant="yellow">{authError || authSuccess || (authLoading ? "LOADING..." : isRegister ? "CREATE ACCOUNT" : "SIGN IN")}</ActionButton>
         {isRegister && (
-          <label className="home-copy-light flex items-center justify-center gap-2 rounded-[0.9rem] bg-[#0B5F35] p-1.5 text-center text-[10px] uppercase leading-none tracking-[0.14em] text-[#F5F0E6]/78">
+          <label className="home-copy-light flex items-center justify-center gap-2 bg-transparent py-1 text-center text-[10px] uppercase leading-none tracking-[0.14em] text-[#F5F0E6]/78">
             <input type="checkbox" checked={emailOptIn} onChange={(event) => setEmailOptIn(event.target.checked)} className="h-4 w-4 shrink-0 accent-[#F7D117]" />
             <span>Receive email communications</span>
           </label>
@@ -622,9 +630,9 @@ function LandingPanel({ onPlayGuest }) {
   </div>;
 }
 
-function HostPanel({ onSelectGroup, onSelectTeam }) {
-  return <HomeMenuShell>
-    <div className="mb-4 text-center text-[34px] home-copy-bold uppercase leading-none tracking-[0.05em] text-[#F5F1E8]">CHOOSE YOUR TEAM</div>
+function HostPanel({ onSelectGroup, onSelectTeam, onBack }) {
+  return <HomeMenuShell onBack={onBack}>
+    <div className="mb-3 text-center text-[31px] home-copy-bold uppercase leading-none tracking-[0.07em] text-[#F5F1E8]">CHOOSE YOUR TEAM</div>
     <div className="grid grid-cols-3 gap-2">
       {HOST_TEAMS.map((host) => {
         const theme = getTeamTheme(host.name);
@@ -632,9 +640,9 @@ function HostPanel({ onSelectGroup, onSelectTeam }) {
         return <button key={host.name} onClick={() => onSelectTeam(host.name, host.group)} className="h-[50px] rounded-[1rem] border border-[#F5F1E8]/22 shadow-[0_0_8px_rgba(245,241,232,0.06),inset_0_2px_8px_rgba(255,255,255,0.10)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-full items-center justify-center text-[22px] home-copy-bold uppercase tracking-[0.075em]">{label}</span></button>;
       })}
     </div>
-    <button onClick={() => onSelectGroup("A")} className="mt-3 grid h-[72px] w-full grid-cols-[42px_minmax(0,1fr)_64px] items-center gap-3 rounded-[1.15rem] border-2 border-[#F7D117]/85 bg-[#F7D117] px-5 text-[#0B5F35] shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]">
+    <button onClick={() => onSelectGroup("A")} className="mt-3 grid h-[60px] w-full grid-cols-[42px_minmax(0,1fr)_64px] items-center gap-3 rounded-[1.05rem] border-2 border-[#F7D117]/85 bg-[#F7D117] px-5 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]">
       <PadlockIcon className="h-7 w-7" />
-      <div className="home-copy-bold min-w-0 truncate text-center text-[23px] uppercase leading-none tracking-[0.075em]">UNLOCK ALL 48 TEAMS</div>
+      <div className="home-copy-bold min-w-0 truncate text-center text-[23px] uppercase leading-none tracking-[0.075em]">ALL TEAMS</div>
       <div className="home-copy-bold text-right text-[19px] uppercase tracking-[0.06em]">£0.99</div>
     </button>
   </HomeMenuShell>;
@@ -651,7 +659,7 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
   return <HomeMenuShell onBack={onBack}>
     <div className="mb-3 flex items-center justify-center gap-4">
       <ArrowButton direction="left" onClick={previousGroup} />
-      <div className="home-copy-bold text-[36px] uppercase tracking-[0.08em] text-[#F5F1E8]">GROUP {group}</div>
+      <div className="home-copy-bold text-[31px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]">GROUP {group}</div>
       <ArrowButton direction="right" onClick={nextGroup} />
     </div>
     <div className="grid gap-2">
@@ -663,10 +671,10 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
   </HomeMenuShell>;
 }
 
-export function HomeScreen({ onSelectGroup, onSelectTeam }) {
+export function HomeScreen({ onSelectGroup, onSelectTeam, allTeamsUnlocked = false }) {
   const [homeMode, setHomeMode] = useState("landing");
-  if (homeMode === "hosts") return <HomeLayout><HostPanel onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>;
-  return <HomeLayout><LandingPanel onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
+  if (homeMode === "hosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked}><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>;
+  return <HomeLayout allTeamsUnlocked={allTeamsUnlocked}><LandingPanel onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
 }
-export function HostSelectScreen(props) { return <HomeLayout><HostPanel {...props} /></HomeLayout>; }
-export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam, onBack }) { return <HomeLayout><TeamPanel group={selectedGroup} onBack={onBack} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>; }
+export function HostSelectScreen(props) { return <HomeLayout allTeamsUnlocked={props.allTeamsUnlocked}><HostPanel {...props} /></HomeLayout>; }
+export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam, onBack, allTeamsUnlocked = false }) { return <HomeLayout allTeamsUnlocked={allTeamsUnlocked}><TeamPanel group={selectedGroup} onBack={onBack} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>; }
