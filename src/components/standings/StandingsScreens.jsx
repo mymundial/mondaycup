@@ -6,8 +6,8 @@ import { ScreenTitle } from "../layout/Menu.jsx";
 import { FixturesToggle } from "../schedule/ScheduleScreens.jsx";
 
 const rowClass = ({ isUserTeam }) => [
-  "mb-1 grid grid-cols-[24px_minmax(0,1.9fr)_18px_repeat(6,24px)] items-center gap-[3px] rounded-xl px-2 py-1.5 text-center text-[9px] text-[#072D1D]/80 last:mb-0 ring-1 ring-[#0B5F35]/5",
-  isUserTeam ? "bg-[#DCE9DE] font-black" : "bg-[#F8F4EC] font-semibold",
+  "mb-1 grid grid-cols-[24px_minmax(0,1.9fr)_18px_repeat(6,24px)] items-center gap-[3px] rounded-xl px-2 py-1.5 text-center text-[11px] text-[#072D1D]/80 last:mb-0 ring-1 ring-[#0B5F35]/5",
+  isUserTeam ? "bg-[#DCE9DE] home-copy-regular" : "bg-[#F8F4EC] home-copy-light",
 ].join(" ");
 
 function PlaceholderSlot({ value, compact = false }) {
@@ -45,7 +45,7 @@ function BracketRow({ count, fixtures = [], gap = "gap-[2px]", layout = "vertica
 }
 
 function StageLabel({ children }) {
-  return <div className="text-center text-[6px] font-black uppercase tracking-[0.1em] text-[#7DAA8F]">{children}</div>;
+  return <div className="text-center home-copy-bold text-[7px] uppercase tracking-[0.12em] text-[#7DAA8F]">{children}</div>;
 }
 
 function PodiumBox({ title, team, className }) {
@@ -57,7 +57,7 @@ function PodiumBox({ title, team, className }) {
 
 export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam = null }) {
   return <div className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.04)]">
-    <div className="bg-[#0B5F35] px-3 py-2.5 text-center text-[17px] font-black tracking-[-0.025em] text-[#F5F0E6]">{title}</div>
+    <div className="bg-[#0B5F35] px-3 py-2.5 text-center home-copy-bold text-[20px] tracking-[0.06em] text-[#F5F0E6]">{title}</div>
     <div className="p-2.5">
       <div className="mb-1 grid grid-cols-[24px_minmax(0,1.9fr)_18px_repeat(6,24px)] items-center gap-[3px] px-2 text-center text-[8px] font-black uppercase tracking-[0.08em] text-[#072D1D]/42">
         <span>#</span><span className="pl-1 text-left">Team</span><span aria-hidden="true" /><span>P</span><span>W</span><span>D</span><span>L</span><span>GD</span><span>Pts</span>
@@ -80,7 +80,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
   const { r32, r16, qf, sf, finalFixture, thirdFixture, winner, runnerUp, thirdPlace } = selectBracketModel({ knockoutFixtures: round32, podium });
 
   return <div className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.04)]">
-    <div className="bg-[#0B5F35] px-3 py-2.5 text-center text-[17px] font-black tracking-[-0.025em] text-[#F5F0E6]">TOURNAMENT BRACKET</div>
+    <div className="bg-[#0B5F35] px-3 py-2.5 text-center home-copy-bold text-[20px] tracking-[0.06em] text-[#F5F0E6]">TOURNAMENT BRACKET</div>
     <div className="px-2 pb-2 pt-2" style={{ zoom: 0.86 }}>
       <StageLabel>ROUND OF 32</StageLabel>
       <div className="mt-1.5"><BracketRow count={8} fixtures={r32.slice(0, 8)} gap="gap-[1px]" layout="r32" userTeam={userTeam} /></div>

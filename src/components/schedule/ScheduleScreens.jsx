@@ -24,17 +24,17 @@ export function FixtureCard({ home = "TBC", away = "TBC", group, played = false,
   const isUserFixture = userTeam && (home === userTeam || away === userTeam);
   const isUserHome = userTeam && home === userTeam;
   const isUserAway = userTeam && away === userTeam;
-  const cardClass = `mb-1.5 rounded-2xl px-3 py-2 text-center text-[11px] font-semibold text-[#072D1D]/80 ring-1 ring-[#0B5F35]/6 last:mb-0 ${isUserFixture ? "bg-[#DCE9DE]" : "bg-[#F8F4EC]"}`;
+  const cardClass = `mb-1.5 rounded-2xl px-3 py-2 text-center home-copy-light text-[12px] text-[#072D1D]/80 ring-1 ring-[#0B5F35]/6 last:mb-0 ${isUserFixture ? "bg-[#DCE9DE]" : "bg-[#F8F4EC]"}`;
   return <div className={cardClass}>
     <div className="mb-1 flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-[0.14em] text-[#0B5F35]/60">
       {matchNo && <span>M{matchNo}</span>}
       {group && <span>Group {group}</span>}
     </div>
-    <div className="grid grid-cols-[24px_minmax(0,1fr)_34px_minmax(0,1fr)_24px] items-center gap-2 text-[10px] font-black text-[#072D1D]">
+    <div className="grid grid-cols-[24px_minmax(0,1fr)_34px_minmax(0,1fr)_24px] items-center gap-2 text-[12px] text-[#072D1D]">
       <div className="flex items-center justify-center"><FlagSlot value={home} /></div>
-      <span className={`min-w-0 truncate text-center uppercase tracking-[0.005em] ${isUserHome ? "font-black" : "font-semibold"}`}>{displayTeam(home)}</span>
+      <span className={`min-w-0 truncate text-center uppercase tracking-[0.005em] ${isUserHome ? "home-copy-regular" : "home-copy-light"}`}>{displayTeam(home)}</span>
       <span className="text-center font-black text-[#0B5F35]">{played ? `${homeGoals}-${awayGoals}` : "v"}</span>
-      <span className={`min-w-0 truncate text-center uppercase tracking-[0.005em] ${isUserAway ? "font-black" : "font-semibold"}`}>{displayTeam(away)}</span>
+      <span className={`min-w-0 truncate text-center uppercase tracking-[0.005em] ${isUserAway ? "home-copy-regular" : "home-copy-light"}`}>{displayTeam(away)}</span>
       <div className="flex items-center justify-center"><FlagSlot value={away} /></div>
     </div>
   </div>;
@@ -46,7 +46,7 @@ export function FixturesToggle({ value, onChange }) {
 }
 
 export function FixtureSection({ title, children, sectionRef }) {
-  return <div ref={sectionRef} className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.04)]"><div className="bg-[#0B5F35] px-3 py-2.5 text-center text-[17px] font-black uppercase tracking-[-0.025em] text-[#F5F0E6]">{title}</div><div className="p-2.5">{children}</div></div>;
+  return <div ref={sectionRef} className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.04)]"><div className="bg-[#0B5F35] px-3 py-2.5 text-center home-copy-bold text-[20px] uppercase tracking-[0.06em] text-[#F5F0E6]">{title}</div><div className="p-2.5">{children}</div></div>;
 }
 
 export function FixturesScreen({ fixtureView, onFixtureViewChange, schedule, menuProps, knockoutFixtures, userTeam = null, scheduleFocus = null }) {

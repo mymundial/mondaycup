@@ -74,3 +74,6 @@ button, input, textarea, select {
 .font-main-light {
   font-family: "SportsDINLight", "SportsDINRegular", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
+
+.home-copy-bold, .font-main-bold { letter-spacing: 0.055em; }
+.led-text-glow { text-shadow: 0 0 7px rgba(247,209,23,0.40); }

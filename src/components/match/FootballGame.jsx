@@ -160,10 +160,8 @@ function LedAdvertisingHoard() {
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
       <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" />
-      <div className="relative mx-auto grid h-full max-w-[78%] grid-cols-[18%_1fr_18%] items-center gap-[4%]">
-        <img src={TROPHY_AD_SRC} alt="" className="h-[76%] w-full object-contain drop-shadow-[0_0_5px_rgba(247,209,23,0.20)]" draggable={false} aria-hidden="true" />
-        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="h-[78%] w-full object-contain drop-shadow-[0_0_7px_rgba(245,241,232,0.18)]" draggable={false} />
-        <img src={TROPHY_AD_SRC} alt="" className="h-[76%] w-full object-contain drop-shadow-[0_0_5px_rgba(247,209,23,0.20)]" draggable={false} aria-hidden="true" />
+      <div className="relative mx-auto flex h-full max-w-[76%] items-center justify-center">
+        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="h-[82%] w-full object-contain drop-shadow-[0_0_7px_rgba(245,241,232,0.18)]" draggable={false} />
       </div>
     </div>
   );
