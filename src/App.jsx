@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { GROUPS, GROUP_LETTERS } from "./data/teams.js";
 import { buildSchedule, blankTable, buildQualifiers, buildRound32Fixtures, sortRows, applyFixtureResult, completeMatchday, didTeamQualify, findTeamKnockoutFixture, getFixtureOpponent, completeKnockoutRound, knockoutStageLabel, runSelfTests } from "./logic/tournament.js";
 import { DrawerShell } from "./components/layout/Layout.jsx";
-import { ScreenTitle } from "./components/layout/Menu.jsx";
+import { ScreenTopBar } from "./components/layout/ScreenTopBar.jsx";
+import { MenuPanel, IvoryCard, UserHighlightCard } from "./components/layout/MenuPanel.jsx";
+import { ActionButton } from "./components/layout/ActionButton.jsx";
 import { HomeScreen, TeamSelectScreen } from "./components/selection/SelectionScreens.jsx";
 import { FixturesScreen } from "./components/schedule/ScheduleScreens.jsx";
 import { GroupsScreen } from "./components/standings/StandingsScreens.jsx";
@@ -91,29 +93,104 @@ function calculateEarlyQualifiedTeams(table, schedule, fullQualifiers, groupStag
 
 
 function StatTile({ label, value }) {
-  return <div className="rounded-[1.2rem] bg-[#F8F4EC] p-3 text-center text-[#0B5F35] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_18px_rgba(7,45,29,0.04)]"><div className="home-copy-bold text-[22px] uppercase leading-none">{value}</div><div className="home-copy-regular mt-1 text-[9px] uppercase tracking-[0.12em] text-[#0B5F35]/55">{label}</div></div>;
+  return (
+    <IvoryCard className="p-3 text-center">
+      <div className="home-copy-bold text-[22px] uppercase leading-none text-[#072D1D]">{value}</div>
+      <div className="home-copy-regular mt-1 text-[9px] uppercase tracking-[0.12em] text-[#0B5F35]">{label}</div>
+    </IvoryCard>
+  );
 }
 
 function UpgradeButton({ label, detail }) {
-  return <button className="rounded-[1.1rem] border border-[#F7D117]/55 bg-[#0B5F35] p-3 text-left text-[#F5F1E8] shadow-[0_8px_18px_rgba(7,45,29,0.10)]"><div className="home-copy-bold text-[12px] uppercase tracking-[0.06em] text-[#F7D117]">{label}</div><div className="home-copy-regular mt-1 text-[8px] uppercase tracking-[0.08em] text-[#F5F1E8]/58">{detail}</div></button>;
+  return (
+    <ActionButton variant="dark" className="h-auto min-h-[58px] rounded-[1.1rem] px-3 py-3 text-left tracking-[0.06em]" onClick={undefined}>
+      <span className="block w-full text-left">
+        <span className="block home-copy-bold text-[12px] uppercase tracking-[0.06em] text-[#F7D117]">{label}</span>
+        <span className="mt-1 block home-copy-regular text-[8px] uppercase tracking-[0.08em] text-[#F5F1E8]/72">{detail}</span>
+      </span>
+    </ActionButton>
+  );
 }
 
 function ClubhouseScreen({ menuProps, team, userForm, score }) {
   const wins = userForm.filter((item) => item === "W").length;
   const goals = Number(score?.[0] || 0);
-  return <main className="home-main-font flex min-h-0 flex-1 flex-col gap-2"><ScreenTitle {...menuProps}>CLUBHOUSE</ScreenTitle><section className="min-h-0 flex-1 overflow-auto px-4 pb-4"><div className="overflow-hidden rounded-[1.8rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.06)]"><div className="bg-[#0B5F35] px-5 py-4 text-center text-[#F5F1E8]"><div className="home-copy-bold text-[26px] uppercase leading-none">MY CLUBHOUSE</div><div className="home-copy-regular mt-2 text-[10px] uppercase tracking-[0.16em] text-[#F5F1E8]/60">Edit profile · track campaigns · climb the table</div></div><div className="space-y-4 p-4"><div className="grid gap-2"><label className="home-copy-regular text-[10px] uppercase tracking-[0.14em] text-[#0B5F35]/55">Nickname</label><input className="h-11 rounded-[1rem] border border-[#0B5F35]/10 bg-white/65 px-4 home-copy-bold text-[16px] uppercase text-[#0B5F35] outline-none" defaultValue="MONDAY HERO" /><label className="home-copy-regular mt-1 text-[10px] uppercase tracking-[0.14em] text-[#0B5F35]/55">Favourite team</label><input className="h-11 rounded-[1rem] border border-[#0B5F35]/10 bg-white/65 px-4 home-copy-bold text-[16px] uppercase text-[#0B5F35] outline-none" defaultValue={team || "CANADA"} /></div><div className="grid grid-cols-2 gap-2"><StatTile label="Monday Cups won" value="0" /><StatTile label="Leaderboard rank" value="#--" /><StatTile label="Total goals" value={goals} /><StatTile label="Goals scored" value={goals ? "100%" : "0%"} /></div><div className="grid grid-cols-2 gap-2"><UpgradeButton label="Power upgrade" detail="+10%" /><UpgradeButton label="Accuracy upgrade" detail="+10%" /><UpgradeButton label="Goalkeeper upgrade" detail="+10%" /><UpgradeButton label="Brown Envelope" detail="Guaranteed campaign" /></div></div></div></section></main>;
+  return (
+    <main className="home-main-font relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
+      <ScreenTopBar {...menuProps}>CLUBHOUSE</ScreenTopBar>
+      <section className="min-h-0 flex-1 overflow-auto px-0 pb-4 pt-2">
+        <MenuPanel title="MY CLUBHOUSE" subtitle="Edit profile · track campaigns · climb the table">
+          <div className="space-y-4 p-4 pt-2">
+            <div className="grid gap-2">
+              <label className="home-copy-regular text-[10px] uppercase tracking-[0.14em] text-[#F5F1E8]/72">Nickname</label>
+              <input className="h-11 rounded-[1rem] border border-[#F5F1E8]/65 bg-[#F5F1E8] px-4 home-copy-bold text-[16px] uppercase text-[#26352E] outline-none" defaultValue="MONDAY HERO" />
+              <label className="home-copy-regular mt-1 text-[10px] uppercase tracking-[0.14em] text-[#F5F1E8]/72">Favourite team</label>
+              <input className="h-11 rounded-[1rem] border border-[#F5F1E8]/65 bg-[#F5F1E8] px-4 home-copy-bold text-[16px] uppercase text-[#26352E] outline-none" defaultValue={team || "CANADA"} />
+            </div>
+            <div className="grid grid-cols-2 gap-2"><StatTile label="Monday Cups won" value={wins} /><StatTile label="Leaderboard rank" value="#--" /><StatTile label="Total goals" value={goals} /><StatTile label="Goals scored" value={goals ? "100%" : "0%"} /></div>
+            <div className="grid grid-cols-2 gap-2"><UpgradeButton label="Power upgrade" detail="+10%" /><UpgradeButton label="Accuracy upgrade" detail="+10%" /><UpgradeButton label="Goalkeeper upgrade" detail="+10%" /><UpgradeButton label="Brown Envelope" detail="Guaranteed campaign" /></div>
+          </div>
+        </MenuPanel>
+      </section>
+    </main>
+  );
 }
 
 function TrophyCabinetScreen({ menuProps }) {
   const trophies = ["Host hero", "Group winner", "Knockout king", "Finalist", "Champion", "Golden boot", "Perfect power", "Perfect accuracy", "Clean sweep", "Underdog", "48-team master", "Monday legend"];
-  return <main className="home-main-font flex min-h-0 flex-1 flex-col gap-2"><ScreenTitle {...menuProps}>TROPHY CABINET</ScreenTitle><section className="min-h-0 flex-1 overflow-auto px-4 pb-4"><div className="overflow-hidden rounded-[1.8rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8"><div className="bg-[#0B5F35] px-5 py-4 text-center text-[#F5F1E8]"><div className="home-copy-bold text-[25px] uppercase leading-none">COLLECTION</div><div className="home-copy-regular mt-2 text-[10px] uppercase tracking-[0.16em] text-[#F5F1E8]/60">12 trophy slots to start · expandable later</div></div><div className="grid grid-cols-3 gap-3 p-4">{trophies.map((name, index) => <div key={name} className="flex h-[96px] flex-col items-center justify-center rounded-[1.2rem] bg-[#F8F4EC] p-2 text-center ring-1 ring-[#0B5F35]/8"><div className="grid h-10 w-10 place-items-center rounded-full bg-[#0B5F35]/8 text-[#0B5F35]/30 home-copy-bold text-[22px]">🏆</div><div className="home-copy-bold mt-2 text-[8px] uppercase leading-tight tracking-[0.06em] text-[#0B5F35]/55">{name}</div><div className="home-copy-regular mt-1 text-[6px] uppercase tracking-[0.10em] text-[#0B5F35]/35">{index < 5 ? "Free" : "Locked"}</div></div>)}</div></div></section></main>;
+  return (
+    <main className="home-main-font relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
+      <ScreenTopBar {...menuProps}>TROPHY CABINET</ScreenTopBar>
+      <section className="min-h-0 flex-1 overflow-auto px-0 pb-4 pt-2">
+        <MenuPanel title="COLLECTION" subtitle="12 trophy slots to start · expandable later">
+          <div className="grid grid-cols-3 gap-3 p-4 pt-2">
+            {trophies.map((name, index) => {
+              const unlocked = index < 5;
+              const Card = unlocked ? UserHighlightCard : IvoryCard;
+              return (
+                <Card key={name} className="flex h-[96px] flex-col items-center justify-center p-2 text-center">
+                  <div className={`grid h-10 w-10 place-items-center rounded-full home-copy-bold text-[22px] ${unlocked ? "bg-[#F7D117] text-[#072D1D]" : "bg-[#0B5F35]/8 text-[#0B5F35]/30"}`}>🏆</div>
+                  <div className={`home-copy-bold mt-2 text-[8px] uppercase leading-tight tracking-[0.06em] ${unlocked ? "text-[#F7D117]" : "text-[#26352E]"}`}>{name}</div>
+                  <div className={`home-copy-regular mt-1 text-[6px] uppercase tracking-[0.10em] ${unlocked ? "text-[#F5F1E8]/72" : "text-[#0B5F35]/45"}`}>{unlocked ? "Free" : "Locked"}</div>
+                </Card>
+              );
+            })}
+          </div>
+        </MenuPanel>
+      </section>
+    </main>
+  );
 }
 
 function LeaderboardScreen({ menuProps }) {
   const rows = [
     [1, "MONDAYHERO", 1840], [2, "PANENKA12", 1710], [3, "NETFINDER", 1625], [4, "GROUPKING", 1510], [5, "YOU", "--"]
   ];
-  return <main className="home-main-font flex min-h-0 flex-1 flex-col gap-2"><ScreenTitle {...menuProps}>LEADERBOARD</ScreenTitle><section className="min-h-0 flex-1 overflow-auto px-4 pb-4"><div className="overflow-hidden rounded-[1.8rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8"><div className="bg-[#0B5F35] px-5 py-4 text-center text-[#F5F1E8]"><div className="home-copy-bold text-[25px] uppercase leading-none">BEST CAMPAIGN POINTS</div><div className="home-copy-regular mt-2 text-[10px] uppercase tracking-[0.16em] text-[#F5F1E8]/60">Single-campaign high score only</div></div><div className="p-4"><div className="mb-3 rounded-[1.2rem] bg-[#F8F4EC] p-3 text-[9px] uppercase leading-relaxed tracking-[0.06em] text-[#0B5F35]/60">Scoring model: 50 for centre power, 50 for centre accuracy, 50 per goal, 10 woodwork, 50 per match win, 50 group qualification, 100 champion, 50 runner-up, 25 third.</div><div className="space-y-2">{rows.map(([rank, name, points]) => <div key={rank} className="grid grid-cols-[40px_1fr_70px] items-center rounded-[1rem] bg-[#F8F4EC] px-3 py-3 ring-1 ring-[#0B5F35]/8"><div className="home-copy-bold text-[16px] text-[#0B5F35]/55">#{rank}</div><div className="home-copy-bold text-[15px] uppercase text-[#0B5F35]">{name}</div><div className="home-copy-bold text-right text-[16px] text-[#0B5F35]">{points}</div></div>)}</div></div></div></section></main>;
+  return (
+    <main className="home-main-font relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
+      <ScreenTopBar {...menuProps}>LEADERBOARD</ScreenTopBar>
+      <section className="min-h-0 flex-1 overflow-auto px-0 pb-4 pt-2">
+        <MenuPanel title="BEST CAMPAIGN POINTS" subtitle="Single-campaign high score only">
+          <div className="p-4 pt-2">
+            <IvoryCard className="mb-3 p-3 text-[9px] uppercase leading-relaxed tracking-[0.06em]">Scoring model: 50 for centre power, 50 for centre accuracy, 50 per goal, 10 woodwork, 50 per match win, 50 group qualification, 100 champion, 50 runner-up, 25 third.</IvoryCard>
+            <div className="space-y-2">
+              {rows.map(([rank, name, points]) => {
+                const isUser = name === "YOU";
+                const Card = isUser ? UserHighlightCard : IvoryCard;
+                return (
+                  <Card key={rank} className="grid grid-cols-[40px_1fr_70px] items-center px-3 py-3">
+                    <div className={`home-copy-bold text-[16px] ${isUser ? "text-[#F7D117]" : "text-[#0B5F35]/55"}`}>#{rank}</div>
+                    <div className={`home-copy-bold text-[15px] uppercase ${isUser ? "text-[#F7D117]" : "text-[#26352E]"}`}>{name}</div>
+                    <div className={`home-copy-bold text-right text-[16px] ${isUser ? "text-[#F5F1E8]" : "text-[#26352E]"}`}>{points}</div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </MenuPanel>
+      </section>
+    </main>
+  );
 }
 
 export default function App() {

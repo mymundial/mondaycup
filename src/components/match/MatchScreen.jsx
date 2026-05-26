@@ -16,7 +16,173 @@ import {
 const SHARE_CANVAS_NAME = "monday-cup-result.png";
 const SHARE_EXPORT_SIZE = 2000;
 const SHARE_TOP_BANNER_HEIGHT = 90;
-const TERMINAL_STATUSES = new Set(["eliminated", "champion", "runnerUp", "third", "fourth"]);
+const CHAMPIONS_BADGE_SRC = "/mc-champs2.png";
+const RUNNER_UP_BADGE_SRC = "/mc-runner-up.png";
+const THIRD_PLACE_BADGE_SRC = "/mc-third-place.png";
+const TERMINAL_STATUSES = new Set(["eliminated", "champion", "runnerUp", "runner-up", "fourth"]);
+const THIRD_PLACE_STATUSES = new Set(["third", "thirdPlace", "third-place", "bronze"]);
+
+const SHARE_TEAM_BORDER_COLORS = {
+  Mexico: "#29A64A",
+  Canada: "#E32219",
+  USA: "#2430D9",
+  England: "#F5F1E8",
+  France: "#1454A8",
+  Spain: "#F7D117",
+  Argentina: "#78BCE8",
+  Brazil: "#F7D117",
+  Germany: "#F5F1E8",
+  Portugal: "#0B7A3B",
+  Italy: "#0B7A3B",
+  Netherlands: "#FF6A13",
+};
+
+const SHARE_TEAM_EXPORT_STYLES = {
+  Mexico: { bg: "#29A64A", fg: "#072D1D" },
+  Canada: { bg: "#E32219", fg: "#F5F1E8" },
+  USA: { bg: "#2430D9", fg: "#F5F1E8" },
+  England: { bg: "#F5F1E8", fg: "#072D1D" },
+  France: { bg: "#1454A8", fg: "#F5F1E8" },
+  Spain: { bg: "#F7D117", fg: "#072D1D" },
+  Argentina: { bg: "#78BCE8", fg: "#072D1D" },
+  Brazil: { bg: "#F7D117", fg: "#072D1D" },
+  Germany: { bg: "#F5F1E8", fg: "#072D1D" },
+  Portugal: { bg: "#0B7A3B", fg: "#F5F1E8" },
+  Italy: { bg: "#0B7A3B", fg: "#F5F1E8" },
+  Netherlands: { bg: "#FF6A13", fg: "#072D1D" },
+};
+
+function getShareBorderColor(team) {
+  return SHARE_TEAM_BORDER_COLORS[team] || "#F7D117";
+}
+
+function getShareExportTeamStyle(team) {
+  return SHARE_TEAM_EXPORT_STYLES[team] || { bg: getShareBorderColor(team), fg: "#072D1D" };
+}
+
+function applySharePreviewOverrides(clone, userTeam = null, badgeMode = null) {
+  if (!clone) return;
+
+  clone.querySelectorAll('[data-normalise-stage-label="true"]').forEach((node) => {
+    node.textContent = normaliseThirdPlaceCopy(node.textContent);
+  });
+
+  // The live match page keeps the flash commentary beneath the scoreboard.
+  // The export composition moves it above the scoreboard text only in the cloned share card.
+  const scoreboardInner = clone.querySelector('[data-share-scoreboard="true"] > div.relative');
+  const flash = clone.querySelector('[data-share-flash="true"]');
+  const divider = clone.querySelector('[data-share-score-divider="true"]');
+  if (divider) divider.remove();
+  if (scoreboardInner && flash) {
+    scoreboardInner.insertBefore(flash, scoreboardInner.firstElementChild);
+    flash.style.margin = "0";
+    flash.style.borderTopWidth = "0px";
+    flash.style.boxShadow = "inset 0 -1px 0 rgba(245,241,232,0.18)";
+  }
+
+  if (badgeMode === "runnerUp" && flash) {
+    const teamStyle = getShareExportTeamStyle(userTeam);
+    flash.textContent = `${String(userTeam || "YOUR TEAM").toUpperCase()} LOST!`;
+    flash.style.background = teamStyle.bg;
+    flash.style.color = teamStyle.fg;
+  }
+}
+
+function normaliseThirdPlaceCopy(value) {
+  return String(value || "").replace(/3rd\s*place\s*play[-\s]*off/gi, "THIRD PLACE PLAY-OFF").replace(/third\s*place\s*playoff/gi, "THIRD PLACE PLAY-OFF").replace(/third\s*place\s*play[-\s]*off/gi, "THIRD PLACE PLAY-OFF");
+}
+
+function textIncludesThirdPlace(value) {
+  return /third\s*place|3rd\s*place|bronze|m103|third[-_\s]*place[-_\s]*play[-_\s]*off|third[-_\s]*place[-_\s]*playoff/i.test(String(value || ""));
+}
+
+function isThirdPlacePlayoffResult({ result, fixture, stageLabel }) {
+  const status = result?.status;
+  if (!THIRD_PLACE_STATUSES.has(status)) return false;
+  const values = [
+    stageLabel,
+    fixture?.id,
+    fixture?.code,
+    fixture?.name,
+    fixture?.title,
+    fixture?.label,
+    fixture?.round,
+    fixture?.roundName,
+    fixture?.stage,
+    fixture?.stageName,
+    fixture?.phase,
+    fixture?.type,
+    fixture?.matchType,
+    fixture?.matchNo,
+    result?.id,
+    result?.code,
+    result?.name,
+    result?.title,
+    result?.label,
+    result?.round,
+    result?.roundName,
+    result?.stage,
+    result?.stageName,
+    result?.phase,
+    result?.type,
+    result?.matchType,
+    result?.matchNo,
+  ];
+  return values.some(textIncludesThirdPlace);
+}
+
+function getTerminalBadgeMode({ result, fixture, stageLabel, podium, team }) {
+  if (!result) return null;
+  if (result.status === "champion" || podium?.champion === team) return "champion";
+  if (result.status === "runnerUp" || result.status === "runner-up" || podium?.runnerUp === team || podium?.runnerup === team || podium?.second === team) return "runnerUp";
+  if (isThirdPlacePlayoffResult({ result, fixture, stageLabel }) || (podium?.third === team && isThirdPlacePlayoffResult({ result, fixture, stageLabel })) || (podium?.thirdPlace === team && isThirdPlacePlayoffResult({ result, fixture, stageLabel }))) return "third";
+  return null;
+}
+
+function isTerminalShareResult({ result, fixture, stageLabel, podium, team }) {
+  if (!result) return false;
+  if (getTerminalBadgeMode({ result, fixture, stageLabel, podium, team })) return true;
+  if (THIRD_PLACE_STATUSES.has(result.status)) return isThirdPlacePlayoffResult({ result, fixture, stageLabel });
+  return TERMINAL_STATUSES.has(result.status);
+}
+
+function getBadgeMode({ status, podium, team }) {
+  if (status === "champion" || podium?.champion === team) return "champion";
+  if (status === "runnerUp" || status === "runner-up" || podium?.runnerUp === team || podium?.runnerup === team || podium?.second === team) return "runnerUp";
+  // Third place must be gated by fixture context via getTerminalBadgeMode so it is not awarded after a semi-final.
+  return null;
+}
+
+function getBadgeVisuals(mode) {
+  if (mode === "runnerUp") {
+    return {
+      src: RUNNER_UP_BADGE_SRC,
+      alt: "Monday Cup Runner-Up",
+      glowOuter: "rgba(235,238,243,0.26)",
+      glowInner: "rgba(255,255,255,0.22)",
+      shadow: "drop-shadow(0 0 18px rgba(235,238,243,0.42))",
+    };
+  }
+  if (mode === "third") {
+    return {
+      src: THIRD_PLACE_BADGE_SRC,
+      alt: "Monday Cup Third Place",
+      glowOuter: "rgba(205,127,50,0.25)",
+      glowInner: "rgba(244,176,104,0.11)",
+      shadow: "drop-shadow(0 0 18px rgba(205,127,50,0.46))",
+    };
+  }
+  if (mode === "champion") {
+    return {
+      src: CHAMPIONS_BADGE_SRC,
+      alt: "Monday Cup Champions",
+      glowOuter: "rgba(247,209,23,0.25)",
+      glowInner: "rgba(247,209,23,0.11)",
+      shadow: "drop-shadow(0 0 18px rgba(247,209,23,0.46))",
+    };
+  }
+  return null;
+}
 
 function getDisplayUsername() {
   const currentUser = auth.currentUser;
@@ -62,7 +228,7 @@ function drawImageContain(ctx, img, x, y, width, height) {
   ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
 }
 
-async function composeShareExportCanvas(sourceCanvas) {
+async function composeShareExportCanvas(sourceCanvas, userTeam = null, badgeMode = null) {
   const canvas = document.createElement("canvas");
   canvas.width = SHARE_EXPORT_SIZE;
   canvas.height = SHARE_EXPORT_SIZE;
@@ -70,43 +236,13 @@ async function composeShareExportCanvas(sourceCanvas) {
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
-  const bannerHeight = SHARE_TOP_BANNER_HEIGHT;
+  ctx.drawImage(sourceCanvas, 0, 0, sourceCanvas.width, sourceCanvas.height, 0, 0, SHARE_EXPORT_SIZE, SHARE_EXPORT_SIZE);
 
-  const topGradient = ctx.createLinearGradient(0, 0, 0, bannerHeight);
-  topGradient.addColorStop(0, "#0A3C27");
-  topGradient.addColorStop(0.5, "#072D1D");
-  topGradient.addColorStop(1, "#051F15");
-  ctx.fillStyle = topGradient;
-  ctx.fillRect(0, 0, SHARE_EXPORT_SIZE, bannerHeight);
-
-  // Keep the top export banner clean: no internal grid/vertical join lines.
-
-  ctx.drawImage(sourceCanvas, 0, 0, sourceCanvas.width, sourceCanvas.height, 0, bannerHeight, SHARE_EXPORT_SIZE, SHARE_EXPORT_SIZE);
-
-  const [cornerLogo, adLogo] = await Promise.all([
-    loadCanvasImage(await assetToDataUrl(ASSETS.mondayLogo)),
-    loadCanvasImage(await assetToDataUrl("/monday-cup-ad.png")),
-  ]);
-
-  const cornerLogoSize = bannerHeight * 0.68;
-  const cornerInsetX = SHARE_EXPORT_SIZE * 0.09;
-  drawImageContain(ctx, cornerLogo, cornerInsetX - cornerLogoSize / 2, bannerHeight * 0.14, cornerLogoSize, bannerHeight * 0.72);
-  drawImageContain(ctx, cornerLogo, SHARE_EXPORT_SIZE - cornerInsetX - cornerLogoSize / 2, bannerHeight * 0.14, cornerLogoSize, bannerHeight * 0.72);
-
-  const adLogoWidth = SHARE_EXPORT_SIZE * 0.18;
-  const adLogoHeight = bannerHeight * 0.62;
-  drawImageContain(ctx, adLogo, (SHARE_EXPORT_SIZE - adLogoWidth) / 2, (bannerHeight - adLogoHeight) / 2, adLogoWidth, adLogoHeight);
-
-  ctx.strokeStyle = "rgba(245,241,232,0.42)";
-  ctx.lineWidth = 3;
-  ctx.strokeRect(3, 3, SHARE_EXPORT_SIZE - 6, SHARE_EXPORT_SIZE - 6);
-
-  ctx.strokeStyle = "rgba(245,241,232,0.24)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(0, bannerHeight);
-  ctx.lineTo(SHARE_EXPORT_SIZE, bannerHeight);
-  ctx.stroke();
+  // Export should use the live-rendered match scene exactly as captured.
+  // No extra badge, glow, scoreboard darkening, flash gradient, or stadium vignette is applied here.
+  ctx.strokeStyle = getShareBorderColor(userTeam);
+  ctx.lineWidth = 20;
+  ctx.strokeRect(10, 10, SHARE_EXPORT_SIZE - 20, SHARE_EXPORT_SIZE - 20);
 
   return canvas;
 }
@@ -197,13 +333,14 @@ async function inlineCloneImages(clone) {
   }));
 }
 
-async function renderElementToCanvasWithSvg(shareElement) {
+async function renderElementToCanvasWithSvg(shareElement, userTeam = null, badgeMode = null) {
   const rect = shareElement.getBoundingClientRect();
   const cropSize = Math.max(1, Math.min(rect.width, rect.height || rect.width));
   const clone = shareElement.cloneNode(true);
 
   copyComputedStyles(shareElement, clone);
   await inlineCloneImages(clone);
+  applySharePreviewOverrides(clone, userTeam, badgeMode);
 
   clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
   clone.style.position = "relative";
@@ -255,17 +392,17 @@ async function renderElementToCanvasWithSvg(shareElement) {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(img, 0, 0, SHARE_EXPORT_SIZE, SHARE_EXPORT_SIZE);
-    return composeShareExportCanvas(sourceCanvas);
+    return composeShareExportCanvas(sourceCanvas, userTeam, badgeMode);
   } finally {
     URL.revokeObjectURL(url);
   }
 }
 
-async function captureShareElementBlob(shareElement) {
+async function captureShareElementBlob(shareElement, userTeam = null, badgeMode = null) {
   if (!shareElement) throw new Error("Share capture area was not found");
   if (document?.fonts?.ready) await document.fonts.ready.catch(() => null);
   await preloadImagesInElement(shareElement);
-  const canvas = await renderElementToCanvasWithSvg(shareElement);
+  const canvas = await renderElementToCanvasWithSvg(shareElement, userTeam, badgeMode);
   return getCanvasBlob(canvas);
 }
 
@@ -325,6 +462,51 @@ function BackArrowIcon({ className = "h-7 w-7" }) {
   );
 }
 
+function BracketIcon({ className = "h-8 w-8" }) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <rect x="7" y="10" width="16" height="13" rx="2.5" stroke="currentColor" strokeWidth="4" />
+      <rect x="7" y="41" width="16" height="13" rx="2.5" stroke="currentColor" strokeWidth="4" />
+      <rect x="41" y="25.5" width="16" height="13" rx="2.5" stroke="currentColor" strokeWidth="4" />
+      <path d="M23 16.5h8c5 0 7 3.5 10 9M23 47.5h8c5 0 7-3.5 10-9" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function FootballLineIcon({ className = "h-8 w-8" }) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <circle cx="32" cy="32" r="25" stroke="currentColor" strokeWidth="4" />
+      <path d="M32 18l11 8-4 13H25l-4-13 11-8Z" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+      <path d="M21 26l-10-4M43 26l10-4M25 39l-7 10M39 39l7 10M32 18V7M32 57v-8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ShareResultIcon({ className = "h-8 w-8" }) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M21 36v15h30V36" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M36 12v29M36 12l-10 10M36 12l10 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M13 30h12M39 51H13V30" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" opacity="0.72" />
+    </svg>
+  );
+}
+
+function TerminalActionCard({ onClick, icon, label, disabled = false }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex aspect-square min-h-[92px] flex-col items-center justify-center gap-2 rounded-[1.2rem] border border-[#F7D117]/75 bg-[#F7D117] px-2 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.22),inset_0_2px_8px_rgba(255,255,255,0.22)] ring-1 ring-[#F7D117]/35 disabled:opacity-70"
+    >
+      <span className="flex h-9 items-center justify-center text-[#072D1D]">{icon}</span>
+      <span className="home-copy-bold text-[9px] uppercase leading-none tracking-[0.08em]">{label}</span>
+    </button>
+  );
+}
+
 
 function getCampaignPointsTotal({ result, groupRows = [], userTeam = null, userForm = [] }) {
   const directValue = result?.campaignPoints ?? result?.pointsTotal ?? result?.leaderboardPoints ?? result?.totalPoints;
@@ -378,7 +560,7 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
             <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{index + 1}</span>
             <span className="flex justify-center"><Flag team={row.team} className="h-4 w-6 rounded-[4px] ring-1 ring-[#F5F1E8]/35" /></span>
             <span className={`min-w-0 truncate text-left uppercase home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#26352E]"}`} style={tightTeamStyle(row.team)}>{row.team}</span>
-            <span className={`flex h-full items-center justify-center text-[inherit] home-copy-bold leading-none ${isUser ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{isQualified ? "Q" : ""}</span>
+            <span className={`flex h-full items-center justify-center text-[12px] home-copy-bold leading-none ${isUser ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{isQualified ? "Q" : ""}</span>
             <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.played}</span>
             <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.won}</span>
             <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.drawn}</span>
@@ -392,7 +574,7 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
   );
 }
 
-function FullTimeModal({ result, onNext, onDismiss, onViewBracket, onPlayAgain, groupRows, qualifiedTeams, userTeam, selectedGroup, stageLabel, userForm, shareCaptureRef }) {
+function FullTimeModal({ result, fixture, onNext, onDismiss, onViewBracket, onPlayAgain, groupRows, qualifiedTeams, userTeam, selectedGroup, stageLabel, userForm, shareCaptureRef, podium }) {
   const isKnockout = !result.week;
   const userInKnockout = result.home === userTeam || result.away === userTeam;
   const homeIsUser = result.home === userTeam;
@@ -402,10 +584,11 @@ function FullTimeModal({ result, onNext, onDismiss, onViewBracket, onPlayAgain, 
   const [shareBusy, setShareBusy] = useState(false);
   const [sharePreviewOpen, setSharePreviewOpen] = useState(false);
   const [sharePreviewUrl, setSharePreviewUrl] = useState("");
-  const isTerminalResult = TERMINAL_STATUSES.has(result?.status);
+  const isTerminalResult = isTerminalShareResult({ result, fixture, stageLabel, podium, team: userTeam });
   const campaignPointsTotal = getCampaignPointsTotal({ result, groupRows, userTeam, userForm });
+  const activeBadgeMode = getTerminalBadgeMode({ result, fixture, stageLabel, podium, team: userTeam });
 
-  const buildShareBlob = () => captureShareElementBlob(shareCaptureRef?.current);
+  const buildShareBlob = () => captureShareElementBlob(shareCaptureRef?.current, userTeam, activeBadgeMode);
 
   useEffect(() => {
     let active = true;
@@ -473,16 +656,15 @@ function FullTimeModal({ result, onNext, onDismiss, onViewBracket, onPlayAgain, 
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/48 px-5 pt-20">
       <div className="relative w-full max-w-sm overflow-visible rounded-[2rem] border border-[#F5F1E8]/14 bg-[#0B5F35]/92 text-center text-[#F5F1E8] shadow-[0_10px_26px_rgba(0,0,0,0.22),inset_0_-2px_6px_rgba(0,0,0,0.06)]">
         {!sharePreviewOpen && (
-          <div className="absolute left-0 right-0 top-[-50px] z-[3] grid grid-cols-[minmax(0,1fr)_78px] gap-2 px-5">
+          <div className="absolute left-0 right-0 top-[-62px] z-[3] grid grid-cols-[minmax(0,1fr)_78px] gap-4 px-5">
             <div className="relative flex h-11 items-center justify-center overflow-hidden rounded-full border border-[#F5F1E8]/18 bg-[#072D1D] px-4 shadow-[0_6px_14px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.07),inset_0_-1px_0_rgba(0,0,0,0.12)] ring-1 ring-[#0B5F35]/35">
               <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.18),rgba(24,166,83,0.05),rgba(11,95,53,0.18))]" />
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),rgba(0,0,0,0.15))]" />
               <div className="relative z-[1]"><FormTracker form={userForm} /></div>
             </div>
-            <div className="relative flex h-11 flex-col items-center justify-center overflow-hidden rounded-full border border-[#F5F1E8]/18 bg-[#072D1D] px-2 shadow-[0_6px_14px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.07),inset_0_-1px_0_rgba(0,0,0,0.12)] ring-1 ring-[#0B5F35]/35">
+            <div className="relative flex h-11 items-center justify-center overflow-hidden rounded-full border border-[#F5F1E8]/18 bg-[#072D1D] px-2 shadow-[0_6px_14px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.07),inset_0_-1px_0_rgba(0,0,0,0.12)] ring-1 ring-[#0B5F35]/35">
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),rgba(0,0,0,0.15))]" />
-              <span className="relative z-[1] home-copy-light text-[7px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]/70">PTS</span>
-              <span className="relative z-[1] font-led text-[16px] leading-none text-[#F7D117] led-text-glow">{campaignPointsTotal}</span>
+              <span className="relative z-[1] font-led text-[18px] leading-none text-[#F7D117] led-text-glow">{campaignPointsTotal}</span>
             </div>
           </div>
         )}
@@ -502,7 +684,7 @@ function FullTimeModal({ result, onNext, onDismiss, onViewBracket, onPlayAgain, 
                 <img src={ASSETS.mondayLogo} alt="Monday Cup" className="h-full w-full object-contain" draggable={false} />
               </div>
             )}
-            <div className="text-center home-copy-bold text-[25px] uppercase leading-[0.95] tracking-[0.06em] text-[#F5F0E6]">{sharePreviewOpen ? "SHARE" : modalHeaderTitle({ isKnockout, stageLabel, selectedGroup })}</div>
+            <div className="text-center home-copy-bold text-[25px] uppercase leading-[0.95] tracking-[0.06em] text-[#F5F0E6]">{sharePreviewOpen ? "SHARE" : normaliseThirdPlaceCopy(modalHeaderTitle({ isKnockout, stageLabel, selectedGroup }))}</div>
             <button onClick={onDismiss} aria-label="Close result" className="flex h-9 w-9 items-center justify-center justify-self-end text-[#F5F0E6]">
               <CloseIcon className="h-6 w-6" />
             </button>
@@ -531,14 +713,14 @@ function FullTimeModal({ result, onNext, onDismiss, onViewBracket, onPlayAgain, 
           {isTerminalResult ? (
             sharePreviewOpen ? (
               <div className="mt-1.5 space-y-2.5">
-                <div className="mx-auto aspect-square w-full overflow-hidden rounded-[1.15rem] border border-[#F5F1E8]/22 bg-[#072D1D] p-[3px] shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#0B5F35]/45">
-                  <div className="relative h-full w-full overflow-hidden rounded-[0.95rem] bg-[#0B5F35]">
+                <div className="mx-auto aspect-square w-full overflow-hidden border border-[#F5F1E8]/22 bg-[#072D1D] p-[3px] shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#0B5F35]/45">
+                  <div className="relative h-full w-full overflow-hidden bg-[#0B5F35]">
                     {sharePreviewUrl ? (
                       <img src={sharePreviewUrl} alt="Monday Cup result preview" className="h-full w-full object-cover" draggable={false} />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center px-6 text-center home-copy-bold text-[13px] uppercase tracking-[0.14em] text-[#F5F1E8]">Preparing preview</div>
                     )}
-                    <div className="pointer-events-none absolute inset-0 rounded-[0.95rem] ring-1 ring-[#F5F1E8]/16" aria-hidden="true" />
+                    <div className="pointer-events-none absolute inset-0 ring-1 ring-[#F5F1E8]/16" aria-hidden="true" />
                   </div>
                 </div>
                 <button type="button" onClick={handleShare} disabled={shareBusy} className="mx-auto flex h-11 w-full items-center justify-center rounded-full border border-[#F7D117]/75 bg-[#F7D117] home-copy-bold text-[15px] uppercase tracking-[0.14em] text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.24),inset_0_2px_8px_rgba(255,255,255,0.22)] disabled:opacity-70">
@@ -546,11 +728,10 @@ function FullTimeModal({ result, onNext, onDismiss, onViewBracket, onPlayAgain, 
                 </button>
               </div>
             ) : (
-              <div className="mt-2.5 space-y-2">
-                <button type="button" onClick={openSharePreview} disabled={shareBusy} className="mx-auto flex h-11 w-full items-center justify-center rounded-full border border-[#F7D117]/75 bg-[#F7D117] home-copy-bold text-[15px] uppercase tracking-[0.14em] text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.24),inset_0_2px_8px_rgba(255,255,255,0.22)] disabled:opacity-70">
-                  {shareBusy ? "PREPARING" : "SHARE YOUR RESULT"}
-                </button>
-
+              <div className="mt-2.5 grid grid-cols-3 gap-2">
+                <TerminalActionCard onClick={onViewBracket} label="VIEW BRACKET" icon={<BracketIcon className="h-8 w-8" />} />
+                <TerminalActionCard onClick={onPlayAgain} label="PLAY AGAIN" icon={<FootballLineIcon className="h-8 w-8" />} />
+                <TerminalActionCard onClick={openSharePreview} disabled={shareBusy} label={shareBusy ? "PREPARING" : "SHARE RESULT"} icon={<ShareResultIcon className="h-8 w-8" />} />
               </div>
             )
           ) : (
@@ -587,12 +768,13 @@ export function MatchScreen({
   const [matchBusy, setMatchBusy] = useState(false);
   const shareCaptureRef = useRef(null);
   const username = useMemo(() => getDisplayUsername(), [matchResult]);
-  const isTerminalResult = TERMINAL_STATUSES.has(matchResult?.status);
+  const isTerminalResult = isTerminalShareResult({ result: matchResult, fixture, stageLabel, podium, team });
   const userTeam = teamToGameTeam(team || "Team A");
   const opponentTeam = teamToGameTeam(opponent || "Team B");
   const fallbackFixture = fixture || createFallbackFixture({ team, opponent });
   const completedResult = toCompletedGameResult(matchResult, fallbackFixture);
-  const showChampionsBadge = matchResult?.status === "champion" || podium?.champion === team;
+  const activeBadgeMode = getTerminalBadgeMode({ result: matchResult, fixture, stageLabel, podium, team });
+  const showChampionsBadge = activeBadgeMode === "champion";
 
   return (
     <Shell>
@@ -625,12 +807,14 @@ export function MatchScreen({
             onEndAction={onNextMatch}
             onBusyChange={setMatchBusy}
             showChampionsBadge={showChampionsBadge}
+            podiumBadgeMode={activeBadgeMode}
           />
         </div>
 
         {matchResult && !modalDismissed && (
           <FullTimeModal
             result={matchResult}
+            fixture={fallbackFixture}
             onNext={onNextMatch}
             onDismiss={onDismissModal}
             onViewBracket={onViewBracket}
@@ -642,6 +826,7 @@ export function MatchScreen({
             stageLabel={stageLabel}
             userForm={userForm}
             shareCaptureRef={shareCaptureRef}
+            podium={podium}
           />
         )}
 

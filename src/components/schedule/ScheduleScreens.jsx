@@ -5,48 +5,64 @@ import { buildRound32Placeholders } from "../../logic/tournament.js";
 import { buildPlaceholderFixtures, mergeByMatchNo } from "../../logic/bracketMappingSelectors.js";
 import { selectFixtureScrollTarget } from "../../logic/schedulePositioningSelectors.js";
 import { Flag } from "../shared.jsx";
-import { ScreenTitle } from "../layout/Menu.jsx";
+import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
+import { MenuPanel } from "../layout/MenuPanel.jsx";
 
 const isSeedLabel = (value) => /^[123][A-L]+$/.test(String(value || ""));
 const isProgressionLabel = (value) => /^(W|RU)\d+$/.test(String(value || ""));
 const isPlaceholderLabel = (value) => !value || value === "TBC" || isSeedLabel(value) || isProgressionLabel(value);
 const displayTeam = (value) => value || "TBC";
+const normaliseRoundTitle = (title = "") => String(title).replace(/3rd\s+place\s+play-?off/i, "THIRD PLACE PLAY-OFF").replace(/3RD\s+PLACE\s+PLAY-?OFF/i, "THIRD PLACE PLAY-OFF");
 
 function PlaceholderFlag({ className = "h-4 w-6" }) {
-  return <span className={`relative flex ${className} shrink-0 items-center justify-center overflow-hidden rounded bg-[#DCE9DE] text-[6px] font-black tracking-[0.04em] text-[#0B5F35]/55 ring-1 ring-[#0B5F35]/10`}>TBC</span>;
+  return <span className={`relative flex ${className} shrink-0 items-center justify-center overflow-hidden rounded bg-[#0B5F35] text-[8px] home-copy-bold tracking-[0.04em] text-[#F5F1E8] ring-1 ring-[#F5F1E8]/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]`}>TBC</span>;
 }
 
-function FlagSlot({ value }) {
-  return isPlaceholderLabel(value) ? <PlaceholderFlag /> : <Flag team={value} />;
+function FlagSlot({ value, className = "h-5 w-7" }) {
+  return isPlaceholderLabel(value) ? <PlaceholderFlag className={className} /> : <Flag team={value} className={`${className} rounded-[4px] ring-1 ring-[#F5F1E8]/35`} />;
 }
 
 export function FixtureCard({ home = "TBC", away = "TBC", group, played = false, homeGoals = null, awayGoals = null, matchNo = null, userTeam = null }) {
   const isUserFixture = userTeam && (home === userTeam || away === userTeam);
   const isUserHome = userTeam && home === userTeam;
   const isUserAway = userTeam && away === userTeam;
-  const cardClass = `mb-1.5 rounded-2xl px-3 py-2 text-center home-copy-light text-[14px] text-[#072D1D]/80 ring-1 ring-[#0B5F35]/6 last:mb-0 ${isUserFixture ? "bg-[#DCE9DE]" : "bg-[#F8F4EC]"}`;
-  return <div className={cardClass}>
-    <div className="mb-1 flex items-center justify-center gap-2 text-[10px] home-copy-bold uppercase tracking-[0.15em] text-[#0B5F35]/60">
-      {matchNo && <span>M{matchNo}</span>}
-      {group && <span>Group {group}</span>}
+  const scoreText = played ? `${homeGoals}-${awayGoals}` : "v";
+  const cardClass = `mb-1.5 grid min-h-[62px] grid-rows-[30%_40%_30%] rounded-[1.25rem] border px-2.5 text-center ring-1 last:mb-0 shadow-[0_8px_18px_rgba(0,0,0,0.12)] ${isUserFixture ? "border-[#F5F1E8]/22 bg-[#072D1D] text-[#F5F1E8] ring-[#0B5F35]/45 shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`;
+  const teamText = (isUserTeam) => isUserTeam ? "text-[#F7D117]" : isUserFixture ? "text-[#F5F1E8]" : "text-[#26352E]";
+  const scoreClass = isUserFixture ? "text-[#F5F1E8]" : "text-[#26352E]";
+  const labelClass = isUserFixture ? "text-[#F5F1E8]" : "text-[#0B5F35]";
+
+  return (
+    <div className={cardClass}>
+      <div className={`flex items-end justify-center gap-2 self-stretch pb-[3px] home-copy-bold text-[11px] uppercase leading-none tracking-[0.14em] ${labelClass}`}>
+        {matchNo && !group && <span>M{matchNo}</span>}
+        {group && <span>GROUP {group}</span>}
+        {matchNo && group && <span className="home-copy-regular text-[10px] opacity-80">M{matchNo}</span>}
+      </div>
+      <div className="grid min-h-0 grid-cols-[28px_minmax(0,1fr)_34px_minmax(0,1fr)_28px] items-center gap-1 self-stretch home-main-font text-[clamp(12px,3.2vw,14px)] uppercase leading-none">
+        <div className="flex items-center justify-center"><FlagSlot value={home} /></div>
+        <span className={`block min-w-0 truncate text-center home-copy-regular ${teamText(isUserHome)}`} title={displayTeam(home)}>{displayTeam(home)}</span>
+        <span className={`flex items-center justify-center home-copy-bold tabular-nums leading-none ${scoreClass}`}>{scoreText}</span>
+        <span className={`block min-w-0 truncate text-center home-copy-regular ${teamText(isUserAway)}`} title={displayTeam(away)}>{displayTeam(away)}</span>
+        <div className="flex items-center justify-center"><FlagSlot value={away} /></div>
+      </div>
+      <div aria-hidden="true" className="self-stretch" />
     </div>
-    <div className="grid grid-cols-[24px_minmax(0,1fr)_34px_minmax(0,1fr)_24px] items-center gap-2 text-[14px] text-[#072D1D]">
-      <div className="flex items-center justify-center"><FlagSlot value={home} /></div>
-      <span className={`min-w-0 truncate text-center uppercase tracking-[0.005em] ${isUserHome ? "home-copy-regular" : "home-copy-light"}`}>{displayTeam(home)}</span>
-      <span className="text-center font-black text-[#0B5F35]">{played ? `${homeGoals}-${awayGoals}` : "v"}</span>
-      <span className={`min-w-0 truncate text-center uppercase tracking-[0.005em] ${isUserAway ? "home-copy-regular" : "home-copy-light"}`}>{displayTeam(away)}</span>
-      <div className="flex items-center justify-center"><FlagSlot value={away} /></div>
-    </div>
-  </div>;
+  );
 }
 
 export function FixturesToggle({ value, onChange }) {
-  const buttonClass = (active) => `rounded-full px-3 py-2 home-copy-bold text-[14px] uppercase transition-all ${active ? "bg-[#0B5F35] text-[#F5F0E6] shadow-sm" : "bg-transparent text-[#0B5F35]/72"}`;
-  return <div className="grid grid-cols-2 gap-2 rounded-full border border-[#0B5F35]/10 bg-[#EFE7D8] p-1 shadow-inner"><button onClick={() => onChange("group")} className={buttonClass(value === "group")}>Groups</button><button onClick={() => onChange("knockout")} className={buttonClass(value === "knockout")}>Knockout</button></div>;
+  const buttonClass = (active) => `rounded-full px-3 py-2 home-copy-bold text-[14px] uppercase tracking-[0.08em] transition-all ${active ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.22)]" : "bg-transparent text-[#F5F1E8]"}`;
+  return <div className="mx-auto grid w-[94%] grid-cols-2 gap-2 rounded-full border border-[#F5F1E8]/14 bg-[#0B5F35]/70 p-1 shadow-[inset_0_1px_0_rgba(245,241,232,0.08),0_8px_20px_rgba(0,0,0,0.12)]"><button onClick={() => onChange("group")} className={buttonClass(value === "group")}>Groups</button><button onClick={() => onChange("knockout")} className={buttonClass(value === "knockout")}>Knockout</button></div>;
 }
 
 export function FixtureSection({ title, children, sectionRef }) {
-  return <div ref={sectionRef} className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] bg-[#EFE7D8] text-[#072D1D] ring-1 ring-[#0B5F35]/8 shadow-[0_8px_24px_rgba(7,45,29,0.04)]"><div className="bg-[#0B5F35] px-3 py-2.5 text-center home-copy-bold text-[23px] uppercase tracking-[0.09em] text-[#F5F0E6]">{title}</div><div className="p-2.5">{children}</div></div>;
+  return (
+    <MenuPanel ref={sectionRef}>
+      <div className="px-3 pb-1.5 pt-3 text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">{normaliseRoundTitle(title)}</div>
+      <div className="p-2 pt-1.5">{children}</div>
+    </MenuPanel>
+  );
 }
 
 export function FixturesScreen({ fixtureView, onFixtureViewChange, schedule, menuProps, knockoutFixtures, userTeam = null, scheduleFocus = null }) {
@@ -77,11 +93,21 @@ export function FixturesScreen({ fixtureView, onFixtureViewChange, schedule, men
     if (node) sectionRefs.current[key] = node;
   };
 
-  return <main className="flex min-h-0 flex-1 flex-col gap-2"><ScreenTitle {...menuProps}>SCHEDULE</ScreenTitle><FixturesToggle value={fixtureView} onChange={onFixtureViewChange} /><section ref={scrollRef} className="min-h-0 flex-1 overflow-auto py-1"><div className="space-y-2.5">
-    {fixtureView === "group" && [1, 2, 3].map((round) => <FixtureSection key={round} title={`MATCHDAY ${round}`} sectionRef={setSectionRef(`group-${round}`)}>{schedule.filter((fixture) => fixture.week === round).map((fixture) => <FixtureCard key={fixture.id} {...fixture} userTeam={userTeam} />)}</FixtureSection>)}
-    {fixtureView === "knockout" && KO_ROUNDS.map(([label, nums]) => {
-      const fixtures = label === "Round of 32" ? round32 : mergeByMatchNo(buildPlaceholderFixtures(label, nums), knockoutFixtures);
-      return <FixtureSection key={label} title={label} sectionRef={setSectionRef(`knockout-${label}`)}>{[...fixtures].sort((a,b)=>(a.matchNo||0)-(b.matchNo||0)).map((fixture) => <FixtureCard key={fixture.id || fixture.matchNo} {...fixture} userTeam={userTeam} />)}</FixtureSection>;
-    })}
-  </div></section></main>;
+  return (
+    <main className="relative z-[1] flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden text-[#F5F1E8]">
+      <ScreenTopBar {...menuProps}>SCHEDULE</ScreenTopBar>
+      <div className="relative z-[1] flex min-h-0 flex-1 flex-col gap-2 px-0 pb-2 pt-1.5">
+        <FixturesToggle value={fixtureView} onChange={onFixtureViewChange} />
+        <section ref={scrollRef} className="min-h-0 flex-1 overflow-auto py-1">
+          <div className="space-y-2.5 pb-2">
+            {fixtureView === "group" && [1, 2, 3].map((round) => <FixtureSection key={round} title={`MATCHDAY ${round}`} sectionRef={setSectionRef(`group-${round}`)}>{schedule.filter((fixture) => fixture.week === round).map((fixture) => <FixtureCard key={fixture.id} {...fixture} userTeam={userTeam} />)}</FixtureSection>)}
+            {fixtureView === "knockout" && KO_ROUNDS.map(([label, nums]) => {
+              const fixtures = label === "Round of 32" ? round32 : mergeByMatchNo(buildPlaceholderFixtures(label, nums), knockoutFixtures);
+              return <FixtureSection key={label} title={normaliseRoundTitle(label)} sectionRef={setSectionRef(`knockout-${label}`)}>{[...fixtures].sort((a,b)=>(a.matchNo||0)-(b.matchNo||0)).map((fixture) => <FixtureCard key={fixture.id || fixture.matchNo} {...fixture} userTeam={userTeam} />)}</FixtureSection>;
+            })}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
 }
