@@ -12,6 +12,8 @@
     "@tailwindcss/postcss": "latest",
     "@vitejs/plugin-react": "latest",
     "firebase": "^12.13.0",
+    "html-to-image": "^1.11.13",
+    "html2canvas": "^1.4.1",
     "react": "latest",
     "react-dom": "latest",
     "tailwindcss": "latest",
