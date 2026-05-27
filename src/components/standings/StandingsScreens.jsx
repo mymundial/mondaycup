@@ -2,18 +2,17 @@ import { useEffect, useRef } from "react";
 import { isRealBracketTeam, selectBracketModel, selectBracketSideForTeam, selectUserGroup } from "../../logic/bracketMappingSelectors.js";
 import { selectStandingsScrollTarget } from "../../logic/schedulePositioningSelectors.js";
 import { Flag } from "../shared.jsx";
-import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
-import { MenuPanel } from "../layout/MenuPanel.jsx";
+import { ScreenTitle } from "../layout/Menu.jsx";
 import { FixturesToggle } from "../schedule/ScheduleScreens.jsx";
 
 const rowClass = ({ isUserTeam }) => [
-  "mb-1 grid grid-cols-[24px_minmax(0,1.9fr)_18px_repeat(6,24px)] items-center gap-[3px] rounded-xl px-2 py-1.5 text-center text-[13px] last:mb-0 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)]",
-  isUserTeam ? "border border-[#F5F1E8]/22 bg-[#072D1D] text-[#F5F1E8] ring-[#0B5F35]/45" : "border border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18",
+  "mb-1 grid grid-cols-[22px_minmax(0,1.8fr)_18px_repeat(6,22px)] items-center gap-[2px] rounded-xl px-2 py-1.5 text-center text-[12px] last:mb-0 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)]",
+  isUserTeam ? "border border-[#F5F1E8]/22 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/16" : "border border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18",
 ].join(" ");
 
 function PlaceholderSlot({ value, compact = false }) {
   const sizeClass = compact ? "h-[14px] w-[21px] text-[4.5px]" : "h-[18px] w-[26px] text-[5px]";
-  return <span className={`relative flex ${sizeClass} shrink-0 items-center justify-center overflow-hidden rounded bg-[#F7D117] font-black uppercase tracking-[0.035em] text-[#072D1D] ring-1 ring-[#F5F1E8]/35`}>{value || "TBC"}</span>;
+  return <span className={`relative flex ${sizeClass} shrink-0 items-center justify-center overflow-hidden rounded bg-[#0B5F35] font-black uppercase tracking-[0.035em] text-[#F5F1E8] ring-1 ring-[#F5F1E8]/35`}>{value || "TBC"}</span>;
 }
 
 function BracketSlot({ value, compact = false }) {
@@ -57,10 +56,10 @@ function PodiumBox({ title, team, className }) {
 }
 
 export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam = null }) {
-  return <MenuPanel>
+  return <div className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] border border-[#F5F1E8]/12 bg-[#0B5F35]/88 text-[#F5F1E8] ring-1 ring-[#F5F1E8]/12 shadow-[0_10px_26px_rgba(0,0,0,0.16),inset_0_1px_0_rgba(245,241,232,0.08)] backdrop-blur-[1px]">
     <div className="px-3 pb-1.5 pt-3 text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F0E6]">{title}</div>
     <div className="p-2 pt-1.5">
-      <div className="mb-1 grid grid-cols-[24px_minmax(0,1.9fr)_18px_repeat(6,24px)] items-center gap-[3px] px-2 text-center text-[9px] home-copy-bold uppercase tracking-[0.1em] text-[#F5F1E8]/72">
+      <div className="mb-1 grid grid-cols-[22px_minmax(0,1.8fr)_18px_repeat(6,22px)] items-center gap-[3px] px-2 text-center text-[9px] home-copy-bold uppercase tracking-[0.1em] text-[#F5F1E8]/72">
         <span>#</span><span className="pl-1 text-left">Team</span><span aria-hidden="true" /><span>P</span><span>W</span><span>D</span><span>L</span><span>GD</span><span>Pts</span>
       </div>
       {rows.map((row, index) => {
@@ -74,15 +73,15 @@ export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam =
         </div>;
       })}
     </div>
-  </MenuPanel>;
+  </div>;
 }
 
 function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
   const { r32, r16, qf, sf, finalFixture, thirdFixture, winner, runnerUp, thirdPlace } = selectBracketModel({ knockoutFixtures: round32, podium });
 
-  return <MenuPanel>
+  return <div className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] border border-[#F5F1E8]/12 bg-[#0B5F35]/88 text-[#F5F1E8] ring-1 ring-[#F5F1E8]/12 shadow-[0_10px_26px_rgba(0,0,0,0.16),inset_0_1px_0_rgba(245,241,232,0.08)] backdrop-blur-[1px]">
     <div className="px-3 pb-1.5 pt-3 text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F0E6]">TOURNAMENT BRACKET</div>
-    <div className="px-2 pb-2 pt-2" style={{ zoom: 0.86 }}>
+    <div className="px-2 pb-2 pt-2" style={{ zoom: 0.84 }}>
       <StageLabel>ROUND OF 32</StageLabel>
       <div className="mt-1.5"><BracketRow count={8} fixtures={r32.slice(0, 8)} gap="gap-[1px]" layout="r32" userTeam={userTeam} /></div>
 
@@ -105,7 +104,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
       <div className="mt-3"><StageLabel>ROUND OF 16</StageLabel><div className="mt-1.5"><BracketRow count={4} fixtures={r16.slice(4, 8)} gap="gap-3" layout="horizontal" userTeam={userTeam} /></div></div>
       <div className="mt-3"><StageLabel>ROUND OF 32</StageLabel><div className="mt-1.5"><BracketRow count={8} fixtures={r32.slice(8, 16)} gap="gap-[1px]" layout="r32" userTeam={userTeam} /></div></div>
     </div>
-  </MenuPanel>;
+  </div>;
 }
 
 export function GroupsScreen({ allGroups, menuProps, standingsView, onStandingsViewChange, knockoutFixtures, qualifiedTeams = new Set(), userTeam = null, podium = {} }) {
@@ -129,7 +128,7 @@ export function GroupsScreen({ allGroups, menuProps, standingsView, onStandingsV
     return () => cancelAnimationFrame(frame);
   }, [scrollTarget.key, scrollTarget.align, standingsView, knockoutFixtures.length, userTeam, userGroup, allGroups.length]);
 
-  return <main className="relative z-[1] flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden text-[#F5F1E8]"><ScreenTopBar {...menuProps}>STANDINGS</ScreenTopBar><div className="pt-1.5"><FixturesToggle value={standingsView} onChange={onStandingsViewChange} /></div><section ref={scrollRef} className="min-h-0 flex-1 overflow-auto py-1"><div className="space-y-2.5 pb-2">
+  return <main className="relative z-[1] flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden text-[#F5F1E8]"><ScreenTitle {...menuProps}>STANDINGS</ScreenTitle><div className="pt-1.5"><FixturesToggle value={standingsView} onChange={onStandingsViewChange} /></div><section ref={scrollRef} className="min-h-0 flex-1 overflow-auto py-1"><div className="space-y-2.5 pb-2">
     {standingsView === "group" && allGroups.map(({ group, rows }) => <div key={group} ref={(node) => { if (node) groupRefs.current[group] = node; }}><GroupTable title={`GROUP ${group}`} rows={rows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} /></div>)}
     {standingsView === "knockout" && <KnockoutBracket round32={knockoutFixtures} podium={podium} userTeam={userTeam} />}
   </div></section></main>;

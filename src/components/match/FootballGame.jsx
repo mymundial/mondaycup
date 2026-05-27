@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Flag } from "../shared.jsx";
-import { usePenaltyMeter } from "../../hooks/usePenaltyMeter.js";
+import { ASSETS } from "../../data/assets.js";
 import {
   DEFAULT_ASSETS,
   LED_YELLOW,
@@ -18,21 +18,33 @@ import {
   shotTravelMs,
   keeperTravelMs,
   classifyPower,
-  classifyAccuracy,
   resolvePenalty,
-  aiMeterValue,
+  buildAiPenaltyAttempt,
+  keeperReadDirection,
   playSound,
   visiblePenaltyMarkers,
   decideMatchState,
   stageLabelForFixture,
   buildResult,
 } from "../../logic/penaltyEngine.js";
+import { PODIUM_BADGE_MODE } from "../../logic/resultStatus.js";
 
-const MONDAY_CUP_AD_SRC = "/monday-cup-ad.png";
-const TROPHY_AD_SRC = "/trophy-ad.png";
-const CHAMPIONS_BADGE_SRC = "/mc-champs2.png";
-const RUNNER_UP_BADGE_SRC = "/mc-runner-up.png";
-const THIRD_PLACE_BADGE_SRC = "/mc-third-place.png";
+const MONDAY_CUP_AD_SRC = ASSETS.branding.mondayCupAd;
+const CHAMPIONS_BADGE_SRC = ASSETS.badges.champion;
+const RUNNER_UP_BADGE_SRC = ASSETS.badges.runnerUp;
+const THIRD_PLACE_BADGE_SRC = ASSETS.badges.third;
+const COSMETICS_KEY = "mondayCup.clubhouseCosmetics";
+const GOLDEN_BALL_SRC = "/assets/game/golden-ball.png";
+const GOLDEN_GLOVE_SRC = "/assets/game/golden-glove.png";
+
+function readActiveCosmetics() {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(window.localStorage.getItem(COSMETICS_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
 
 function TeamFlag({ team, className = "h-4 w-6" }) {
   if (team.flag) return <img src={team.flag} alt={`${team.name} flag`} className={`${className} rounded-sm object-cover`} draggable={false} />;
@@ -44,7 +56,7 @@ function normaliseThirdPlaceCopy(value) {
 }
 
 function getPodiumBadgeVisuals(mode) {
-  if (mode === "runnerUp") {
+  if (mode === PODIUM_BADGE_MODE.RUNNER_UP) {
     return {
       src: RUNNER_UP_BADGE_SRC,
       alt: "Monday Cup Runner-Up",
@@ -53,7 +65,7 @@ function getPodiumBadgeVisuals(mode) {
       shadow: "drop-shadow(0 0 18px rgba(235,238,243,0.42))",
     };
   }
-  if (mode === "third") {
+  if (mode === PODIUM_BADGE_MODE.THIRD) {
     return {
       src: THIRD_PLACE_BADGE_SRC,
       alt: "Monday Cup Third Place",
@@ -62,7 +74,7 @@ function getPodiumBadgeVisuals(mode) {
       shadow: "drop-shadow(0 0 18px rgba(205,127,50,0.42))",
     };
   }
-  if (mode === "champion") {
+  if (mode === PODIUM_BADGE_MODE.CHAMPION) {
     return {
       src: CHAMPIONS_BADGE_SRC,
       alt: "Monday Cup Champions",
@@ -126,13 +138,24 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
   );
 }
 
-function Meter({ value, ideal }) {
+function PowerChargeMeter({ value, ideal = GAME.powerIdeal, charging = false }) {
+  const left = `${ideal[0]}%`;
+  const width = `${ideal[1] - ideal[0]}%`;
+
   return (
-    <div className="h-8 rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/22 bg-[#0b2d1d] p-1 shadow-[0_8px_18px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#0B5F35]/50">
-      <div className="relative h-full overflow-hidden rounded-[clamp(14px,2.2vh,28px)] bg-[#0b2d1d]">
-        <div className="absolute top-0 h-full bg-[#0d6c3d]" style={{ left: `${ideal[0]}%`, width: `${ideal[1] - ideal[0]}%` }} />
-        <div className="absolute left-1/2 top-0 z-[3] h-full w-[2px] -translate-x-1/2 bg-[#f5f1e8] shadow-[0_0_4px_rgba(245,241,232,0.7)]" />
-        <div className="absolute top-0 z-[2] h-full w-1 -translate-x-1/2 bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.75)]" style={{ left: `${value}%` }} />
+    <div className="relative h-10 rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/22 bg-[#0b2d1d] p-1 shadow-[0_8px_18px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#0B5F35]/50">
+      <div className="relative h-full overflow-hidden rounded-[clamp(14px,2.2vh,28px)] bg-[#061A11]">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(0,0,0,0.18))]" />
+        <div
+          className="absolute inset-y-0 bg-[#0B5F35]/78 shadow-[0_0_10px_rgba(11,95,53,0.32),inset_0_0_8px_rgba(18,214,97,0.11)]"
+          style={{ left, width }}
+        />
+        <div
+          className="absolute inset-y-0 left-0 bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.45)] transition-[width] duration-75 ease-linear"
+          style={{ width: `${value}%`, borderTopLeftRadius: 999, borderBottomLeftRadius: 999, borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+        />
+        <div className="absolute inset-y-[-3px] left-1/2 w-[3px] -translate-x-1/2 rounded-full bg-[#F5F1E8] shadow-[0_0_7px_rgba(245,241,232,0.75)]" />
+        <div className={`pointer-events-none absolute inset-0 ${charging ? "animate-pulse" : ""} bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(0,0,0,0.13))]`} />
       </div>
     </div>
   );
@@ -245,7 +268,7 @@ function GoalFrame({ showAim, aimDirection }) {
 
 function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderTeam, showAim, aimDirection, assets, showChampionsBadge = false, podiumBadgeMode = null, hideMatchActors = false }) {
   const goalLine = GAME.goal.top + GAME.goal.height;
-  const activeBadgeMode = podiumBadgeMode || (showChampionsBadge ? "champion" : null);
+  const activeBadgeMode = podiumBadgeMode || (showChampionsBadge ? PODIUM_BADGE_MODE.CHAMPION : null);
   const podiumBadge = getPodiumBadgeVisuals(activeBadgeMode);
   const showPodiumBadge = Boolean(podiumBadge);
   return (
@@ -305,10 +328,22 @@ function ConfirmButton({ onClick, disabled = false, children }) {
   );
 }
 
-function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMeter, accuracyMeter, opponentTeam, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction }) {
+function ControlOverlay({
+  phase,
+  selected,
+  setSelected,
+  handleConfirmDirection,
+  powerValue,
+  powerCharging,
+  startPowerCharge,
+  releasePowerCharge,
+  opponentTeam,
+  endActionLabel = "MATCH COMPLETE",
+  endActionEnabled = false,
+  onEndAction,
+}) {
   const canChoose = phase === PHASE.DIRECTION;
   const canPower = phase === PHASE.POWER;
-  const canAccuracy = phase === PHASE.ACCURACY;
   const titleClass = "home-copy-bold text-center text-[clamp(16px,2.25vh,27px)] font-black tracking-[0.08em] text-[#f5f1e8] drop-shadow-md";
 
   return (
@@ -325,20 +360,38 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
             ))}
           </div>
           <div className="h-[4%]" />
-          <ConfirmButton onClick={handleConfirm}>CONFIRM DIRECTION</ConfirmButton>
+          <ConfirmButton onClick={handleConfirmDirection}>CONFIRM DIRECTION</ConfirmButton>
         </div>
       )}
       {canPower && (
         <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%] flex flex-col gap-[clamp(10px,1.2vh,18px)]">
-          <div className={titleClass}>SHOT POWER</div><Meter value={powerMeter.value} ideal={GAME.powerIdeal} /><ConfirmButton onClick={handleConfirm}>CONFIRM POWER</ConfirmButton>
+          <div className={titleClass}>SHOT POWER</div>
+          <PowerChargeMeter value={powerValue} ideal={GAME.powerIdeal} charging={powerCharging} />
+          <button
+            type="button"
+            onPointerDown={startPowerCharge}
+            onPointerUp={releasePowerCharge}
+            onPointerCancel={releasePowerCharge}
+            onPointerLeave={powerCharging ? releasePowerCharge : undefined}
+            onKeyDown={(event) => {
+              if ((event.key === " " || event.key === "Enter") && !powerCharging) {
+                event.preventDefault();
+                startPowerCharge(event);
+              }
+            }}
+            onKeyUp={(event) => {
+              if (event.key === " " || event.key === "Enter") {
+                event.preventDefault();
+                releasePowerCharge(event);
+              }
+            }}
+            className="grid h-[clamp(40px,4.7vh,62px)] w-full touch-none place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(15px,2.1vh,25px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35"
+          >
+            <span className="block w-full whitespace-nowrap text-center">{powerCharging ? "RELEASE" : "HOLD POWER"}</span>
+          </button>
         </div>
       )}
-      {canAccuracy && (
-        <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%] flex flex-col gap-[clamp(10px,1.2vh,18px)]">
-          <div className={titleClass}>SHOT ACCURACY</div><Meter value={accuracyMeter.value} ideal={GAME.accuracyIdeal} /><ConfirmButton onClick={handleConfirm}>CONFIRM ACCURACY</ConfirmButton>
-        </div>
-      )}
-      {!canChoose && !canPower && !canAccuracy && (
+      {!canChoose && !canPower && (
         <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%]">
           <ConfirmButton onClick={endActionEnabled ? onEndAction : undefined} disabled={!endActionEnabled}>
             {phase === PHASE.SHOT ? "SHOT IN PROGRESS" : phase === PHASE.AI_WAIT ? `${opponentTeam.name.toUpperCase()} SHOOTING` : endActionLabel}
@@ -352,14 +405,25 @@ function ControlOverlay({ phase, selected, setSelected, handleConfirm, powerMete
 export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction, showChampionsBadge = false, podiumBadgeMode = null }) {
   const user = useMemo(() => normaliseTeam(userTeam, "Team A"), [userTeam]);
   const opponent = useMemo(() => normaliseTeam(opponentTeam, "Team B"), [opponentTeam]);
-  const mergedAssets = useMemo(() => ({ ...DEFAULT_ASSETS, ...assets, sounds: { ...DEFAULT_ASSETS.sounds, ...(assets?.sounds || {}) } }), [assets]);
+  const activeCosmetics = useMemo(() => readActiveCosmetics(), [fixture?.id, completedResult?.fixtureId, completedResult?.matchNo]);
+  const mergedAssets = useMemo(() => ({
+    ...DEFAULT_ASSETS,
+    ...assets,
+    ball: activeCosmetics?.goldenBall ? GOLDEN_BALL_SRC : (assets?.ball || DEFAULT_ASSETS.ball),
+    goalkeeper: activeCosmetics?.goldenGlove ? GOLDEN_GLOVE_SRC : (assets?.goalkeeper || DEFAULT_ASSETS.goalkeeper),
+    sounds: { ...DEFAULT_ASSETS.sounds, ...(assets?.sounds || {}) },
+  }), [assets, activeCosmetics]);
   const stageLabel = stageLabelForFixture(fixture);
 
   const [phase, setPhase] = useState(PHASE.DIRECTION);
   const [shootingSide, setShootingSide] = useState("user");
   const [selected, setSelected] = useState(getDirection("CM"));
   const [lockedDirection, setLockedDirection] = useState(null);
-  const [lockedPower, setLockedPower] = useState(50);
+  const [powerValue, setPowerValue] = useState(0);
+  const [powerCharging, setPowerCharging] = useState(false);
+  const powerValueRef = useRef(0);
+  const powerFrameRef = useRef(null);
+  const powerStartRef = useRef(0);
   const [score, setScore] = useState({ user: 0, opponent: 0 });
   const [attempts, setAttempts] = useState({ user: [], opponent: [] });
   const [shot, setShot] = useState(null);
@@ -367,15 +431,13 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   const [hasCompleted, setHasCompleted] = useState(false);
   const [winnerSide, setWinnerSide] = useState(null);
 
-  const powerMeter = usePenaltyMeter(phase === PHASE.POWER);
-  const accuracyMeter = usePenaltyMeter(phase === PHASE.ACCURACY);
   const activeTeam = shootingSide === "user" ? user : opponent;
   const defenderTeam = shootingSide === "user" ? opponent : user;
   const shotActive = phase === PHASE.SHOT && Boolean(shot);
   const ballPoint = shot?.targetPoint ?? GAME.spot;
   const keeperPoint = shot ? pointForDirection(shot.keeperDirection) : pointForDirection(getDirection("CM"));
   const aimDirection = lockedDirection ?? selected;
-  const showAim = phase === PHASE.DIRECTION || phase === PHASE.POWER || phase === PHASE.ACCURACY;
+  const showAim = phase === PHASE.DIRECTION || phase === PHASE.POWER;
 
   const isKnockoutShootout = Boolean(fixture?.requiresWinner);
   const matchFinished = phase === PHASE.FINISHED || hasCompleted;
@@ -404,15 +466,16 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     setShootingSide("user");
     setSelected(getDirection("CM"));
     setLockedDirection(null);
-    setLockedPower(50);
+    setPowerValue(0);
+    powerValueRef.current = 0;
+    setPowerCharging(false);
+    if (powerFrameRef.current) cancelAnimationFrame(powerFrameRef.current);
     setScore({ user: 0, opponent: 0 });
     setAttempts({ user: [], opponent: [] });
     setShot(null);
     setTicker(`${user.name.toUpperCase()} TO SHOOT`);
     setHasCompleted(false);
     setWinnerSide(null);
-    powerMeter.reset();
-    accuracyMeter.reset();
   };
 
   useEffect(() => {
@@ -453,7 +516,11 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       setTicker(`${opponent.name.toUpperCase()} TO SHOOT`);
       setShot(null);
       setPhase(PHASE.AI_WAIT);
-      window.setTimeout(() => commitShot("opponent", randomDirection(), aiMeterValue(), aiMeterValue(), nextScore, nextAttempts), GAME.aiWaitMs);
+      window.setTimeout(() => {
+        const aiDirection = randomDirection();
+        const aiAttempt = buildAiPenaltyAttempt({ team: opponent, direction: aiDirection });
+        commitShot("opponent", aiDirection, aiAttempt.power, nextScore, nextAttempts, aiAttempt.keeperDirection);
+      }, GAME.aiWaitMs);
       return;
     }
 
@@ -462,16 +529,25 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     setShot(null);
     setSelected(getDirection("CM"));
     setLockedDirection(null);
-    setLockedPower(50);
-    powerMeter.reset();
-    accuracyMeter.reset();
+    setPowerValue(0);
+    powerValueRef.current = 0;
+    setPowerCharging(false);
     setPhase(PHASE.DIRECTION);
   }
 
-  function commitShot(side, direction, power, accuracy, currentScore = score, currentAttempts = attempts) {
+  function commitShot(side, direction, power, currentScore = score, currentAttempts = attempts, plannedKeeperDirection = null) {
     if (hasCompleted) return;
     playSound(side === "user" ? mergedAssets.sounds.userShot : mergedAssets.sounds.opponentShot, side === "user" ? 0.9 : 0.82);
-    const resolved = resolvePenalty({ direction, power, accuracy, keeperDirection: randomDirection() });
+    let keeperDirection = plannedKeeperDirection || (side === "user" ? keeperReadDirection(direction, Math.random, { goalAssist: activeCosmetics?.goldenBall ? 0.10 : 0 }) : randomDirection());
+    if (side === "opponent" && activeCosmetics?.goldenGlove && Math.random() < 0.10) {
+      keeperDirection = direction;
+    }
+    const resolved = resolvePenalty({
+      direction,
+      power,
+      keeperDirection,
+      middleBypass: side === "user",
+    });
     const nextScore = { ...currentScore, [side]: currentScore[side] + (resolved.goal ? 1 : 0) };
     const nextAttempts = { ...currentAttempts, [side]: [...currentAttempts[side], resolved.result] };
 
@@ -484,23 +560,56 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     window.setTimeout(() => finishTurn(nextAttempts, nextScore, side), GAME.shotMs);
   }
 
-  function handleConfirm() {
-    if (phase === PHASE.DIRECTION) {
-      setLockedDirection(selected);
-      powerMeter.reset();
-      setPhase(PHASE.POWER);
-      return;
-    }
-    if (phase === PHASE.POWER && lockedDirection) {
-      setLockedPower(powerMeter.value);
-      accuracyMeter.reset();
-      setPhase(PHASE.ACCURACY);
-      return;
-    }
-    if (phase === PHASE.ACCURACY && lockedDirection) {
-      commitShot("user", lockedDirection, lockedPower, accuracyMeter.value);
-    }
+  function handleConfirmDirection() {
+    if (phase !== PHASE.DIRECTION) return;
+    setLockedDirection(selected);
+    setPowerValue(0);
+    powerValueRef.current = 0;
+    setPowerCharging(false);
+    setPhase(PHASE.POWER);
   }
+
+  function startPowerCharge(event) {
+    if (phase !== PHASE.POWER || !lockedDirection || hasCompleted) return;
+    event?.currentTarget?.setPointerCapture?.(event.pointerId);
+    if (powerFrameRef.current) cancelAnimationFrame(powerFrameRef.current);
+    setPowerValue(0);
+    powerValueRef.current = 0;
+    powerStartRef.current = performance.now();
+    setPowerCharging(true);
+
+    const tick = (now) => {
+      const elapsed = now - powerStartRef.current;
+      const next = clamp((elapsed / GAME.powerChargeMs) * 100, 0, 100);
+      powerValueRef.current = next;
+      setPowerValue(next);
+      if (next < 100) {
+        powerFrameRef.current = requestAnimationFrame(tick);
+      } else {
+        setPowerCharging(false);
+        powerFrameRef.current = null;
+      }
+    };
+    powerFrameRef.current = requestAnimationFrame(tick);
+  }
+
+  function releasePowerCharge(event) {
+    if (phase !== PHASE.POWER || !lockedDirection || hasCompleted) return;
+    event?.currentTarget?.releasePointerCapture?.(event.pointerId);
+    if (powerFrameRef.current) {
+      cancelAnimationFrame(powerFrameRef.current);
+      powerFrameRef.current = null;
+    }
+    setPowerCharging(false);
+    const finalPower = clamp(powerValueRef.current || powerValue, 0, 100);
+    commitShot("user", lockedDirection, finalPower);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (powerFrameRef.current) cancelAnimationFrame(powerFrameRef.current);
+    };
+  }, []);
 
   function tickerStyle() {
     const finalTeam = winnerSide === "user" ? user : winnerSide === "opponent" ? opponent : null;
@@ -532,9 +641,11 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         phase={phase}
         selected={selected}
         setSelected={setSelected}
-        handleConfirm={handleConfirm}
-        powerMeter={powerMeter}
-        accuracyMeter={accuracyMeter}
+        handleConfirmDirection={handleConfirmDirection}
+        powerValue={powerValue}
+        powerCharging={powerCharging}
+        startPowerCharge={startPowerCharge}
+        releasePowerCharge={releasePowerCharge}
         opponentTeam={opponent}
         endActionLabel={endActionLabel}
         endActionEnabled={endActionEnabled}

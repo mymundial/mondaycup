@@ -1,11 +1,10 @@
+import { ASSETS } from "../data/assets.js";
+
 export const DEFAULT_ASSETS = {
-  logo: "https://raw.githubusercontent.com/mymundial/mymundial/ad679ee2973445fc1c1c856603f6baf5695d90c6/LOGO-wht.png",
-  ball: "/ball1.png",
-  goalkeeper: "/gk1.png",
-  sounds: {
-    userShot: "https://raw.githubusercontent.com/mymundial/mymundial/415282fcde8c537de643f76e83d168f413ee6735/shot2mon.wav",
-    opponentShot: "https://raw.githubusercontent.com/mymundial/mymundial/415282fcde8c537de643f76e83d168f413ee6735/Shot5.wav",
-  },
+  logo: ASSETS.branding.mondayCupAd,
+  ball: ASSETS.game.ball,
+  goalkeeper: ASSETS.game.goalkeeper,
+  sounds: ASSETS.sounds,
 };
 
 export const LED_YELLOW = "#F7D117";
@@ -14,10 +13,12 @@ export const GAME = {
   regulationPens: 5,
   meterStep: 4,
   meterTickMs: 24,
-  powerIdeal: [40, 60],
-  accuracyIdeal: [40, 60],
+  powerIdeal: [45, 55],
+  // The new shooting loop is 2-step: choose direction, then hold/release power.
+  // Accuracy is now derived from release quality and keeper square matching.
   shotMs: 950,
   aiWaitMs: 500,
+  powerChargeMs: 1350,
   goal: { left: 10, top: 8, width: 80, height: 30 },
   spot: { x: 50, y: 54.5 },
 };
@@ -37,7 +38,6 @@ export const DIRECTIONS = [
 export const PHASE = {
   DIRECTION: "direction",
   POWER: "power",
-  ACCURACY: "accuracy",
   SHOT: "shot",
   AI_WAIT: "ai-wait",
   FINISHED: "finished",
@@ -46,6 +46,7 @@ export const PHASE = {
 export const COMMENTARY = {
   goal: "GOAL!",
   save: "SAVE!",
+  weak: "WEAK SHOT!",
   wide: "WIDE!",
   over: "OVER!",
   post: "HIT THE POST!",
@@ -66,6 +67,7 @@ export function normaliseTeam(team, fallback) {
     flag: team?.flag || "",
     primaryColour: team?.primaryColour || "#0B5F35",
     textColour: team?.textColour || "#F5F0E6",
+    rank: Number(team?.rank ?? team?.ranking ?? team?.teamRank ?? team?.seed ?? team?.worldRank ?? 24),
   };
 }
 
@@ -145,78 +147,152 @@ export function keeperTravelMs(shot) {
 }
 
 export function classifyPower(power) {
-  if (power >= GAME.powerIdeal[0] && power <= GAME.powerIdeal[1]) return "good";
-  if (power < 25 || power > 78) return "very-poor";
-  if (power < 35 || power > 65) return "poor";
-  return "ok";
-}
-
-export function classifyAccuracy(accuracy) {
-  if (accuracy >= GAME.accuracyIdeal[0] && accuracy <= GAME.accuracyIdeal[1]) return "good";
-  if (accuracy < 20 || accuracy > 85) return "very-poor";
-  if (accuracy < 35 || accuracy > 72) return "poor";
-  return "ok";
+  if (power < 25) return "very-weak";
+  if (power < 40) return "weak";
+  if (power >= GAME.powerIdeal[0] && power <= GAME.powerIdeal[1]) return "perfect";
+  if (power >= 40 && power <= 60) return "good";
+  if (power <= 75) return "overhit";
+  return "very-overhit";
 }
 
 export function isGoodPower(power) {
-  return classifyPower(power) === "good";
+  const state = classifyPower(power);
+  return state === "perfect" || state === "good";
 }
 
-export function isGoodAccuracy(accuracy) {
-  return classifyAccuracy(accuracy) === "good";
+export function isWeakPower(power) {
+  const state = classifyPower(power);
+  return state === "weak" || state === "very-weak";
 }
 
-export function specialCodeFor(direction, power, accuracy, rng = Math.random) {
+export function isOverhitPower(power) {
+  const state = classifyPower(power);
+  return state === "overhit" || state === "very-overhit";
+}
+
+export function keeperReadDirection(targetDirection, rng = Math.random) {
+  // MVP keeper AI: fair, visual and deterministic once the square is chosen.
+  // Difficulty can later adjust this probability/pattern-reading without changing result rules.
+  const readChance = 0.28;
+  if (rng() < readChance) return targetDirection;
+  return randomDifferentDirection(targetDirection, rng);
+}
+
+export function getTeamRank(team) {
+  const rawRank = team?.rank ?? team?.ranking ?? team?.teamRank ?? team?.seed ?? team?.worldRank;
+  const rank = Number(rawRank);
+  return Number.isFinite(rank) ? clamp(Math.round(rank), 1, 48) : 24;
+}
+
+export function getAiGoalProbability(team) {
+  const rank = getTeamRank(team);
+  if (rank <= 10) return 0.84;
+  if (rank <= 20) return 0.74;
+  if (rank <= 30) return 0.66;
+  if (rank <= 39) return 0.58;
+  return 0.50;
+}
+
+export function randomDifferentDirection(direction, rng = Math.random) {
+  const alternatives = DIRECTIONS.filter((candidate) => candidate.id !== direction.id);
+  return alternatives[Math.floor(rng() * alternatives.length)] ?? getDirection("CM");
+}
+
+function randomGoodPower(rank, rng) {
+  // Better teams live closer to the optimum band, but every side can still hit a playable penalty.
+  if (rank <= 10) return Math.round(46 + rng() * 8); // 46–54
+  if (rank <= 20) return Math.round(43 + rng() * 14); // 43–57
+  if (rank <= 30) return Math.round(41 + rng() * 18); // 41–59
+  return Math.round(40 + rng() * 20); // 40–60
+}
+
+function randomWeakPower(rank, rng) {
+  const base = rank <= 20 ? 28 : rank <= 30 ? 24 : 20;
+  const span = rank <= 20 ? 11 : rank <= 30 ? 14 : 18;
+  return Math.round(base + rng() * span);
+}
+
+function randomOverhitPower(rank, rng) {
+  const base = rank <= 20 ? 76 : rank <= 30 ? 78 : 80;
+  return Math.round(base + rng() * 15);
+}
+
+export function buildAiPenaltyAttempt({ team, direction, rng = Math.random }) {
+  const rank = getTeamRank(team);
+  const goalChance = getAiGoalProbability(team);
+  const scores = rng() < goalChance;
+
+  if (scores) {
+    return {
+      power: randomGoodPower(rank, rng),
+      keeperDirection: randomDifferentDirection(direction, rng),
+      expectedGoal: true,
+    };
+  }
+
+  // Failed AI penalties should be visually clear: read by keeper, weak save, or obvious miss.
+  const failureRoll = rng();
+  const weakThreshold = rank <= 10 ? 0.20 : rank <= 20 ? 0.28 : rank <= 30 ? 0.36 : 0.44;
+  const overhitThreshold = rank <= 10 ? 0.44 : rank <= 20 ? 0.54 : rank <= 30 ? 0.64 : 0.74;
+
+  if (failureRoll < weakThreshold) {
+    return {
+      power: randomWeakPower(rank, rng),
+      keeperDirection: direction,
+      expectedGoal: false,
+    };
+  }
+
+  if (failureRoll < overhitThreshold) {
+    return {
+      power: randomOverhitPower(rank, rng),
+      keeperDirection: randomDifferentDirection(direction, rng),
+      expectedGoal: false,
+    };
+  }
+
+  return {
+    power: randomGoodPower(rank, rng),
+    keeperDirection: direction,
+    expectedGoal: false,
+  };
+}
+
+export function aiPowerValue(teamOrRng = null, maybeRng = Math.random) {
+  // Backwards-compatible helper. Prefer buildAiPenaltyAttempt for AI-controlled shots.
+  const rng = typeof teamOrRng === "function" ? teamOrRng : maybeRng;
+  const team = typeof teamOrRng === "function" ? null : teamOrRng;
+  return randomGoodPower(getTeamRank(team), rng);
+}
+
+export function missCodeFor(direction, power) {
   const powerState = classifyPower(power);
-  const accuracyState = classifyAccuracy(accuracy);
-  const poorPower = powerState === "poor" || powerState === "very-poor";
-  const goodAccuracy = accuracyState === "good" || accuracyState === "ok";
-  const poorAccuracy = accuracyState === "poor" || accuracyState === "very-poor";
 
-  if (!poorPower) return null;
+  if (powerState === "very-weak" || powerState === "weak") return direction.id;
 
-  const strongChance = powerState === "very-poor" || accuracyState === "very-poor" ? 0.85 : 0.6;
-  const mediumChance = powerState === "very-poor" ? 0.7 : 0.45;
-
-  if (poorPower && goodAccuracy && rng() < mediumChance) {
-    if (direction.col === 0 || direction.col === 2) return `${direction.id}P`;
-    return direction.row === 0 ? "LX" : direction.row === 1 ? "CX" : "RX";
+  if (powerState === "very-overhit") {
+    if (direction.row === 0 || direction.col === 1) {
+      return direction.col === 0 ? "LO" : direction.col === 1 ? "CO" : "RO";
+    }
+    return direction.col === 0 ? `${direction.id}W` : direction.col === 2 ? `${direction.id}W` : "CO";
   }
 
-  if (poorPower && poorAccuracy && rng() < strongChance) {
-    if (direction.row === 0) return direction.col === 0 ? "LO" : direction.col === 1 ? "CO" : "RO";
-    if (direction.col === 0 || direction.col === 2) return `${direction.id}W`;
+  if (powerState === "overhit") {
+    if (direction.row === 0) {
+      if (power >= 65) return direction.col === 0 ? "LO" : direction.col === 1 ? "CO" : "RO";
+      return direction.col === 0 ? "LX" : direction.col === 1 ? "CX" : "RX";
+    }
+    if (direction.row === 1 && direction.col !== 1 && power >= 70) return `${direction.id}W`;
+    if (direction.row === 1 && direction.col === 1 && power >= 68) return "CX";
+    if (direction.row === 2 && direction.col !== 1 && power >= 72) return `${direction.id}P`;
   }
 
-  return null;
+  return direction.id;
 }
 
-export function driftDirection(direction, power, accuracy, rng = Math.random) {
-  if (isGoodPower(power) && isGoodAccuracy(accuracy)) return direction;
-  let chance = 0.15;
-  if (classifyAccuracy(accuracy) === "poor") chance = 0.35;
-  if (classifyAccuracy(accuracy) === "very-poor") chance = 0.55;
-  if (rng() > chance) return direction;
-
-  const colDrift = classifyAccuracy(accuracy) === "good" ? 0 : rng() < 0.5 ? -1 : 1;
-  const rowDrift = power < 35 ? 1 : power > 65 ? -1 : 0;
-  return findDirection(clamp(direction.row + rowDrift, 0, 2), clamp(direction.col + colDrift, 0, 2), direction);
-}
-
-export function keeperBoostChance(finalDirection, power, accuracy) {
-  if (isGoodPower(power) && isGoodAccuracy(accuracy)) return 0;
-  let boost = 0;
-  if (classifyPower(power) === "poor") boost += 0.12;
-  if (classifyPower(power) === "very-poor") boost += 0.25;
-  if (classifyAccuracy(accuracy) === "poor") boost += 0.12;
-  if (classifyAccuracy(accuracy) === "very-poor") boost += 0.25;
-  if (finalDirection.col === 1) boost += 0.12;
-  if (finalDirection.col === 1 && finalDirection.row === 1) boost += 0.18;
-  return Math.min(boost, 0.7);
-}
-
-export function commentaryFor(code, goal) {
+export function commentaryFor(code, goal, quality = "") {
   if (goal) return COMMENTARY.goal;
+  if (quality === "weak" || quality === "very-weak") return COMMENTARY.weak;
   if (code.endsWith("P")) return COMMENTARY.post;
   if (["LX", "CX", "RX"].includes(code)) return COMMENTARY.bar;
   if (["LO", "CO", "RO"].includes(code)) return COMMENTARY.over;
@@ -224,46 +300,74 @@ export function commentaryFor(code, goal) {
   return COMMENTARY.save;
 }
 
-export function resolvePenalty({ direction, power, accuracy, keeperDirection, rng = Math.random }) {
-  const special = specialCodeFor(direction, power, accuracy, rng);
-  if (special) {
+export function resolvePenalty({ direction, power, keeperDirection, rng = Math.random }) {
+  const powerState = classifyPower(power);
+
+  // Poor shots should not bamboozle the keeper. They become clear saves.
+  if (powerState === "very-weak" || powerState === "weak") {
+    const saveDirection = direction;
     return {
       chosenDirection: direction,
       finalDirection: direction,
-      keeperDirection,
+      keeperDirection: saveDirection,
       power,
-      accuracy,
-      code: special,
-      targetPoint: pointForOutcome(special, direction),
+      accuracy: power,
+      quality: powerState,
+      code: direction.id,
+      targetPoint: pointForDirection(direction),
       result: "S",
       goal: false,
-      commentary: commentaryFor(special, false),
+      commentary: commentaryFor(direction.id, false, powerState),
     };
   }
 
-  const finalDirection = driftDirection(direction, power, accuracy, rng);
-  const boostedSave = rng() < keeperBoostChance(finalDirection, power, accuracy);
-  const effectiveKeeper = boostedSave ? finalDirection : keeperDirection;
-  const saved = effectiveKeeper.id === finalDirection.id;
+  // Overhit shots fail visibly instead of relying on hidden probability.
+  if (powerState === "overhit" || powerState === "very-overhit") {
+    const missCode = missCodeFor(direction, power);
+    const staysOnTarget = missCode === direction.id;
+    if (!staysOnTarget) {
+      return {
+        chosenDirection: direction,
+        finalDirection: direction,
+        keeperDirection,
+        power,
+        accuracy: power,
+        quality: powerState,
+        code: missCode,
+        targetPoint: pointForOutcome(missCode, direction),
+        result: "S",
+        goal: false,
+        commentary: commentaryFor(missCode, false, powerState),
+      };
+    }
+  }
+
+  // Good/on-target shots obey the visual square rule:
+  // keeper same square = save, keeper different square = goal.
+  const resolvedKeeper = keeperDirection || keeperReadDirection(direction, rng);
+  // Temporary testing assist: central-column penalties cannot be saved by the keeper.
+  // This keeps middle shots useful for campaign progression while leaderboard/difficulty tuning continues.
+  const middleBypassActive = direction.col === 1;
+  const saved = !middleBypassActive && resolvedKeeper.id === direction.id;
   const goal = !saved;
 
   return {
     chosenDirection: direction,
-    finalDirection,
-    keeperDirection: effectiveKeeper,
+    finalDirection: direction,
+    keeperDirection: resolvedKeeper,
     power,
-    accuracy,
-    code: finalDirection.id,
-    targetPoint: pointForDirection(finalDirection),
+    accuracy: power,
+    quality: powerState,
+    code: direction.id,
+    targetPoint: pointForDirection(direction),
     result: goal ? "G" : "S",
     goal,
-    commentary: commentaryFor(finalDirection.id, goal),
+    commentary: commentaryFor(direction.id, goal, powerState),
   };
 }
 
-export function aiMeterValue() {
-  return 20 + Math.floor(Math.random() * 81);
-}
+// Backwards-compatible alias for older imports.
+export const aiMeterValue = aiPowerValue;
 
 export function playSound(src, volume = 0.85) {
   if (!src) return;

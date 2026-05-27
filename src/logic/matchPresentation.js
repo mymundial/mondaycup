@@ -1,4 +1,5 @@
 import { getTeamTheme, teamCode } from "../data/teams.js";
+import { RESULT_STATUS, isTerminalResultStatus, normalizeResultStatus } from "./resultStatus.js";
 
 export function teamToGameTeam(name) {
   const theme = getTeamTheme(name);
@@ -13,26 +14,28 @@ export function teamToGameTeam(name) {
 }
 
 export function modalTitle(result) {
-  if (result.status === "champion") return "CHAMPIONS!";
-  if (result.status === "runnerUp") return "RUNNER-UP!";
-  if (result.status === "third") return "THIRD!";
-  if (result.status === "qualified") return "QUALIFIED!";
-  if (result.status === "eliminated" || result.status === "thirdPlace") return "ELIMINATED!";
+  const status = normalizeResultStatus(result?.status);
+  if (status === RESULT_STATUS.CHAMPION) return "CHAMPIONS!";
+  if (status === RESULT_STATUS.RUNNER_UP) return "RUNNER-UP!";
+  if (status === RESULT_STATUS.THIRD_PLACE) return "THIRD!";
+  if (status === RESULT_STATUS.QUALIFIED) return "QUALIFIED!";
+  if (status === RESULT_STATUS.ELIMINATED || status === RESULT_STATUS.THIRD_PLACE_PENDING) return "ELIMINATED!";
   if (result.isDraw || result.homeGoals === result.awayGoals) return "DRAW!";
-  if (result.status === "knockoutWin") return "QUALIFIED!";
+  if (status === RESULT_STATUS.KNOCKOUT_WIN) return "QUALIFIED!";
   return result.won ? "VICTORY!" : "DEFEAT!";
 }
 
 export function modalHeaderColour(result) {
-  if (result?.status === "champion") return "#D4AF37";
-  if (result?.status === "runnerUp") return "#C0C0C0";
-  if (result?.status === "third") return "#CD7F32";
+  const status = normalizeResultStatus(result?.status);
+  if (status === RESULT_STATUS.CHAMPION) return "#D4AF37";
+  if (status === RESULT_STATUS.RUNNER_UP) return "#C0C0C0";
+  if (status === RESULT_STATUS.THIRD_PLACE) return "#CD7F32";
   return "#0B5F35";
 }
 
 export function modalButton(result) {
   if (!result) return "FULL TIME";
-  if (["eliminated", "champion", "runnerUp", "third", "fourth"].includes(result.status)) return "PLAY AGAIN";
+  if (isTerminalResultStatus(result.status)) return "PLAY AGAIN";
   return "NEXT MATCH";
 }
 

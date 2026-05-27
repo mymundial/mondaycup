@@ -13,18 +13,16 @@ const GAME = {
 };
 
 
-const TROPHY_PIXEL_SRC = "/trophy_pixel.png";
-const MONDAY_CUP_AD_SRC = "/monday-cup-ad.png";
-const TROPHY_AD_SRC = "/trophy-ad.png";
+const MONDAY_CUP_AD_SRC = ASSETS.branding.mondayCupAd;
 const SCOREBOARD_STAGE_TEXT = "font-led text-[clamp(9px,1.35vh,16px)] font-black uppercase leading-none tracking-[0.14em] text-[#F7D117]";
 const SCOREBOARD_MAIN_TEXT = "font-led text-[clamp(17px,3.05vh,34px)] font-black uppercase leading-none tracking-normal text-[#F7D117]";
 const SCOREBOARD_MARKER_TEXT = "font-led text-[clamp(6px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.12em] text-[#F7D117]";
 const MENU_TITLE_CLASS = "home-copy-bold text-[28px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]";
 const HOME_MAIN_HEIGHT = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
 const HOME_LOGO_TOP_RATIO = 0;
-const HOME_LOGO_TOP_PADDING = "0px";
-const HOME_LOGO_HEIGHT = `calc(${HOME_MAIN_HEIGHT} * 0.30)`;
-const HOME_LOGO_GAP = "clamp(12px,1.8vh,22px)";
+const HOME_LOGO_TOP_PADDING = "clamp(18px,3vh,28px)";
+const HOME_LOGO_HEIGHT = "min(167px,15.95vh)";
+const HOME_LOGO_GAP = "clamp(18px,2.6vh,30px)";
 const HOME_MENU_TOP_OFFSET = `calc(${HOME_LOGO_TOP_PADDING} + (${HOME_MAIN_HEIGHT} * ${HOME_LOGO_TOP_RATIO}) + ${HOME_LOGO_HEIGHT} + ${HOME_LOGO_GAP})`;
 
 function AtIcon({ className = "" }) {
@@ -54,17 +52,7 @@ function StarIcon({ className = "" }) {
   );
 }
 
-function ScoreboardTrophy({ side }) {
-  return (
-    <img
-      src={TROPHY_PIXEL_SRC}
-      alt=""
-      className={`h-[clamp(28px,4.55vh,48px)] w-auto object-contain opacity-95 drop-shadow-[0_0_7px_rgba(247,209,23,0.38)] ${side === "left" ? "scale-x-[-1]" : ""}`}
-      draggable={false}
-      aria-hidden="true"
-    />
-  );
-}
+
 
 function HomeCrowdPerson({ x, y, scale = 1, shirt = "#0d6c3d", skin = "#c98f65", pose = "down", opacity = 1 }) {
   const armLeft = pose === "up" ? "M5 13 L1 6" : "M5 13 L2 20";
@@ -396,7 +384,7 @@ function ActionButton({ children, eyebrow, onClick, variant = "light", disabled 
   const styles = variant === "yellow"
     ? "border-[#F7D117]/75 bg-[#F7D117] text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.24),inset_0_2px_8px_rgba(255,255,255,0.22)]"
     : variant === "green"
-      ? "border-[#F5F0E6]/20 bg-[#0B5F35] text-[#F5F0E6]"
+      ? "border-[#F5F0E6]/20 bg-[#072D1D] text-[#F5F0E6]"
       : variant === "account"
         ? "border-[#F5F0E6]/18 bg-[#F5F0E6]/18 text-[#F5F0E6]"
         : "border-[#D4AF37]/50 bg-[#F5F0E6] text-[#0B5F35]";
@@ -447,7 +435,7 @@ function HomeMenuShell({ children, className = "", onBack }) {
 function FloatingHomeLogo() {
   return (
     <div className="pointer-events-none absolute inset-x-0 z-[20] flex justify-center" style={{ top: `calc(${HOME_LOGO_TOP_PADDING} + ${HOME_LOGO_TOP_RATIO * 100}%)` }} aria-hidden="true">
-      <div className="relative flex w-[40vw] max-w-[420px] min-w-[220px] items-start justify-center" style={{ height: HOME_LOGO_HEIGHT }}>
+      <div className="relative flex w-[420px] max-w-[92vw] items-start justify-center" style={{ height: HOME_LOGO_HEIGHT }}>
         <div className="absolute inset-x-10 bottom-2 h-[42%] rounded-full bg-[#F7D117]/28 blur-3xl" />
         <div className="absolute inset-x-14 bottom-3 h-[36%] rounded-full bg-[#F5F1E8]/24 blur-2xl" />
         <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative z-10 h-full w-auto object-contain drop-shadow-[0_10px_24px_rgba(0,0,0,0.44)]" draggable={false} />
@@ -474,6 +462,16 @@ function AuthInput({ icon, type = "text", placeholder, value, onChange }) {
   );
 }
 
+
+function withTimeout(promise, timeoutMs = 8000, label = "Firebase request") {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      window.setTimeout(() => reject(new Error(`${label} timed out`)), timeoutMs);
+    }),
+  ]);
+}
+
 function authErrorMessage(error) {
   const code = error?.code || "";
   if (code === "auth/email-already-in-use") return "That email is already registered";
@@ -484,7 +482,7 @@ function authErrorMessage(error) {
   return error?.message || "Something went wrong please try again";
 }
 
-function AuthPanel({ mode, setMode, onBack }) {
+function AuthPanel({ mode, setMode, onBack, onAuthComplete }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -522,28 +520,33 @@ function AuthPanel({ mode, setMode, onBack }) {
 
       await updateProfile(credential.user, { displayName: trimmedUsername });
 
-      await setDoc(doc(db, "users", credential.user.uid), {
-        username: trimmedUsername,
-        email: trimmedEmail,
-        favouriteTeam: "",
-        emailOptIn,
-        worldCupsWon: 0,
-        goalsScored: 0,
-        matchesWon: 0,
-        bestCampaignPoints: 0,
-        leaderboardRank: null,
-        unlockedTeams: false,
-        upgrades: {
-          power: 0,
-          accuracy: 0,
-          goalkeeper: 0,
-          brownEnvelope: 0,
-        },
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+      try {
+        await withTimeout(setDoc(doc(db, "users", credential.user.uid), {
+          username: trimmedUsername,
+          email: trimmedEmail,
+          favouriteTeam: "",
+          emailOptIn,
+          worldCupsWon: 0,
+          goalsScored: 0,
+          matchesWon: 0,
+          bestCampaignPoints: 0,
+          leaderboardRank: null,
+          unlockedTeams: false,
+          upgrades: {
+            power: 0,
+            accuracy: 0,
+            goalkeeper: 0,
+            brownEnvelope: 0,
+          },
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }), 8000, "Profile save");
+      } catch (profileError) {
+        console.warn("Profile save failed after registration", profileError);
+      }
 
       setAuthSuccess("Account created welcome to the Clubhouse");
+      onAuthComplete?.(credential.user);
     } catch (error) {
       setAuthError(authErrorMessage(error));
     } finally {
@@ -555,8 +558,9 @@ function AuthPanel({ mode, setMode, onBack }) {
     try {
       setAuthLoading(true);
       resetMessages();
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
       setAuthSuccess("Signed in welcome back");
+      onAuthComplete?.(credential.user);
     } catch (error) {
       setAuthError(authErrorMessage(error));
     } finally {
@@ -614,11 +618,11 @@ function AuthPanel({ mode, setMode, onBack }) {
       <div className="flex min-h-[30px] items-center justify-center text-center">
         <div className={MENU_TITLE_CLASS}>CLUBHOUSE</div>
       </div>
-      <div className="mt-2 grid grid-cols-2 rounded-[0.75rem] border border-[#F5F1E8]/20 bg-[#072D1D]/42 p-0.5 shadow-inner">
+      <div className="mt-2 grid grid-cols-2 rounded-[0.75rem] border border-[#F5F1E8]/20 bg-[#0B5F35]/82 p-0.5 shadow-inner">
         <button type="button" onClick={() => switchMode("signin")} className={`home-copy-bold h-6 rounded-[0.55rem] text-[14px] uppercase tracking-[0.05em] transition ${!isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN IN</button>
         <button type="button" onClick={() => switchMode("register")} className={`home-copy-bold h-6 rounded-[0.55rem] text-[14px] uppercase tracking-[0.05em] transition ${isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN UP</button>
       </div>
-      <form className="mt-2 space-y-1.5" onSubmit={handleSubmit}>
+      <form className="mt-2 space-y-1.5" onSubmit={handleSubmit} noValidate>
         {isRegister && <AuthInput icon={<StarIcon className="h-5 w-5" />} placeholder="Username" value={username} onChange={(event) => { resetMessages(); setUsername(event.target.value); }} />}
         <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Email address" type="email" value={email} onChange={(event) => { resetMessages(); setEmail(event.target.value); }} />
         <AuthInput icon={<PadlockIcon className="h-5 w-5" />} placeholder="Password" type="password" value={password} onChange={(event) => { resetMessages(); setPassword(event.target.value); }} />
@@ -639,9 +643,9 @@ function AuthPanel({ mode, setMode, onBack }) {
   </div>;
 }
 
-function LandingPanel({ onPlayGuest }) {
+function LandingPanel({ onPlayGuest, onAuthComplete }) {
   const [authMode, setAuthMode] = useState(null);
-  if (authMode) return <AuthPanel mode={authMode} setMode={setAuthMode} onBack={() => setAuthMode(null)} />;
+  if (authMode) return <AuthPanel mode={authMode} setMode={setAuthMode} onBack={() => setAuthMode(null)} onAuthComplete={onAuthComplete} />;
 
   return <div className="space-y-3">
     <HomeMenuShell>
@@ -713,10 +717,10 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
   </HomeMenuShell>;
 }
 
-export function HomeScreen({ onSelectGroup, onSelectTeam, allTeamsUnlocked = false }) {
+export function HomeScreen({ onSelectGroup, onSelectTeam, allTeamsUnlocked = false, onAuthComplete }) {
   const [homeMode, setHomeMode] = useState("landing");
   if (homeMode === "hosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked}><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>;
-  return <HomeLayout allTeamsUnlocked={allTeamsUnlocked}><LandingPanel onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
+  return <HomeLayout allTeamsUnlocked={allTeamsUnlocked}><LandingPanel onPlayGuest={() => setHomeMode("hosts")} onAuthComplete={(user) => { onAuthComplete?.(user); setHomeMode("hosts"); }} /></HomeLayout>;
 }
 export function HostSelectScreen(props) { return <HomeLayout allTeamsUnlocked={props.allTeamsUnlocked}><HostPanel {...props} /></HomeLayout>; }
 export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam, onBack, allTeamsUnlocked = false }) { return <HomeLayout allTeamsUnlocked={allTeamsUnlocked}><TeamPanel group={selectedGroup} onBack={onBack} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>; }

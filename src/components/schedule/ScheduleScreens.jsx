@@ -5,8 +5,7 @@ import { buildRound32Placeholders } from "../../logic/tournament.js";
 import { buildPlaceholderFixtures, mergeByMatchNo } from "../../logic/bracketMappingSelectors.js";
 import { selectFixtureScrollTarget } from "../../logic/schedulePositioningSelectors.js";
 import { Flag } from "../shared.jsx";
-import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
-import { MenuPanel } from "../layout/MenuPanel.jsx";
+import { ScreenTitle } from "../layout/Menu.jsx";
 
 const isSeedLabel = (value) => /^[123][A-L]+$/.test(String(value || ""));
 const isProgressionLabel = (value) => /^(W|RU)\d+$/.test(String(value || ""));
@@ -27,7 +26,7 @@ export function FixtureCard({ home = "TBC", away = "TBC", group, played = false,
   const isUserHome = userTeam && home === userTeam;
   const isUserAway = userTeam && away === userTeam;
   const scoreText = played ? `${homeGoals}-${awayGoals}` : "v";
-  const cardClass = `mb-1.5 grid min-h-[62px] grid-rows-[30%_40%_30%] rounded-[1.25rem] border px-2.5 text-center ring-1 last:mb-0 shadow-[0_8px_18px_rgba(0,0,0,0.12)] ${isUserFixture ? "border-[#F5F1E8]/22 bg-[#072D1D] text-[#F5F1E8] ring-[#0B5F35]/45 shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`;
+  const cardClass = `mb-1.5 grid min-h-[62px] grid-rows-[30%_40%_30%] rounded-[1.25rem] border px-2.5 text-center ring-1 last:mb-0 shadow-[0_8px_18px_rgba(0,0,0,0.12)] ${isUserFixture ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/16 shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`;
   const teamText = (isUserTeam) => isUserTeam ? "text-[#F7D117]" : isUserFixture ? "text-[#F5F1E8]" : "text-[#26352E]";
   const scoreClass = isUserFixture ? "text-[#F5F1E8]" : "text-[#26352E]";
   const labelClass = isUserFixture ? "text-[#F5F1E8]" : "text-[#0B5F35]";
@@ -53,15 +52,15 @@ export function FixtureCard({ home = "TBC", away = "TBC", group, played = false,
 
 export function FixturesToggle({ value, onChange }) {
   const buttonClass = (active) => `rounded-full px-3 py-2 home-copy-bold text-[14px] uppercase tracking-[0.08em] transition-all ${active ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.22)]" : "bg-transparent text-[#F5F1E8]"}`;
-  return <div className="mx-auto grid w-[94%] grid-cols-2 gap-2 rounded-full border border-[#F5F1E8]/14 bg-[#0B5F35]/70 p-1 shadow-[inset_0_1px_0_rgba(245,241,232,0.08),0_8px_20px_rgba(0,0,0,0.12)]"><button onClick={() => onChange("group")} className={buttonClass(value === "group")}>Groups</button><button onClick={() => onChange("knockout")} className={buttonClass(value === "knockout")}>Knockout</button></div>;
+  return <div className="mx-auto grid w-[94%] grid-cols-2 gap-2 rounded-full border border-[#F5F1E8]/14 bg-[#0B5F35]/82 p-1 shadow-[inset_0_1px_0_rgba(245,241,232,0.08),0_8px_20px_rgba(0,0,0,0.12)]"><button onClick={() => onChange("group")} className={buttonClass(value === "group")}>Groups</button><button onClick={() => onChange("knockout")} className={buttonClass(value === "knockout")}>Knockout</button></div>;
 }
 
 export function FixtureSection({ title, children, sectionRef }) {
   return (
-    <MenuPanel ref={sectionRef}>
+    <div ref={sectionRef} className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] border border-[#F5F1E8]/12 bg-[#0B5F35]/88 text-[#F5F1E8] shadow-[0_10px_26px_rgba(0,0,0,0.20),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F5F1E8]/10 backdrop-blur-[1px]">
       <div className="px-3 pb-1.5 pt-3 text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">{normaliseRoundTitle(title)}</div>
       <div className="p-2 pt-1.5">{children}</div>
-    </MenuPanel>
+    </div>
   );
 }
 
@@ -94,9 +93,9 @@ export function FixturesScreen({ fixtureView, onFixtureViewChange, schedule, men
   };
 
   return (
-    <main className="relative z-[1] flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden text-[#F5F1E8]">
-      <ScreenTopBar {...menuProps}>SCHEDULE</ScreenTopBar>
-      <div className="relative z-[1] flex min-h-0 flex-1 flex-col gap-2 px-0 pb-2 pt-1.5">
+    <main className="relative z-[1] flex h-full min-h-0 w-full flex-col gap-0 overflow-hidden text-[#F5F1E8]">
+      <ScreenTitle {...menuProps}>SCHEDULE</ScreenTitle>
+      <div className="relative z-[1] flex min-h-0 flex-1 flex-col gap-2 px-0 pb-2 pt-2">
         <FixturesToggle value={fixtureView} onChange={onFixtureViewChange} />
         <section ref={scrollRef} className="min-h-0 flex-1 overflow-auto py-1">
           <div className="space-y-2.5 pb-2">

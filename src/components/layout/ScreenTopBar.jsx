@@ -6,7 +6,7 @@ export function ScreenTopBar({ children, menuOpen, onToggleMenu, onMatch, onFixt
   return (
     <section className="relative z-[220] flex h-[54px] shrink-0 items-center justify-center overflow-visible bg-[#072D1D] px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.16)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.16))]" aria-hidden="true" />
-      <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 z-[1] h-12 w-12 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
+      <img src={ASSETS.branding.mondayCupAd} alt="Monday Cup" className="absolute left-3 top-1/2 z-[1] h-8 w-24 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
       <h2 className="relative z-[1] home-copy-bold text-[clamp(25px,6.1vw,34px)] font-black uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">
         {children}
       </h2>

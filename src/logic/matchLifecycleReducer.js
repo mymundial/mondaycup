@@ -13,6 +13,8 @@ import {
   resultFormCode,
   userScoreFromFixtureResult,
 } from "./gameFixture.js";
+import { RESULT_STATUS, isTerminalResultStatus } from "./resultStatus.js";
+import { getUserFinishStatus } from "./podium.js";
 
 function findUpcomingGroupFixture({ schedule = [], selectedGroup, team }) {
   return schedule.find((fixture) => !fixture.played && fixture.group === selectedGroup && (fixture.home === team || fixture.away === team));
@@ -57,7 +59,7 @@ function buildGroupCompletePatch(state, result) {
       awayGoals: result.awayGoals,
       won: result.userWon,
       week: match.week,
-      status: completedGroupStage ? (qualified ? "qualified" : "eliminated") : (result.isDraw ? "groupDraw" : result.userWon ? "groupWin" : "groupLoss"),
+      status: completedGroupStage ? (qualified ? RESULT_STATUS.QUALIFIED : RESULT_STATUS.ELIMINATED) : (result.isDraw ? RESULT_STATUS.GROUP_DRAW : result.userWon ? RESULT_STATUS.GROUP_WIN : RESULT_STATUS.GROUP_LOSS),
       isDraw: result.isDraw || result.homeGoals === result.awayGoals,
       attempts: result.attempts,
     },
@@ -88,12 +90,7 @@ function buildKnockoutCompletePatch(state, result) {
   }, team);
 
   const matchNo = playedUserMatch.matchNo;
-  const lostSemiFinal = !result.userWon && (matchNo === 101 || matchNo === 102);
-  let status = "eliminated";
-  if (matchNo === 103) status = result.userWon ? "third" : "fourth";
-  else if (matchNo === 104) status = result.userWon ? "champion" : "runnerUp";
-  else if (result.userWon) status = "knockoutWin";
-  else if (lostSemiFinal) status = "thirdPlace";
+  const status = getUserFinishStatus({ result, fixture: playedUserMatch, matchNo, userWon: result.userWon });
 
   return {
     score: userScore,
@@ -144,7 +141,7 @@ function buildQuickWinPatch(state) {
       awayGoals,
       won: true,
       week: match.week,
-      status: completedGroupStage ? (qualified ? "qualified" : "eliminated") : "groupWin",
+      status: completedGroupStage ? (qualified ? RESULT_STATUS.QUALIFIED : RESULT_STATUS.ELIMINATED) : RESULT_STATUS.GROUP_WIN,
       attempts: { user: ["G", "G", "G", "G", "G"], opponent: ["S", "S", "S", "S", "S"] },
     },
   };
@@ -154,16 +151,16 @@ function buildNextMatchPatch(state) {
   const { team, matchResult, knockoutFixtures, table, schedule, selectedGroup, groupStageComplete, standingsView } = state;
   if (!team || !matchResult) return null;
 
-  if (matchResult.status === "thirdPlace") {
+  if (matchResult.status === RESULT_STATUS.THIRD_PLACE_PENDING) {
     const nextFixture = matchResult.nextFixture || knockoutFixtures.find((fixture) => fixture.matchNo === 103 && (fixture.home === team || fixture.away === team));
     if (nextFixture) return buildGoToKnockoutFixturePatch({ fixture: nextFixture, team });
   }
 
-  if (["champion", "runnerUp", "eliminated", "third", "fourth"].includes(matchResult.status)) {
+  if (isTerminalResultStatus(matchResult.status)) {
     return { resetTournament: true };
   }
 
-  if (matchResult.status === "qualified") {
+  if (matchResult.status === RESULT_STATUS.QUALIFIED) {
     const round32 = knockoutFixtures.length ? knockoutFixtures : buildRound32Fixtures(table);
     const userFixture = findTeamKnockoutFixture(team, round32);
     if (userFixture) {
@@ -174,7 +171,7 @@ function buildNextMatchPatch(state) {
     }
   }
 
-  if (matchResult.status === "knockoutWin") {
+  if (matchResult.status === RESULT_STATUS.KNOCKOUT_WIN) {
     const nextFixture = matchResult.nextFixture || knockoutFixtures.find((fixture) => !fixture.played && (fixture.home === team || fixture.away === team));
     if (nextFixture) return buildGoToKnockoutFixturePatch({ fixture: nextFixture, team });
   }
