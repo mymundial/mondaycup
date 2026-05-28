@@ -36,6 +36,9 @@ const THIRD_PLACE_BADGE_SRC = ASSETS.badges.third;
 const COSMETICS_KEY = "mondayCup.clubhouseCosmetics";
 const GOLDEN_BALL_SRC = "/assets/game/golden-ball.png";
 const GOLDEN_GLOVE_SRC = "/assets/game/golden-glove.png";
+const PHASE_ACCURACY = "accuracy";
+const POWER_SWEEP_MS = 1050;
+const ACCURACY_SWEEP_MS = 900;
 
 function readActiveCosmetics() {
   if (typeof window === "undefined") return {};
@@ -158,6 +161,29 @@ function PowerChargeMeter({ value, ideal = GAME.powerIdeal, charging = false, fi
         />
         <div className="absolute inset-y-[-3px] left-1/2 w-[3px] -translate-x-1/2 rounded-full bg-[#F5F1E8] shadow-[0_0_7px_rgba(245,241,232,0.75)]" />
         <div className={`pointer-events-none absolute inset-0 ${charging ? "animate-pulse" : ""} bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(0,0,0,0.13))]`} />
+      </div>
+    </div>
+  );
+}
+
+function AccuracyMeter({ value, ideal = [43, 57], running = false }) {
+  const left = `${ideal[0]}%`;
+  const width = `${ideal[1] - ideal[0]}%`;
+
+  return (
+    <div className="relative h-10 rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/22 bg-[#0b2d1d] p-1 shadow-[0_8px_18px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#0B5F35]/50">
+      <div className="relative h-full overflow-hidden rounded-[clamp(14px,2.2vh,28px)] bg-[#061A11]">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(0,0,0,0.18))]" />
+        <div
+          className="absolute inset-y-0 bg-[#0B5F35]/82 shadow-[0_0_10px_rgba(11,95,53,0.32),inset_0_0_8px_rgba(18,214,97,0.11)]"
+          style={{ left, width }}
+        />
+        <div className="absolute inset-y-[-3px] left-1/2 w-[3px] -translate-x-1/2 rounded-full bg-[#F5F1E8] shadow-[0_0_7px_rgba(245,241,232,0.75)]" />
+        <div
+          className="absolute inset-y-[-2px] w-[4px] -translate-x-1/2 rounded-full bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.65)]"
+          style={{ left: `${value}%`, willChange: "left" }}
+        />
+        <div className={`pointer-events-none absolute inset-0 ${running ? "animate-pulse" : ""} bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(0,0,0,0.13))]`} />
       </div>
     </div>
   );
@@ -337,8 +363,10 @@ function ControlOverlay({
   powerValue,
   powerCharging,
   powerFillRef,
-  startPowerCharge,
-  releasePowerCharge,
+  handleLockPower,
+  accuracyValue,
+  accuracyRunning,
+  handleLockAccuracy,
   opponentTeam,
   endActionLabel = "MATCH COMPLETE",
   endActionEnabled = false,
@@ -346,6 +374,7 @@ function ControlOverlay({
 }) {
   const canChoose = phase === PHASE.DIRECTION;
   const canPower = phase === PHASE.POWER;
+  const canAccuracy = phase === PHASE_ACCURACY;
   const titleClass = "home-copy-bold text-center text-[clamp(16px,2.25vh,27px)] font-black tracking-[0.08em] text-[#f5f1e8] drop-shadow-md";
 
   return (
@@ -369,32 +398,17 @@ function ControlOverlay({
         <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%] flex flex-col gap-[clamp(10px,1.2vh,18px)]">
           <div className={titleClass}>SHOT POWER</div>
           <PowerChargeMeter value={powerValue} ideal={GAME.powerIdeal} charging={powerCharging} fillRef={powerFillRef} />
-          <button
-            type="button"
-            onPointerDown={startPowerCharge}
-            onPointerUp={releasePowerCharge}
-            onPointerCancel={releasePowerCharge}
-            onLostPointerCapture={powerCharging ? releasePowerCharge : undefined}
-            onKeyDown={(event) => {
-              if ((event.key === " " || event.key === "Enter") && !powerCharging) {
-                event.preventDefault();
-                startPowerCharge(event);
-              }
-            }}
-            onKeyUp={(event) => {
-              if (event.key === " " || event.key === "Enter") {
-                event.preventDefault();
-                releasePowerCharge(event);
-              }
-            }}
-            className="grid h-[clamp(44px,5.3vh,66px)] w-full touch-none select-none place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(15px,2.1vh,25px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35"
-            style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none", touchAction: "none" }}
-          >
-            <span className="block w-full whitespace-nowrap text-center">{powerCharging ? "RELEASE" : "HOLD POWER"}</span>
-          </button>
+          <ConfirmButton onClick={handleLockPower}>TAP FOR POWER</ConfirmButton>
         </div>
       )}
-      {!canChoose && !canPower && (
+      {canAccuracy && (
+        <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%] flex flex-col gap-[clamp(10px,1.2vh,18px)]">
+          <div className={titleClass}>SHOT ACCURACY</div>
+          <AccuracyMeter value={accuracyValue} running={accuracyRunning} />
+          <ConfirmButton onClick={handleLockAccuracy}>TAP FOR ACCURACY</ConfirmButton>
+        </div>
+      )}
+      {!canChoose && !canPower && !canAccuracy && (
         <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%]">
           <ConfirmButton onClick={endActionEnabled ? onEndAction : undefined} disabled={!endActionEnabled}>
             {phase === PHASE.SHOT ? "SHOT IN PROGRESS" : phase === PHASE.AI_WAIT ? `${opponentTeam.name.toUpperCase()} SHOOTING` : endActionLabel}
@@ -425,12 +439,18 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   const [lockedDirection, setLockedDirection] = useState(null);
   const [powerValue, setPowerValue] = useState(0);
   const [powerCharging, setPowerCharging] = useState(false);
+  const [lockedPower, setLockedPower] = useState(null);
+  const [accuracyValue, setAccuracyValue] = useState(50);
+  const [accuracyRunning, setAccuracyRunning] = useState(false);
   const powerValueRef = useRef(0);
   const powerFrameRef = useRef(null);
   const powerLastFrameRef = useRef(0);
-  const powerPointerIdRef = useRef(null);
+  const powerDirectionRef = useRef(1);
   const powerFillRef = useRef(null);
-  const powerReleasedRef = useRef(true);
+  const accuracyValueRef = useRef(50);
+  const accuracyFrameRef = useRef(null);
+  const accuracyLastFrameRef = useRef(0);
+  const accuracyDirectionRef = useRef(1);
   const [score, setScore] = useState({ user: 0, opponent: 0 });
   const [attempts, setAttempts] = useState({ user: [], opponent: [] });
   const [shot, setShot] = useState(null);
@@ -444,7 +464,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   const ballPoint = shot?.targetPoint ?? GAME.spot;
   const keeperPoint = shot ? pointForDirection(shot.keeperDirection) : pointForDirection(getDirection("CM"));
   const aimDirection = lockedDirection ?? selected;
-  const showAim = phase === PHASE.DIRECTION || phase === PHASE.POWER;
+  const showAim = phase === PHASE.DIRECTION || phase === PHASE.POWER || phase === PHASE_ACCURACY;
 
   const isKnockoutShootout = Boolean(fixture?.requiresWinner);
   const matchFinished = phase === PHASE.FINISHED || hasCompleted;
@@ -476,7 +496,12 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     setPowerValue(0);
     powerValueRef.current = 0;
     setPowerCharging(false);
+    setLockedPower(null);
+    setAccuracyValue(50);
+    accuracyValueRef.current = 50;
+    setAccuracyRunning(false);
     if (powerFrameRef.current) cancelAnimationFrame(powerFrameRef.current);
+    if (accuracyFrameRef.current) cancelAnimationFrame(accuracyFrameRef.current);
     setScore({ user: 0, opponent: 0 });
     setAttempts({ user: [], opponent: [] });
     setShot(null);
@@ -539,10 +564,14 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     setPowerValue(0);
     powerValueRef.current = 0;
     setPowerCharging(false);
+    setLockedPower(null);
+    setAccuracyValue(50);
+    accuracyValueRef.current = 50;
+    setAccuracyRunning(false);
     setPhase(PHASE.DIRECTION);
   }
 
-  function commitShot(side, direction, power, currentScore = score, currentAttempts = attempts, plannedKeeperDirection = null) {
+  function commitShot(side, direction, power, currentScore = score, currentAttempts = attempts, plannedKeeperDirection = null, accuracy = null) {
     if (hasCompleted) return;
     playSound(side === "user" ? mergedAssets.sounds.userShot : mergedAssets.sounds.opponentShot, side === "user" ? 0.9 : 0.82);
     let keeperDirection = plannedKeeperDirection || (side === "user" ? keeperReadDirection(direction, Math.random, { goalAssist: activeCosmetics?.goldenBall ? 0.10 : 0 }) : randomDirection());
@@ -559,6 +588,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       result: resolved.result,
       goal: Boolean(resolved.goal),
       power,
+      accuracy,
       targetZone: Number(power) >= GAME.powerIdeal[0] && Number(power) <= GAME.powerIdeal[1],
       directionId: direction?.id,
       row: direction?.row,
@@ -569,7 +599,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     const nextScore = { ...currentScore, [side]: currentScore[side] + (resolved.goal ? 1 : 0) };
     const nextAttempts = { ...currentAttempts, [side]: [...currentAttempts[side], attemptRecord] };
 
-    setShot(resolved);
+    setShot({ ...resolved, accuracy });
     setShootingSide(side);
     setScore(nextScore);
     setAttempts(nextAttempts);
@@ -584,6 +614,10 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     setPowerValue(0);
     powerValueRef.current = 0;
     setPowerCharging(false);
+    setLockedPower(null);
+    setAccuracyValue(50);
+    accuracyValueRef.current = 50;
+    setAccuracyRunning(false);
     setPhase(PHASE.POWER);
   }
 
@@ -596,6 +630,12 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     setPowerValue(safePower);
   }
 
+  function setAccuracyVisual(nextAccuracy) {
+    const safeAccuracy = clamp(nextAccuracy, 0, 100);
+    accuracyValueRef.current = safeAccuracy;
+    setAccuracyValue(safeAccuracy);
+  }
+
   function stopPowerFrame() {
     if (powerFrameRef.current) {
       cancelAnimationFrame(powerFrameRef.current);
@@ -603,80 +643,123 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     }
   }
 
-  function startPowerCharge(event) {
-    if (phase !== PHASE.POWER || !lockedDirection || hasCompleted || powerCharging) return;
-    event?.preventDefault?.();
-    event?.stopPropagation?.();
-
-    if (typeof event?.pointerId === "number") {
-      powerPointerIdRef.current = event.pointerId;
-      event.currentTarget?.setPointerCapture?.(event.pointerId);
+  function stopAccuracyFrame() {
+    if (accuracyFrameRef.current) {
+      cancelAnimationFrame(accuracyFrameRef.current);
+      accuracyFrameRef.current = null;
     }
+  }
 
+  function startPowerMeter() {
     stopPowerFrame();
-    setPowerVisual(0);
-    powerLastFrameRef.current = performance.now();
-    powerReleasedRef.current = false;
     setPowerCharging(true);
+    powerDirectionRef.current = 1;
+    powerLastFrameRef.current = performance.now();
+    setPowerVisual(0);
 
-    const chargePerMs = 100 / Math.max(1, GAME.powerChargeMs);
+    const sweepPerMs = 100 / Math.max(1, POWER_SWEEP_MS / 2);
     const tick = (now) => {
-      // Mobile browsers can pause requestAnimationFrame during touch/scroll work.
-      // Cap delta so the hidden shot power never runs ahead of the visible meter.
       const delta = Math.min(Math.max(now - powerLastFrameRef.current, 0), 34);
       powerLastFrameRef.current = now;
-      const next = clamp(powerValueRef.current + delta * chargePerMs, 0, 100);
-      setPowerVisual(next);
+      let next = powerValueRef.current + powerDirectionRef.current * delta * sweepPerMs;
 
-      if (next < 100) {
-        powerFrameRef.current = requestAnimationFrame(tick);
-      } else {
-        powerFrameRef.current = null;
-        setPowerCharging(false);
+      if (next >= 100) {
+        next = 100;
+        powerDirectionRef.current = -1;
+      } else if (next <= 0) {
+        next = 0;
+        powerDirectionRef.current = 1;
       }
+
+      setPowerVisual(next);
+      powerFrameRef.current = requestAnimationFrame(tick);
     };
 
     powerFrameRef.current = requestAnimationFrame(tick);
   }
 
-  function releasePowerCharge(event) {
-    if (phase !== PHASE.POWER || !lockedDirection || hasCompleted || powerReleasedRef.current) return;
-    powerReleasedRef.current = true;
+  function startAccuracyMeter() {
+    stopAccuracyFrame();
+    setAccuracyRunning(true);
+    accuracyDirectionRef.current = 1;
+    accuracyLastFrameRef.current = performance.now();
+    setAccuracyVisual(50);
+
+    const sweepPerMs = 100 / Math.max(1, ACCURACY_SWEEP_MS / 2);
+    const tick = (now) => {
+      const delta = Math.min(Math.max(now - accuracyLastFrameRef.current, 0), 34);
+      accuracyLastFrameRef.current = now;
+      let next = accuracyValueRef.current + accuracyDirectionRef.current * delta * sweepPerMs;
+
+      if (next >= 100) {
+        next = 100;
+        accuracyDirectionRef.current = -1;
+      } else if (next <= 0) {
+        next = 0;
+        accuracyDirectionRef.current = 1;
+      }
+
+      setAccuracyVisual(next);
+      accuracyFrameRef.current = requestAnimationFrame(tick);
+    };
+
+    accuracyFrameRef.current = requestAnimationFrame(tick);
+  }
+
+  function handleLockPower(event) {
+    if (phase !== PHASE.POWER || !lockedDirection || hasCompleted) return;
     event?.preventDefault?.();
     event?.stopPropagation?.();
-
-    const pointerId = event?.pointerId ?? powerPointerIdRef.current;
-    if (typeof pointerId === "number") {
-      event?.currentTarget?.releasePointerCapture?.(pointerId);
-    }
-    powerPointerIdRef.current = null;
 
     stopPowerFrame();
     setPowerCharging(false);
     const finalPower = clamp(powerValueRef.current, 0, 100);
-    commitShot("user", lockedDirection, finalPower);
+    setLockedPower(finalPower);
+    setAccuracyValue(50);
+    accuracyValueRef.current = 50;
+    setPhase(PHASE_ACCURACY);
+  }
+
+  function handleLockAccuracy(event) {
+    if (phase !== PHASE_ACCURACY || !lockedDirection || hasCompleted) return;
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+
+    stopAccuracyFrame();
+    setAccuracyRunning(false);
+    const finalAccuracy = clamp(accuracyValueRef.current, 0, 100);
+    const rawPower = clamp(lockedPower ?? powerValueRef.current, 0, 100);
+    const accuracyOffset = (finalAccuracy - 50) * 0.7;
+    const finalPower = clamp(rawPower + accuracyOffset, 0, 100);
+    commitShot("user", lockedDirection, finalPower, score, attempts, null, finalAccuracy);
   }
 
   useEffect(() => {
-    const releaseFromWindow = (event) => {
-      if (!powerCharging) return;
-      releasePowerCharge(event);
-    };
+    if (phase === PHASE.POWER && lockedDirection && !hasCompleted) {
+      startPowerMeter();
+      return () => stopPowerFrame();
+    }
+    stopPowerFrame();
+    setPowerCharging(false);
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, lockedDirection?.id, hasCompleted]);
 
-    window.addEventListener("pointerup", releaseFromWindow, { passive: false });
-    window.addEventListener("pointercancel", releaseFromWindow, { passive: false });
-    window.addEventListener("blur", releaseFromWindow);
-
-    return () => {
-      window.removeEventListener("pointerup", releaseFromWindow);
-      window.removeEventListener("pointercancel", releaseFromWindow);
-      window.removeEventListener("blur", releaseFromWindow);
-    };
-  }, [powerCharging, phase, lockedDirection, hasCompleted]);
+  useEffect(() => {
+    if (phase === PHASE_ACCURACY && lockedDirection && !hasCompleted) {
+      startAccuracyMeter();
+      return () => stopAccuracyFrame();
+    }
+    stopAccuracyFrame();
+    setAccuracyRunning(false);
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, lockedDirection?.id, hasCompleted]);
 
   useEffect(() => {
     return () => {
       stopPowerFrame();
+      stopAccuracyFrame();
     };
   }, []);
 
@@ -714,8 +797,10 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         powerValue={powerValue}
         powerCharging={powerCharging}
         powerFillRef={powerFillRef}
-        startPowerCharge={startPowerCharge}
-        releasePowerCharge={releasePowerCharge}
+        handleLockPower={handleLockPower}
+        accuracyValue={accuracyValue}
+        accuracyRunning={accuracyRunning}
+        handleLockAccuracy={handleLockAccuracy}
         opponentTeam={opponent}
         endActionLabel={endActionLabel}
         endActionEnabled={endActionEnabled}
