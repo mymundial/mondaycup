@@ -37,8 +37,32 @@ const COSMETICS_KEY = "mondayCup.clubhouseCosmetics";
 const GOLDEN_BALL_SRC = "/assets/game/golden-ball.png";
 const GOLDEN_GLOVE_SRC = "/assets/game/golden-glove.png";
 const PHASE_ACCURACY = "accuracy";
-const POWER_SWEEP_MS = 1050;
-const ACCURACY_SWEEP_MS = 900;
+const POWER_SWEEP_MS = 1300;
+const DEFAULT_ACCURACY_SWEEP_MS = 1300;
+const POWER_TARGET_ZONE = [40, 60];
+const ACCURACY_TARGET_ZONE = [40, 60];
+
+function accuracySpeedForPower(power) {
+  const safe = clamp(Number(power) || 0, 0, 100);
+  if (safe >= 40 && safe <= 60) return 1300;
+  if ((safe >= 30 && safe < 40) || (safe > 60 && safe <= 70)) return 1125;
+  if ((safe >= 10 && safe < 30) || (safe > 70 && safe <= 90)) return 1050;
+  return 900;
+}
+
+function accuracyOutcomeForValue(value, direction) {
+  const safe = clamp(Number(value) || 0, 0, 100);
+  if (safe >= 40 && safe <= 60) return "onTarget";
+
+  const col = Number(direction?.col);
+  const isNearMiss = (safe >= 30 && safe < 40) || (safe > 60 && safe <= 70);
+
+  // Direction is locked. Accuracy can only decide whether that chosen shot is
+  // on target, hits the relevant post/bar, or misses on the same side.
+  if (col === 0) return isNearMiss ? "postLeft" : "wideLeft";
+  if (col === 2) return isNearMiss ? "postRight" : "wideRight";
+  return isNearMiss ? "crossbarCentre" : "overCentre";
+}
 
 function readActiveCosmetics() {
   if (typeof window === "undefined") return {};
@@ -151,22 +175,22 @@ function PowerChargeMeter({ value, ideal = GAME.powerIdeal, charging = false, fi
       <div className="relative h-full overflow-hidden rounded-[clamp(14px,2.2vh,28px)] bg-[#061A11]">
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(0,0,0,0.18))]" />
         <div
-          className="absolute inset-y-0 bg-[#0B5F35]/78 shadow-[0_0_10px_rgba(11,95,53,0.32),inset_0_0_8px_rgba(18,214,97,0.11)]"
+          className="absolute inset-y-0 bg-[#0B5F35]/82 shadow-[0_0_10px_rgba(11,95,53,0.32),inset_0_0_8px_rgba(18,214,97,0.11)]"
           style={{ left, width }}
         />
+        <div className="absolute inset-y-[-3px] left-1/2 w-[3px] -translate-x-1/2 rounded-full bg-[#F5F1E8] shadow-[0_0_7px_rgba(245,241,232,0.75)]" />
         <div
           ref={fillRef}
-          className="absolute inset-y-0 left-0 bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.45)]"
-          style={{ width: `${value}%`, borderTopLeftRadius: 999, borderBottomLeftRadius: 999, borderTopRightRadius: 0, borderBottomRightRadius: 0, willChange: "width" }}
+          className="absolute inset-y-[-2px] w-[4px] -translate-x-1/2 rounded-full bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.65)]"
+          style={{ left: `${value}%`, willChange: "left" }}
         />
-        <div className="absolute inset-y-[-3px] left-1/2 w-[3px] -translate-x-1/2 rounded-full bg-[#F5F1E8] shadow-[0_0_7px_rgba(245,241,232,0.75)]" />
         <div className={`pointer-events-none absolute inset-0 ${charging ? "animate-pulse" : ""} bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(0,0,0,0.13))]`} />
       </div>
     </div>
   );
 }
 
-function AccuracyMeter({ value, ideal = [43, 57], running = false }) {
+function AccuracyMeter({ value, ideal = ACCURACY_TARGET_ZONE, running = false }) {
   const left = `${ideal[0]}%`;
   const width = `${ideal[1] - ideal[0]}%`;
 
@@ -397,7 +421,7 @@ function ControlOverlay({
       {canPower && (
         <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%] flex flex-col gap-[clamp(10px,1.2vh,18px)]">
           <div className={titleClass}>SHOT POWER</div>
-          <PowerChargeMeter value={powerValue} ideal={GAME.powerIdeal} charging={powerCharging} fillRef={powerFillRef} />
+          <PowerChargeMeter value={powerValue} ideal={POWER_TARGET_ZONE} charging={powerCharging} fillRef={powerFillRef} />
           <ConfirmButton onClick={handleLockPower}>TAP FOR POWER</ConfirmButton>
         </div>
       )}
@@ -440,14 +464,16 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   const [powerValue, setPowerValue] = useState(0);
   const [powerCharging, setPowerCharging] = useState(false);
   const [lockedPower, setLockedPower] = useState(null);
-  const [accuracyValue, setAccuracyValue] = useState(50);
+  const [accuracyValue, setAccuracyValue] = useState(0);
   const [accuracyRunning, setAccuracyRunning] = useState(false);
+  const [accuracySweepMs, setAccuracySweepMs] = useState(DEFAULT_ACCURACY_SWEEP_MS);
+  const accuracySweepMsRef = useRef(DEFAULT_ACCURACY_SWEEP_MS);
   const powerValueRef = useRef(0);
   const powerFrameRef = useRef(null);
   const powerLastFrameRef = useRef(0);
   const powerDirectionRef = useRef(1);
   const powerFillRef = useRef(null);
-  const accuracyValueRef = useRef(50);
+  const accuracyValueRef = useRef(0);
   const accuracyFrameRef = useRef(null);
   const accuracyLastFrameRef = useRef(0);
   const accuracyDirectionRef = useRef(1);
@@ -497,9 +523,11 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     powerValueRef.current = 0;
     setPowerCharging(false);
     setLockedPower(null);
-    setAccuracyValue(50);
-    accuracyValueRef.current = 50;
+    setAccuracyValue(0);
+    accuracyValueRef.current = 0;
     setAccuracyRunning(false);
+    setAccuracySweepMs(DEFAULT_ACCURACY_SWEEP_MS);
+    accuracySweepMsRef.current = DEFAULT_ACCURACY_SWEEP_MS;
     if (powerFrameRef.current) cancelAnimationFrame(powerFrameRef.current);
     if (accuracyFrameRef.current) cancelAnimationFrame(accuracyFrameRef.current);
     setScore({ user: 0, opponent: 0 });
@@ -565,13 +593,15 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     powerValueRef.current = 0;
     setPowerCharging(false);
     setLockedPower(null);
-    setAccuracyValue(50);
-    accuracyValueRef.current = 50;
+    setAccuracyValue(0);
+    accuracyValueRef.current = 0;
     setAccuracyRunning(false);
+    setAccuracySweepMs(DEFAULT_ACCURACY_SWEEP_MS);
+    accuracySweepMsRef.current = DEFAULT_ACCURACY_SWEEP_MS;
     setPhase(PHASE.DIRECTION);
   }
 
-  function commitShot(side, direction, power, currentScore = score, currentAttempts = attempts, plannedKeeperDirection = null, accuracy = null) {
+  function commitShot(side, direction, power, currentScore = score, currentAttempts = attempts, plannedKeeperDirection = null, accuracy = null, accuracyOutcome = null) {
     if (hasCompleted) return;
     playSound(side === "user" ? mergedAssets.sounds.userShot : mergedAssets.sounds.opponentShot, side === "user" ? 0.9 : 0.82);
     let keeperDirection = plannedKeeperDirection || (side === "user" ? keeperReadDirection(direction, Math.random, { goalAssist: activeCosmetics?.goldenBall ? 0.10 : 0 }) : randomDirection());
@@ -583,13 +613,15 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       power,
       keeperDirection,
       middleBypass: false,
+      accuracyOutcome,
     });
     const attemptRecord = {
       result: resolved.result,
       goal: Boolean(resolved.goal),
       power,
       accuracy,
-      targetZone: Number(power) >= GAME.powerIdeal[0] && Number(power) <= GAME.powerIdeal[1],
+      targetZone: Number(power) >= POWER_TARGET_ZONE[0] && Number(power) <= POWER_TARGET_ZONE[1],
+      accuracyOutcome,
       directionId: direction?.id,
       row: direction?.row,
       col: direction?.col,
@@ -615,8 +647,8 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     powerValueRef.current = 0;
     setPowerCharging(false);
     setLockedPower(null);
-    setAccuracyValue(50);
-    accuracyValueRef.current = 50;
+    setAccuracyValue(0);
+    accuracyValueRef.current = 0;
     setAccuracyRunning(false);
     setPhase(PHASE.POWER);
   }
@@ -625,7 +657,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     const safePower = clamp(nextPower, 0, 100);
     powerValueRef.current = safePower;
     if (powerFillRef.current) {
-      powerFillRef.current.style.width = `${safePower}%`;
+      powerFillRef.current.style.left = `${safePower}%`;
     }
     setPowerValue(safePower);
   }
@@ -683,9 +715,9 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     setAccuracyRunning(true);
     accuracyDirectionRef.current = 1;
     accuracyLastFrameRef.current = performance.now();
-    setAccuracyVisual(50);
+    setAccuracyVisual(0);
 
-    const sweepPerMs = 100 / Math.max(1, ACCURACY_SWEEP_MS / 2);
+    const sweepPerMs = 100 / Math.max(1, accuracySweepMsRef.current / 2);
     const tick = (now) => {
       const delta = Math.min(Math.max(now - accuracyLastFrameRef.current, 0), 34);
       accuracyLastFrameRef.current = now;
@@ -714,9 +746,13 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     stopPowerFrame();
     setPowerCharging(false);
     const finalPower = clamp(powerValueRef.current, 0, 100);
+    const nextAccuracySpeed = accuracySpeedForPower(finalPower);
     setLockedPower(finalPower);
-    setAccuracyValue(50);
-    accuracyValueRef.current = 50;
+    setAccuracySweepMs(nextAccuracySpeed);
+    accuracySweepMsRef.current = nextAccuracySpeed;
+    setAccuracyValue(0);
+    accuracyValueRef.current = 0;
+    accuracyDirectionRef.current = 1;
     setPhase(PHASE_ACCURACY);
   }
 
@@ -728,10 +764,9 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     stopAccuracyFrame();
     setAccuracyRunning(false);
     const finalAccuracy = clamp(accuracyValueRef.current, 0, 100);
-    const rawPower = clamp(lockedPower ?? powerValueRef.current, 0, 100);
-    const accuracyOffset = (finalAccuracy - 50) * 0.7;
-    const finalPower = clamp(rawPower + accuracyOffset, 0, 100);
-    commitShot("user", lockedDirection, finalPower, score, attempts, null, finalAccuracy);
+    const finalPower = clamp(lockedPower ?? powerValueRef.current, 0, 100);
+    const accuracyOutcome = accuracyOutcomeForValue(finalAccuracy, lockedDirection);
+    commitShot("user", lockedDirection, finalPower, score, attempts, null, finalAccuracy, accuracyOutcome);
   }
 
   useEffect(() => {

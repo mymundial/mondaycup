@@ -301,8 +301,71 @@ export function commentaryFor(code, goal, quality = "") {
   return COMMENTARY.save;
 }
 
-export function resolvePenalty({ direction, power, keeperDirection, rng = Math.random, middleBypass = false }) {
+function missCodeForAccuracyOutcome(direction, accuracyOutcome) {
+  const rowCode = direction.row === 0 ? "T" : direction.row === 1 ? "M" : "B";
+
+  switch (accuracyOutcome) {
+    case "postLeft":
+      return `L${rowCode}P`;
+    case "wideLeft":
+      return `L${rowCode}W`;
+    case "postRight":
+      return `R${rowCode}P`;
+    case "wideRight":
+      return `R${rowCode}W`;
+    case "crossbarCentre":
+      return "CX";
+    case "overCentre":
+      return "CO";
+    default:
+      return direction.id;
+  }
+}
+
+export function resolvePenalty({ direction, power, keeperDirection, rng = Math.random, middleBypass = false, accuracyOutcome = null }) {
   const powerState = classifyPower(power);
+
+  // User-controlled 3-step shot logic:
+  // 1) Direction is locked and never flips side.
+  // 2) Power only controls accuracy-meter speed before this function is called.
+  // 3) Accuracy decides on-target / post-bar / miss.
+  // 4) If on target, keeper same square = save; keeper different square = goal.
+  if (accuracyOutcome) {
+    const resolvedKeeper = keeperDirection || keeperReadDirection(direction, rng);
+
+    if (accuracyOutcome !== "onTarget") {
+      const missCode = missCodeForAccuracyOutcome(direction, accuracyOutcome);
+      return {
+        chosenDirection: direction,
+        finalDirection: direction,
+        keeperDirection: resolvedKeeper,
+        power,
+        accuracy: null,
+        quality: accuracyOutcome,
+        code: missCode,
+        targetPoint: pointForOutcome(missCode, direction),
+        result: "S",
+        goal: false,
+        commentary: commentaryFor(missCode, false, accuracyOutcome),
+      };
+    }
+
+    const saved = resolvedKeeper.id === direction.id;
+    const goal = !saved;
+    return {
+      chosenDirection: direction,
+      finalDirection: direction,
+      keeperDirection: resolvedKeeper,
+      power,
+      accuracy: null,
+      quality: "on-target",
+      code: direction.id,
+      targetPoint: pointForDirection(direction),
+      result: goal ? "G" : "S",
+      goal,
+      commentary: commentaryFor(direction.id, goal, "on-target"),
+    };
+  }
 
   // Poor shots should not bamboozle the keeper. They become clear saves.
   if (powerState === "very-weak" || powerState === "weak") {
@@ -408,7 +471,7 @@ export function stageLabelForFixture(fixture) {
   return labels[stage] || "MATCH";
 }
 
-export function buildResult({ fixture, userTeam, opponentTeam, score, winnerSide, isDraw, attempts = null }) {
+export function buildResult({ fixture, userTeam, opponentTeam, score, winnerSide, isDraw }) {
   const userIsHome = fixture?.homeTeamId === userTeam.id;
   const homeGoals = userIsHome ? score.user : score.opponent;
   const awayGoals = userIsHome ? score.opponent : score.user;
@@ -427,8 +490,5 @@ export function buildResult({ fixture, userTeam, opponentTeam, score, winnerSide
     loser,
     userWon: winnerSide === "user",
     isDraw,
-    userShotEvents: Array.isArray(attempts?.user) ? attempts.user : [],
-    opponentShotEvents: Array.isArray(attempts?.opponent) ? attempts.opponent : [],
-    wentToSuddenDeath: Boolean((attempts?.user?.length || 0) > GAME.regulationPens || (attempts?.opponent?.length || 0) > GAME.regulationPens),
   };
 }
