@@ -5,7 +5,9 @@ import { auth, db } from "../../firebase";
 import { HOST_TEAMS, GROUPS, GROUP_LETTERS, TEAM_RANK, getTeamTheme } from "../../data/teams.js";
 import { ASSETS } from "../../data/assets.js";
 import { Flag } from "../shared.jsx";
+import { ensureUserDocument } from "../../lib/firebaseUser.js";
 import { GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
+import { AuthEmailCommsCheckbox, AuthForgotPasswordButton, AuthPrimaryButton, AuthTabs, AuthTextInput, PasswordVisibilityButton } from "../auth/AuthFormParts.jsx";
 
 const GAME = {
   goal: { left: 10, top: 8, width: 80, height: 30 },
@@ -14,6 +16,7 @@ const GAME = {
 
 
 const MONDAY_CUP_AD_SRC = ASSETS.branding.mondayCupAd;
+const FLOATING_HOME_LOGO_SRC = ASSETS.branding.mondayLogo;
 const SCOREBOARD_STAGE_TEXT = "font-led text-[clamp(9px,1.35vh,16px)] font-black uppercase leading-none tracking-[0.14em] text-[#F7D117]";
 const SCOREBOARD_MAIN_TEXT = "font-led text-[clamp(17px,3.05vh,34px)] font-black uppercase leading-none tracking-normal text-[#F7D117]";
 const SCOREBOARD_MARKER_TEXT = "font-led text-[clamp(6px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.12em] text-[#F7D117]";
@@ -304,7 +307,7 @@ function HomeMenuBar() {
     <div className="relative z-[3] flex h-[54px] shrink-0 items-center justify-center overflow-hidden bg-[#072D1D] px-6 text-[#F5F1E8]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.16))]" aria-hidden="true" />
       <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
-      <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[30px] w-auto object-contain" draggable={false} />
+      <img src={ASSETS.branding.mondayFlat} alt="Monday Cup" className="relative z-[1] h-[38px] w-auto object-contain" draggable={false} />
       <img src={ASSETS.mondayLogo} alt="Monday Cup" className="absolute right-3 top-1/2 h-12 w-12 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
     </div>
   );
@@ -380,7 +383,7 @@ function HomeLayout({ children, allTeamsUnlocked = false }) {
   );
 }
 
-function ActionButton({ children, eyebrow, onClick, variant = "light", disabled = false, type = "button", size = "normal" }) {
+function ActionButton({ children, eyebrow, onClick, variant = "light", disabled = false, type = "button", size = "normal", className = "" }) {
   const styles = variant === "yellow"
     ? "border-[#F7D117]/75 bg-[#F7D117] text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.24),inset_0_2px_8px_rgba(255,255,255,0.22)]"
     : variant === "green"
@@ -389,10 +392,10 @@ function ActionButton({ children, eyebrow, onClick, variant = "light", disabled 
         ? "border-[#F5F0E6]/18 bg-[#F5F0E6]/18 text-[#F5F0E6]"
         : "border-[#D4AF37]/50 bg-[#F5F0E6] text-[#0B5F35]";
 
-  const heightClass = size === "hero" ? "min-h-[62px] py-3" : "h-[44px]";
-  const textClass = size === "hero" ? "text-[clamp(20px,5.4vw,30px)] tracking-[0.075em]" : "text-[clamp(12px,3.45vw,20px)] tracking-[0.055em]";
+  const heightClass = size === "hero" ? "min-h-[62px] py-3" : size === "journey" ? "h-[50px]" : "h-[44px]";
+  const textClass = size === "hero" ? "text-[clamp(20px,5.4vw,30px)] tracking-[0.075em]" : size === "journey" ? "text-[clamp(13px,3.6vw,18px)] tracking-[0.07em]" : "text-[clamp(12px,3.45vw,20px)] tracking-[0.055em]";
 
-  return <button type={type} onClick={onClick} disabled={disabled} className={`flex ${heightClass} w-full items-center justify-center rounded-[1rem] border px-4 text-center transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"}`}>
+  return <button type={type} onClick={onClick} disabled={disabled} className={`flex ${heightClass} w-full items-center justify-center rounded-[1rem] border px-4 text-center transition ${styles} ${disabled ? "opacity-70" : "active:scale-[0.99]"} ${className}`}>
     {eyebrow && <span className="sr-only">{eyebrow}</span>}
     <div className={`home-copy-bold w-full truncate whitespace-nowrap ${textClass} uppercase leading-none`}>{children}</div>
   </button>;
@@ -438,38 +441,26 @@ function FloatingHomeLogo() {
       <div className="relative flex w-[420px] max-w-[92vw] items-start justify-center" style={{ height: HOME_LOGO_HEIGHT }}>
         <div className="absolute inset-x-10 bottom-2 h-[42%] rounded-full bg-[#F7D117]/28 blur-3xl" />
         <div className="absolute inset-x-14 bottom-3 h-[36%] rounded-full bg-[#F5F1E8]/24 blur-2xl" />
-        <img src={ASSETS.mondayLogo} alt="Monday Cup" className="relative z-10 h-full w-auto object-contain drop-shadow-[0_10px_24px_rgba(0,0,0,0.44)]" draggable={false} />
+        <img src={FLOATING_HOME_LOGO_SRC} alt="Monday Cup" className="relative z-10 h-full w-auto object-contain drop-shadow-[0_10px_24px_rgba(0,0,0,0.44)]" draggable={false} />
       </div>
     </div>
   );
 }
 
-function AuthInput({ icon, type = "text", placeholder, value, onChange }) {
+function AuthInput({ icon, type = "text", placeholder, value, onChange, autoComplete, maxLength, rightAction, inputMode }) {
   return (
-    <label className="block text-left">
-      <span className="sr-only">{placeholder}</span>
-      <div className="relative">
-        <span className="pointer-events-none absolute left-3.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-[#0B5F35]/82">{icon}</span>
-        <input
-          type={type}
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          className="home-copy-regular h-9 w-full rounded-[0.85rem] border border-[#F5F0E6]/18 bg-[#F5F0E6]/94 py-0 pl-11 pr-4 text-[15px] uppercase tracking-[0.055em] text-[#0B5F35] outline-none placeholder:text-[#0B5F35]/34 focus:border-[#F7D117]"
-        />
-      </div>
-    </label>
+    <AuthTextInput
+      icon={icon}
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      autoComplete={autoComplete}
+      maxLength={maxLength}
+      rightAction={rightAction}
+      inputMode={inputMode}
+    />
   );
-}
-
-
-function withTimeout(promise, timeoutMs = 8000, label = "Firebase request") {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => {
-      window.setTimeout(() => reject(new Error(`${label} timed out`)), timeoutMs);
-    }),
-  ]);
 }
 
 function authErrorMessage(error) {
@@ -482,16 +473,17 @@ function authErrorMessage(error) {
   return error?.message || "Something went wrong please try again";
 }
 
-function AuthPanel({ mode, setMode, onBack, onAuthComplete }) {
+function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [emailOptIn, setEmailOptIn] = useState(true);
   const [forgotPassword, setForgotPassword] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authSuccess, setAuthSuccess] = useState("");
-  const isRegister = mode === "register";
+  const isRegister = mode === "register" || mode === "signup";
 
   const resetMessages = () => {
     setAuthError("");
@@ -520,33 +512,15 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete }) {
 
       await updateProfile(credential.user, { displayName: trimmedUsername });
 
-      try {
-        await withTimeout(setDoc(doc(db, "users", credential.user.uid), {
-          username: trimmedUsername,
-          email: trimmedEmail,
-          favouriteTeam: "",
-          emailOptIn,
-          worldCupsWon: 0,
-          goalsScored: 0,
-          matchesWon: 0,
-          bestCampaignPoints: 0,
-          leaderboardRank: null,
-          unlockedTeams: false,
-          upgrades: {
-            power: 0,
-            accuracy: 0,
-            goalkeeper: 0,
-            brownEnvelope: 0,
-          },
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        }), 8000, "Profile save");
-      } catch (profileError) {
-        console.warn("Profile save failed after registration", profileError);
-      }
+      await ensureUserDocument(credential.user, trimmedUsername, {
+        username: trimmedUsername,
+        emailOptIn,
+        updatedAt: serverTimestamp(),
+      });
+      await onAuthComplete?.(credential.user, { navigate: false });
+      onSignedIn?.(credential.user);
 
       setAuthSuccess("Account created welcome to the Clubhouse");
-      onAuthComplete?.(credential.user);
     } catch (error) {
       setAuthError(authErrorMessage(error));
     } finally {
@@ -559,8 +533,9 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete }) {
       setAuthLoading(true);
       resetMessages();
       const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      await onAuthComplete?.(credential.user, { navigate: false });
+      onSignedIn?.(credential.user);
       setAuthSuccess("Signed in welcome back");
-      onAuthComplete?.(credential.user);
     } catch (error) {
       setAuthError(authErrorMessage(error));
     } finally {
@@ -604,10 +579,10 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete }) {
           <div className={MENU_TITLE_CLASS}>RESET PASSWORD</div>
         </div>
         <form className="mt-3 space-y-2" onSubmit={handleForgotPassword}>
-          <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Confirm email address" type="email" value={email} onChange={(event) => { resetMessages(); setEmail(event.target.value); }} />
+          <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Confirm email address" type="text" inputMode="email" value={email} onChange={(event) => { resetMessages(); setEmail(event.target.value); }} />
           {authError && <div className="home-copy-regular rounded-[0.8rem] bg-red-500/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-red-100">{authError}</div>}
           {authSuccess && <div className="home-copy-regular rounded-[0.8rem] bg-[#B7FF3C]/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-[#B7FF3C]">{authSuccess}</div>}
-          <ActionButton type="submit" variant="yellow">{authLoading ? "SENDING..." : "SEND RESET LINK"}</ActionButton>
+          <AuthPrimaryButton type="submit" loading={authLoading}>{authLoading ? "SENDING..." : "SEND RESET LINK"}</AuthPrimaryButton>
         </form>
       </HomeMenuShell>
     </div>;
@@ -615,43 +590,63 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete }) {
 
   return <div className="space-y-3">
     <HomeMenuShell onBack={onBack}>
-      <div className="flex min-h-[30px] items-center justify-center text-center">
-        <div className={MENU_TITLE_CLASS}>CLUBHOUSE</div>
-      </div>
-      <div className="mt-2 grid grid-cols-2 rounded-[0.75rem] border border-[#F5F1E8]/20 bg-[#0B5F35]/82 p-0.5 shadow-inner">
-        <button type="button" onClick={() => switchMode("signin")} className={`home-copy-bold h-6 rounded-[0.55rem] text-[14px] uppercase tracking-[0.05em] transition ${!isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN IN</button>
-        <button type="button" onClick={() => switchMode("register")} className={`home-copy-bold h-6 rounded-[0.55rem] text-[14px] uppercase tracking-[0.05em] transition ${isRegister ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "text-[#F5F1E8]/62"}`}>SIGN UP</button>
-      </div>
-      <form className="mt-2 space-y-1.5" onSubmit={handleSubmit} noValidate>
+      <div className={`mb-3 flex min-h-[34px] items-center justify-center text-center ${MENU_TITLE_CLASS}`}>CLUBHOUSE</div>
+<AuthTabs mode={mode} onChange={switchMode} />
+      <form className="mt-2 space-y-1.5" onSubmit={handleSubmit}>
         {isRegister && <AuthInput icon={<StarIcon className="h-5 w-5" />} placeholder="Username" value={username} onChange={(event) => { resetMessages(); setUsername(event.target.value); }} />}
-        <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Email address" type="email" value={email} onChange={(event) => { resetMessages(); setEmail(event.target.value); }} />
-        <AuthInput icon={<PadlockIcon className="h-5 w-5" />} placeholder="Password" type="password" value={password} onChange={(event) => { resetMessages(); setPassword(event.target.value); }} />
-        <ActionButton type="submit" variant="yellow">{authError || authSuccess || (authLoading ? "LOADING..." : isRegister ? "REGISTER" : "SIGN IN")}</ActionButton>
+        <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Email address" type="text" inputMode="email" value={email} onChange={(event) => { resetMessages(); setEmail(event.target.value); }} />
+        <AuthTextInput icon={<PadlockIcon className="h-5 w-5" />} placeholder="Password" type={passwordVisible ? "text" : "password"} value={password} onChange={(event) => { resetMessages(); setPassword(event.target.value); }} rightAction={<PasswordVisibilityButton visible={passwordVisible} onToggle={() => setPasswordVisible((value) => !value)} />} />
+        <AuthPrimaryButton type="submit" loading={authLoading}>{authError || authSuccess || (authLoading ? "LOADING..." : isRegister ? "REGISTER" : "SIGN IN")}</AuthPrimaryButton>
         {isRegister && (
-          <label className="home-copy-bold flex items-center justify-center gap-2 bg-transparent py-0.5 text-center text-[11px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]">
-            <input type="checkbox" checked={emailOptIn} onChange={(event) => setEmailOptIn(event.target.checked)} className="h-4 w-4 shrink-0 accent-[#F7D117]" />
-            <span>Receive email communications</span>
-          </label>
+          <AuthEmailCommsCheckbox checked={emailOptIn} onChange={setEmailOptIn} />
         )}
         {!isRegister && (
-          <button type="button" onClick={() => { resetMessages(); setForgotPassword(true); }} className="home-copy-bold mx-auto mt-2 block text-[11px] uppercase tracking-[0.16em] text-[#F5F1E8] underline-offset-4 active:scale-[0.98]">
-            FORGOT PASSWORD?
-          </button>
+<AuthForgotPasswordButton onClick={() => { resetMessages(); setForgotPassword(true); }} />
         )}
       </form>
     </HomeMenuShell>
   </div>;
 }
 
-function LandingPanel({ onPlayGuest, onAuthComplete }) {
+function WelcomeBackPanel({ onResume, onNewCampaign, hasResumeCampaign = false }) {
+  return <div className="space-y-3">
+    <HomeMenuShell>
+      <div className={`mb-3 flex min-h-[34px] items-center justify-center text-center ${MENU_TITLE_CLASS}`}>WELCOME BACK</div>
+      <div className="flex flex-col gap-3">
+        <ActionButton
+          onClick={hasResumeCampaign ? onResume : undefined}
+          variant="yellow"
+          size="journey"
+          disabled={!hasResumeCampaign}
+          className={!hasResumeCampaign ? "pointer-events-none opacity-28" : ""}
+        >
+          RESUME GAME
+        </ActionButton>
+        <ActionButton onClick={onNewCampaign} variant="yellow" size="journey">NEW CAMPAIGN</ActionButton>
+      </div>
+    </HomeMenuShell>
+  </div>;
+}
+
+function LandingPanel({ onPlayGuest, currentUser, onOpenClubhouse, onAuthComplete, onResumeCampaign, hasResumeCampaign = false }) {
   const [authMode, setAuthMode] = useState(null);
-  if (authMode) return <AuthPanel mode={authMode} setMode={setAuthMode} onBack={() => setAuthMode(null)} onAuthComplete={onAuthComplete} />;
+  const [showWelcomeBack, setShowWelcomeBack] = useState(false);
+  if (showWelcomeBack) {
+    return <WelcomeBackPanel onResume={onResumeCampaign} onNewCampaign={onPlayGuest} hasResumeCampaign={hasResumeCampaign} />;
+  }
+  if (authMode) return <AuthPanel mode={authMode} setMode={setAuthMode} onBack={() => setAuthMode(null)} onAuthComplete={onAuthComplete} onSignedIn={() => { setAuthMode(null); setShowWelcomeBack(true); }} />;
+
+  const handleClubhouse = () => {
+    if (currentUser) onOpenClubhouse?.();
+    else setAuthMode("signin");
+  };
 
   return <div className="space-y-3">
     <HomeMenuShell>
-      <div className="space-y-2.5">
-        <ActionButton onClick={onPlayGuest} variant="yellow" size="hero">PLAY NOW</ActionButton>
-        <ActionButton onClick={() => setAuthMode("signin")} variant="yellow" size="hero">CLUBHOUSE</ActionButton>
+      <div className={`mb-3 flex min-h-[34px] items-center justify-center text-center ${MENU_TITLE_CLASS}`}>START YOUR JOURNEY</div>
+      <div className="flex flex-col gap-3">
+        <ActionButton onClick={onPlayGuest} variant="yellow" size="journey">PLAY NOW</ActionButton>
+        <ActionButton onClick={handleClubhouse} variant="yellow" size="journey">CLUBHOUSE</ActionButton>
       </div>
     </HomeMenuShell>
   </div>;
@@ -661,8 +656,21 @@ function getTeamGroup(teamName) {
   return GROUP_LETTERS.find((letter) => GROUPS[letter].includes(teamName)) || "A";
 }
 
-function HostPanel({ onSelectGroup, onSelectTeam, onBack }) {
+function HostPanel({ onSelectGroup, onSelectTeam, onBack, currentUser = null, onAuthComplete }) {
   const hostLabels = { Canada: "CAN", Mexico: "MEX", "United States": "USA" };
+  const [authMode, setAuthMode] = useState(null);
+
+  if (authMode) {
+    return (
+      <AuthPanel
+        mode={authMode}
+        setMode={setAuthMode}
+        onBack={() => setAuthMode(null)}
+        onAuthComplete={onAuthComplete}
+        onSignedIn={() => setAuthMode(null)}
+      />
+    );
+  }
 
   return <HomeMenuShell onBack={onBack}>
     <div className={`mb-3 flex min-h-[34px] items-center justify-center text-center ${MENU_TITLE_CLASS}`}>CHOOSE YOUR TEAM</div>
@@ -686,7 +694,7 @@ function HostPanel({ onSelectGroup, onSelectTeam, onBack }) {
         );
       })}
     </div>
-    <button onClick={() => onSelectGroup("A")} className="relative mt-3 flex h-[56px] w-full items-center justify-center rounded-[1.05rem] border-2 border-[#F7D117]/85 bg-[#F7D117] px-5 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]">
+    <button onClick={() => { if (currentUser) onSelectGroup("A"); else setAuthMode("signin"); }} className="relative mt-3 flex h-[50px] w-full items-center justify-center rounded-[1rem] border-2 border-[#F7D117]/85 bg-[#F7D117] px-5 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]">
       <PadlockIcon className="absolute left-5 h-7 w-7" />
       <div className="home-copy-bold min-w-0 truncate text-center text-[clamp(13px,3.5vw,17px)] uppercase leading-none tracking-[0.075em]">ALL TEAMS</div>
       <div className="home-copy-bold absolute right-5 text-right text-[19px] uppercase tracking-[0.06em]">£0.99</div>
@@ -717,10 +725,10 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
   </HomeMenuShell>;
 }
 
-export function HomeScreen({ onSelectGroup, onSelectTeam, allTeamsUnlocked = false, onAuthComplete }) {
+export function HomeScreen({ onSelectGroup, onSelectTeam, allTeamsUnlocked = false, currentUser = null, onOpenClubhouse, onAuthComplete, onResumeCampaign, hasResumeCampaign = false }) {
   const [homeMode, setHomeMode] = useState("landing");
-  if (homeMode === "hosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked}><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>;
-  return <HomeLayout allTeamsUnlocked={allTeamsUnlocked}><LandingPanel onPlayGuest={() => setHomeMode("hosts")} onAuthComplete={(user) => { onAuthComplete?.(user); setHomeMode("hosts"); }} /></HomeLayout>;
+  if (homeMode === "hosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked}><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} currentUser={currentUser} onAuthComplete={onAuthComplete} /></HomeLayout>;
+  return <HomeLayout allTeamsUnlocked={allTeamsUnlocked}><LandingPanel currentUser={currentUser} onOpenClubhouse={onOpenClubhouse} onAuthComplete={onAuthComplete} onResumeCampaign={onResumeCampaign} hasResumeCampaign={hasResumeCampaign} onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
 }
 export function HostSelectScreen(props) { return <HomeLayout allTeamsUnlocked={props.allTeamsUnlocked}><HostPanel {...props} /></HomeLayout>; }
 export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam, onBack, allTeamsUnlocked = false }) { return <HomeLayout allTeamsUnlocked={allTeamsUnlocked}><TeamPanel group={selectedGroup} onBack={onBack} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>; }

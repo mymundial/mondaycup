@@ -1,4 +1,5 @@
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase.js";
 import { GROUPS, GROUP_LETTERS } from "../data/teams.js";
 import { RESULT_STATUS } from "./resultStatus.js";
 import { knockoutStageLabel } from "./tournament.js";
@@ -10,6 +11,7 @@ export const MONDAY_CUPS_WON_KEY = "mondayCup.mondayCupsWon";
 export const ALL_TIME_GOALS_KEY = "mondayCup.allTimeGoals";
 export const ALL_TIME_SHOTS_KEY = "mondayCup.allTimeShots";
 export const COSMETICS_KEY = "mondayCup.clubhouseCosmetics";
+export const ALL_TEAMS_UNLOCKED_KEY = "mondayCup.allTeamsUnlocked";
 const TERMINAL_LEADERBOARD_STATUSES = new Set([
   RESULT_STATUS.CHAMPION,
   RESULT_STATUS.RUNNER_UP,
@@ -66,11 +68,11 @@ export function isTerminalLeaderboardStatus(status) {
 export async function publishRegisteredLeaderboardEntry(entry) {
   if (!entry?.userId || !db) return;
   try {
-    await addDoc(collection(db, "leaderboard"), {
+    await setDoc(doc(db, "leaderboard", entry.userId), {
       ...entry,
       completedAt: serverTimestamp(),
-      createdAt: serverTimestamp(),
-    });
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
   } catch (error) {
     console.warn("Leaderboard publish failed", error);
   }

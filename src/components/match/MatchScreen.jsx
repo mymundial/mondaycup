@@ -6,6 +6,7 @@ import { Shell } from "../layout/Layout.jsx";
 import { MenuDropdown } from "../layout/Menu.jsx";
 import FootballGame from "./FootballGame.jsx";
 import EndMatchModal from "./EndMatchModal.jsx";
+import { MC_COLORS, MC_TYPE } from "../../styles/theme.js";
 import {
   createFallbackFixture,
   modalButton,
@@ -45,6 +46,7 @@ export function MatchScreen({
   userForm = [],
   campaignId = "default",
   podium = null,
+  activeCosmetics = null,
 }) {
   const [matchBusy, setMatchBusy] = useState(false);
   const shareCaptureRef = useRef(null);
@@ -60,14 +62,14 @@ export function MatchScreen({
   return (
     <Shell>
       <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#EFE7D8]">
-        <div className="relative z-[3] flex h-[54px] shrink-0 items-center justify-center overflow-hidden bg-[#072D1D] px-6 text-[#F5F1E8]">
+        <div className="relative z-[1000] flex h-[54px] shrink-0 items-center justify-center overflow-hidden px-6 text-[#F5F1E8]" style={{ background: MC_COLORS.greenDark }}>
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.16))]" aria-hidden="true" />
-          <img src={ASSETS.branding.mondayCupAd} alt="Monday Cup" className="absolute left-3 top-1/2 z-[1] h-8 w-24 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
-          <div className="relative z-[1] home-copy-bold text-[clamp(30px,7.2vw,38px)] font-black uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">MATCH</div>
-          <button onClick={menuProps.onToggleMenu} disabled={matchBusy} aria-disabled={matchBusy} title={matchBusy ? "Menu available after the shot" : "Open menu"} className={`absolute right-3 top-1/2 z-[2] flex h-10 w-10 -translate-y-1/2 items-center justify-center text-[#F5F1E8] ${matchBusy ? "cursor-not-allowed opacity-45" : ""}`}>
+          <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 z-[1] h-10 w-10 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
+          <div className="relative z-[1] home-copy-bold text-[clamp(30px,7.2vw,38px)] uppercase leading-none text-[#F5F1E8]" style={MC_TYPE.title}>MATCH</div>
+          <button onClick={menuProps.onToggleMenu} disabled={matchBusy} aria-disabled={matchBusy} title={matchBusy ? "Menu available after the shot" : "Open menu"} className={`absolute right-3 top-1/2 z-[1001] flex h-10 w-10 -translate-y-1/2 items-center justify-center text-[#F5F1E8] ${matchBusy ? "cursor-not-allowed opacity-45" : ""}`}>
             <HamburgerIcon />
           </button>
-          {menuProps.menuOpen && <MenuDropdown onClose={menuProps.onToggleMenu} onMatch={menuProps.onMatch} onFixtures={menuProps.onFixtures} onGroups={menuProps.onGroups} onRestart={menuProps.onRestart} />}
+          {menuProps.menuOpen && <MenuDropdown onClose={menuProps.onToggleMenu} onMatch={menuProps.onMatch} onFixtures={menuProps.onFixtures} onGroups={menuProps.onGroups} onClubhouse={menuProps.onClubhouse} onTrophyCabinet={menuProps.onTrophyCabinet} onLeaderboard={menuProps.onLeaderboard} onRestart={menuProps.onRestart} onSignOut={menuProps.onSignOut} canSignOut={menuProps.canSignOut} />}
         </div>
 
         <div ref={shareCaptureRef} className="relative min-h-0 flex-1 overflow-hidden bg-[#0d6c3d]">
@@ -89,6 +91,7 @@ export function MatchScreen({
             onBusyChange={setMatchBusy}
             showChampionsBadge={showChampionsBadge}
             podiumBadgeMode={activeBadgeMode}
+            activeCosmetics={activeCosmetics}
           />
         </div>
 

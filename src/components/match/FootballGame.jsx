@@ -92,7 +92,8 @@ function PenaltyMarkers({ attempts, totalSlots = GAME.regulationPens }) {
     <div className="flex w-full justify-center gap-[3px]">
       {Array.from({ length: totalSlots }).map((_, idx) => {
         const value = visible[idx];
-        const color = value === "G" ? "bg-green-500 pen-marker-goal" : value === "S" ? "bg-red-500 pen-marker-save" : "bg-[#F7D117] pen-marker-empty";
+        const markerValue = typeof value === "string" ? value : value?.result;
+        const color = markerValue === "G" ? "bg-green-500 pen-marker-goal" : markerValue === "S" ? "bg-red-500 pen-marker-save" : "bg-[#F7D117] pen-marker-empty";
         return <span key={idx} className={`h-[6px] w-[6px] rounded-full ${color}`} />;
       })}
     </div>
@@ -118,7 +119,7 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
           {normaliseThirdPlaceCopy(stageLabel || "GROUP STAGE")}
         </div>
         <div className="h-[52%] px-[3.5%] pt-[1%]">
-          <div className="grid h-full grid-cols-[11%_minmax(58px,1fr)_38px_26px_38px_minmax(58px,1fr)_11%] grid-rows-[58%_42%] items-center">
+          <div className="grid h-full grid-cols-[17%_minmax(48px,1fr)_38px_26px_38px_minmax(48px,1fr)_17%] grid-rows-[58%_42%] items-center">
             <div className="col-start-1 row-start-1 flex items-center justify-center"><TeamFlag team={userTeam} className="h-4 w-6 ring-1 ring-[#F7D117]/38 shadow-[0_0_4px_rgba(247,209,23,0.16)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" /></div>
             <div className="col-start-2 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">{userTeam.code}</div></div>
             <div className="led-text-glow font-led col-start-3 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.user}</div>
@@ -138,7 +139,7 @@ function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerSty
   );
 }
 
-function PowerChargeMeter({ value, ideal = GAME.powerIdeal, charging = false }) {
+function PowerChargeMeter({ value, ideal = GAME.powerIdeal, charging = false, fillRef = null }) {
   const left = `${ideal[0]}%`;
   const width = `${ideal[1] - ideal[0]}%`;
 
@@ -151,8 +152,9 @@ function PowerChargeMeter({ value, ideal = GAME.powerIdeal, charging = false }) 
           style={{ left, width }}
         />
         <div
-          className="absolute inset-y-0 left-0 bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.45)] transition-[width] duration-75 ease-linear"
-          style={{ width: `${value}%`, borderTopLeftRadius: 999, borderBottomLeftRadius: 999, borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+          ref={fillRef}
+          className="absolute inset-y-0 left-0 bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.45)]"
+          style={{ width: `${value}%`, borderTopLeftRadius: 999, borderBottomLeftRadius: 999, borderTopRightRadius: 0, borderBottomRightRadius: 0, willChange: "width" }}
         />
         <div className="absolute inset-y-[-3px] left-1/2 w-[3px] -translate-x-1/2 rounded-full bg-[#F5F1E8] shadow-[0_0_7px_rgba(245,241,232,0.75)]" />
         <div className={`pointer-events-none absolute inset-0 ${charging ? "animate-pulse" : ""} bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(0,0,0,0.13))]`} />
@@ -199,16 +201,17 @@ function CrowdBackdrop({ crowdColours = [] }) {
     }));
   };
 
-  const rowConfigs = Array.from({ length: 9 }, (_, index) => {
-    const t = index / 8;
+  const rowConfigs = Array.from({ length: 16 }, (_, index) => {
+    const t = index / 15;
+    const y = 2.5 + 94 * Math.pow(t, 1.24);
     return {
-      count: Math.round(42 - t * 18),
-      step: 2.35 + t * 2.0,
-      y: 4 + 87 * Math.pow(t, 1.18),
-      scale: 0.4 + t * 0.58,
-      opacity: 0.18 + t * 0.82,
-      stagger: 0.35 + t * 0.85,
-      wave: 0.35 + t * 0.55,
+      count: Math.round(62 - t * 34),
+      step: 1.68 + t * 2.45,
+      y,
+      scale: 0.26 + t * 0.78,
+      opacity: 0.16 + t * 0.84,
+      stagger: 0.18 + t * 1.04,
+      wave: 0.12 + t * 0.80,
       shirtOffset: index,
       skinOffset: index % skins.length,
     };
@@ -243,9 +246,7 @@ function LedAdvertisingHoard() {
       <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" />
       <div className="relative mx-auto flex h-full max-w-[76%] items-center justify-center">
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[70%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5F1E8]/16 blur-xl" aria-hidden="true" />
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[48%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/12 blur-lg" aria-hidden="true" />
-        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[82%] w-full object-contain drop-shadow-[0_0_11px_rgba(245,241,232,0.34)]" draggable={false} />
+        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[90%] w-full object-contain" draggable={false} />
       </div>
     </div>
   );
@@ -335,6 +336,7 @@ function ControlOverlay({
   handleConfirmDirection,
   powerValue,
   powerCharging,
+  powerFillRef,
   startPowerCharge,
   releasePowerCharge,
   opponentTeam,
@@ -366,13 +368,13 @@ function ControlOverlay({
       {canPower && (
         <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%] flex flex-col gap-[clamp(10px,1.2vh,18px)]">
           <div className={titleClass}>SHOT POWER</div>
-          <PowerChargeMeter value={powerValue} ideal={GAME.powerIdeal} charging={powerCharging} />
+          <PowerChargeMeter value={powerValue} ideal={GAME.powerIdeal} charging={powerCharging} fillRef={powerFillRef} />
           <button
             type="button"
             onPointerDown={startPowerCharge}
             onPointerUp={releasePowerCharge}
             onPointerCancel={releasePowerCharge}
-            onPointerLeave={powerCharging ? releasePowerCharge : undefined}
+            onLostPointerCapture={powerCharging ? releasePowerCharge : undefined}
             onKeyDown={(event) => {
               if ((event.key === " " || event.key === "Enter") && !powerCharging) {
                 event.preventDefault();
@@ -385,7 +387,8 @@ function ControlOverlay({
                 releasePowerCharge(event);
               }
             }}
-            className="grid h-[clamp(40px,4.7vh,62px)] w-full touch-none place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(15px,2.1vh,25px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35"
+            className="grid h-[clamp(44px,5.3vh,66px)] w-full touch-none select-none place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(15px,2.1vh,25px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35"
+            style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none", touchAction: "none" }}
           >
             <span className="block w-full whitespace-nowrap text-center">{powerCharging ? "RELEASE" : "HOLD POWER"}</span>
           </button>
@@ -402,10 +405,11 @@ function ControlOverlay({
   );
 }
 
-export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction, showChampionsBadge = false, podiumBadgeMode = null }) {
+export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction, showChampionsBadge = false, podiumBadgeMode = null, activeCosmetics: activeCosmeticsProp = null }) {
   const user = useMemo(() => normaliseTeam(userTeam, "Team A"), [userTeam]);
   const opponent = useMemo(() => normaliseTeam(opponentTeam, "Team B"), [opponentTeam]);
-  const activeCosmetics = useMemo(() => readActiveCosmetics(), [fixture?.id, completedResult?.fixtureId, completedResult?.matchNo]);
+  const storedActiveCosmetics = useMemo(() => readActiveCosmetics(), [fixture?.id, completedResult?.fixtureId, completedResult?.matchNo]);
+  const activeCosmetics = activeCosmeticsProp || storedActiveCosmetics || {};
   const mergedAssets = useMemo(() => ({
     ...DEFAULT_ASSETS,
     ...assets,
@@ -423,7 +427,10 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   const [powerCharging, setPowerCharging] = useState(false);
   const powerValueRef = useRef(0);
   const powerFrameRef = useRef(null);
-  const powerStartRef = useRef(0);
+  const powerLastFrameRef = useRef(0);
+  const powerPointerIdRef = useRef(null);
+  const powerFillRef = useRef(null);
+  const powerReleasedRef = useRef(true);
   const [score, setScore] = useState({ user: 0, opponent: 0 });
   const [attempts, setAttempts] = useState({ user: [], opponent: [] });
   const [shot, setShot] = useState(null);
@@ -501,7 +508,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   function finishTurn(nextAttempts, nextScore, side) {
     const matchState = decideMatchState({ attempts: nextAttempts, score: nextScore, fixture });
     if (matchState.finished) {
-      const result = buildResult({ fixture, userTeam: user, opponentTeam: opponent, score: nextScore, winnerSide: matchState.winnerSide, isDraw: matchState.draw });
+      const result = buildResult({ fixture, userTeam: user, opponentTeam: opponent, score: nextScore, winnerSide: matchState.winnerSide, isDraw: matchState.draw, attempts: nextAttempts });
       setPhase(PHASE.FINISHED);
       setWinnerSide(matchState.winnerSide);
       const winnerName = matchState.winnerSide === "user" ? user.name : opponent.name;
@@ -546,10 +553,21 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       direction,
       power,
       keeperDirection,
-      middleBypass: side === "user",
+      middleBypass: false,
     });
+    const attemptRecord = {
+      result: resolved.result,
+      goal: Boolean(resolved.goal),
+      power,
+      targetZone: Number(power) >= GAME.powerIdeal[0] && Number(power) <= GAME.powerIdeal[1],
+      directionId: direction?.id,
+      row: direction?.row,
+      col: direction?.col,
+      quality: resolved.quality,
+      isSuddenDeath: currentAttempts[side].length >= GAME.regulationPens,
+    };
     const nextScore = { ...currentScore, [side]: currentScore[side] + (resolved.goal ? 1 : 0) };
-    const nextAttempts = { ...currentAttempts, [side]: [...currentAttempts[side], resolved.result] };
+    const nextAttempts = { ...currentAttempts, [side]: [...currentAttempts[side], attemptRecord] };
 
     setShot(resolved);
     setShootingSide(side);
@@ -569,45 +587,96 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     setPhase(PHASE.POWER);
   }
 
-  function startPowerCharge(event) {
-    if (phase !== PHASE.POWER || !lockedDirection || hasCompleted) return;
-    event?.currentTarget?.setPointerCapture?.(event.pointerId);
-    if (powerFrameRef.current) cancelAnimationFrame(powerFrameRef.current);
-    setPowerValue(0);
-    powerValueRef.current = 0;
-    powerStartRef.current = performance.now();
-    setPowerCharging(true);
-
-    const tick = (now) => {
-      const elapsed = now - powerStartRef.current;
-      const next = clamp((elapsed / GAME.powerChargeMs) * 100, 0, 100);
-      powerValueRef.current = next;
-      setPowerValue(next);
-      if (next < 100) {
-        powerFrameRef.current = requestAnimationFrame(tick);
-      } else {
-        setPowerCharging(false);
-        powerFrameRef.current = null;
-      }
-    };
-    powerFrameRef.current = requestAnimationFrame(tick);
+  function setPowerVisual(nextPower) {
+    const safePower = clamp(nextPower, 0, 100);
+    powerValueRef.current = safePower;
+    if (powerFillRef.current) {
+      powerFillRef.current.style.width = `${safePower}%`;
+    }
+    setPowerValue(safePower);
   }
 
-  function releasePowerCharge(event) {
-    if (phase !== PHASE.POWER || !lockedDirection || hasCompleted) return;
-    event?.currentTarget?.releasePointerCapture?.(event.pointerId);
+  function stopPowerFrame() {
     if (powerFrameRef.current) {
       cancelAnimationFrame(powerFrameRef.current);
       powerFrameRef.current = null;
     }
+  }
+
+  function startPowerCharge(event) {
+    if (phase !== PHASE.POWER || !lockedDirection || hasCompleted || powerCharging) return;
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+
+    if (typeof event?.pointerId === "number") {
+      powerPointerIdRef.current = event.pointerId;
+      event.currentTarget?.setPointerCapture?.(event.pointerId);
+    }
+
+    stopPowerFrame();
+    setPowerVisual(0);
+    powerLastFrameRef.current = performance.now();
+    powerReleasedRef.current = false;
+    setPowerCharging(true);
+
+    const chargePerMs = 100 / Math.max(1, GAME.powerChargeMs);
+    const tick = (now) => {
+      // Mobile browsers can pause requestAnimationFrame during touch/scroll work.
+      // Cap delta so the hidden shot power never runs ahead of the visible meter.
+      const delta = Math.min(Math.max(now - powerLastFrameRef.current, 0), 34);
+      powerLastFrameRef.current = now;
+      const next = clamp(powerValueRef.current + delta * chargePerMs, 0, 100);
+      setPowerVisual(next);
+
+      if (next < 100) {
+        powerFrameRef.current = requestAnimationFrame(tick);
+      } else {
+        powerFrameRef.current = null;
+        setPowerCharging(false);
+      }
+    };
+
+    powerFrameRef.current = requestAnimationFrame(tick);
+  }
+
+  function releasePowerCharge(event) {
+    if (phase !== PHASE.POWER || !lockedDirection || hasCompleted || powerReleasedRef.current) return;
+    powerReleasedRef.current = true;
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+
+    const pointerId = event?.pointerId ?? powerPointerIdRef.current;
+    if (typeof pointerId === "number") {
+      event?.currentTarget?.releasePointerCapture?.(pointerId);
+    }
+    powerPointerIdRef.current = null;
+
+    stopPowerFrame();
     setPowerCharging(false);
-    const finalPower = clamp(powerValueRef.current || powerValue, 0, 100);
+    const finalPower = clamp(powerValueRef.current, 0, 100);
     commitShot("user", lockedDirection, finalPower);
   }
 
   useEffect(() => {
+    const releaseFromWindow = (event) => {
+      if (!powerCharging) return;
+      releasePowerCharge(event);
+    };
+
+    window.addEventListener("pointerup", releaseFromWindow, { passive: false });
+    window.addEventListener("pointercancel", releaseFromWindow, { passive: false });
+    window.addEventListener("blur", releaseFromWindow);
+
     return () => {
-      if (powerFrameRef.current) cancelAnimationFrame(powerFrameRef.current);
+      window.removeEventListener("pointerup", releaseFromWindow);
+      window.removeEventListener("pointercancel", releaseFromWindow);
+      window.removeEventListener("blur", releaseFromWindow);
+    };
+  }, [powerCharging, phase, lockedDirection, hasCompleted]);
+
+  useEffect(() => {
+    return () => {
+      stopPowerFrame();
     };
   }, []);
 
@@ -644,6 +713,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         handleConfirmDirection={handleConfirmDirection}
         powerValue={powerValue}
         powerCharging={powerCharging}
+        powerFillRef={powerFillRef}
         startPowerCharge={startPowerCharge}
         releasePowerCharge={releasePowerCharge}
         opponentTeam={opponent}

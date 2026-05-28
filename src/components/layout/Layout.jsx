@@ -1,6 +1,7 @@
 import { BrandMark, MondayLogo } from "../shared.jsx";
 import { AppFrame, AppFrameContent } from "./AppFrame.jsx";
 import { PitchPageBackground } from "./PitchPageBackground.jsx";
+import { MC_COLORS, MC_SIZES, mcPanelBorder } from "../../styles/theme.js";
 
 export function Shell({ children }) {
   return <div className="flex min-h-[100dvh] justify-center bg-[#F5F0E6] text-[#072D1D] antialiased"><div className="min-h-[100dvh] w-full max-w-md">{children}</div></div>;
@@ -14,8 +15,15 @@ export function Footer() {
   return <footer className="mt-auto h-[48px] shrink-0 bg-[#F5F0E6] pt-1.5 text-center"><div className="flex h-full items-start justify-center pt-2"><BrandMark /></div></footer>;
 }
 
-export function GreenCard({ children }) {
-  return <section className="rounded-[2.2rem] border border-white/10 bg-[#0B5F35] p-5 text-[#F5F0E6]">{children}</section>;
+export function GreenCard({ children, className = "" }) {
+  return (
+    <section
+      className={`text-[#F5F0E6] ${className}`}
+      style={{ borderRadius: MC_SIZES.panelRadius, border: mcPanelBorder, background: MC_COLORS.greenPanel, padding: 20 }}
+    >
+      {children}
+    </section>
+  );
 }
 
 export function Hero() {

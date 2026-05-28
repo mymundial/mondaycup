@@ -170,10 +170,11 @@ export function isOverhitPower(power) {
   return state === "overhit" || state === "very-overhit";
 }
 
-export function keeperReadDirection(targetDirection, rng = Math.random) {
+export function keeperReadDirection(targetDirection, rng = Math.random, options = {}) {
   // MVP keeper AI: fair, visual and deterministic once the square is chosen.
-  // Difficulty can later adjust this probability/pattern-reading without changing result rules.
-  const readChance = 0.28;
+  // goalAssist lowers the keeper read chance for temporary Golden Ball testing.
+  const goalAssist = clamp(Number(options.goalAssist || 0), 0, 0.25);
+  const readChance = clamp(0.28 - goalAssist, 0.05, 0.9);
   if (rng() < readChance) return targetDirection;
   return randomDifferentDirection(targetDirection, rng);
 }
@@ -300,7 +301,7 @@ export function commentaryFor(code, goal, quality = "") {
   return COMMENTARY.save;
 }
 
-export function resolvePenalty({ direction, power, keeperDirection, rng = Math.random }) {
+export function resolvePenalty({ direction, power, keeperDirection, rng = Math.random, middleBypass = false }) {
   const powerState = classifyPower(power);
 
   // Poor shots should not bamboozle the keeper. They become clear saves.
@@ -345,9 +346,7 @@ export function resolvePenalty({ direction, power, keeperDirection, rng = Math.r
   // Good/on-target shots obey the visual square rule:
   // keeper same square = save, keeper different square = goal.
   const resolvedKeeper = keeperDirection || keeperReadDirection(direction, rng);
-  // Temporary testing assist: central-column penalties cannot be saved by the keeper.
-  // This keeps middle shots useful for campaign progression while leaderboard/difficulty tuning continues.
-  const middleBypassActive = direction.col === 1;
+  const middleBypassActive = Boolean(middleBypass) && direction.col === 1;
   const saved = !middleBypassActive && resolvedKeeper.id === direction.id;
   const goal = !saved;
 
@@ -409,7 +408,7 @@ export function stageLabelForFixture(fixture) {
   return labels[stage] || "MATCH";
 }
 
-export function buildResult({ fixture, userTeam, opponentTeam, score, winnerSide, isDraw }) {
+export function buildResult({ fixture, userTeam, opponentTeam, score, winnerSide, isDraw, attempts = null }) {
   const userIsHome = fixture?.homeTeamId === userTeam.id;
   const homeGoals = userIsHome ? score.user : score.opponent;
   const awayGoals = userIsHome ? score.opponent : score.user;
@@ -428,5 +427,8 @@ export function buildResult({ fixture, userTeam, opponentTeam, score, winnerSide
     loser,
     userWon: winnerSide === "user",
     isDraw,
+    userShotEvents: Array.isArray(attempts?.user) ? attempts.user : [],
+    opponentShotEvents: Array.isArray(attempts?.opponent) ? attempts.opponent : [],
+    wentToSuddenDeath: Boolean((attempts?.user?.length || 0) > GAME.regulationPens || (attempts?.opponent?.length || 0) > GAME.regulationPens),
   };
 }

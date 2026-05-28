@@ -1,7 +1,11 @@
 const branding = {
   mondayLogo: "/assets/branding/monday-cup.png",
-  mondayCupAd: "/assets/branding/monday-cup-ad.png",
+  mondayCupAd: "/assets/branding/mc-ad-board.png",
+  mondayFlat: "/assets/branding/mc-flat.png",
+  logo2: "/assets/branding/LOGO2.png",
   myMundialLogo: "/assets/branding/mmLOGO.png",
+  trophyAd: "/assets/branding/trophy-ad.png",
+  trophyPixel: "/assets/branding/trophy_pixel.png",
 };
 
 const badges = {
@@ -29,7 +33,10 @@ export const ASSETS = {
   // Backwards-compatible aliases for existing components during migration.
   mondayLogo: branding.mondayLogo,
   mondayCupAd: branding.mondayCupAd,
+  mondayFlat: branding.mondayFlat,
   myMundialLogo: branding.myMundialLogo,
+  trophyAd: branding.trophyAd,
+  trophyPixel: branding.trophyPixel,
   ball: game.ball,
   goalkeeper: game.goalkeeper,
   championBadge: badges.champion,
