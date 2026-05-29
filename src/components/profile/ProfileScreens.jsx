@@ -7,6 +7,7 @@ import { AuthMenuPanel } from "../layout/Menu.jsx";
 import { MenuPanel, IvoryCard, UserHighlightCard } from "../layout/MenuPanel.jsx";
 import { ActionButton } from "../layout/ActionButton.jsx";
 import { Flag } from "../shared.jsx";
+import { GROUPS } from "../../data/teams.js";
 
 function DrawerContent({ children }) {
   return <section className="min-h-0 flex-1 overflow-auto px-0 pb-4 pt-4">{children}</section>;
@@ -388,35 +389,101 @@ export function ClubhouseScreen({
   );
 }
 
-function TrophyIcon({ unlocked }) {
+const ALL_NATIONS = Object.values(GROUPS).flat();
+
+const PODIUM_BADGES = [
+  {
+    key: "championFinish",
+    title: "Champion",
+    statusLabel: "Win the final",
+    assetSrc: "/assets/badges/mc-champs2.png",
+    accent: "#D8B62F",
+  },
+  {
+    key: "runnerUpFinish",
+    title: "Runner-Up",
+    statusLabel: "Reach the final",
+    assetSrc: "/assets/badges/mc-runner-up.png",
+    accent: "#C8C8C8",
+  },
+  {
+    key: "thirdPlaceFinish",
+    title: "Third Place",
+    statusLabel: "Win 3rd place play-off",
+    assetSrc: "/assets/badges/mc-third-place.png",
+    accent: "#CD7F32",
+  },
+];
+
+function PodiumPlaceholderIcon({ color = "#D8B62F" }) {
   return (
-    <svg viewBox="0 0 64 64" className={`h-10 w-10 ${unlocked ? "text-[#F7D117]" : "text-[#0B5F35]/34"}`} fill="none" aria-hidden="true">
-      <path d="M22 10h20v9c0 9-4 16-10 19-6-3-10-10-10-19v-9Z" fill="currentColor" />
-      <path d="M18 14H9v4c0 8 5 14 13 15M46 14h9v4c0 8-5 14-13 15" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
-      <path d="M32 38v10M22 54h20M18 60h28" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+    <svg viewBox="0 0 64 64" className="h-12 w-12" fill="none" aria-hidden="true">
+      <circle cx="32" cy="32" r="29" stroke={color} strokeWidth="3.5" opacity="0.35" />
+      <path d="M32 14l5.4 10.9 12 1.7-8.7 8.5 2.1 12-10.8-5.7-10.8 5.7 2.1-12-8.7-8.5 12-1.7L32 14Z" fill={color} opacity="0.95" />
+      <path d="M32 20.5l3.2 6.5 7.2 1-5.2 5.1 1.2 7.2-6.4-3.4-6.4 3.4 1.2-7.2-5.2-5.1 7.2-1 3.2-6.5Z" fill="#072D1D" opacity="0.92" />
     </svg>
   );
 }
 
-export function TrophyCabinetScreen({ menuProps }) {
-  const trophies = ["Host hero", "Group winner", "Knockout king", "Finalist", "Champion", "Golden boot", "Perfect power", "Perfect accuracy", "Clean sweep", "Underdog", "48-team master", "Monday legend"];
+function PodiumBadgeCard({ unlocked, title, statusLabel, assetSrc, accent }) {
+  return (
+    <div className="rounded-[1.9rem] border border-[#2D6D41] bg-[linear-gradient(180deg,rgba(8,54,34,0.98),rgba(6,39,26,0.98))] p-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_10px_20px_rgba(0,0,0,0.16)]">
+      <div className="flex min-h-[110px] flex-col items-center justify-center rounded-[1.4rem] border border-[#315F3D] bg-[#072D1D]/78 px-2 py-3">
+        {unlocked ? (
+          <img src={assetSrc} alt="" className="h-14 w-14 object-contain" />
+        ) : (
+          <PodiumPlaceholderIcon color={accent} />
+        )}
+        <div className="home-copy-bold mt-3 text-[10px] uppercase tracking-[0.08em]" style={{ color: unlocked ? '#F7D117' : accent }}>{title}</div>
+        <div className={`home-copy-regular mt-1 text-[6.5px] uppercase tracking-[0.12em] ${unlocked ? "text-[#F5F1E8]/78" : "text-[#F5F1E8]/58"}`}>{unlocked ? 'Unlocked' : statusLabel}</div>
+      </div>
+    </div>
+  );
+}
+
+function NationFlagTile({ team, unlocked }) {
+  return (
+    <div className={`rounded-[1rem] border p-1.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_6px_14px_rgba(0,0,0,0.12)] ${unlocked ? "border-[#D8B62F]/45 bg-[#072D1D]" : "border-[#2B5F3A] bg-[#083622]/88"}`}>
+      <div className={`mx-auto flex h-[26px] w-[38px] items-center justify-center overflow-hidden rounded-[0.45rem] ${unlocked ? "ring-1 ring-[#F7D117]/55" : "opacity-40 saturate-0 brightness-[0.78]"}`}>
+        <Flag team={team} className="h-[26px] w-[38px] rounded-[0.45rem]" />
+      </div>
+      <div className={`mt-1 home-copy-bold text-[5.8px] uppercase leading-tight tracking-[0.08em] ${unlocked ? "text-[#F5F1E8]" : "text-[#F5F1E8]/52"}`}>{team}</div>
+    </div>
+  );
+}
+
+export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWins = {} }) {
+  const completedCount = ALL_NATIONS.filter((team) => nationCupWins?.[team]?.unlocked).length;
+
   return (
     <main className="home-main-font relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
       <ScreenTopBar {...menuProps}>TROPHY CABINET</ScreenTopBar>
       <DrawerContent>
-        <MenuPanel title="COLLECTION" subtitle="Unlocked trophies use the user highlight style">
-          <div className="grid grid-cols-3 gap-3 p-4 pt-2">
-            {trophies.map((name, index) => {
-              const unlocked = index < 5;
-              const Card = unlocked ? UserHighlightCard : IvoryCard;
-              return (
-                <Card key={name} className="flex h-[104px] flex-col items-center justify-center p-2 text-center">
-                  <TrophyIcon unlocked={unlocked} />
-                  <div className={`home-copy-bold mt-2 text-[8px] uppercase leading-tight tracking-[0.06em] ${unlocked ? "text-[#F7D117]" : "text-[#26352E]"}`}>{name}</div>
-                  <div className={`home-copy-regular mt-1 text-[6px] uppercase tracking-[0.10em] ${unlocked ? "text-[#F5F1E8]/72" : "text-[#0B5F35]/45"}`}>{unlocked ? "Unlocked" : "Locked"}</div>
-                </Card>
-              );
-            })}
+        <MenuPanel title="PODIUM BADGES" subtitle="Earn the official badge by reaching each finish">
+          <div className="grid grid-cols-1 gap-3 p-4 pt-2 sm:grid-cols-3">
+            {PODIUM_BADGES.map((badge) => (
+              <PodiumBadgeCard
+                key={badge.key}
+                unlocked={Boolean(achievements?.[badge.key])}
+                title={badge.title}
+                statusLabel={badge.statusLabel}
+                assetSrc={badge.assetSrc}
+                accent={badge.accent}
+              />
+            ))}
+          </div>
+        </MenuPanel>
+
+        <MenuPanel title="NATION CUP WALL" subtitle={`${completedCount} / ${ALL_NATIONS.length} nations completed`}>
+          <div className="px-4 pb-4 pt-2">
+            <div className="mb-3 rounded-[1rem] border border-[#F5F1E8]/14 bg-[#072D1D]/55 px-3 py-2 text-center home-copy-regular text-[8px] uppercase tracking-[0.08em] text-[#F5F1E8]/74">
+              Win the Monday Cup with each nation to reveal the full wall.
+            </div>
+            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+              {ALL_NATIONS.map((nation) => (
+                <NationFlagTile key={nation} team={nation} unlocked={Boolean(nationCupWins?.[nation]?.unlocked)} />
+              ))}
+            </div>
           </div>
         </MenuPanel>
       </DrawerContent>

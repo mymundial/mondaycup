@@ -89,8 +89,21 @@ export const createDefaultBestCampaign = () => ({
   completedAt: null,
 });
 
+const normaliseAchievements = (source = {}, legacy = {}) => ({
+  championFinish: Boolean(source.championFinish ?? legacy.championFinish ?? source.trophy5 ?? legacy.trophy5 ?? false),
+  runnerUpFinish: Boolean(source.runnerUpFinish ?? legacy.runnerUpFinish ?? false),
+  thirdPlaceFinish: Boolean(source.thirdPlaceFinish ?? legacy.thirdPlaceFinish ?? false),
+  ...source,
+});
+
+const normaliseNationCupWins = (source = {}) => (source && typeof source === "object" ? { ...source } : {});
+
 export const createDefaultAchievements = () =>
-  Object.fromEntries(Array.from({ length: 12 }, (_, index) => [`trophy${index + 1}`, false]));
+  normaliseAchievements({
+    championFinish: false,
+    runnerUpFinish: false,
+    thirdPlaceFinish: false,
+  });
 
 const cleanUsername = (value, fallback = "Player") =>
   String(value || fallback).trim().slice(0, 10) || fallback;
@@ -271,10 +284,8 @@ export const createDefaultUserProfile = (user, username = "Player", extra = {}) 
     currentProgress: extra.currentProgress || null,
     bestCampaign,
     careerStats,
-    achievements: {
-      ...createDefaultAchievements(),
-      ...(extra.achievements || {}),
-    },
+    achievements: normaliseAchievements(extra.achievements, extra.trophies),
+    nationCupWins: normaliseNationCupWins(extra.nationCupWins),
 
     ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables }),
 
@@ -300,7 +311,8 @@ const normaliseProfileUpdate = (data = {}) => {
     currentProgress: data.currentProgress ?? data.currentCampaign?.currentProgress ?? null,
     bestCampaign,
     careerStats,
-    achievements: data.achievements ? { ...createDefaultAchievements(), ...data.achievements } : undefined,
+    achievements: data.achievements || data.trophies ? normaliseAchievements(data.achievements, data.trophies) : undefined,
+    nationCupWins: data.nationCupWins ? normaliseNationCupWins(data.nationCupWins) : undefined,
     ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables }),
     updatedAt: serverTimestamp(),
   };
@@ -368,7 +380,8 @@ export async function loadUserProfile(uid) {
     currentCampaign,
     bestCampaign,
     careerStats,
-    achievements: { ...createDefaultAchievements(), ...(data.achievements || data.trophies || {}) },
+    achievements: normaliseAchievements(data.achievements, data.trophies),
+    nationCupWins: normaliseNationCupWins(data.nationCupWins),
     ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables }),
     currentProgress: data.currentProgress || null,
   };

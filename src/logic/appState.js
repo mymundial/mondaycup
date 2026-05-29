@@ -12,6 +12,8 @@ export const ALL_TIME_GOALS_KEY = "mondayCup.allTimeGoals";
 export const ALL_TIME_SHOTS_KEY = "mondayCup.allTimeShots";
 export const COSMETICS_KEY = "mondayCup.clubhouseCosmetics";
 export const ALL_TEAMS_UNLOCKED_KEY = "mondayCup.allTeamsUnlocked";
+export const ACHIEVEMENTS_KEY = "mondayCup.achievements";
+export const NATION_CUP_WINS_KEY = "mondayCup.nationCupWins";
 const TERMINAL_LEADERBOARD_STATUSES = new Set([
   RESULT_STATUS.CHAMPION,
   RESULT_STATUS.RUNNER_UP,

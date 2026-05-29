@@ -11,7 +11,7 @@ import { FixturesScreen } from "./components/schedule/ScheduleScreens.jsx";
 import { GroupsScreen } from "./components/standings/StandingsScreens.jsx";
 import { MatchScreen } from "./components/match/MatchScreen.jsx";
 import { DrawerShell } from "./components/layout/Layout.jsx";
-import { ensureUserDocument, isNicknameTaken, loadCurrentProgress, loadLeaderboardRows, loadUserProfile, saveAllTeamsUnlocked, saveCurrentProgress, saveLeaderboardHighScore, saveUserNickname, saveUserProfile, unlockCosmetic, consumeGoldenTicket } from "./lib/firebaseUser.js";
+import { ensureUserDocument, isNicknameTaken, loadCurrentProgress, loadLeaderboardRows, loadUserProfile, saveAllTeamsUnlocked, saveCurrentProgress, saveLeaderboardHighScore, saveUserNickname, saveUserProfile, unlockCosmetic, consumeGoldenTicket, createDefaultAchievements } from "./lib/firebaseUser.js";
 import { ClubhouseScreen, TrophyCabinetScreen, LeaderboardScreen } from "./components/profile/ProfileScreens.jsx";
 import {
   BEST_CAMPAIGN_SCORE_KEY,
@@ -21,6 +21,8 @@ import {
   ALL_TIME_SHOTS_KEY,
   COSMETICS_KEY,
   ALL_TEAMS_UNLOCKED_KEY,
+  ACHIEVEMENTS_KEY,
+  NATION_CUP_WINS_KEY,
   safeReadNumber,
   safeWriteNumber,
   safeReadJson,
@@ -74,6 +76,8 @@ export default function App() {
   const [allTimeShots, setAllTimeShots] = useState(() => safeReadNumber(ALL_TIME_SHOTS_KEY, 0));
   const [activeCosmetics, setActiveCosmetics] = useState(() => safeReadJson(COSMETICS_KEY, { goldenBoot: false, goldenBall: false, goldenGlove: false, goldenTicket: false, goldenTicketQuantity: 0 }));
   const [firebaseProfile, setFirebaseProfile] = useState(null);
+  const [achievements, setAchievements] = useState(() => safeReadJson(ACHIEVEMENTS_KEY, createDefaultAchievements()));
+  const [nationCupWins, setNationCupWins] = useState(() => safeReadJson(NATION_CUP_WINS_KEY, {}));
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -87,6 +91,12 @@ export default function App() {
           });
           const profile = await loadUserProfile(user.uid);
           setFirebaseProfile(profile || null);
+          if (profile?.achievements) {
+            syncAchievementState({ ...createDefaultAchievements(), ...(profile.achievements || {}) });
+          }
+          if (profile?.nationCupWins) {
+            syncNationCupWinsState(profile.nationCupWins || {});
+          }
           if (profile?.unlocks?.allTeams) {
             setAllTeamsUnlocked(true);
             safeWriteJson(ALL_TEAMS_UNLOCKED_KEY, true);
@@ -185,6 +195,12 @@ export default function App() {
 
         const profile = await loadUserProfile(nextUser.uid);
         setFirebaseProfile(profile || null);
+        if (profile?.achievements) {
+          syncAchievementState({ ...createDefaultAchievements(), ...(profile.achievements || {}) });
+        }
+        if (profile?.nationCupWins) {
+          syncNationCupWinsState(profile.nationCupWins || {});
+        }
         if (profile?.unlocks?.allTeams) {
           setAllTeamsUnlocked(true);
           safeWriteJson(ALL_TEAMS_UNLOCKED_KEY, true);
@@ -217,6 +233,53 @@ export default function App() {
   const currentRoundLabel = team ? roundLabelForResult(matchResult, matchStage) : "NO CAMPAIGN";
 
   const sanitizeCloudData = (value) => JSON.parse(JSON.stringify(value ?? null));
+
+  const syncAchievementState = (nextAchievements) => {
+    setAchievements(nextAchievements);
+    safeWriteJson(ACHIEVEMENTS_KEY, nextAchievements);
+  };
+
+  const syncNationCupWinsState = (nextNationCupWins) => {
+    setNationCupWins(nextNationCupWins);
+    safeWriteJson(NATION_CUP_WINS_KEY, nextNationCupWins);
+  };
+
+  const unlockProgressForResult = (status, userTeam) => {
+    const now = Date.now();
+    const nextAchievements = { ...achievements };
+    let achievementsChanged = false;
+
+    if (status === RESULT_STATUS.CHAMPION && !nextAchievements.championFinish) {
+      nextAchievements.championFinish = true;
+      achievementsChanged = true;
+    }
+    if (status === RESULT_STATUS.RUNNER_UP && !nextAchievements.runnerUpFinish) {
+      nextAchievements.runnerUpFinish = true;
+      achievementsChanged = true;
+    }
+    if (status === RESULT_STATUS.THIRD_PLACE && !nextAchievements.thirdPlaceFinish) {
+      nextAchievements.thirdPlaceFinish = true;
+      achievementsChanged = true;
+    }
+
+    if (achievementsChanged) {
+      syncAchievementState(nextAchievements);
+    }
+
+    if (status === RESULT_STATUS.CHAMPION && userTeam) {
+      const previous = nationCupWins?.[userTeam] || {};
+      const nextNationCupWins = {
+        ...(nationCupWins || {}),
+        [userTeam]: {
+          unlocked: true,
+          wins: Number(previous.wins || 0) + 1,
+          firstWonAt: previous.firstWonAt || now,
+          lastWonAt: now,
+        },
+      };
+      syncNationCupWinsState(nextNationCupWins);
+    }
+  };
 
   const buildGameSnapshot = () => sanitizeCloudData({
     version: 1,
@@ -330,6 +393,8 @@ export default function App() {
         conversionPercentage,
         leaderboardRank: myLeaderboardRank || null,
       },
+      achievements,
+      nationCupWins,
       cosmetics: activeCosmetics || { goldenBoot: false, goldenBall: false, goldenGlove: false, goldenTicket: false, goldenTicketQuantity: 0 },
       leaderboard: {
         points: Number(Math.max(scoringState.campaignPoints || 0, bestCampaignScore || 0)),
@@ -363,6 +428,7 @@ export default function App() {
 
     return () => window.clearTimeout(timeout);
   }, [
+    achievements,
     activeCosmetics,
     allTeamsUnlocked,
     allTimeGoals,
@@ -376,6 +442,7 @@ export default function App() {
     matchStage,
     mondayCupsWon,
     myLeaderboardRank,
+    nationCupWins,
     opponent,
     score,
     scoringState.campaignPoints,
@@ -420,6 +487,8 @@ export default function App() {
         return next;
       });
     }
+
+    unlockProgressForResult(baseResult.status, team);
 
     if (nextScoringState.campaignPoints > bestCampaignScore) {
       const summary = {
@@ -822,7 +891,9 @@ export default function App() {
     setMondayCupsWon(0);
     setAllTimeGoals(0);
     setAllTimeShots(0);
-    setActiveCosmetics({ goldenBall: false, goldenGlove: false });
+    setActiveCosmetics({ goldenBoot: false, goldenBall: false, goldenGlove: false, goldenTicket: false, goldenTicketQuantity: 0 });
+    syncAchievementState(createDefaultAchievements());
+    syncNationCupWinsState({});
 
     try {
       window.localStorage.removeItem(BEST_CAMPAIGN_SCORE_KEY);
@@ -831,6 +902,8 @@ export default function App() {
       window.localStorage.removeItem(ALL_TIME_GOALS_KEY);
       window.localStorage.removeItem(ALL_TIME_SHOTS_KEY);
       window.localStorage.removeItem(COSMETICS_KEY);
+      window.localStorage.removeItem(ACHIEVEMENTS_KEY);
+      window.localStorage.removeItem(NATION_CUP_WINS_KEY);
       window.localStorage.removeItem("mondayCup.localLeaderboardRows");
     } catch (error) {
       console.warn("Could not clear local account session cache", error);
@@ -881,7 +954,7 @@ export default function App() {
         </DrawerShell>
       )
       : drawer === "trophyCabinet"
-        ? <DrawerShell><TrophyCabinetScreen menuProps={menuProps} /></DrawerShell>
+        ? <DrawerShell><TrophyCabinetScreen menuProps={menuProps} achievements={achievements} nationCupWins={nationCupWins} /></DrawerShell>
         : drawer === "leaderboard"
           ? <DrawerShell><LeaderboardScreen menuProps={menuProps} rows={leaderboardRows} currentCampaignScore={scoringState.campaignPoints} bestCampaignScore={bestCampaignScore} team={team} bestCampaignSummary={bestCampaignSummary} currentUser={currentUser} /></DrawerShell>
           : drawer === "fixtures"
