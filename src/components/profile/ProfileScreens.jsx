@@ -452,40 +452,145 @@ function NationFlagTile({ team, unlocked }) {
   );
 }
 
+const SVG_TROPHIES = [
+  { key: "firstCup", title: "First Cup", detail: "Win the cup once", type: "cup", unlock: ({ completedCount }) => completedCount >= 1 },
+  { key: "fiveNations", title: "Five Nations", detail: "Win with 5 nations", type: "flag", unlock: ({ completedCount }) => completedCount >= 5 },
+  { key: "continental Run", title: "Continental Run", detail: "Win with 12 nations", type: "globe", unlock: ({ completedCount }) => completedCount >= 12 },
+  { key: "halfWall", title: "Half Wall", detail: "Win with 24 nations", type: "wall", unlock: ({ completedCount }) => completedCount >= 24 },
+  { key: "podiumSet", title: "Podium Set", detail: "Earn all 3 podium badges", type: "medal", unlock: ({ achievements }) => Boolean(achievements?.championFinish && achievements?.runnerUpFinish && achievements?.thirdPlaceFinish) },
+  { key: "mondayLegend", title: "Monday Legend", detail: "Complete all 48 nations", type: "star", unlock: ({ completedCount }) => completedCount >= 48 },
+];
+
+function TrophyGlyph({ type = "cup", unlocked = false }) {
+  const color = unlocked ? "#F7D117" : "#2D6D41";
+  const muted = unlocked ? 1 : 0.58;
+  return (
+    <svg viewBox="0 0 72 72" className="h-12 w-12" fill="none" aria-hidden="true">
+      <circle cx="36" cy="36" r="32" stroke={color} strokeWidth="3" opacity={unlocked ? 0.28 : 0.42} />
+      {type === "flag" ? (
+        <>
+          <path d="M26 51V20" stroke={color} strokeWidth="5" strokeLinecap="round" opacity={muted} />
+          <path d="M28 20h24l-5 8 5 8H28V20Z" fill={color} opacity={muted} />
+          <path d="M22 56h20" stroke={color} strokeWidth="5" strokeLinecap="round" opacity={muted} />
+        </>
+      ) : type === "globe" ? (
+        <>
+          <circle cx="36" cy="35" r="18" stroke={color} strokeWidth="5" opacity={muted} />
+          <path d="M19 35h34M36 17c6 6 8 30 0 36M36 17c-6 6-8 30 0 36" stroke={color} strokeWidth="3.5" strokeLinecap="round" opacity={muted} />
+        </>
+      ) : type === "wall" ? (
+        <>
+          {[0, 1, 2].map((row) => [0, 1, 2].map((col) => (
+            <rect key={`${row}-${col}`} x={20 + col * 11} y={20 + row * 11} width="8" height="8" rx="2" fill={color} opacity={muted} />
+          )))}
+        </>
+      ) : type === "medal" ? (
+        <>
+          <path d="M26 16l10 16 10-16" stroke={color} strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" opacity={muted} />
+          <circle cx="36" cy="43" r="13" fill={color} opacity={muted} />
+          <path d="M36 36l2.2 4.4 4.8.7-3.5 3.4.8 4.8-4.3-2.3-4.3 2.3.8-4.8-3.5-3.4 4.8-.7L36 36Z" fill="#072D1D" opacity={unlocked ? 0.96 : 0.72} />
+        </>
+      ) : type === "star" ? (
+        <path d="M36 14l6.3 13 14.2 2-10.3 10 2.4 14.1L36 46.4l-12.6 6.7 2.4-14.1-10.3-10 14.2-2L36 14Z" fill={color} opacity={muted} />
+      ) : (
+        <>
+          <path d="M26 16h20v10c0 9-4 16-10 19-6-3-10-10-10-19V16Z" fill={color} opacity={muted} />
+          <path d="M23 20h-8v4c0 8 5 13 12 14M49 20h8v4c0 8-5 13-12 14" stroke={color} strokeWidth="5" strokeLinecap="round" opacity={muted} />
+          <path d="M36 45v8M26 58h20" stroke={color} strokeWidth="5" strokeLinecap="round" opacity={muted} />
+        </>
+      )}
+    </svg>
+  );
+}
+
+function SvgTrophyCard({ trophy, unlocked }) {
+  return (
+    <div className={`rounded-[1.5rem] border p-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_18px_rgba(0,0,0,0.13)] ${unlocked ? "border-[#D8B62F]/42 bg-[#072D1D]" : "border-[#2D6D41] bg-[#06271A]/92"}`}>
+      <div className="flex min-h-[112px] flex-col items-center justify-center rounded-[1.05rem] border border-[#315F3D] bg-[#083622]/64 px-2 py-3">
+        <TrophyGlyph type={trophy.type} unlocked={unlocked} />
+        <div className={`home-copy-bold mt-2 text-[8.5px] uppercase leading-tight tracking-[0.08em] ${unlocked ? "text-[#F7D117]" : "text-[#F5F1E8]/68"}`}>{trophy.title}</div>
+        <div className="home-copy-regular mt-1 text-[6px] uppercase leading-tight tracking-[0.10em] text-[#F5F1E8]/52">{unlocked ? "Unlocked" : trophy.detail}</div>
+      </div>
+    </div>
+  );
+}
+
+function TrophyCabinetSlider({ value, onChange }) {
+  const options = [
+    { key: "badges", label: "Badges" },
+    { key: "nations", label: "Flag Wall" },
+  ];
+  return (
+    <div className="px-4 pb-2 pt-1">
+      <div className="grid grid-cols-2 rounded-[1.35rem] border border-[#F5F1E8]/18 bg-[#06271A]/86 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_18px_rgba(0,0,0,0.16)]">
+        {options.map((option) => {
+          const active = value === option.key;
+          return (
+            <button
+              key={option.key}
+              type="button"
+              onClick={() => onChange(option.key)}
+              className={`h-10 rounded-[1rem] home-copy-bold text-[10px] uppercase tracking-[0.10em] transition ${active ? "bg-[#F5F1E8] text-[#072D1D] shadow-[0_6px_14px_rgba(0,0,0,0.18)]" : "text-[#F5F1E8]/68 hover:text-[#F7D117]"}`}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWins = {} }) {
+  const [trophyView, setTrophyView] = useState("badges");
   const completedCount = ALL_NATIONS.filter((team) => nationCupWins?.[team]?.unlocked).length;
+  const trophyContext = { achievements, completedCount };
 
   return (
     <main className="home-main-font relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
       <ScreenTopBar {...menuProps}>TROPHY CABINET</ScreenTopBar>
       <DrawerContent>
-        <MenuPanel title="PODIUM BADGES" subtitle="Earn the official badge by reaching each finish">
-          <div className="grid grid-cols-1 gap-3 p-4 pt-2 sm:grid-cols-3">
-            {PODIUM_BADGES.map((badge) => (
-              <PodiumBadgeCard
-                key={badge.key}
-                unlocked={Boolean(achievements?.[badge.key])}
-                title={badge.title}
-                statusLabel={badge.statusLabel}
-                assetSrc={badge.assetSrc}
-                accent={badge.accent}
-              />
-            ))}
-          </div>
-        </MenuPanel>
+        <TrophyCabinetSlider value={trophyView} onChange={setTrophyView} />
 
-        <MenuPanel title="NATION CUP WALL" subtitle={`${completedCount} / ${ALL_NATIONS.length} nations completed`}>
-          <div className="px-4 pb-4 pt-2">
-            <div className="mb-3 rounded-[1rem] border border-[#F5F1E8]/14 bg-[#072D1D]/55 px-3 py-2 text-center home-copy-regular text-[8px] uppercase tracking-[0.08em] text-[#F5F1E8]/74">
-              Win the Monday Cup with each nation to reveal the full wall.
+        {trophyView === "badges" ? (
+          <>
+            <MenuPanel title="PODIUM BADGES" subtitle="Official placement badges replace the SVG when earned">
+              <div className="grid grid-cols-1 gap-3 p-4 pt-2 sm:grid-cols-3">
+                {PODIUM_BADGES.map((badge) => (
+                  <PodiumBadgeCard
+                    key={badge.key}
+                    unlocked={Boolean(achievements?.[badge.key])}
+                    title={badge.title}
+                    statusLabel={badge.statusLabel}
+                    assetSrc={badge.assetSrc}
+                    accent={badge.accent}
+                  />
+                ))}
+              </div>
+            </MenuPanel>
+
+            <MenuPanel title="SVG TROPHIES" subtitle="Reusable trophy set without new image assets">
+              <div className="grid grid-cols-2 gap-3 p-4 pt-2 sm:grid-cols-3">
+                {SVG_TROPHIES.map((trophy) => (
+                  <SvgTrophyCard key={trophy.key} trophy={trophy} unlocked={Boolean(trophy.unlock(trophyContext))} />
+                ))}
+              </div>
+            </MenuPanel>
+          </>
+        ) : (
+          <MenuPanel title="NATION CUP WALL" subtitle={`${completedCount} / ${ALL_NATIONS.length} nations completed`}>
+            <div className="px-4 pb-4 pt-2">
+              <div className="mb-3 rounded-[1rem] border border-[#F5F1E8]/14 bg-[#072D1D]/55 px-3 py-2 text-center home-copy-regular text-[8px] uppercase tracking-[0.08em] text-[#F5F1E8]/74">
+                Win the Monday Cup with each nation to reveal the full wall.
+              </div>
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                {ALL_NATIONS.map((nation) => (
+                  <NationFlagTile key={nation} team={nation} unlocked={Boolean(nationCupWins?.[nation]?.unlocked)} />
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-              {ALL_NATIONS.map((nation) => (
-                <NationFlagTile key={nation} team={nation} unlocked={Boolean(nationCupWins?.[nation]?.unlocked)} />
-              ))}
-            </div>
-          </div>
-        </MenuPanel>
+          </MenuPanel>
+        )}
       </DrawerContent>
     </main>
   );

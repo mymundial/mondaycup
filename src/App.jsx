@@ -244,20 +244,27 @@ export default function App() {
     safeWriteJson(NATION_CUP_WINS_KEY, nextNationCupWins);
   };
 
-  const unlockProgressForResult = (status, userTeam) => {
+  const unlockProgressForResult = (result, userTeam) => {
+    const status = result?.status;
+    const matchNo = Number(result?.matchNo);
+    const didWin = result?.userWon ?? result?.won;
+    const isChampionFinish = matchNo === 104 && didWin === true && status === RESULT_STATUS.CHAMPION;
+    const isRunnerUpFinish = matchNo === 104 && didWin === false && status === RESULT_STATUS.RUNNER_UP;
+    const isThirdPlaceFinish = matchNo === 103 && didWin === true && status === RESULT_STATUS.THIRD_PLACE;
+
     const now = Date.now();
     const nextAchievements = { ...achievements };
     let achievementsChanged = false;
 
-    if (status === RESULT_STATUS.CHAMPION && !nextAchievements.championFinish) {
+    if (isChampionFinish && !nextAchievements.championFinish) {
       nextAchievements.championFinish = true;
       achievementsChanged = true;
     }
-    if (status === RESULT_STATUS.RUNNER_UP && !nextAchievements.runnerUpFinish) {
+    if (isRunnerUpFinish && !nextAchievements.runnerUpFinish) {
       nextAchievements.runnerUpFinish = true;
       achievementsChanged = true;
     }
-    if (status === RESULT_STATUS.THIRD_PLACE && !nextAchievements.thirdPlaceFinish) {
+    if (isThirdPlaceFinish && !nextAchievements.thirdPlaceFinish) {
       nextAchievements.thirdPlaceFinish = true;
       achievementsChanged = true;
     }
@@ -266,7 +273,7 @@ export default function App() {
       syncAchievementState(nextAchievements);
     }
 
-    if (status === RESULT_STATUS.CHAMPION && userTeam) {
+    if (isChampionFinish && userTeam) {
       const previous = nationCupWins?.[userTeam] || {};
       const nextNationCupWins = {
         ...(nationCupWins || {}),
@@ -488,7 +495,7 @@ export default function App() {
       });
     }
 
-    unlockProgressForResult(baseResult.status, team);
+    unlockProgressForResult(baseResult, team);
 
     if (nextScoringState.campaignPoints > bestCampaignScore) {
       const summary = {

@@ -94,11 +94,22 @@ export function getUserFinishStatus({ result = null, fixture = null, stageLabel 
 
 export function getPodiumBadgeMode({ result = null, fixture = null, stageLabel = "", podium = null, team = null } = {}) {
   const matchNo = Number(getFixtureMatchNo(fixture, result));
+  const didWin = userWonResult(result);
   const finishStatus = getUserFinishStatus({ result, fixture, stageLabel, podium, team });
 
-  if (matchNo === 104 && finishStatus === RESULT_STATUS.CHAMPION) return PODIUM_BADGE_MODE.CHAMPION;
-  if (matchNo === 104 && finishStatus === RESULT_STATUS.RUNNER_UP) return PODIUM_BADGE_MODE.RUNNER_UP;
-  if (matchNo === 103 && finishStatus === RESULT_STATUS.THIRD_PLACE) return PODIUM_BADGE_MODE.THIRD;
+  // Badge display is intentionally locked to the real placement fixtures only:
+  // - Champion: user wins final M104
+  // - Runner-up: user loses final M104
+  // - Third place: user wins third-place play-off M103
+  // This prevents podium badges showing during semi-final setup or other knockout wins.
+  if (matchNo === 104) {
+    if (didWin === true || finishStatus === RESULT_STATUS.CHAMPION) return PODIUM_BADGE_MODE.CHAMPION;
+    if (didWin === false || finishStatus === RESULT_STATUS.RUNNER_UP) return PODIUM_BADGE_MODE.RUNNER_UP;
+  }
+
+  if (matchNo === 103 && (didWin === true || finishStatus === RESULT_STATUS.THIRD_PLACE)) {
+    return PODIUM_BADGE_MODE.THIRD;
+  }
 
   return null;
 }
@@ -107,14 +118,15 @@ export function isTerminalShareResult({ result = null, fixture = null, stageLabe
   if (!result) return false;
 
   const matchNo = Number(getFixtureMatchNo(fixture, result));
+  const didWin = userWonResult(result);
   const finishStatus = getUserFinishStatus({ result, fixture, stageLabel, podium, team });
 
   if (matchNo === 104) {
-    return finishStatus === RESULT_STATUS.CHAMPION || finishStatus === RESULT_STATUS.RUNNER_UP;
+    return didWin === true || didWin === false || finishStatus === RESULT_STATUS.CHAMPION || finishStatus === RESULT_STATUS.RUNNER_UP;
   }
 
   if (matchNo === 103) {
-    return finishStatus === RESULT_STATUS.THIRD_PLACE;
+    return didWin === true || finishStatus === RESULT_STATUS.THIRD_PLACE;
   }
 
   return false;
