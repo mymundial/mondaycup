@@ -3,7 +3,7 @@ import { auth } from "../../firebase.js";
 import { LEADERBOARD_POINTS } from "../../logic/leaderboardScoring.js";
 import { formForSummary, conversionPercent } from "../../logic/appState.js";
 import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
-import { AuthMenuPanel } from "../layout/Menu.jsx";
+import { AuthMenuPanel, ScreenTitle } from "../layout/Menu.jsx";
 import { MenuPanel, IvoryCard, UserHighlightCard } from "../layout/MenuPanel.jsx";
 import { ActionButton } from "../layout/ActionButton.jsx";
 import { Flag } from "../shared.jsx";
@@ -393,208 +393,210 @@ const ALL_NATIONS = Object.values(GROUPS).flat();
 
 const PODIUM_BADGES = [
   {
-    key: "championFinish",
-    title: "Champion",
-    statusLabel: "Win the final",
-    assetSrc: "/assets/badges/mc-champs2.png",
-    accent: "#D8B62F",
+    key: "thirdPlaceFinish",
+    title: "Third Place",
+    assetSrc: "/assets/badges/mc-third-place.png",
+    accent: "#CD7F32",
   },
   {
     key: "runnerUpFinish",
     title: "Runner-Up",
-    statusLabel: "Reach the final",
     assetSrc: "/assets/badges/mc-runner-up.png",
     accent: "#C8C8C8",
   },
   {
-    key: "thirdPlaceFinish",
-    title: "Third Place",
-    statusLabel: "Win 3rd place play-off",
-    assetSrc: "/assets/badges/mc-third-place.png",
-    accent: "#CD7F32",
+    key: "championFinish",
+    title: "Champion",
+    assetSrc: "/assets/badges/mc-champs2.png",
+    accent: "#D8B62F",
   },
 ];
 
 function PodiumPlaceholderIcon({ color = "#D8B62F" }) {
   return (
     <svg viewBox="0 0 64 64" className="h-12 w-12" fill="none" aria-hidden="true">
-      <circle cx="32" cy="32" r="29" stroke={color} strokeWidth="3.5" opacity="0.35" />
+      <circle cx="32" cy="32" r="30" fill="#072D1D" opacity="0.98" />
+      <circle cx="32" cy="32" r="22" stroke={color} strokeWidth="3.5" opacity="0.46" />
       <path d="M32 14l5.4 10.9 12 1.7-8.7 8.5 2.1 12-10.8-5.7-10.8 5.7 2.1-12-8.7-8.5 12-1.7L32 14Z" fill={color} opacity="0.95" />
       <path d="M32 20.5l3.2 6.5 7.2 1-5.2 5.1 1.2 7.2-6.4-3.4-6.4 3.4 1.2-7.2-5.2-5.1 7.2-1 3.2-6.5Z" fill="#072D1D" opacity="0.92" />
     </svg>
   );
 }
 
-function PodiumBadgeCard({ unlocked, title, statusLabel, assetSrc, accent }) {
+function PodiumBadgeCard({ unlocked, title, assetSrc, accent }) {
   return (
-    <div className="rounded-[1.9rem] border border-[#2D6D41] bg-[linear-gradient(180deg,rgba(8,54,34,0.98),rgba(6,39,26,0.98))] p-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_10px_20px_rgba(0,0,0,0.16)]">
-      <div className="flex min-h-[110px] flex-col items-center justify-center rounded-[1.4rem] border border-[#315F3D] bg-[#072D1D]/78 px-2 py-3">
+    <div className={`mb-1.5 grid min-h-[106px] grid-rows-[1fr_auto] place-items-center rounded-[1.25rem] border px-2.5 py-3 text-center ring-1 last:mb-0 ${unlocked ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/16 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`}>
+      <div className="flex min-h-0 items-center justify-center">
         {unlocked ? (
           <img src={assetSrc} alt="" className="h-14 w-14 object-contain" />
         ) : (
           <PodiumPlaceholderIcon color={accent} />
         )}
-        <div className="home-copy-bold mt-3 text-[10px] uppercase tracking-[0.08em]" style={{ color: unlocked ? '#F7D117' : accent }}>{title}</div>
-        <div className={`home-copy-regular mt-1 text-[6.5px] uppercase tracking-[0.12em] ${unlocked ? "text-[#F5F1E8]/78" : "text-[#F5F1E8]/58"}`}>{unlocked ? 'Unlocked' : statusLabel}</div>
       </div>
+      <div className={`home-copy-bold mt-2 text-[10px] uppercase leading-none tracking-[0.12em] ${unlocked ? "text-[#F7D117]" : "text-[#0B5F35]"}`}>{title}</div>
     </div>
   );
 }
 
 function NationFlagTile({ team, unlocked }) {
   return (
-    <div className={`rounded-[1rem] border p-1.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_6px_14px_rgba(0,0,0,0.12)] ${unlocked ? "border-[#D8B62F]/45 bg-[#072D1D]" : "border-[#2B5F3A] bg-[#083622]/88"}`}>
-      <div className={`mx-auto flex h-[26px] w-[38px] items-center justify-center overflow-hidden rounded-[0.45rem] ${unlocked ? "ring-1 ring-[#F7D117]/55" : "opacity-40 saturate-0 brightness-[0.78]"}`}>
-        <Flag team={team} className="h-[26px] w-[38px] rounded-[0.45rem]" />
+    <div className={`rounded-[1.05rem] border px-1.5 py-2 text-center ring-1 ${unlocked ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/16" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`}>
+      <div className={`mx-auto flex h-[24px] w-[36px] items-center justify-center overflow-hidden rounded-[0.4rem] ${unlocked ? "ring-1 ring-[#F7D117]/55" : "opacity-35 saturate-0 brightness-[0.78]"}`}>
+        <Flag team={team} className="h-[24px] w-[36px] rounded-[0.4rem]" />
       </div>
-      <div className={`mt-1 home-copy-bold text-[5.8px] uppercase leading-tight tracking-[0.08em] ${unlocked ? "text-[#F5F1E8]" : "text-[#F5F1E8]/52"}`}>{team}</div>
+      <div className={`mt-1 home-copy-bold text-[5.8px] uppercase leading-tight tracking-[0.08em] ${unlocked ? "text-[#F7D117]" : "text-[#0B5F35]/56"}`}>{team}</div>
     </div>
   );
 }
 
-const SVG_TROPHIES = [
-  { key: "firstCup", title: "First Cup", detail: "Win the cup once", type: "cup", unlock: ({ completedCount }) => completedCount >= 1 },
-  { key: "fiveNations", title: "Five Nations", detail: "Win with 5 nations", type: "flag", unlock: ({ completedCount }) => completedCount >= 5 },
-  { key: "continental Run", title: "Continental Run", detail: "Win with 12 nations", type: "globe", unlock: ({ completedCount }) => completedCount >= 12 },
-  { key: "halfWall", title: "Half Wall", detail: "Win with 24 nations", type: "wall", unlock: ({ completedCount }) => completedCount >= 24 },
-  { key: "podiumSet", title: "Podium Set", detail: "Earn all 3 podium badges", type: "medal", unlock: ({ achievements }) => Boolean(achievements?.championFinish && achievements?.runnerUpFinish && achievements?.thirdPlaceFinish) },
-  { key: "mondayLegend", title: "Monday Legend", detail: "Complete all 48 nations", type: "star", unlock: ({ completedCount }) => completedCount >= 48 },
-];
-
-function TrophyGlyph({ type = "cup", unlocked = false }) {
-  const color = unlocked ? "#F7D117" : "#2D6D41";
-  const muted = unlocked ? 1 : 0.58;
+function TrophyToggle({ value, onChange }) {
+  const buttonClass = (active) => `flex h-8 items-center justify-center rounded-[0.75rem] px-3 home-copy-bold text-[14px] uppercase leading-none tracking-[0.08em] transition-all ${active ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "bg-[#0B5F35] text-[#F5F1E8]/72"}`;
   return (
-    <svg viewBox="0 0 72 72" className="h-12 w-12" fill="none" aria-hidden="true">
-      <circle cx="36" cy="36" r="32" stroke={color} strokeWidth="3" opacity={unlocked ? 0.28 : 0.42} />
-      {type === "flag" ? (
-        <>
-          <path d="M26 51V20" stroke={color} strokeWidth="5" strokeLinecap="round" opacity={muted} />
-          <path d="M28 20h24l-5 8 5 8H28V20Z" fill={color} opacity={muted} />
-          <path d="M22 56h20" stroke={color} strokeWidth="5" strokeLinecap="round" opacity={muted} />
-        </>
-      ) : type === "globe" ? (
-        <>
-          <circle cx="36" cy="35" r="18" stroke={color} strokeWidth="5" opacity={muted} />
-          <path d="M19 35h34M36 17c6 6 8 30 0 36M36 17c-6 6-8 30 0 36" stroke={color} strokeWidth="3.5" strokeLinecap="round" opacity={muted} />
-        </>
-      ) : type === "wall" ? (
-        <>
-          {[0, 1, 2].map((row) => [0, 1, 2].map((col) => (
-            <rect key={`${row}-${col}`} x={20 + col * 11} y={20 + row * 11} width="8" height="8" rx="2" fill={color} opacity={muted} />
-          )))}
-        </>
-      ) : type === "medal" ? (
-        <>
-          <path d="M26 16l10 16 10-16" stroke={color} strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" opacity={muted} />
-          <circle cx="36" cy="43" r="13" fill={color} opacity={muted} />
-          <path d="M36 36l2.2 4.4 4.8.7-3.5 3.4.8 4.8-4.3-2.3-4.3 2.3.8-4.8-3.5-3.4 4.8-.7L36 36Z" fill="#072D1D" opacity={unlocked ? 0.96 : 0.72} />
-        </>
-      ) : type === "star" ? (
-        <path d="M36 14l6.3 13 14.2 2-10.3 10 2.4 14.1L36 46.4l-12.6 6.7 2.4-14.1-10.3-10 14.2-2L36 14Z" fill={color} opacity={muted} />
-      ) : (
-        <>
-          <path d="M26 16h20v10c0 9-4 16-10 19-6-3-10-10-10-19V16Z" fill={color} opacity={muted} />
-          <path d="M23 20h-8v4c0 8 5 13 12 14M49 20h8v4c0 8-5 13-12 14" stroke={color} strokeWidth="5" strokeLinecap="round" opacity={muted} />
-          <path d="M36 45v8M26 58h20" stroke={color} strokeWidth="5" strokeLinecap="round" opacity={muted} />
-        </>
-      )}
+    <div className="mx-auto grid w-[94%] grid-cols-2 rounded-[0.95rem] border border-[#F5F1E8]/20 bg-[#0B5F35]/82 p-0.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.08),0_8px_20px_rgba(0,0,0,0.12)]">
+      <button type="button" onClick={() => onChange("badges")} className={buttonClass(value === "badges")}>BADGES</button>
+      <button type="button" onClick={() => onChange("flagWall")} className={buttonClass(value === "flagWall")}>FLAGS</button>
+    </div>
+  );
+}
+
+function TrophySection({ title, children }) {
+  return (
+    <section className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] border border-[#F5F1E8]/12 bg-[#0B5F35]/44 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F5F1E8]/10">
+      <div className="px-3 pb-4 pt-3 text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">
+        {title}
+      </div>
+      <div className="px-2 pb-3">{children}</div>
+    </section>
+  );
+}
+
+function TrophyCount({ children }) {
+  return <div className="pt-2 text-center home-copy-bold text-[10px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">{children}</div>;
+}
+
+function AchievementArrowButton({ direction, onClick }) {
+  return <button type="button" onClick={onClick} className="flex h-8 w-8 items-center justify-center text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.32)] active:scale-[0.96]" aria-label={direction === "left" ? "Previous achievements" : "Next achievements"}><svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{direction === "left" ? <path d="M15 5L8 12L15 19" /> : <path d="M9 5L16 12L9 19" />}</svg></button>;
+}
+
+function AchievementSectionTitle({ onPrevious, onNext }) {
+  return (
+    <div className="grid grid-cols-[32px_minmax(0,1fr)_32px] items-center gap-2">
+      <AchievementArrowButton direction="left" onClick={onPrevious} />
+      <span>ACHIEVEMENTS</span>
+      <AchievementArrowButton direction="right" onClick={onNext} />
+    </div>
+  );
+}
+
+
+function SvgTrophy({ unlocked }) {
+  const color = unlocked ? "#F7D117" : "#0B5F35";
+  const opacity = unlocked ? 1 : 0.42;
+  return (
+    <svg viewBox="0 0 64 64" className="h-10 w-10" fill="none" aria-hidden="true">
+      <path d="M22 10h20v9c0 9-4 16-10 19-6-3-10-10-10-19v-9Z" fill={color} opacity={opacity} />
+      <path d="M18 14H9v4c0 8 5 14 13 15M46 14h9v4c0 8-5 14-13 15" stroke={color} strokeWidth="5" strokeLinecap="round" opacity={opacity} />
+      <path d="M32 38v10M22 54h20M18 60h28" stroke={color} strokeWidth="5" strokeLinecap="round" opacity={opacity} />
     </svg>
   );
 }
 
-function SvgTrophyCard({ trophy, unlocked }) {
+function SvgTrophyCard({ title, unlocked }) {
   return (
-    <div className={`rounded-[1.5rem] border p-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_18px_rgba(0,0,0,0.13)] ${unlocked ? "border-[#D8B62F]/42 bg-[#072D1D]" : "border-[#2D6D41] bg-[#06271A]/92"}`}>
-      <div className="flex min-h-[112px] flex-col items-center justify-center rounded-[1.05rem] border border-[#315F3D] bg-[#083622]/64 px-2 py-3">
-        <TrophyGlyph type={trophy.type} unlocked={unlocked} />
-        <div className={`home-copy-bold mt-2 text-[8.5px] uppercase leading-tight tracking-[0.08em] ${unlocked ? "text-[#F7D117]" : "text-[#F5F1E8]/68"}`}>{trophy.title}</div>
-        <div className="home-copy-regular mt-1 text-[6px] uppercase leading-tight tracking-[0.10em] text-[#F5F1E8]/52">{unlocked ? "Unlocked" : trophy.detail}</div>
-      </div>
-    </div>
-  );
-}
-
-function TrophyCabinetSlider({ value, onChange }) {
-  const options = [
-    { key: "badges", label: "Badges" },
-    { key: "nations", label: "Flag Wall" },
-  ];
-  return (
-    <div className="px-4 pb-2 pt-1">
-      <div className="grid grid-cols-2 rounded-[1.35rem] border border-[#F5F1E8]/18 bg-[#06271A]/86 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_18px_rgba(0,0,0,0.16)]">
-        {options.map((option) => {
-          const active = value === option.key;
-          return (
-            <button
-              key={option.key}
-              type="button"
-              onClick={() => onChange(option.key)}
-              className={`h-10 rounded-[1rem] home-copy-bold text-[10px] uppercase tracking-[0.10em] transition ${active ? "bg-[#F5F1E8] text-[#072D1D] shadow-[0_6px_14px_rgba(0,0,0,0.18)]" : "text-[#F5F1E8]/68 hover:text-[#F7D117]"}`}
-            >
-              {option.label}
-            </button>
-          );
-        })}
-      </div>
+    <div className={`grid min-h-[86px] place-items-center rounded-[1.1rem] border px-1.5 py-2 text-center ring-1 ${unlocked ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/16" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`}>
+      <SvgTrophy unlocked={unlocked} />
+      <div className={`home-copy-bold mt-2 text-[8px] uppercase leading-none tracking-[0.12em] ${unlocked ? "text-[#F7D117]" : "text-[#0B5F35]"}`}>{title}</div>
     </div>
   );
 }
 
 export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWins = {} }) {
   const [trophyView, setTrophyView] = useState("badges");
+  const [achievementPage, setAchievementPage] = useState(0);
   const completedCount = ALL_NATIONS.filter((team) => nationCupWins?.[team]?.unlocked).length;
-  const trophyContext = { achievements, completedCount };
+  const svgTrophies = [
+    { key: "ourTime", title: "Our Time" },
+    { key: "kickOff", title: "Kick Off" },
+    { key: "woodwork", title: "Woodwork" },
+    { key: "targetMan", title: "Target Man" },
+    { key: "ptsOnTheBoard", title: "PTS On The Board" },
+    { key: "victory", title: "Victory" },
+    { key: "cleanSweep", title: "Clean Sweep" },
+    { key: "qualified", title: "Qualified" },
+    { key: "tko", title: "TKO" },
+    { key: "quarterFinalist", title: "Quarter-Finalist" },
+    { key: "semiFinalist", title: "Semi-Finalist" },
+    { key: "finalist", title: "Finalist" },
+    { key: "cleanSheet", title: "Clean Sheet" },
+    { key: "perfect", title: "Perfect" },
+    { key: "comebackKing", title: "Comeback King" },
+    { key: "iceCold", title: "Ice Cold" },
+    { key: "goldenTouch", title: "Golden Touch" },
+    { key: "corruptionScandal", title: "Corruption Scandal" },
+    { key: "mondayLegend", title: "Monday Legend" },
+    { key: "invincible", title: "Invincible" },
+    { key: "nationalTreasure", title: "National Treasure" },
+    { key: "globalIcon", title: "Global Icon", unlocked: completedCount >= ALL_NATIONS.length || Boolean(achievements?.globalIcon) },
+    { key: "siuuu", title: "SIUUU!" },
+    { key: "goat", title: "G.O.A.T." },
+  ].map((item) => ({ ...item, unlocked: item.unlocked ?? Boolean(achievements?.[item.key]) }));
+  const achievementsPerPage = 6;
+  const achievementPageCount = Math.ceil(svgTrophies.length / achievementsPerPage);
+  const visibleAchievements = svgTrophies.slice(achievementPage * achievementsPerPage, achievementPage * achievementsPerPage + achievementsPerPage);
+  const unlockedOnPage = visibleAchievements.filter((item) => item.unlocked).length;
+  const podiumUnlockedCount = PODIUM_BADGES.filter((badge) => Boolean(achievements?.[badge.key])).length;
+  const previousAchievementPage = () => setAchievementPage((page) => (page - 1 + achievementPageCount) % achievementPageCount);
+  const nextAchievementPage = () => setAchievementPage((page) => (page + 1) % achievementPageCount);
 
   return (
-    <main className="home-main-font relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
-      <ScreenTopBar {...menuProps}>TROPHY CABINET</ScreenTopBar>
-      <DrawerContent>
-        <TrophyCabinetSlider value={trophyView} onChange={setTrophyView} />
+    <main className="relative z-[1] flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden text-[#F5F1E8]">
+      <ScreenTitle {...menuProps}>TROPHIES</ScreenTitle>
+      <div className="px-0 pb-2 pt-3">
+        <TrophyToggle value={trophyView} onChange={setTrophyView} />
+      </div>
+      <section className="min-h-0 flex-1 overflow-auto pb-1 pt-0.5">
+        <div className="space-y-2.5 pb-2">
+          {trophyView === "badges" && (
+            <>
+              <TrophySection title="PODIUM">
+                <div className="grid grid-cols-3 gap-1.5">
+                  {PODIUM_BADGES.map((badge) => (
+                    <PodiumBadgeCard
+                      key={badge.key}
+                      unlocked={Boolean(achievements?.[badge.key])}
+                      title={badge.title}
+                      assetSrc={badge.assetSrc}
+                      accent={badge.accent}
+                    />
+                  ))}
+                </div>
+                <TrophyCount>{podiumUnlockedCount}/3</TrophyCount>
+              </TrophySection>
+              <TrophySection title={<AchievementSectionTitle onPrevious={previousAchievementPage} onNext={nextAchievementPage} />}>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {visibleAchievements.map((trophy) => <SvgTrophyCard key={trophy.key} {...trophy} />)}
+                </div>
+                <TrophyCount>{unlockedOnPage}/{visibleAchievements.length}</TrophyCount>
+              </TrophySection>
+            </>
+          )}
 
-        {trophyView === "badges" ? (
-          <>
-            <MenuPanel title="PODIUM BADGES" subtitle="Official placement badges replace the SVG when earned">
-              <div className="grid grid-cols-1 gap-3 p-4 pt-2 sm:grid-cols-3">
-                {PODIUM_BADGES.map((badge) => (
-                  <PodiumBadgeCard
-                    key={badge.key}
-                    unlocked={Boolean(achievements?.[badge.key])}
-                    title={badge.title}
-                    statusLabel={badge.statusLabel}
-                    assetSrc={badge.assetSrc}
-                    accent={badge.accent}
-                  />
-                ))}
-              </div>
-            </MenuPanel>
-
-            <MenuPanel title="SVG TROPHIES" subtitle="Reusable trophy set without new image assets">
-              <div className="grid grid-cols-2 gap-3 p-4 pt-2 sm:grid-cols-3">
-                {SVG_TROPHIES.map((trophy) => (
-                  <SvgTrophyCard key={trophy.key} trophy={trophy} unlocked={Boolean(trophy.unlock(trophyContext))} />
-                ))}
-              </div>
-            </MenuPanel>
-          </>
-        ) : (
-          <MenuPanel title="NATION CUP WALL" subtitle={`${completedCount} / ${ALL_NATIONS.length} nations completed`}>
-            <div className="px-4 pb-4 pt-2">
-              <div className="mb-3 rounded-[1rem] border border-[#F5F1E8]/14 bg-[#072D1D]/55 px-3 py-2 text-center home-copy-regular text-[8px] uppercase tracking-[0.08em] text-[#F5F1E8]/74">
-                Win the Monday Cup with each nation to reveal the full wall.
-              </div>
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+          {trophyView === "flagWall" && (
+            <TrophySection title="FLAG WALL">
+              <div className="grid grid-cols-6 gap-1.5">
                 {ALL_NATIONS.map((nation) => (
                   <NationFlagTile key={nation} team={nation} unlocked={Boolean(nationCupWins?.[nation]?.unlocked)} />
                 ))}
               </div>
-            </div>
-          </MenuPanel>
-        )}
-      </DrawerContent>
+              <TrophyCount>{completedCount}/{ALL_NATIONS.length}</TrophyCount>
+            </TrophySection>
+          )}
+        </div>
+      </section>
     </main>
   );
 }
+
 
 const LEADERBOARD_GRID = "46px minmax(0,1fr) 44px 58px";
 

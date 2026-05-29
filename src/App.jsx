@@ -78,6 +78,7 @@ export default function App() {
   const [firebaseProfile, setFirebaseProfile] = useState(null);
   const [achievements, setAchievements] = useState(() => safeReadJson(ACHIEVEMENTS_KEY, createDefaultAchievements()));
   const [nationCupWins, setNationCupWins] = useState(() => safeReadJson(NATION_CUP_WINS_KEY, {}));
+  const [campaignPlayedMatches, setCampaignPlayedMatches] = useState(0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -244,39 +245,73 @@ export default function App() {
     safeWriteJson(NATION_CUP_WINS_KEY, nextNationCupWins);
   };
 
-  const unlockProgressForResult = (result, userTeam) => {
+  const unlockProgressForResult = (result, userTeam, options = {}) => {
     const status = result?.status;
     const matchNo = Number(result?.matchNo);
     const didWin = result?.userWon ?? result?.won;
+    const isDraw = Boolean(result?.isDraw || result?.homeGoals === result?.awayGoals);
+    const userShotEvents = Array.isArray(options.userShotEvents) ? options.userShotEvents : [];
+    const opponentShotEvents = Array.isArray(result?.attempts?.opponent) ? result.attempts.opponent : [];
+    const nextUserForm = Array.isArray(options.nextUserForm) ? options.nextUserForm : userForm;
+    const playedMatches = Number(options.playedMatches ?? campaignPlayedMatches ?? 0);
     const isChampionFinish = matchNo === 104 && didWin === true && status === RESULT_STATUS.CHAMPION;
     const isRunnerUpFinish = matchNo === 104 && didWin === false && status === RESULT_STATUS.RUNNER_UP;
     const isThirdPlaceFinish = matchNo === 103 && didWin === true && status === RESULT_STATUS.THIRD_PLACE;
+    const userIsHome = result?.home === userTeam || result?.homeTeam === userTeam;
+    const opponentGoals = Number(userIsHome ? result?.awayGoals : result?.homeGoals);
+    const shotStats = countShotStats(userShotEvents);
+    const nextAllTimeGoalCount = Number(allTimeGoals || 0) + Number(shotStats.goals || 0);
+
+    const wasBehindBeforeWin = (() => {
+      if (didWin !== true) return false;
+      let userGoals = 0;
+      let opponentGoalsRunning = 0;
+      const maxShots = Math.max(userShotEvents.length, opponentShotEvents.length);
+      for (let index = 0; index < maxShots; index += 1) {
+        if (userShotEvents[index]?.goal) userGoals += 1;
+        if (opponentShotEvents[index]?.goal) opponentGoalsRunning += 1;
+        if (opponentGoalsRunning > userGoals) return true;
+      }
+      return false;
+    })();
 
     const now = Date.now();
-    const nextAchievements = { ...achievements };
-    let achievementsChanged = false;
+    const nextAchievements = { ...createDefaultAchievements(), ...(achievements || {}) };
+    let nextNationCupWins = nationCupWins || {};
+    const unlock = (key) => {
+      if (!nextAchievements[key]) nextAchievements[key] = true;
+    };
 
-    if (isChampionFinish && !nextAchievements.championFinish) {
-      nextAchievements.championFinish = true;
-      achievementsChanged = true;
-    }
-    if (isRunnerUpFinish && !nextAchievements.runnerUpFinish) {
-      nextAchievements.runnerUpFinish = true;
-      achievementsChanged = true;
-    }
-    if (isThirdPlaceFinish && !nextAchievements.thirdPlaceFinish) {
-      nextAchievements.thirdPlaceFinish = true;
-      achievementsChanged = true;
-    }
+    if (["Canada", "Mexico", "United States"].includes(userTeam)) unlock("ourTime");
+    unlock("kickOff");
+    if (userShotEvents.some((event) => ["postLeft", "postRight", "crossbarCentre"].includes(event?.accuracyOutcome))) unlock("woodwork");
+    if (shotStats.goals > 0) unlock("targetMan");
+    if (!matchNo && (didWin === true || isDraw)) unlock("ptsOnTheBoard");
+    if (didWin === true) unlock("victory");
+    if (status === RESULT_STATUS.QUALIFIED) unlock("qualified");
+    if (status === RESULT_STATUS.QUALIFIED && nextUserForm.length >= 3 && nextUserForm.slice(0, 3).every((code) => code === "W")) unlock("cleanSweep");
+    if (didWin === true && matchNo >= 73 && matchNo <= 88) unlock("tko");
+    if (didWin === true && matchNo >= 89 && matchNo <= 96) unlock("quarterFinalist");
+    if (didWin === true && matchNo >= 97 && matchNo <= 100) unlock("semiFinalist");
+    if (didWin === true && (matchNo === 101 || matchNo === 102)) unlock("finalist");
+    if (Number.isFinite(opponentGoals) && opponentGoals === 0) unlock("cleanSheet");
+    if (userShotEvents.length > 0 && userShotEvents.every((event) => Boolean(event?.goal))) unlock("perfect");
+    if (wasBehindBeforeWin) unlock("comebackKing");
+    if (didWin === true && userShotEvents.some((event) => Boolean(event?.isSuddenDeath))) unlock("iceCold");
+    if (didWin === true && (activeCosmetics?.goldenBoot || activeCosmetics?.goldenBall || activeCosmetics?.goldenGlove)) unlock("goldenTouch");
+    if (isChampionFinish && Number(mondayCupsWon || 0) + 1 >= 5) unlock("mondayLegend");
+    if (isChampionFinish && playedMatches >= 8 && nextUserForm.length >= 8 && nextUserForm.every((code) => code === "W")) unlock("invincible");
+    if (nextAllTimeGoalCount >= 1000) unlock("siuuu");
 
-    if (achievementsChanged) {
-      syncAchievementState(nextAchievements);
-    }
+    if (isChampionFinish) unlock("championFinish");
+    if (isRunnerUpFinish) unlock("runnerUpFinish");
+    if (isThirdPlaceFinish) unlock("thirdPlaceFinish");
+    if (nextAchievements.championFinish && nextAchievements.runnerUpFinish && nextAchievements.thirdPlaceFinish) unlock("nationalTreasure");
 
     if (isChampionFinish && userTeam) {
-      const previous = nationCupWins?.[userTeam] || {};
-      const nextNationCupWins = {
-        ...(nationCupWins || {}),
+      const previous = nextNationCupWins?.[userTeam] || {};
+      nextNationCupWins = {
+        ...(nextNationCupWins || {}),
         [userTeam]: {
           unlocked: true,
           wins: Number(previous.wins || 0) + 1,
@@ -284,8 +319,18 @@ export default function App() {
           lastWonAt: now,
         },
       };
-      syncNationCupWinsState(nextNationCupWins);
     }
+
+    const completedNationCount = Object.values(nextNationCupWins || {}).filter((entry) => entry?.unlocked).length;
+    if (completedNationCount >= 48) unlock("globalIcon");
+
+    const requiredForGoat = [
+      "ourTime", "kickOff", "woodwork", "targetMan", "ptsOnTheBoard", "victory", "cleanSweep", "qualified", "tko", "quarterFinalist", "semiFinalist", "finalist", "cleanSheet", "perfect", "comebackKing", "iceCold", "goldenTouch", "corruptionScandal", "mondayLegend", "invincible", "nationalTreasure", "globalIcon", "siuuu", "championFinish", "runnerUpFinish", "thirdPlaceFinish",
+    ];
+    if (requiredForGoat.every((key) => Boolean(nextAchievements[key]))) unlock("goat");
+
+    syncAchievementState(nextAchievements);
+    if (nextNationCupWins !== nationCupWins) syncNationCupWinsState(nextNationCupWins);
   };
 
   const buildGameSnapshot = () => sanitizeCloudData({
@@ -309,6 +354,7 @@ export default function App() {
     matchResult,
     modalDismissed,
     activeCosmetics,
+    campaignPlayedMatches,
   });
 
   const restoreGameSnapshot = (snapshot) => {
@@ -320,6 +366,7 @@ export default function App() {
     setMatchStage(snapshot.matchStage || "GROUP STAGE");
     setUserForm(Array.isArray(snapshot.userForm) ? snapshot.userForm : []);
     setScoringState(snapshot.scoringState || createScoringState());
+    setCampaignPlayedMatches(Number(snapshot.campaignPlayedMatches || 0));
     setFixtureView(snapshot.fixtureView || "group");
     setStandingsView(snapshot.standingsView || "group");
     setTable(snapshot.table || blankTable());
@@ -445,6 +492,7 @@ export default function App() {
     bestCampaignSummary,
     currentRoundLabel,
     currentUser,
+    campaignPlayedMatches,
     matchResult,
     matchStage,
     mondayCupsWon,
@@ -466,12 +514,17 @@ export default function App() {
     const enrichedResult = {
       ...baseResult,
       userShotEvents,
+      attempts: baseResult.attempts || { user: userShotEvents, opponent: [] },
       campaignPoints: nextScoringState.campaignPoints,
       pointsAwarded: nextScoringState.lastMatchPoints,
       pointsBreakdown: nextScoringState.lastBreakdown,
     };
 
     setScoringState(nextScoringState);
+    const nextFormCode = resultFormCode(enrichedResult, team);
+    const nextUserForm = [...userForm, nextFormCode].filter(Boolean).slice(-8);
+    const nextCampaignPlayedMatches = Number(campaignPlayedMatches || 0) + 1;
+    setCampaignPlayedMatches(nextCampaignPlayedMatches);
 
     const shotStats = countShotStats(userShotEvents);
     if (shotStats.shots > 0) {
@@ -495,19 +548,19 @@ export default function App() {
       });
     }
 
-    unlockProgressForResult(baseResult, team);
+    unlockProgressForResult(baseResult, team, { userShotEvents, nextUserForm, playedMatches: nextCampaignPlayedMatches });
 
     if (nextScoringState.campaignPoints > bestCampaignScore) {
       const summary = {
         ...buildCampaignSummary({
           team,
-          userForm: [...userForm, resultFormCode(enrichedResult, team)].filter(Boolean).slice(-8),
+          userForm: nextUserForm,
           campaignPoints: nextScoringState.campaignPoints,
           result: enrichedResult,
           fallbackRound: matchStage,
         }),
         points: Number(nextScoringState.campaignPoints || 0),
-        tournamentProgress: [...userForm, resultFormCode(enrichedResult, team)].filter(Boolean).slice(-8),
+        tournamentProgress: nextUserForm,
         cosmeticBallEquipped: Boolean(activeCosmetics?.goldenBall),
         cosmeticGloveEquipped: Boolean(activeCosmetics?.goldenGlove),
       };
@@ -537,13 +590,13 @@ export default function App() {
         bestCampaign: nextIsBest ? {
           ...buildCampaignSummary({
             team,
-            userForm: [...userForm, resultFormCode(enrichedResult, team)].filter(Boolean).slice(-8),
+            userForm: nextUserForm,
             campaignPoints: nextScoringState.campaignPoints,
             result: enrichedResult,
             fallbackRound: matchStage,
           }),
           points: Number(nextScoringState.campaignPoints || 0),
-          tournamentProgress: [...userForm, resultFormCode(enrichedResult, team)].filter(Boolean).slice(-8),
+          tournamentProgress: nextUserForm,
           cosmeticBallEquipped: Boolean(activeCosmetics?.goldenBall),
           cosmeticGloveEquipped: Boolean(activeCosmetics?.goldenGlove),
         } : bestCampaignSummary,
@@ -563,7 +616,7 @@ export default function App() {
     setMenuAuthRequestId((id) => id + 1);
     setMenuOpen(true);
   };
-  const resetTournament = () => { setScreen("home"); setDrawer(null); setMenuOpen(false); setFixtureView("group"); setStandingsView("group"); setSelectedGroup("A"); setTeam(null); setOpponent(""); setScore([0, 0]); setMatchResult(null); setModalDismissed(false); setTable(blankTable()); setSchedule(buildSchedule()); setKnockoutFixtures([]); setCurrentKnockoutMatch(null); setPodium({}); setMatchStage("GROUP STAGE"); setUserForm([]); setScoringState(createScoringState()); };
+  const resetTournament = () => { setScreen("home"); setDrawer(null); setMenuOpen(false); setFixtureView("group"); setStandingsView("group"); setSelectedGroup("A"); setTeam(null); setOpponent(""); setScore([0, 0]); setMatchResult(null); setModalDismissed(false); setTable(blankTable()); setSchedule(buildSchedule()); setKnockoutFixtures([]); setCurrentKnockoutMatch(null); setPodium({}); setMatchStage("GROUP STAGE"); setUserForm([]); setScoringState(createScoringState()); setCampaignPlayedMatches(0); };
   const handleResumeCampaign = async () => {
     const snapshot = currentUser?.uid
       ? await loadCurrentProgress(currentUser.uid).catch(() => firebaseProfile?.currentProgress || firebaseProfile?.savedGames?.current || null)
@@ -607,6 +660,11 @@ export default function App() {
   };
 
   const startTeam = (name, groupOverride = selectedGroup) => {
+    if (["Canada", "Mexico", "United States"].includes(name)) {
+      const nextAchievements = { ...createDefaultAchievements(), ...(achievements || {}), ourTime: true };
+      syncAchievementState(nextAchievements);
+    }
+    setCampaignPlayedMatches(0);
     const ticketQuantity = Number(activeCosmetics?.goldenTicketQuantity ?? (activeCosmetics?.goldenTicket ? 1 : 0));
     const canUseGoldenTicket = Boolean(activeCosmetics?.goldenTicket) && ticketQuantity > 0;
     const useGoldenTicket = canUseGoldenTicket && window.confirm("Use Golden Ticket and advance straight to the final? This consumes 1 ticket.");
@@ -632,6 +690,8 @@ export default function App() {
         setScoringState(createScoringState());
         setFixtureView("knockout");
         setStandingsView("knockout");
+        const nextAchievements = { ...createDefaultAchievements(), ...(achievements || {}), corruptionScandal: true };
+        syncAchievementState(nextAchievements);
         consumeLocalGoldenTicket();
         return;
       }
@@ -728,6 +788,7 @@ export default function App() {
         status,
         nextFixture: nextUserFixture,
         isDraw: false,
+        attempts: result.attempts || null,
       }, result.userShotEvents || []);
       setMatchResult(displayResult);
       return;
@@ -759,6 +820,7 @@ export default function App() {
       week: match.week,
       status: completedGroupStage ? (qualified ? RESULT_STATUS.QUALIFIED : RESULT_STATUS.ELIMINATED) : (result.isDraw ? RESULT_STATUS.GROUP_DRAW : result.userWon ? RESULT_STATUS.GROUP_WIN : RESULT_STATUS.GROUP_LOSS),
       isDraw: result.isDraw || result.homeGoals === result.awayGoals,
+      attempts: result.attempts || null,
     }, result.userShotEvents || []);
     setMatchResult(displayResult);
   };
@@ -893,6 +955,7 @@ export default function App() {
     setMatchStage("GROUP STAGE");
     setUserForm([]);
     setScoringState(createScoringState());
+    setCampaignPlayedMatches(0);
     setBestCampaignScore(0);
     setBestCampaignSummary(null);
     setMondayCupsWon(0);

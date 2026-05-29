@@ -89,21 +89,52 @@ export const createDefaultBestCampaign = () => ({
   completedAt: null,
 });
 
+export const ACHIEVEMENT_KEYS = [
+  "ourTime",
+  "kickOff",
+  "woodwork",
+  "targetMan",
+  "ptsOnTheBoard",
+  "victory",
+  "cleanSweep",
+  "qualified",
+  "tko",
+  "quarterFinalist",
+  "semiFinalist",
+  "finalist",
+  "cleanSheet",
+  "perfect",
+  "comebackKing",
+  "iceCold",
+  "goldenTouch",
+  "corruptionScandal",
+  "mondayLegend",
+  "invincible",
+  "nationalTreasure",
+  "globalIcon",
+  "siuuu",
+  "goat",
+  "championFinish",
+  "runnerUpFinish",
+  "thirdPlaceFinish",
+];
+
 const normaliseAchievements = (source = {}, legacy = {}) => ({
+  ...emptyBooleanMap(ACHIEVEMENT_KEYS),
   championFinish: Boolean(source.championFinish ?? legacy.championFinish ?? source.trophy5 ?? legacy.trophy5 ?? false),
   runnerUpFinish: Boolean(source.runnerUpFinish ?? legacy.runnerUpFinish ?? false),
   thirdPlaceFinish: Boolean(source.thirdPlaceFinish ?? legacy.thirdPlaceFinish ?? false),
+  ourTime: Boolean(source.ourTime ?? source.hostHero ?? legacy.ourTime ?? legacy.hostHero ?? false),
+  victory: Boolean(source.victory ?? source.firstWin ?? legacy.victory ?? legacy.firstWin ?? false),
+  quarterFinalist: Boolean(source.quarterFinalist ?? source.reachQF ?? legacy.quarterFinalist ?? legacy.reachQF ?? false),
+  semiFinalist: Boolean(source.semiFinalist ?? source.reachSF ?? legacy.semiFinalist ?? legacy.reachSF ?? false),
+  finalist: Boolean(source.finalist ?? source.reachFinal ?? legacy.finalist ?? legacy.reachFinal ?? false),
   ...source,
 });
 
 const normaliseNationCupWins = (source = {}) => (source && typeof source === "object" ? { ...source } : {});
 
-export const createDefaultAchievements = () =>
-  normaliseAchievements({
-    championFinish: false,
-    runnerUpFinish: false,
-    thirdPlaceFinish: false,
-  });
+export const createDefaultAchievements = () => normaliseAchievements();
 
 const cleanUsername = (value, fallback = "Player") =>
   String(value || fallback).trim().slice(0, 10) || fallback;
