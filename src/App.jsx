@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged, signOut, updateProfile } from "firebase/auth";
 import { auth } from "./firebase.js";
-import { buildSchedule, blankTable, buildQualifiers, buildRound32Fixtures, sortRows, applyFixtureResult, completeMatchday, didTeamQualify, findTeamKnockoutFixture, getFixtureOpponent, completeKnockoutRound, knockoutStageLabel, runSelfTests } from "./logic/tournament.js";
+import { buildSchedule, blankTable, buildQualifiers, buildRound32Fixtures, sortRows, applyFixtureResult, completeMatchday, didTeamQualify, findTeamKnockoutFixture, getFixtureOpponent, completeKnockoutRound, knockoutStageLabel, simulateGoldenTicketFinalRun, runSelfTests } from "./logic/tournament.js";
 import { RESULT_STATUS } from "./logic/resultStatus.js";
 import { GROUPS, GROUP_LETTERS } from "./data/teams.js";
 import { getUserFinishStatus } from "./logic/podium.js";
@@ -11,7 +11,7 @@ import { FixturesScreen } from "./components/schedule/ScheduleScreens.jsx";
 import { GroupsScreen } from "./components/standings/StandingsScreens.jsx";
 import { MatchScreen } from "./components/match/MatchScreen.jsx";
 import { DrawerShell } from "./components/layout/Layout.jsx";
-import { ensureUserDocument, isNicknameTaken, loadCurrentProgress, loadLeaderboardRows, loadUserProfile, saveAllTeamsUnlocked, saveCurrentProgress, saveLeaderboardHighScore, saveUserNickname, saveUserProfile, unlockCosmetic } from "./lib/firebaseUser.js";
+import { ensureUserDocument, isNicknameTaken, loadCurrentProgress, loadLeaderboardRows, loadUserProfile, saveAllTeamsUnlocked, saveCurrentProgress, saveLeaderboardHighScore, saveUserNickname, saveUserProfile, unlockCosmetic, consumeGoldenTicket } from "./lib/firebaseUser.js";
 import { ClubhouseScreen, TrophyCabinetScreen, LeaderboardScreen } from "./components/profile/ProfileScreens.jsx";
 import {
   BEST_CAMPAIGN_SCORE_KEY,
@@ -72,7 +72,7 @@ export default function App() {
   const [mondayCupsWon, setMondayCupsWon] = useState(() => safeReadNumber(MONDAY_CUPS_WON_KEY, 0));
   const [allTimeGoals, setAllTimeGoals] = useState(() => safeReadNumber(ALL_TIME_GOALS_KEY, 0));
   const [allTimeShots, setAllTimeShots] = useState(() => safeReadNumber(ALL_TIME_SHOTS_KEY, 0));
-  const [activeCosmetics, setActiveCosmetics] = useState(() => safeReadJson(COSMETICS_KEY, { goldenBall: false, goldenGlove: false }));
+  const [activeCosmetics, setActiveCosmetics] = useState(() => safeReadJson(COSMETICS_KEY, { goldenBoot: false, goldenBall: false, goldenGlove: false, goldenTicket: false, goldenTicketQuantity: 0 }));
   const [firebaseProfile, setFirebaseProfile] = useState(null);
 
   useEffect(() => {
@@ -177,7 +177,7 @@ export default function App() {
           await saveUserProfile(nextUser.uid, {
             currentCampaign: currentCampaignPayload,
             currentProgress: guestSnapshot,
-            cosmetics: activeCosmetics || { goldenBall: false, goldenGlove: false },
+            cosmetics: activeCosmetics || { goldenBoot: false, goldenBall: false, goldenGlove: false, goldenTicket: false, goldenTicketQuantity: 0 },
             unlocks: { allTeams: Boolean(allTeamsUnlocked) },
           });
           await saveCurrentProgress(nextUser.uid, guestSnapshot);
@@ -330,7 +330,7 @@ export default function App() {
         conversionPercentage,
         leaderboardRank: myLeaderboardRank || null,
       },
-      cosmetics: activeCosmetics || { goldenBall: false, goldenGlove: false },
+      cosmetics: activeCosmetics || { goldenBoot: false, goldenBall: false, goldenGlove: false, goldenTicket: false, goldenTicketQuantity: 0 },
       leaderboard: {
         points: Number(Math.max(scoringState.campaignPoints || 0, bestCampaignScore || 0)),
         rank: myLeaderboardRank || null,
@@ -516,7 +516,51 @@ export default function App() {
     setScreen("teams");
   };
 
+  const consumeLocalGoldenTicket = () => {
+    setActiveCosmetics((current) => {
+      const next = { ...(current || {}), goldenTicket: false, goldenTicketQuantity: 0 };
+      safeWriteJson(COSMETICS_KEY, next);
+      return next;
+    });
+
+    if (currentUser?.uid) {
+      consumeGoldenTicket(currentUser.uid).catch((error) => {
+        console.warn("Golden Ticket consume failed", error);
+      });
+    }
+  };
+
   const startTeam = (name, groupOverride = selectedGroup) => {
+    const ticketQuantity = Number(activeCosmetics?.goldenTicketQuantity ?? (activeCosmetics?.goldenTicket ? 1 : 0));
+    const canUseGoldenTicket = Boolean(activeCosmetics?.goldenTicket) && ticketQuantity > 0;
+    const useGoldenTicket = canUseGoldenTicket && window.confirm("Use Golden Ticket and advance straight to the final? This consumes 1 ticket.");
+
+    if (useGoldenTicket) {
+      const ticketRun = simulateGoldenTicketFinalRun(name, groupOverride);
+      if (ticketRun?.currentFinalFixture) {
+        setSelectedGroup(ticketRun.selectedGroup || groupOverride);
+        setTeam(name);
+        setOpponent(ticketRun.opponent || getFixtureOpponent(name, ticketRun.currentFinalFixture));
+        setSchedule(ticketRun.schedule || buildSchedule());
+        setTable(ticketRun.table || blankTable());
+        setKnockoutFixtures(ticketRun.knockoutFixtures || []);
+        setCurrentKnockoutMatch(ticketRun.currentFinalFixture);
+        setScreen("match");
+        setDrawer(null);
+        setMenuOpen(false);
+        setScore([0, 0]);
+        setMatchStage("FINAL");
+        setMatchResult(null);
+        setModalDismissed(false);
+        setUserForm(["W", "W", "W", "W", "W", "W", "W"].slice(-8));
+        setScoringState(createScoringState());
+        setFixtureView("knockout");
+        setStandingsView("knockout");
+        consumeLocalGoldenTicket();
+        return;
+      }
+    }
+
     const fixture = schedule.find((item) => !item.played && item.group === groupOverride && (item.home === name || item.away === name)) || schedule.find((item) => item.group === groupOverride && (item.home === name || item.away === name));
     setSelectedGroup(groupOverride);
     setTeam(name);
@@ -724,7 +768,17 @@ export default function App() {
 
   const toggleCosmetic = (id) => {
     setActiveCosmetics((current) => {
-      const next = { ...(current || {}), [id]: !current?.[id] };
+      let next;
+
+      if (id === "goldenTicket") {
+        const currentQuantity = Number(current?.goldenTicketQuantity ?? (current?.goldenTicket ? 1 : 0));
+        const nextActive = !current?.goldenTicket;
+        const nextQuantity = nextActive ? Math.max(1, currentQuantity) : currentQuantity;
+        next = { ...(current || {}), goldenTicket: nextActive, goldenTicketQuantity: nextQuantity };
+      } else {
+        next = { ...(current || {}), [id]: !current?.[id] };
+      }
+
       safeWriteJson(COSMETICS_KEY, next);
 
       if (currentUser?.uid) {

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Flag } from "../shared.jsx";
 import { ASSETS } from "../../data/assets.js";
 import {
   DEFAULT_ASSETS,
@@ -21,150 +20,31 @@ import {
   resolvePenalty,
   buildAiPenaltyAttempt,
   keeperReadDirection,
+  applyGoldenGloveSecondRead,
   playSound,
-  visiblePenaltyMarkers,
   decideMatchState,
   stageLabelForFixture,
   buildResult,
 } from "../../logic/penaltyEngine.js";
+import { Scoreboard } from "./Scoreboard.jsx";
+import { GOLDEN_BALL_SRC, GOLDEN_GLOVE_SRC, readActiveCosmetics } from "../../logic/cosmetics.js";
+import {
+  DEFAULT_ACCURACY_SWEEP_MS,
+  PHASE_ACCURACY,
+  POWER_SWEEP_MS,
+  accuracyOutcomeForValue,
+  accuracySpeedForPower,
+  directionLabel,
+  getAccuracyTargetZone,
+  getPowerTargetZone,
+  isAccuracyInTargetZone,
+  isPowerInTargetZone,
+  meterPoints,
+} from "../../logic/shotMeter.js";
+import { getPodiumBadgeVisuals } from "../../logic/matchVisuals.js";
 import { PODIUM_BADGE_MODE } from "../../logic/resultStatus.js";
 
 const MONDAY_CUP_AD_SRC = ASSETS.branding.mondayCupAd;
-const CHAMPIONS_BADGE_SRC = ASSETS.badges.champion;
-const RUNNER_UP_BADGE_SRC = ASSETS.badges.runnerUp;
-const THIRD_PLACE_BADGE_SRC = ASSETS.badges.third;
-const COSMETICS_KEY = "mondayCup.clubhouseCosmetics";
-const GOLDEN_BALL_SRC = "/assets/game/golden-ball.png";
-const GOLDEN_GLOVE_SRC = "/assets/game/golden-glove.png";
-const PHASE_ACCURACY = "accuracy";
-const POWER_SWEEP_MS = 1300;
-const DEFAULT_ACCURACY_SWEEP_MS = 1300;
-const POWER_TARGET_ZONE = [40, 60];
-const ACCURACY_TARGET_ZONE = [40, 60];
-
-function accuracySpeedForPower(power) {
-  const safe = clamp(Number(power) || 0, 0, 100);
-  if (safe >= 40 && safe <= 60) return 1300;
-  if ((safe >= 30 && safe < 40) || (safe > 60 && safe <= 70)) return 1125;
-  if ((safe >= 10 && safe < 30) || (safe > 70 && safe <= 90)) return 1050;
-  return 900;
-}
-
-function accuracyOutcomeForValue(value, direction) {
-  const safe = clamp(Number(value) || 0, 0, 100);
-  if (safe >= 40 && safe <= 60) return "onTarget";
-
-  const col = Number(direction?.col);
-  const isNearMiss = (safe >= 30 && safe < 40) || (safe > 60 && safe <= 70);
-
-  // Direction is locked. Accuracy can only decide whether that chosen shot is
-  // on target, hits the relevant post/bar, or misses on the same side.
-  if (col === 0) return isNearMiss ? "postLeft" : "wideLeft";
-  if (col === 2) return isNearMiss ? "postRight" : "wideRight";
-  return isNearMiss ? "crossbarCentre" : "overCentre";
-}
-
-function readActiveCosmetics() {
-  if (typeof window === "undefined") return {};
-  try {
-    return JSON.parse(window.localStorage.getItem(COSMETICS_KEY) || "{}");
-  } catch {
-    return {};
-  }
-}
-
-function TeamFlag({ team, className = "h-4 w-6" }) {
-  if (team.flag) return <img src={team.flag} alt={`${team.name} flag`} className={`${className} rounded-sm object-cover`} draggable={false} />;
-  return <Flag team={team.name} className={className} />;
-}
-
-function normaliseThirdPlaceCopy(value) {
-  return String(value || "").replace(/3rd\s*place\s*play[-\s]*off/gi, "THIRD PLACE PLAY-OFF").replace(/third\s*place\s*playoff/gi, "THIRD PLACE PLAY-OFF").replace(/third\s*place\s*play[-\s]*off/gi, "THIRD PLACE PLAY-OFF");
-}
-
-function getPodiumBadgeVisuals(mode) {
-  if (mode === PODIUM_BADGE_MODE.RUNNER_UP) {
-    return {
-      src: RUNNER_UP_BADGE_SRC,
-      alt: "Monday Cup Runner-Up",
-      glowOuter: "rgba(235,238,243,0.26)",
-      glowInner: "rgba(255,255,255,0.22)",
-      shadow: "drop-shadow(0 0 18px rgba(235,238,243,0.42))",
-    };
-  }
-  if (mode === PODIUM_BADGE_MODE.THIRD) {
-    return {
-      src: THIRD_PLACE_BADGE_SRC,
-      alt: "Monday Cup Third Place",
-      glowOuter: "rgba(205,127,50,0.26)",
-      glowInner: "rgba(244,176,104,0.22)",
-      shadow: "drop-shadow(0 0 18px rgba(205,127,50,0.42))",
-    };
-  }
-  if (mode === PODIUM_BADGE_MODE.CHAMPION) {
-    return {
-      src: CHAMPIONS_BADGE_SRC,
-      alt: "Monday Cup Champions",
-      glowOuter: "rgba(247,209,23,0.26)",
-      glowInner: "rgba(255,213,74,0.26)",
-      shadow: "drop-shadow(0 0 18px rgba(247,209,23,0.46))",
-    };
-  }
-  return null;
-}
-
-function PenaltyMarkers({ attempts, totalSlots = GAME.regulationPens }) {
-  const visible = visiblePenaltyMarkers(attempts);
-  return (
-    <div className="flex w-full justify-center gap-[3px]">
-      {Array.from({ length: totalSlots }).map((_, idx) => {
-        const value = visible[idx];
-        const markerValue = typeof value === "string" ? value : value?.result;
-        const color = markerValue === "G" ? "bg-green-500 pen-marker-goal" : markerValue === "S" ? "bg-red-500 pen-marker-save" : "bg-[#F7D117] pen-marker-empty";
-        return <span key={idx} className={`h-[6px] w-[6px] rounded-full ${color}`} />;
-      })}
-    </div>
-  );
-}
-
-function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerStyle, stageLabel, totalMarkerSlots = GAME.regulationPens }) {
-  return (
-    <section data-share-scoreboard="true" className="relative h-[16.5%] shrink-0 overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]">
-      <div
-        className="absolute inset-x-0 top-[4px] bottom-[4px] opacity-50"
-        style={{
-          backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 0.78px, transparent 1.55px)",
-          backgroundSize: "7px 7px",
-          backgroundPosition: "3.5px 3.5px",
-        }}
-      />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
-      <div data-share-score-divider="true" className="absolute inset-x-0 bottom-[26%] z-[2] h-px bg-[#F5F1E8]/20 shadow-[0_0_6px_rgba(245,241,232,0.10)]" />
-      <div className="relative z-[1] h-full">
-        <div data-normalise-stage-label="true" className="led-text-glow font-led grid h-[22%] place-items-center py-[2%] text-center text-[clamp(9px,1.35vh,16px)] font-black uppercase tracking-[0.14em] text-[#F7D117]">
-          {normaliseThirdPlaceCopy(stageLabel || "GROUP STAGE")}
-        </div>
-        <div className="h-[52%] px-[3.5%] pt-[1%]">
-          <div className="grid h-full grid-cols-[17%_minmax(48px,1fr)_38px_26px_38px_minmax(48px,1fr)_17%] grid-rows-[58%_42%] items-center">
-            <div className="col-start-1 row-start-1 flex items-center justify-center"><TeamFlag team={userTeam} className="h-4 w-6 ring-1 ring-[#F7D117]/38 shadow-[0_0_4px_rgba(247,209,23,0.16)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" /></div>
-            <div className="col-start-2 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">{userTeam.code}</div></div>
-            <div className="led-text-glow font-led col-start-3 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.user}</div>
-            <div className="led-text-glow font-led col-start-4 row-start-1 flex items-center justify-center px-[4px] text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117]">-</div>
-            <div className="led-text-glow font-led col-start-5 row-start-1 flex items-center justify-center text-[clamp(17px,3.05vh,34px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.opponent}</div>
-            <div className="col-start-6 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">{opponentTeam.code}</div></div>
-            <div className="col-start-7 row-start-1 flex items-center justify-center"><TeamFlag team={opponentTeam} className="h-4 w-6 ring-1 ring-[#F7D117]/38 shadow-[0_0_4px_rgba(247,209,23,0.16)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" /></div>
-            <div className="col-start-2 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><PenaltyMarkers attempts={attempts.user} totalSlots={totalMarkerSlots} /></div></div>
-            <div className="col-start-6 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-[4.4em] justify-center"><PenaltyMarkers attempts={attempts.opponent} totalSlots={totalMarkerSlots} /></div></div>
-          </div>
-        </div>
-        <div data-share-flash="true" className="grid h-[26%] w-full place-items-center overflow-hidden border-y border-[#F5F1E8]/24 px-[3%] text-center home-copy-bold text-[clamp(13px,2.3vh,28px)] font-black tracking-[0.075em] shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)]" style={tickerStyle}>
-          {ticker}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function PowerChargeMeter({ value, ideal = GAME.powerIdeal, charging = false, fillRef = null }) {
   const left = `${ideal[0]}%`;
@@ -190,7 +70,7 @@ function PowerChargeMeter({ value, ideal = GAME.powerIdeal, charging = false, fi
   );
 }
 
-function AccuracyMeter({ value, ideal = ACCURACY_TARGET_ZONE, running = false }) {
+function AccuracyMeter({ value, ideal, running = false }) {
   const left = `${ideal[0]}%`;
   const width = `${ideal[1] - ideal[0]}%`;
 
@@ -305,10 +185,10 @@ function LedAdvertisingHoard() {
 function GoalFrame({ showAim, aimDirection }) {
   const goal = GAME.goal;
   return (
-    <div className="absolute z-[3] overflow-hidden border-[8px] border-b-0 border-[#f5f1e8] bg-[#0d6c3d]/30" style={{ left: `${goal.left}%`, top: `${goal.top}%`, width: `${goal.width}%`, height: `${goal.height}%` }}>
+    <div className="absolute z-[3] overflow-hidden border-[clamp(5px,1.55vw,8px)] border-b-0 border-[#f5f1e8] bg-[#0d6c3d]/30" style={{ left: `${goal.left}%`, top: `${goal.top}%`, width: `${goal.width}%`, height: `${goal.height}%` }}>
       <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "repeating-linear-gradient(90deg, transparent 0%, transparent 1.8%, rgba(245,241,232,0.18) 2.0%, transparent 2.2%), repeating-linear-gradient(180deg, transparent 0%, transparent 2.6%, rgba(245,241,232,0.16) 2.8%, transparent 3.1%), linear-gradient(135deg, transparent 0%, transparent 49%, rgba(245,241,232,0.08) 49.4%, transparent 50%)", backgroundSize: "100% 100%, 100% 100%, 8px 8px" }} />
       {showAim && (
-        <div className="absolute h-10 w-10 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full border-[3px] border-[#F7D117] bg-[#F7D117]/14 shadow-[0_0_10px_rgba(247,209,23,0.52),0_0_22px_rgba(247,209,23,0.22)]" style={{ left: `${((aimDirection.col + 0.5) / 3) * 100}%`, top: `${((aimDirection.row + 0.5) / 3) * 100}%`, animationDuration: "1.1s" }}>
+        <div className="absolute h-[clamp(30px,9vw,40px)] w-[clamp(30px,9vw,40px)] -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full border-[3px] border-[#F7D117] bg-[#F7D117]/14 shadow-[0_0_10px_rgba(247,209,23,0.52),0_0_22px_rgba(247,209,23,0.22)]" style={{ left: `${((aimDirection.col + 0.5) / 3) * 100}%`, top: `${((aimDirection.row + 0.5) / 3) * 100}%`, animationDuration: "1.1s" }}>
           <div className="absolute inset-[-18%] animate-ping rounded-full border-2 border-[#F7D117]/70" style={{ animationDuration: "1.35s" }} />
           <div className="absolute inset-[30%] rounded-full bg-[#F7D117] shadow-[0_0_10px_rgba(247,209,23,0.8)]" />
         </div>
@@ -352,19 +232,19 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
       <div className="absolute bottom-0 left-0 right-0" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
       <div
-        className="pointer-events-none absolute z-[3] rounded-b-[999px] border-b-[8px] border-l-[8px] border-r-[8px] border-[#f5f1e8]"
+        className="pointer-events-none absolute z-[3] rounded-b-[999px] border-b-[clamp(5px,1.55vw,8px)] border-l-[clamp(5px,1.55vw,8px)] border-r-[clamp(5px,1.55vw,8px)] border-[#f5f1e8]"
         style={{ left: "5%", top: `${goalLine}%`, width: "90%", height: "24.2%" }}
       />
       <GoalFrame showAim={showAim} aimDirection={aimDirection} />
-      <div className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f1e8]" style={{ left: `${GAME.spot.x}%`, top: `${GAME.spot.y}%` }} />
+      <div className="absolute h-[clamp(8px,2.4vw,12px)] w-[clamp(8px,2.4vw,12px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f1e8]" style={{ left: `${GAME.spot.x}%`, top: `${GAME.spot.y}%` }} />
       {!hideMatchActors && !showPodiumBadge && (
-        <div className="absolute z-[4] grid h-12 w-12 place-items-center rounded-full border-2 will-change-transform" style={{ left: `${keeperPoint.x}%`, top: `${keeperPoint.y}%`, background: defenderTeam.primaryColour, borderColor: defenderTeam.textColour, transform: keeperTransform(shot?.keeperDirection ?? getDirection("CM"), shotActive), transitionProperty: "left, top, transform", transitionDuration: `${keeperTravelMs(shot)}ms`, transitionTimingFunction: shotActive ? "cubic-bezier(0.18, 0.82, 0.24, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)" }}>
-          <img src={assets.goalkeeper} alt="Goalkeeper" className="h-[2.1rem] w-[2.1rem] object-contain" draggable={false} />
+        <div className="absolute z-[4] grid h-[clamp(38px,10.8vw,48px)] w-[clamp(38px,10.8vw,48px)] place-items-center rounded-full border-2 will-change-transform" style={{ left: `${keeperPoint.x}%`, top: `${keeperPoint.y}%`, background: defenderTeam.primaryColour, borderColor: defenderTeam.textColour, transform: keeperTransform(shot?.keeperDirection ?? getDirection("CM"), shotActive), transitionProperty: "left, top, transform", transitionDuration: `${keeperTravelMs(shot)}ms`, transitionTimingFunction: shotActive ? "cubic-bezier(0.18, 0.82, 0.24, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)" }}>
+          <img src={assets.goalkeeper} alt="Goalkeeper" className="h-[clamp(1.72rem,7.2vw,2.1rem)] w-[clamp(1.72rem,7.2vw,2.1rem)] object-contain" draggable={false} />
         </div>
       )}
       {!hideMatchActors && !showPodiumBadge && (
-        <div className="absolute z-[5] grid h-10 w-10 place-items-center rounded-full border-2 will-change-transform" style={{ left: `${ballPoint.x}%`, top: `${ballPoint.y}%`, background: activeTeam.primaryColour, borderColor: activeTeam.textColour, transform: ballTransform(shotActive), transitionProperty: "left, top, transform", transitionDuration: `${shotTravelMs(shot)}ms`, transitionTimingFunction: shotActive ? "cubic-bezier(0.08, 0.78, 0.16, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)" }}>
-          <img src={assets.ball} alt="Ball" className="h-7 w-7 object-contain" draggable={false} />
+        <div className="absolute z-[5] grid h-[clamp(32px,9.2vw,40px)] w-[clamp(32px,9.2vw,40px)] place-items-center rounded-full border-2 will-change-transform" style={{ left: `${ballPoint.x}%`, top: `${ballPoint.y}%`, background: activeTeam.primaryColour, borderColor: activeTeam.textColour, transform: ballTransform(shotActive), transitionProperty: "left, top, transform", transitionDuration: `${shotTravelMs(shot)}ms`, transitionTimingFunction: shotActive ? "cubic-bezier(0.08, 0.78, 0.16, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)" }}>
+          <img src={assets.ball} alt="Ball" className="h-[clamp(22px,6.3vw,28px)] w-[clamp(22px,6.3vw,28px)] object-contain" draggable={false} />
         </div>
       )}
     </section>
@@ -373,7 +253,7 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
 
 function ConfirmButton({ onClick, disabled = false, children }) {
   return (
-    <button onClick={onClick} disabled={disabled} className="grid h-[clamp(40px,4.7vh,62px)] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(15px,2.1vh,25px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65">
+    <button onClick={onClick} disabled={disabled} className="grid h-[clamp(44px,5.1dvh,62px)] min-h-[44px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(14px,2dvh,23px)] font-black leading-none text-[#0b2d1d] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65">
       <span className="block w-full whitespace-nowrap text-center">{children}</span>
     </button>
   );
@@ -388,9 +268,11 @@ function ControlOverlay({
   powerCharging,
   powerFillRef,
   handleLockPower,
+  powerTargetZone,
   accuracyValue,
   accuracyRunning,
   handleLockAccuracy,
+  accuracyTargetZone,
   opponentTeam,
   endActionLabel = "MATCH COMPLETE",
   endActionEnabled = false,
@@ -399,15 +281,15 @@ function ControlOverlay({
   const canChoose = phase === PHASE.DIRECTION;
   const canPower = phase === PHASE.POWER;
   const canAccuracy = phase === PHASE_ACCURACY;
-  const titleClass = "home-copy-bold text-center text-[clamp(16px,2.25vh,27px)] font-black tracking-[0.08em] text-[#f5f1e8] drop-shadow-md";
+  const titleClass = "home-copy-bold text-center text-[clamp(15px,2.05dvh,24px)] font-black tracking-[0.08em] text-[#f5f1e8] drop-shadow-md";
 
   return (
-    <section className="pointer-events-none absolute bottom-[4.6%] left-[4%] right-[4%] z-30 h-[26%]">
+    <section className="pointer-events-none absolute bottom-[max(10px,env(safe-area-inset-bottom))] left-[4%] right-[4%] z-30 h-[min(28%,176px)]">
       {canChoose && (
-        <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%] top-[3%] flex flex-col">
+        <div className="pointer-events-auto absolute inset-x-[4%] bottom-0 top-0 flex flex-col">
           <div className={titleClass}>SHOT DIRECTION</div>
           <div className="h-[4%]" />
-          <div className="grid flex-1 grid-cols-3 grid-rows-3 gap-[4%]">
+          <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-3 gap-[clamp(5px,1.2vw,10px)]">
             {DIRECTIONS.map((direction) => (
               <button key={direction.id} onClick={() => setSelected(direction)} className={`flex min-h-0 items-center justify-center overflow-hidden rounded-[clamp(14px,2.2vh,28px)] border home-copy-bold text-[clamp(16px,2.15vh,26px)] font-black leading-none shadow-lg ring-1 transition-all ${selected.id === direction.id ? "border-[#F5F1E8]/55 bg-[#F7D117] text-[#0b2d1d] ring-[#F7D117]/35 shadow-[0_0_12px_rgba(247,209,23,0.20),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.18)]" : "border-[#F5F1E8]/22 bg-[#0b2d1d] text-[#f5f1e8] ring-[#0B5F35]/50 shadow-[0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(245,241,232,0.08)]"}`}>
                 <span className="flex h-full w-full max-h-full max-w-full items-center justify-center leading-none">{direction.arrow}</span>
@@ -419,21 +301,21 @@ function ControlOverlay({
         </div>
       )}
       {canPower && (
-        <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%] flex flex-col gap-[clamp(10px,1.2vh,18px)]">
+        <div className="pointer-events-auto absolute inset-x-[4%] bottom-0 flex flex-col gap-[clamp(8px,1.05dvh,16px)]">
           <div className={titleClass}>SHOT POWER</div>
-          <PowerChargeMeter value={powerValue} ideal={POWER_TARGET_ZONE} charging={powerCharging} fillRef={powerFillRef} />
+          <PowerChargeMeter value={powerValue} ideal={powerTargetZone} charging={powerCharging} fillRef={powerFillRef} />
           <ConfirmButton onClick={handleLockPower}>TAP FOR POWER</ConfirmButton>
         </div>
       )}
       {canAccuracy && (
-        <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%] flex flex-col gap-[clamp(10px,1.2vh,18px)]">
+        <div className="pointer-events-auto absolute inset-x-[4%] bottom-0 flex flex-col gap-[clamp(8px,1.05dvh,16px)]">
           <div className={titleClass}>SHOT ACCURACY</div>
-          <AccuracyMeter value={accuracyValue} running={accuracyRunning} />
+          <AccuracyMeter value={accuracyValue} ideal={accuracyTargetZone} running={accuracyRunning} />
           <ConfirmButton onClick={handleLockAccuracy}>TAP FOR ACCURACY</ConfirmButton>
         </div>
       )}
       {!canChoose && !canPower && !canAccuracy && (
-        <div className="pointer-events-auto absolute inset-x-[6%] bottom-[4%]">
+        <div className="pointer-events-auto absolute inset-x-[4%] bottom-0">
           <ConfirmButton onClick={endActionEnabled ? onEndAction : undefined} disabled={!endActionEnabled}>
             {phase === PHASE.SHOT ? "SHOT IN PROGRESS" : phase === PHASE.AI_WAIT ? `${opponentTeam.name.toUpperCase()} SHOOTING` : endActionLabel}
           </ConfirmButton>
@@ -448,6 +330,8 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   const opponent = useMemo(() => normaliseTeam(opponentTeam, "Team B"), [opponentTeam]);
   const storedActiveCosmetics = useMemo(() => readActiveCosmetics(), [fixture?.id, completedResult?.fixtureId, completedResult?.matchNo]);
   const activeCosmetics = activeCosmeticsProp || storedActiveCosmetics || {};
+  const powerTargetZone = useMemo(() => getPowerTargetZone(activeCosmetics), [activeCosmetics]);
+  const accuracyTargetZone = useMemo(() => getAccuracyTargetZone(activeCosmetics), [activeCosmetics]);
   const mergedAssets = useMemo(() => ({
     ...DEFAULT_ASSETS,
     ...assets,
@@ -579,7 +463,10 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       window.setTimeout(() => {
         const aiDirection = randomDirection();
         const aiAttempt = buildAiPenaltyAttempt({ team: opponent, direction: aiDirection });
-        commitShot("opponent", aiDirection, aiAttempt.power, nextScore, nextAttempts, aiAttempt.keeperDirection);
+        const keeperDirection = activeCosmetics?.goldenGlove
+          ? applyGoldenGloveSecondRead({ targetDirection: aiDirection, firstKeeperDirection: aiAttempt.keeperDirection })
+          : aiAttempt.keeperDirection;
+        commitShot("opponent", aiDirection, aiAttempt.power, nextScore, nextAttempts, keeperDirection);
       }, GAME.aiWaitMs);
       return;
     }
@@ -604,10 +491,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   function commitShot(side, direction, power, currentScore = score, currentAttempts = attempts, plannedKeeperDirection = null, accuracy = null, accuracyOutcome = null) {
     if (hasCompleted) return;
     playSound(side === "user" ? mergedAssets.sounds.userShot : mergedAssets.sounds.opponentShot, side === "user" ? 0.9 : 0.82);
-    let keeperDirection = plannedKeeperDirection || (side === "user" ? keeperReadDirection(direction, Math.random, { goalAssist: activeCosmetics?.goldenBall ? 0.10 : 0 }) : randomDirection());
-    if (side === "opponent" && activeCosmetics?.goldenGlove && Math.random() < 0.10) {
-      keeperDirection = direction;
-    }
+    let keeperDirection = plannedKeeperDirection || (side === "user" ? keeperReadDirection(direction, Math.random) : randomDirection());
     const resolved = resolvePenalty({
       direction,
       power,
@@ -615,13 +499,25 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       middleBypass: false,
       accuracyOutcome,
     });
+    const shotNumber = currentAttempts[side].length + 1;
+    const safePower = clamp(Number(power) || 0, 0, 100);
+    const safeAccuracy = accuracy === null || accuracy === undefined ? null : clamp(Number(accuracy) || 0, 0, 100);
     const attemptRecord = {
+      shotNumber,
+      side,
       result: resolved.result,
+      shotResult: resolved.result,
       goal: Boolean(resolved.goal),
-      power,
-      accuracy,
-      targetZone: Number(power) >= POWER_TARGET_ZONE[0] && Number(power) <= POWER_TARGET_ZONE[1],
+      power: safePower,
+      powerValue: safePower,
+      powerPoints: side === "user" ? meterPoints(safePower, 50) : 0,
+      accuracy: safeAccuracy,
+      accuracyValue: safeAccuracy,
+      accuracyPoints: side === "user" ? meterPoints(safeAccuracy, 50) : 0,
+      targetZone: isPowerInTargetZone(safePower, activeCosmetics),
+      accuracyTargetZone: safeAccuracy !== null && isAccuracyInTargetZone(safeAccuracy, activeCosmetics),
       accuracyOutcome,
+      directionSelected: directionLabel(direction),
       directionId: direction?.id,
       row: direction?.row,
       col: direction?.col,
@@ -746,7 +642,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     stopPowerFrame();
     setPowerCharging(false);
     const finalPower = clamp(powerValueRef.current, 0, 100);
-    const nextAccuracySpeed = accuracySpeedForPower(finalPower);
+    const nextAccuracySpeed = accuracySpeedForPower(finalPower, activeCosmetics);
     setLockedPower(finalPower);
     setAccuracySweepMs(nextAccuracySpeed);
     accuracySweepMsRef.current = nextAccuracySpeed;
@@ -765,7 +661,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     setAccuracyRunning(false);
     const finalAccuracy = clamp(accuracyValueRef.current, 0, 100);
     const finalPower = clamp(lockedPower ?? powerValueRef.current, 0, 100);
-    const accuracyOutcome = accuracyOutcomeForValue(finalAccuracy, lockedDirection);
+    const accuracyOutcome = accuracyOutcomeForValue(finalAccuracy, lockedDirection, activeCosmetics);
     commitShot("user", lockedDirection, finalPower, score, attempts, null, finalAccuracy, accuracyOutcome);
   }
 
@@ -833,9 +729,11 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         powerCharging={powerCharging}
         powerFillRef={powerFillRef}
         handleLockPower={handleLockPower}
+        powerTargetZone={powerTargetZone}
         accuracyValue={accuracyValue}
         accuracyRunning={accuracyRunning}
         handleLockAccuracy={handleLockAccuracy}
+        accuracyTargetZone={accuracyTargetZone}
         opponentTeam={opponent}
         endActionLabel={endActionLabel}
         endActionEnabled={endActionEnabled}

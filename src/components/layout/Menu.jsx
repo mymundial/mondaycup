@@ -23,7 +23,7 @@ const MENU_ITEMS = [
 ];
 
 const MENU_FRAME =
-  "w-[calc(100vw_-_24px)] max-w-[408px] overflow-hidden rounded-[1.65rem]";
+  "w-[calc(100vw_-_24px)] max-w-[408px] max-h-[calc(100dvh-82px)] overflow-hidden rounded-[1.65rem]";
 
 const MENU_HEADER =
   "relative mb-4 grid h-14 grid-cols-[44px_1fr_44px] items-center gap-2 px-0";
@@ -509,7 +509,7 @@ export function MenuDropdown({
 
   const menu = (
     <div
-      className="fixed inset-0 isolate flex items-start justify-center bg-[#031B12]/36 px-3 pb-4 pt-[70px] backdrop-blur-[2px]"
+      className="fixed inset-0 isolate flex items-start justify-center overflow-y-auto bg-[#031B12]/36 px-3 pb-[max(14px,env(safe-area-inset-bottom))] pt-[calc(62px+env(safe-area-inset-top))] backdrop-blur-[2px]"
       style={{ zIndex: 2147483647 }}
     >
       <button aria-label="Close menu" onClick={onClose} className="absolute inset-0 z-[0]" type="button" />
@@ -524,7 +524,7 @@ export function MenuDropdown({
           aria-hidden="true"
         />
 
-        <div className="relative p-4">
+        <div className="relative max-h-[calc(100dvh-82px)] overflow-y-auto p-4">
           {authActive ? (
             <AuthMenuPanel
               key={`${initialAuthMode}-${authShowLogoBack}-${authRequestId}`}

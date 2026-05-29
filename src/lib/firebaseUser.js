@@ -19,8 +19,8 @@ export const GROUP_STAGE_MATCH_END = 72;
 export const KNOCKOUT_MATCH_START = 73;
 export const KNOCKOUT_MATCH_END = 104;
 
-const COSMETIC_KEYS = ["goldenBall", "goldenGlove", "cosmetic3", "cosmetic4"];
-const UPGRADE_KEYS = ["allTeams", ...COSMETIC_KEYS];
+const COSMETIC_KEYS = ["goldenBoot", "goldenBall", "goldenGlove", "goldenTicket"];
+const UPGRADE_KEYS = ["allTeams", "goldenBoot", "goldenBall", "goldenGlove"];
 
 const emptyBooleanMap = (keys) => Object.fromEntries(keys.map((key) => [key, false]));
 
@@ -95,26 +95,41 @@ export const createDefaultAchievements = () =>
 const cleanUsername = (value, fallback = "Player") =>
   String(value || fallback).trim().slice(0, 10) || fallback;
 
-const normaliseUpgradeMap = (source = {}, legacyCosmetics = {}, legacyUnlocks = {}) => ({
-  allTeams: Boolean(source.allTeams ?? legacyUnlocks.allTeams ?? false),
-  goldenBall: Boolean(source.goldenBall ?? legacyCosmetics.goldenBall ?? false),
-  goldenGlove: Boolean(source.goldenGlove ?? legacyCosmetics.goldenGlove ?? false),
-  cosmetic3: Boolean(source.cosmetic3 ?? legacyCosmetics.cosmetic3 ?? false),
-  cosmetic4: Boolean(source.cosmetic4 ?? legacyCosmetics.cosmetic4 ?? false),
+const normaliseGoldenTicket = (source = {}, legacyCosmetics = {}) => {
+  const quantity = Number(source.quantity ?? source.count ?? (legacyCosmetics.goldenTicket ? 1 : 0) ?? 0);
+  return {
+    quantity: Math.max(0, Math.floor(Number.isFinite(quantity) ? quantity : 0)),
+    equipped: Boolean(source.equipped ?? legacyCosmetics.goldenTicket ?? quantity > 0),
+    totalPurchased: Number(source.totalPurchased ?? 0),
+    totalUsed: Number(source.totalUsed ?? 0),
+    lastPurchasedAt: source.lastPurchasedAt ?? null,
+    lastUsedAt: source.lastUsedAt ?? null,
+  };
+};
+
+const normaliseConsumables = (source = {}, legacyCosmetics = {}) => ({
+  goldenTicket: normaliseGoldenTicket(source.goldenTicket, legacyCosmetics),
 });
 
-const normaliseCosmeticsEquipped = (source = {}, legacyCosmetics = {}) => ({
+const normaliseUpgradeMap = (source = {}, legacyCosmetics = {}, legacyUnlocks = {}) => ({
+  allTeams: Boolean(source.allTeams ?? legacyUnlocks.allTeams ?? false),
+  goldenBoot: Boolean(source.goldenBoot ?? legacyCosmetics.goldenBoot ?? legacyCosmetics.cosmetic3 ?? false),
   goldenBall: Boolean(source.goldenBall ?? legacyCosmetics.goldenBall ?? false),
   goldenGlove: Boolean(source.goldenGlove ?? legacyCosmetics.goldenGlove ?? false),
-  cosmetic3: Boolean(source.cosmetic3 ?? legacyCosmetics.cosmetic3 ?? false),
-  cosmetic4: Boolean(source.cosmetic4 ?? legacyCosmetics.cosmetic4 ?? false),
+});
+
+const normaliseCosmeticsEquipped = (source = {}, legacyCosmetics = {}, consumables = {}) => ({
+  goldenBoot: Boolean(source.goldenBoot ?? legacyCosmetics.goldenBoot ?? legacyCosmetics.cosmetic3 ?? false),
+  goldenBall: Boolean(source.goldenBall ?? legacyCosmetics.goldenBall ?? false),
+  goldenGlove: Boolean(source.goldenGlove ?? legacyCosmetics.goldenGlove ?? false),
+  goldenTicket: Boolean(consumables.goldenTicket?.equipped ?? source.goldenTicket ?? legacyCosmetics.goldenTicket ?? legacyCosmetics.cosmetic4 ?? false),
 });
 
 const normaliseCosmeticsApplied = (source = {}, legacy = {}) => ({
+  goldenBoot: Boolean(source.goldenBoot ?? legacy.goldenBoot ?? legacy.cosmetic3 ?? false),
   goldenBall: Boolean(source.goldenBall ?? legacy.goldenBall ?? legacy.cosmeticBallEquipped ?? false),
   goldenGlove: Boolean(source.goldenGlove ?? legacy.goldenGlove ?? legacy.cosmeticGloveEquipped ?? false),
-  cosmetic3: Boolean(source.cosmetic3 ?? legacy.cosmetic3 ?? false),
-  cosmetic4: Boolean(source.cosmetic4 ?? legacy.cosmetic4 ?? false),
+  goldenTicket: Boolean(source.goldenTicket ?? legacy.goldenTicket ?? legacy.cosmetic4 ?? false),
 });
 
 const normaliseResultMap = (value, start, end) => ({
@@ -191,7 +206,7 @@ const normaliseCareerStats = (stats = {}, legacy = {}) => {
   };
 };
 
-const buildCompatibilityAliases = ({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped }) => ({
+const buildCompatibilityAliases = ({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables }) => ({
   // Backwards compatibility for existing App.jsx/ProfileScreens.jsx readers during migration.
   currentProgress: null,
   currentCampaign: {
@@ -227,13 +242,15 @@ const buildCompatibilityAliases = ({ currentCampaign, bestCampaign, careerStats,
   },
   cosmetics: {
     ...cosmeticsEquipped,
+    goldenTicketQuantity: Number(consumables?.goldenTicket?.quantity || 0),
   },
 });
 
 export const createDefaultUserProfile = (user, username = "Player", extra = {}) => {
   const clean = cleanUsername(username || user.displayName || user.email?.split("@")[0] || "Player");
+  const consumables = normaliseConsumables(extra.consumables, extra.cosmetics);
   const upgradesPurchased = normaliseUpgradeMap(extra.upgradesPurchased, extra.cosmetics, extra.unlocks);
-  const cosmeticsEquipped = normaliseCosmeticsEquipped(extra.cosmeticsEquipped, extra.cosmetics);
+  const cosmeticsEquipped = normaliseCosmeticsEquipped(extra.cosmeticsEquipped, extra.cosmetics, consumables);
   const currentCampaign = normaliseCurrentCampaign(extra.currentCampaign, extra.currentProgress);
   const bestCampaign = normaliseBestCampaign(extra.bestCampaign);
   const careerStats = normaliseCareerStats(extra.careerStats, extra.stats);
@@ -249,6 +266,7 @@ export const createDefaultUserProfile = (user, username = "Player", extra = {}) 
 
     upgradesPurchased,
     cosmeticsEquipped,
+    consumables,
     currentCampaign,
     currentProgress: extra.currentProgress || null,
     bestCampaign,
@@ -258,7 +276,7 @@ export const createDefaultUserProfile = (user, username = "Player", extra = {}) 
       ...(extra.achievements || {}),
     },
 
-    ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped }),
+    ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables }),
 
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -266,8 +284,9 @@ export const createDefaultUserProfile = (user, username = "Player", extra = {}) 
 };
 
 const normaliseProfileUpdate = (data = {}) => {
+  const consumables = normaliseConsumables(data.consumables, data.cosmetics);
   const upgradesPurchased = normaliseUpgradeMap(data.upgradesPurchased, data.cosmetics, data.unlocks);
-  const cosmeticsEquipped = normaliseCosmeticsEquipped(data.cosmeticsEquipped, data.cosmetics);
+  const cosmeticsEquipped = normaliseCosmeticsEquipped(data.cosmeticsEquipped, data.cosmetics, consumables);
   const currentCampaign = normaliseCurrentCampaign(data.currentCampaign, data.currentProgress);
   const bestCampaign = normaliseBestCampaign(data.bestCampaign);
   const careerStats = normaliseCareerStats(data.careerStats, data.stats);
@@ -276,12 +295,13 @@ const normaliseProfileUpdate = (data = {}) => {
     ...data,
     upgradesPurchased,
     cosmeticsEquipped,
+    consumables,
     currentCampaign,
     currentProgress: data.currentProgress ?? data.currentCampaign?.currentProgress ?? null,
     bestCampaign,
     careerStats,
     achievements: data.achievements ? { ...createDefaultAchievements(), ...data.achievements } : undefined,
-    ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped }),
+    ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables }),
     updatedAt: serverTimestamp(),
   };
 
@@ -335,19 +355,21 @@ export async function loadUserProfile(uid) {
   // Normalise old documents in memory so the UI can safely read the new schema immediately.
   const currentCampaign = normaliseCurrentCampaign(data.currentCampaign, data.currentProgress);
   const bestCampaign = normaliseBestCampaign(data.bestCampaign);
+  const consumables = normaliseConsumables(data.consumables, data.cosmetics);
   const upgradesPurchased = normaliseUpgradeMap(data.upgradesPurchased, data.cosmetics, data.unlocks);
-  const cosmeticsEquipped = normaliseCosmeticsEquipped(data.cosmeticsEquipped, data.cosmetics);
+  const cosmeticsEquipped = normaliseCosmeticsEquipped(data.cosmeticsEquipped, data.cosmetics, consumables);
   const careerStats = normaliseCareerStats(data.careerStats, data.stats);
 
   return {
     ...data,
     upgradesPurchased,
     cosmeticsEquipped,
+    consumables,
     currentCampaign,
     bestCampaign,
     careerStats,
     achievements: { ...createDefaultAchievements(), ...(data.achievements || data.trophies || {}) },
-    ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped }),
+    ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables }),
     currentProgress: data.currentProgress || null,
   };
 }
@@ -372,11 +394,39 @@ export async function unlockCosmetic(uid, cosmeticKey, equipped = true) {
   const isKnownCosmetic = COSMETIC_KEYS.includes(cosmeticKey);
   if (!isKnownCosmetic) return;
 
+  if (cosmeticKey === "goldenTicket") {
+    await setDoc(doc(db, "users", uid), {
+      "consumables.goldenTicket.quantity": equipped ? 1 : 0,
+      "consumables.goldenTicket.equipped": Boolean(equipped),
+      "consumables.goldenTicket.totalPurchased": equipped ? 1 : 0,
+      "consumables.goldenTicket.lastPurchasedAt": equipped ? serverTimestamp() : null,
+      "cosmeticsEquipped.goldenTicket": Boolean(equipped),
+      "cosmetics.goldenTicket": Boolean(equipped),
+      "cosmetics.goldenTicketQuantity": equipped ? 1 : 0,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+    return;
+  }
+
   await setDoc(doc(db, "users", uid), {
     [`upgradesPurchased.${cosmeticKey}`]: true,
     [`cosmeticsEquipped.${cosmeticKey}`]: Boolean(equipped),
     // Compatibility alias until all pages read cosmeticsEquipped.
     [`cosmetics.${cosmeticKey}`]: Boolean(equipped),
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
+export async function consumeGoldenTicket(uid) {
+  if (!uid || !db) return;
+  await setDoc(doc(db, "users", uid), {
+    "consumables.goldenTicket.quantity": 0,
+    "consumables.goldenTicket.equipped": false,
+    "consumables.goldenTicket.totalUsed": 1,
+    "consumables.goldenTicket.lastUsedAt": serverTimestamp(),
+    "cosmeticsEquipped.goldenTicket": false,
+    "cosmetics.goldenTicket": false,
+    "cosmetics.goldenTicketQuantity": 0,
     updatedAt: serverTimestamp(),
   }, { merge: true });
 }

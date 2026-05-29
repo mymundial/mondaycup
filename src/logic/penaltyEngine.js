@@ -179,6 +179,17 @@ export function keeperReadDirection(targetDirection, rng = Math.random, options 
   return randomDifferentDirection(targetDirection, rng);
 }
 
+
+export function applyGoldenGloveSecondRead({ targetDirection, firstKeeperDirection, rng = Math.random }) {
+  if (!targetDirection || !firstKeeperDirection) return firstKeeperDirection || targetDirection;
+  if (firstKeeperDirection.id === targetDirection.id) return firstKeeperDirection;
+
+  // Golden Glove removes the first wrong 1/9 read and gives the keeper one
+  // second read from the remaining 8 goal segments.
+  const remaining = DIRECTIONS.filter((candidate) => candidate.id !== firstKeeperDirection.id);
+  return remaining[Math.floor(rng() * remaining.length)] || firstKeeperDirection;
+}
+
 export function getTeamRank(team) {
   const rawRank = team?.rank ?? team?.ranking ?? team?.teamRank ?? team?.seed ?? team?.worldRank;
   const rank = Number(rawRank);
@@ -471,12 +482,28 @@ export function stageLabelForFixture(fixture) {
   return labels[stage] || "MATCH";
 }
 
-export function buildResult({ fixture, userTeam, opponentTeam, score, winnerSide, isDraw }) {
+export function buildResult({ fixture, userTeam, opponentTeam, score, winnerSide, isDraw, attempts = { user: [], opponent: [] } }) {
   const userIsHome = fixture?.homeTeamId === userTeam.id;
   const homeGoals = userIsHome ? score.user : score.opponent;
   const awayGoals = userIsHome ? score.opponent : score.user;
   const winner = isDraw ? null : winnerSide === "user" ? userTeam.id : opponentTeam.id;
   const loser = isDraw ? null : winnerSide === "user" ? opponentTeam.id : userTeam.id;
+  const userWon = winnerSide === "user";
+  const finalMatchOutcome = isDraw ? "draw" : userWon ? "win" : "loss";
+  const userShotEvents = Array.isArray(attempts?.user)
+    ? attempts.user.map((event, index) => ({
+        shotNumber: event?.shotNumber ?? index + 1,
+        ...event,
+        finalMatchOutcome,
+        userWon,
+        matchWon: userWon,
+        matchDrawn: Boolean(isDraw),
+      }))
+    : [];
+  const enrichedAttempts = {
+    ...attempts,
+    user: userShotEvents,
+  };
 
   return {
     fixtureId: fixture?.id ?? null,
@@ -488,7 +515,10 @@ export function buildResult({ fixture, userTeam, opponentTeam, score, winnerSide
     awayGoals,
     winner,
     loser,
-    userWon: winnerSide === "user",
+    userWon,
     isDraw,
+    finalMatchOutcome,
+    attempts: enrichedAttempts,
+    userShotEvents,
   };
 }

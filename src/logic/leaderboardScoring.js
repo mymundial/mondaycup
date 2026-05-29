@@ -4,13 +4,10 @@ export const LEADERBOARD_POINTS = Object.freeze({
   MATCH_PLAYED: 5,
   MATCH_DRAWN: 10,
   MATCH_WON: 30,
-  TARGET_ZONE_RELEASE: 5,
-  GOAL_SCORED: 10,
-  TARGET_ZONE_GOAL_COMBO: 10,
-  TOP_CORNER_TARGET_ZONE_GOAL: 5,
-  SUDDEN_DEATH_GOAL: 5,
-  SUDDEN_DEATH_MATCH_WIN: 15,
-  PERFECT_SHOOTOUT_WIN: 25,
+  ACCURACY_METER_MAX: 50,
+  POWER_METER_MAX: 50,
+  GOAL_SCORED: 25,
+  PERFECT_SHOOTOUT_WIN: 100,
   QUALIFY_FROM_GROUP: 100,
   REACH_ROUND_OF_16: 150,
   REACH_QUARTER_FINAL: 250,
@@ -42,18 +39,17 @@ export function normaliseAwardedMilestones(value) {
   return new Set();
 }
 
-export function isTargetZoneShot(event) {
-  if (!event) return false;
-  if (event.targetZone === true) return true;
-  return Number(event.power) >= 45 && Number(event.power) <= 55;
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
-export function isTopCornerShot(event) {
-  const direction = event?.direction || event?.chosenDirection || {};
-  const id = direction.id || event?.directionId;
-  const row = Number(direction.row ?? event?.row);
-  const col = Number(direction.col ?? event?.col);
-  return id === "LT" || id === "RT" || (row === 0 && (col === 0 || col === 2));
+export function scoreMeterCentre(value, maxPoints = 50) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) return 0;
+
+  const safeValue = clamp(numericValue, 0, 100);
+  const distanceFromMiddle = Math.abs(safeValue - 50);
+  return clamp(Math.round(maxPoints - distanceFromMiddle), 0, maxPoints);
 }
 
 export function scoreShotEvents(userShotEvents = []) {
@@ -62,30 +58,29 @@ export function scoreShotEvents(userShotEvents = []) {
 
   userShotEvents.forEach((event, index) => {
     const shotNo = index + 1;
-    const targetZone = isTargetZoneShot(event);
+    const preScoredAccuracy = Number(event?.accuracyPoints);
+    const preScoredPower = Number(event?.powerPoints);
+    const accuracyPoints = Number.isFinite(preScoredAccuracy)
+      ? preScoredAccuracy
+      : scoreMeterCentre(event?.accuracy, LEADERBOARD_POINTS.ACCURACY_METER_MAX);
+    const powerPoints = Number.isFinite(preScoredPower)
+      ? preScoredPower
+      : scoreMeterCentre(event?.power, LEADERBOARD_POINTS.POWER_METER_MAX);
     const goal = Boolean(event?.goal);
-    const topCorner = isTopCornerShot(event);
-    const suddenDeath = Boolean(event?.isSuddenDeath || shotNo > 5);
 
-    if (targetZone) {
-      points += LEADERBOARD_POINTS.TARGET_ZONE_RELEASE;
-      breakdown.push({ id: `shot-${shotNo}-target-zone`, label: "Target-zone release", points: LEADERBOARD_POINTS.TARGET_ZONE_RELEASE });
+    if (accuracyPoints > 0) {
+      points += accuracyPoints;
+      breakdown.push({ id: `shot-${shotNo}-accuracy-meter`, label: "Accuracy meter", points: accuracyPoints });
     }
+
+    if (powerPoints > 0) {
+      points += powerPoints;
+      breakdown.push({ id: `shot-${shotNo}-power-meter`, label: "Power meter", points: powerPoints });
+    }
+
     if (goal) {
       points += LEADERBOARD_POINTS.GOAL_SCORED;
       breakdown.push({ id: `shot-${shotNo}-goal`, label: "Goal scored", points: LEADERBOARD_POINTS.GOAL_SCORED });
-    }
-    if (targetZone && goal) {
-      points += LEADERBOARD_POINTS.TARGET_ZONE_GOAL_COMBO;
-      breakdown.push({ id: `shot-${shotNo}-target-goal`, label: "Target-zone goal combo", points: LEADERBOARD_POINTS.TARGET_ZONE_GOAL_COMBO });
-    }
-    if (targetZone && goal && topCorner) {
-      points += LEADERBOARD_POINTS.TOP_CORNER_TARGET_ZONE_GOAL;
-      breakdown.push({ id: `shot-${shotNo}-top-corner`, label: "Top-corner target-zone goal", points: LEADERBOARD_POINTS.TOP_CORNER_TARGET_ZONE_GOAL });
-    }
-    if (goal && suddenDeath) {
-      points += LEADERBOARD_POINTS.SUDDEN_DEATH_GOAL;
-      breakdown.push({ id: `shot-${shotNo}-sudden-death`, label: "Sudden-death goal", points: LEADERBOARD_POINTS.SUDDEN_DEATH_GOAL });
     }
   });
 
@@ -96,12 +91,6 @@ export function isPerfectShootoutWin({ result, userShotEvents = [] }) {
   const userWon = Boolean(result?.userWon ?? result?.won);
   if (!userWon || userShotEvents.length < 5) return false;
   return userShotEvents.slice(0, 5).every((event) => event?.goal === true);
-}
-
-export function isSuddenDeathWin({ result, userShotEvents = [] }) {
-  const userWon = Boolean(result?.userWon ?? result?.won);
-  if (!userWon) return false;
-  return Boolean(result?.wentToSuddenDeath) || userShotEvents.some((event, index) => event?.isSuddenDeath || index >= 5);
 }
 
 function milestoneForResult(result) {
@@ -152,11 +141,6 @@ export function scoreCompletedMatch({ result, userShotEvents = [], awardedMilest
   const shotScore = scoreShotEvents(userShotEvents);
   points += shotScore.points;
   breakdown.push(...shotScore.breakdown);
-
-  if (isSuddenDeathWin({ result, userShotEvents })) {
-    points += LEADERBOARD_POINTS.SUDDEN_DEATH_MATCH_WIN;
-    breakdown.push({ id: "sudden-death-match-win", label: "Sudden-death match win", points: LEADERBOARD_POINTS.SUDDEN_DEATH_MATCH_WIN });
-  }
 
   if (isPerfectShootoutWin({ result, userShotEvents })) {
     points += LEADERBOARD_POINTS.PERFECT_SHOOTOUT_WIN;

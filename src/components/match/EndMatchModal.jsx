@@ -179,22 +179,22 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
 
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#072D1D]/48 px-5 pt-20">
-      <div className="relative w-full max-w-sm overflow-visible rounded-[2rem] border border-[#F5F1E8]/14 bg-[#0B5F35]/94 text-center text-[#F5F1E8] shadow-[0_10px_26px_rgba(0,0,0,0.22),inset_0_-2px_6px_rgba(0,0,0,0.06)]">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#072D1D]/48 px-3 pb-[max(14px,env(safe-area-inset-bottom))] pt-[calc(78px+env(safe-area-inset-top))]">
+      <div className="relative w-full max-w-sm max-h-[calc(100dvh-96px)] overflow-visible rounded-[2rem] border border-[#F5F1E8]/14 bg-[#0B5F35]/94 text-center text-[#F5F1E8] shadow-[0_10px_26px_rgba(0,0,0,0.22),inset_0_-2px_6px_rgba(0,0,0,0.06)]">
         {!sharePreviewOpen && (
-          <div className="absolute left-0 right-0 top-[-62px] z-[3] grid grid-cols-[minmax(0,1fr)_78px] gap-4 px-5">
-            <div className="relative flex h-11 items-center justify-center overflow-hidden rounded-full border border-[#F5F1E8]/18 bg-[#072D1D] px-4 shadow-[0_6px_14px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.07),inset_0_-1px_0_rgba(0,0,0,0.12)] ring-1 ring-[#F5F1E8]/10">
+          <div className="absolute left-0 right-0 top-[-58px] z-[3] grid grid-cols-[minmax(0,1fr)_minmax(62px,74px)] gap-2 px-3 sm:gap-4 sm:px-5">
+            <div className="relative flex h-10 min-w-0 items-center justify-center overflow-hidden rounded-full border border-[#F5F1E8]/18 bg-[#072D1D] px-4 shadow-[0_6px_14px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.07),inset_0_-1px_0_rgba(0,0,0,0.12)] ring-1 ring-[#F5F1E8]/10">
               <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.18),rgba(24,166,83,0.05),rgba(11,95,53,0.18))]" />
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),rgba(0,0,0,0.15))]" />
               <div className="relative z-[1]"><FormTracker form={userForm} /></div>
             </div>
-            <div className="relative flex h-11 items-center justify-center overflow-hidden rounded-full border border-[#F5F1E8]/18 bg-[#072D1D] px-2 shadow-[0_6px_14px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.07),inset_0_-1px_0_rgba(0,0,0,0.12)] ring-1 ring-[#F5F1E8]/10">
+            <div className="relative flex h-10 min-w-0 items-center justify-center overflow-hidden rounded-full border border-[#F5F1E8]/18 bg-[#072D1D] px-2 shadow-[0_6px_14px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.07),inset_0_-1px_0_rgba(0,0,0,0.12)] ring-1 ring-[#F5F1E8]/10">
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),rgba(0,0,0,0.15))]" />
               <span className="relative z-[1] font-led text-[18px] leading-none text-[#F7D117] led-text-glow">{campaignPointsTotal}</span>
             </div>
           </div>
         )}
-        <div className="overflow-hidden rounded-t-[2rem] bg-[#0B5F35]/0 px-5 pb-1.5 pt-2 text-[#F5F0E6]">
+        <div className="overflow-hidden rounded-t-[2rem] bg-[#0B5F35]/0 px-4 pb-1.5 pt-2 text-[#F5F0E6] sm:px-5">
           <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-3">
             {sharePreviewOpen ? (
               <button
@@ -210,23 +210,23 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
                 <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="h-full w-full object-contain" draggable={false} />
               </div>
             )}
-            <div className="text-center home-copy-bold text-[25px] uppercase leading-[0.95] tracking-[0.06em] text-[#F5F0E6]">{sharePreviewOpen ? "SHARE" : normaliseThirdPlaceCopy(modalHeaderTitle({ isKnockout, stageLabel, selectedGroup }))}</div>
+            <div className="text-center home-copy-bold text-[clamp(21px,5.8vw,25px)] uppercase leading-[0.95] tracking-[0.06em] text-[#F5F0E6]">{sharePreviewOpen ? "SHARE" : normaliseThirdPlaceCopy(modalHeaderTitle({ isKnockout, stageLabel, selectedGroup }))}</div>
             <button onClick={onDismiss} aria-label="Close result" className="flex h-9 w-9 items-center justify-center justify-self-end text-[#F5F0E6]">
               <CloseIcon className="h-6 w-6" />
             </button>
           </div>
         </div>
 
-        <div className="px-5 pb-4 pt-1.5">
+        <div className="max-h-[calc(100dvh-190px)] overflow-y-auto px-4 pb-4 pt-1.5 sm:px-5">
           {!sharePreviewOpen && (isKnockout ? (
             <>
               <div className={`mt-1 rounded-[1.25rem] px-2.5 py-3 ${userInKnockout ? "border border-[#F5F1E8]/22 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F7D117]/18 shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "bg-[#F5F1E8]/90 text-[#26352E] ring-1 ring-[#F5F1E8]/10"}`}>
-                <div className={`grid min-h-[32px] grid-cols-[28px_minmax(0,1fr)_34px_minmax(0,1fr)_28px] items-center gap-1 home-main-font text-[clamp(13px,3.4vw,15px)] uppercase leading-none ${userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`}>
-                  <div className="flex items-center justify-center"><Flag team={result.home} className="h-5 w-7 rounded-[4px] ring-1 ring-[#F5F1E8]/35" /></div>
+                <div className={`grid min-h-[32px] grid-cols-[24px_minmax(0,1fr)_32px_minmax(0,1fr)_24px] items-center gap-1 home-main-font text-[clamp(13px,3.4vw,15px)] uppercase leading-none ${userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`}>
+                  <div className="flex items-center justify-center"><Flag team={result.home} className="h-[18px] w-[25px] rounded-[4px] ring-1 ring-[#F5F1E8]/35" /></div>
                   <span className={`block min-w-0 truncate text-center home-copy-regular ${homeIsUser ? "text-[#F7D117]" : userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(result.home)} title={result.home}>{result.home}</span>
                   <span className={`flex items-center justify-center home-copy-bold tabular-nums leading-none ${userInKnockout ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{result.homeGoals}-{result.awayGoals}</span>
                   <span className={`block min-w-0 truncate text-center home-copy-regular ${awayIsUser ? "text-[#F7D117]" : userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(result.away)} title={result.away}>{result.away}</span>
-                  <div className="flex items-center justify-center"><Flag team={result.away} className="h-5 w-7 rounded-[4px] ring-1 ring-[#F5F1E8]/35" /></div>
+                  <div className="flex items-center justify-center"><Flag team={result.away} className="h-[18px] w-[25px] rounded-[4px] ring-1 ring-[#F5F1E8]/35" /></div>
                 </div>
               </div>
             </>
@@ -257,7 +257,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
               type="button"
               onClick={canShareResult ? openSharePreview : onNext}
               disabled={canShareResult && shareBusy}
-              className="mx-auto mt-2.5 flex h-10 w-full items-center justify-center rounded-full border border-[#F7D117]/75 bg-[#F7D117] home-copy-bold text-[15px] uppercase tracking-[0.14em] text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.24),inset_0_2px_8px_rgba(255,255,255,0.22)] disabled:opacity-70"
+              className="mx-auto mt-2.5 flex h-11 min-h-[44px] w-full items-center justify-center rounded-full border border-[#F7D117]/75 bg-[#F7D117] home-copy-bold text-[15px] uppercase tracking-[0.14em] text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.24),inset_0_2px_8px_rgba(255,255,255,0.22)] disabled:opacity-70"
             >
               {canShareResult ? (shareBusy ? "PREPARING" : "SHARE YOUR RESULT") : modalButton(result)}
             </button>

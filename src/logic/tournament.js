@@ -385,6 +385,75 @@ export function runSelfTests() {
   console.assert(finalComplete.podium?.third, "Expected bronze team to come from M103 winner");
 }
 
+export function simulateGoldenTicketFinalRun(userTeam, selectedGroup = null) {
+  if (!userTeam) return null;
+
+  let updatedSchedule = buildSchedule();
+  let updatedTable = blankTable();
+
+  updatedSchedule = updatedSchedule.map((fixture) => {
+    const userIsHome = fixture.home === userTeam;
+    const userIsAway = fixture.away === userTeam;
+    const simulated = userIsHome
+      ? { homeGoals: 1, awayGoals: 0 }
+      : userIsAway
+        ? { homeGoals: 0, awayGoals: 1 }
+        : simulateFixtureScore(fixture.home, fixture.away);
+
+    updatedTable = applyFixtureResult(updatedTable, fixture, simulated.homeGoals, simulated.awayGoals);
+    return { ...fixture, played: true, ...simulated };
+  });
+
+  let updatedFixtures = buildRound32Fixtures(updatedTable);
+  let currentMatch = findTeamKnockoutFixture(userTeam, updatedFixtures);
+  let guard = 0;
+
+  while (currentMatch && currentMatch.matchNo !== 104 && guard < 8) {
+    const userResult = {
+      ...currentMatch,
+      played: true,
+      homeGoals: currentMatch.home === userTeam ? 1 : 0,
+      awayGoals: currentMatch.away === userTeam ? 1 : 0,
+    };
+    const completed = completeKnockoutRound({
+      fixtures: updatedFixtures,
+      currentMatch,
+      userTeam,
+      userResult,
+    });
+    updatedFixtures = completed.updatedFixtures;
+    currentMatch = completed.nextUserFixture || findTeamKnockoutFixture(userTeam, updatedFixtures.filter((fixture) => !fixture.played));
+    guard += 1;
+  }
+
+  if (!currentMatch || currentMatch.matchNo !== 104) {
+    const fallbackOpponent = Object.keys(TEAM_RANK)
+      .filter((candidate) => candidate !== userTeam)
+      .sort((a, b) => (TEAM_RANK[a] || 99) - (TEAM_RANK[b] || 99))[0] || "Opponent";
+    currentMatch = {
+      id: "M104",
+      matchNo: 104,
+      home: userTeam,
+      away: fallbackOpponent,
+      homeSeed: "W101",
+      awaySeed: "W102",
+      played: false,
+      homeGoals: null,
+      awayGoals: null,
+    };
+    updatedFixtures = replaceFixtures(updatedFixtures, [currentMatch]);
+  }
+
+  return {
+    selectedGroup: selectedGroup || updatedTable[userTeam]?.group || "A",
+    schedule: updatedSchedule,
+    table: updatedTable,
+    knockoutFixtures: updatedFixtures,
+    currentFinalFixture: currentMatch,
+    opponent: getFixtureOpponent(userTeam, currentMatch),
+  };
+}
+
 
 export function simulateRemainingTournament(bracket) {
   const updated = { ...bracket };

@@ -54,8 +54,8 @@ function RankStatTile({ value }) {
 
 function FormDot({ value, compact = false }) {
   const dotClass = value === "W" ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.7)]" : value === "L" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.7)]" : value === "D" ? "bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.7)]" : "bg-[#F7D117]/28";
-  const sizeClass = compact ? "h-[9px] w-[9px] min-h-[9px] min-w-[9px]" : "h-[11px] w-[11px] min-h-[11px] min-w-[11px]";
-  return <span className={`block shrink-0 aspect-square ${sizeClass} rounded-full ${dotClass}`} aria-hidden="true" />;
+  const sizeClass = compact ? "h-[clamp(6px,1.7vw,9px)] w-[clamp(6px,1.7vw,9px)]" : "h-[clamp(8px,2.2vw,11px)] w-[clamp(8px,2.2vw,11px)]";
+  return <span className={`block min-w-0 shrink aspect-square ${sizeClass} rounded-full ${dotClass}`} aria-hidden="true" />;
 }
 
 function phaseLabel(label, fallback = "GROUP STAGE") {
@@ -83,11 +83,11 @@ function campaignMedalClass(summary = {}) {
 function CampaignStatusRail({ form = [], points = 0 }) {
   const railClass = "border-[#F7D117]/12 bg-[#062819]/94 text-[#F7D117] shadow-[0_8px_20px_rgba(0,0,0,0.18)]";
   return (
-    <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1.5">
-      <div className={`flex h-[29px] min-w-0 items-center justify-center gap-[5px] rounded-full border px-2 ${railClass}`}>
+    <div className="mt-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-1.5">
+      <div className={`flex h-[29px] min-w-0 items-center justify-center gap-[clamp(2px,0.8vw,5px)] overflow-hidden rounded-full border px-2 ${railClass}`}>
         {Array.from({ length: 8 }).map((_, index) => <FormDot key={index} value={form[index]} compact />)}
       </div>
-      <div className="font-led grid h-[25px] min-w-[44px] place-items-center rounded-full border border-[#F7D117]/12 bg-[#062819]/94 px-2 text-[9px] uppercase leading-none tracking-[0.035em] text-[#F7D117] shadow-[0_8px_20px_rgba(0,0,0,0.18)]">
+      <div className="font-led grid h-[25px] min-w-[40px] place-items-center rounded-full border border-[#F7D117]/12 bg-[#062819]/94 px-2 text-[9px] uppercase leading-none tracking-[0.035em] text-[#F7D117] shadow-[0_8px_20px_rgba(0,0,0,0.18)]">
         {Number(points || 0)}
       </div>
     </div>
@@ -332,10 +332,20 @@ export function ClubhouseScreen({
             <AllTeamsUnlockButton unlocked={Boolean(allTeamsUnlocked)} guestLocked={isGuest} onUnlock={() => { if (isGuest) setRegisterAuthOpen(true); else onUnlockAllTeams?.(); }} />
             <div className="grid grid-cols-4 gap-2">
               <CosmeticUpgradeCard
+                id="goldenBoot"
+                title="Golden Boot"
+                subtitle="POWER BONUS"
+                price="£1"
+                assetSrc="/assets/game/golden-boot.png"
+                active={isGuest ? false : Boolean(activeCosmetics?.goldenBoot)}
+                guestLocked={isGuest}
+                onToggle={(id) => { if (isGuest) setRegisterAuthOpen(true); else onToggleCosmetic?.(id); }}
+              />
+              <CosmeticUpgradeCard
                 id="goldenBall"
                 title="Golden Ball"
-                subtitle="+10% SHOT BONUS"
-                price="£0.99"
+                subtitle="ACCURACY BONUS"
+                price="£1"
                 assetSrc="/assets/game/golden-ball.png"
                 active={isGuest ? false : Boolean(activeCosmetics?.goldenBall)}
                 guestLocked={isGuest}
@@ -344,34 +354,22 @@ export function ClubhouseScreen({
               <CosmeticUpgradeCard
                 id="goldenGlove"
                 title="Golden Glove"
-                subtitle="10% GK BONUS"
-                price="£0.99"
+                subtitle="GOALKEEPER BONUS"
+                price="£1"
                 assetSrc="/assets/game/golden-glove.png"
                 active={isGuest ? false : Boolean(activeCosmetics?.goldenGlove)}
                 guestLocked={isGuest}
                 onToggle={(id) => { if (isGuest) setRegisterAuthOpen(true); else onToggleCosmetic?.(id); }}
               />
               <CosmeticUpgradeCard
-                id="cosmeticPlaceholderOne"
-                title="Cosmetic 3"
-                subtitle="BONUS"
-                price="£0.99"
-                iconText="+"
-                active={false}
+                id="goldenTicket"
+                title="Golden Ticket"
+                subtitle="ADVANCE TO FINAL"
+                price="£1"
+                assetSrc="/assets/game/golden-ticket.png"
+                active={isGuest ? false : Boolean(activeCosmetics?.goldenTicket)}
                 guestLocked={isGuest}
-                disabled={!isGuest}
-                onToggle={() => { if (isGuest) setRegisterAuthOpen(true); }}
-              />
-              <CosmeticUpgradeCard
-                id="cosmeticPlaceholderTwo"
-                title="Cosmetic 4"
-                subtitle="BONUS"
-                price="£0.99"
-                iconText="+"
-                active={false}
-                guestLocked={isGuest}
-                disabled={!isGuest}
-                onToggle={() => { if (isGuest) setRegisterAuthOpen(true); }}
+                onToggle={(id) => { if (isGuest) setRegisterAuthOpen(true); else onToggleCosmetic?.(id); }}
               />
             </div>
           </div>
@@ -548,17 +546,14 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
         { label: "Match Played", points: LEADERBOARD_POINTS.MATCH_PLAYED },
         { label: "Match Drawn", points: LEADERBOARD_POINTS.MATCH_DRAWN },
         { label: "Match Won", points: LEADERBOARD_POINTS.MATCH_WON },
-        { label: "Sudden Death Win", points: LEADERBOARD_POINTS.SUDDEN_DEATH_MATCH_WIN },
       ],
     },
     {
       title: "Shot Skill",
       items: [
-        { label: "Target Zone", points: LEADERBOARD_POINTS.TARGET_ZONE_RELEASE },
+        { label: "Accuracy Meter", points: `0-${LEADERBOARD_POINTS.ACCURACY_METER_MAX}` },
+        { label: "Power Meter", points: `0-${LEADERBOARD_POINTS.POWER_METER_MAX}` },
         { label: "Goal Scored", points: LEADERBOARD_POINTS.GOAL_SCORED },
-        { label: "Target Goal Combo", points: LEADERBOARD_POINTS.TARGET_ZONE_GOAL_COMBO },
-        { label: "Top Corner Bonus", points: LEADERBOARD_POINTS.TOP_CORNER_TARGET_ZONE_GOAL },
-        { label: "Sudden Death Goal", points: LEADERBOARD_POINTS.SUDDEN_DEATH_GOAL },
         { label: "Perfect Shootout Win", points: LEADERBOARD_POINTS.PERFECT_SHOOTOUT_WIN },
       ],
     },
