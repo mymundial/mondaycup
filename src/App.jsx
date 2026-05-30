@@ -233,6 +233,12 @@ export default function App() {
   const currentFixture = currentKnockoutMatch ? toGameFixture(currentKnockoutMatch) : toGameFixture(activeGroupFixture);
   const currentRoundLabel = team ? roundLabelForResult(matchResult, matchStage) : "NO CAMPAIGN";
 
+  const leaderboardCosmeticsApplied = (source = activeCosmetics) => ({
+    goldenBoot: Boolean(source?.goldenBoot || source?.cosmetic3),
+    goldenBall: Boolean(source?.goldenBall || source?.cosmeticBallEquipped),
+    goldenGlove: Boolean(source?.goldenGlove || source?.cosmeticGloveEquipped),
+  });
+
   const sanitizeCloudData = (value) => JSON.parse(JSON.stringify(value ?? null));
 
   const syncAchievementState = (nextAchievements) => {
@@ -437,8 +443,10 @@ export default function App() {
         team: bestCampaignSummary?.team || null,
         stage: bestCampaignSummary?.roundLabel || bestCampaignSummary?.stage || "No Campaign",
         roundLabel: bestCampaignSummary?.roundLabel || bestCampaignSummary?.stage || "No Campaign",
-        cosmeticBallEquipped: Boolean(bestCampaignSummary?.cosmeticBallEquipped ?? activeCosmetics?.goldenBall),
-        cosmeticGloveEquipped: Boolean(bestCampaignSummary?.cosmeticGloveEquipped ?? activeCosmetics?.goldenGlove),
+        cosmeticBootEquipped: Boolean(bestCampaignSummary?.cosmeticBootEquipped ?? bestCampaignSummary?.cosmeticsApplied?.goldenBoot ?? activeCosmetics?.goldenBoot),
+        cosmeticBallEquipped: Boolean(bestCampaignSummary?.cosmeticBallEquipped ?? bestCampaignSummary?.cosmeticsApplied?.goldenBall ?? activeCosmetics?.goldenBall),
+        cosmeticGloveEquipped: Boolean(bestCampaignSummary?.cosmeticGloveEquipped ?? bestCampaignSummary?.cosmeticsApplied?.goldenGlove ?? activeCosmetics?.goldenGlove),
+        cosmeticsApplied: bestCampaignSummary?.cosmeticsApplied || leaderboardCosmeticsApplied(activeCosmetics),
       },
       stats: {
         mondayCupsWon: Number(mondayCupsWon || 0),
@@ -470,6 +478,10 @@ export default function App() {
               team: bestCampaignSummary?.team || null,
               campaignPoints: highScore,
               bestCampaign: bestCampaignSummary || null,
+              cosmeticsApplied: bestCampaignSummary?.cosmeticsApplied || leaderboardCosmeticsApplied(activeCosmetics),
+              status: bestCampaignSummary?.status || bestCampaignSummary?.roundLabel || bestCampaignSummary?.stage || "inProgress",
+              podium: bestCampaignSummary?.podium || null,
+              podiumAchieved: /champion|runner|third/i.test(String(bestCampaignSummary?.roundLabel || bestCampaignSummary?.stage || "")),
               rank: myLeaderboardRank || null,
             }).then(() => loadLeaderboardRows(50).then(setLeaderboardRows));
           }
@@ -561,8 +573,12 @@ export default function App() {
         }),
         points: Number(nextScoringState.campaignPoints || 0),
         tournamentProgress: nextUserForm,
+        cosmeticBootEquipped: Boolean(activeCosmetics?.goldenBoot),
         cosmeticBallEquipped: Boolean(activeCosmetics?.goldenBall),
         cosmeticGloveEquipped: Boolean(activeCosmetics?.goldenGlove),
+        cosmeticsApplied: leaderboardCosmeticsApplied(activeCosmetics),
+        status: enrichedResult.status || baseResult.status || null,
+        podium: podium || null,
       };
       setBestCampaignScore(nextScoringState.campaignPoints);
       setBestCampaignSummary(summary);
@@ -580,6 +596,7 @@ export default function App() {
         campaignPoints: leaderboardBestScore,
         status: baseResult.status,
         podium,
+        cosmeticsApplied: leaderboardCosmeticsApplied(activeCosmetics),
       });
       setLeaderboardRows((rows) => {
         const withoutUser = rows.filter((row) => row.userId !== currentUser.uid);
@@ -587,6 +604,8 @@ export default function App() {
       });
       saveLeaderboardHighScore(currentUser.uid, {
         ...entry,
+        cosmeticsApplied: entry.cosmeticsApplied || leaderboardCosmeticsApplied(activeCosmetics),
+        podiumAchieved: entry.podiumAchieved || /champion|runner|third/i.test(String(baseResult.status || "")),
         bestCampaign: nextIsBest ? {
           ...buildCampaignSummary({
             team,
@@ -597,8 +616,12 @@ export default function App() {
           }),
           points: Number(nextScoringState.campaignPoints || 0),
           tournamentProgress: nextUserForm,
+          cosmeticBootEquipped: Boolean(activeCosmetics?.goldenBoot),
           cosmeticBallEquipped: Boolean(activeCosmetics?.goldenBall),
           cosmeticGloveEquipped: Boolean(activeCosmetics?.goldenGlove),
+          cosmeticsApplied: leaderboardCosmeticsApplied(activeCosmetics),
+          status: enrichedResult.status || baseResult.status || null,
+          podium: podium || null,
         } : bestCampaignSummary,
       })
         .then(() => loadLeaderboardRows(50).then(setLeaderboardRows))

@@ -2,11 +2,15 @@ import { RESULT_STATUS } from "./resultStatus.js";
 
 export const LEADERBOARD_POINTS = Object.freeze({
   MATCH_PLAYED: 5,
-  MATCH_DRAWN: 10,
-  MATCH_WON: 30,
+  MATCH_LOST: 0,
+  MATCH_DRAWN: 5,
+  MATCH_WON: 10,
   ACCURACY_METER_MAX: 50,
   POWER_METER_MAX: 50,
   GOAL_SCORED: 25,
+  SHOT_SAVED: 10,
+  SHOT_WOODWORK: 5,
+  SHOT_MISS: 0,
   PERFECT_SHOOTOUT_WIN: 100,
   QUALIFY_FROM_GROUP: 100,
   REACH_ROUND_OF_16: 150,
@@ -52,6 +56,16 @@ export function scoreMeterCentre(value, maxPoints = 50) {
   return clamp(Math.round(maxPoints - distanceFromMiddle), 0, maxPoints);
 }
 
+
+function normaliseShotOutcome(event = {}) {
+  const raw = String(event.shotResult || event.result || event.outcome || event.accuracyOutcome || "").toLowerCase();
+  if (event.goal === true || raw.includes("goal")) return "goal";
+  if (raw.includes("save") || raw.includes("saved")) return "saved";
+  if (raw.includes("post") || raw.includes("bar") || raw.includes("woodwork") || raw.includes("crossbar")) return "woodwork";
+  if (raw.includes("wide") || raw.includes("over") || raw.includes("miss")) return "miss";
+  return event.goal ? "goal" : "miss";
+}
+
 export function scoreShotEvents(userShotEvents = []) {
   const breakdown = [];
   let points = 0;
@@ -66,7 +80,7 @@ export function scoreShotEvents(userShotEvents = []) {
     const powerPoints = Number.isFinite(preScoredPower)
       ? preScoredPower
       : scoreMeterCentre(event?.power, LEADERBOARD_POINTS.POWER_METER_MAX);
-    const goal = Boolean(event?.goal);
+    const outcome = normaliseShotOutcome(event);
 
     if (accuracyPoints > 0) {
       points += accuracyPoints;
@@ -78,9 +92,15 @@ export function scoreShotEvents(userShotEvents = []) {
       breakdown.push({ id: `shot-${shotNo}-power-meter`, label: "Power meter", points: powerPoints });
     }
 
-    if (goal) {
+    if (outcome === "goal") {
       points += LEADERBOARD_POINTS.GOAL_SCORED;
       breakdown.push({ id: `shot-${shotNo}-goal`, label: "Goal scored", points: LEADERBOARD_POINTS.GOAL_SCORED });
+    } else if (outcome === "saved") {
+      points += LEADERBOARD_POINTS.SHOT_SAVED;
+      breakdown.push({ id: `shot-${shotNo}-saved`, label: "Saved shot", points: LEADERBOARD_POINTS.SHOT_SAVED });
+    } else if (outcome === "woodwork") {
+      points += LEADERBOARD_POINTS.SHOT_WOODWORK;
+      breakdown.push({ id: `shot-${shotNo}-woodwork`, label: "Woodwork", points: LEADERBOARD_POINTS.SHOT_WOODWORK });
     }
   });
 
@@ -178,7 +198,14 @@ export function applyCompletedMatchScore({ scoringState = createScoringState(), 
   };
 }
 
-export function createLeaderboardEntry({ user, team, campaignPoints, status, podium, completedAt = Date.now() }) {
+export function createLeaderboardEntry({ user, team, campaignPoints, status, podium, cosmeticsApplied = {}, completedAt = Date.now() }) {
+  const normalisedCosmeticsApplied = {
+    goldenBoot: Boolean(cosmeticsApplied.goldenBoot || cosmeticsApplied.cosmetic3),
+    goldenBall: Boolean(cosmeticsApplied.goldenBall || cosmeticsApplied.cosmeticBallEquipped),
+    goldenGlove: Boolean(cosmeticsApplied.goldenGlove || cosmeticsApplied.cosmeticGloveEquipped),
+    goldenTicket: Boolean(cosmeticsApplied.goldenTicket || cosmeticsApplied.cosmetic4 || cosmeticsApplied.goldenTicketUsed),
+  };
+
   return {
     userId: user?.uid || null,
     username: user?.displayName || user?.email?.split("@")[0] || "MONDAY HERO",
@@ -187,6 +214,8 @@ export function createLeaderboardEntry({ user, team, campaignPoints, status, pod
     status: status || "inProgress",
     finish: status || "inProgress",
     podium: podium || null,
+    podiumAchieved: Boolean(podium || ["champion", "runnerUp", "runner_up", "thirdPlace", "third_place"].includes(status)),
+    cosmeticsApplied: normalisedCosmeticsApplied,
     completedAt,
   };
 }

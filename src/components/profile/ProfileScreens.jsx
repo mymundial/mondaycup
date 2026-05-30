@@ -84,11 +84,11 @@ function campaignMedalClass(summary = {}) {
 function CampaignStatusRail({ form = [], points = 0 }) {
   const railClass = "border-[#F7D117]/12 bg-[#062819]/94 text-[#F7D117] shadow-[0_8px_20px_rgba(0,0,0,0.18)]";
   return (
-    <div className="mt-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-1.5">
-      <div className={`flex h-[29px] min-w-0 items-center justify-center gap-[clamp(2px,0.8vw,5px)] overflow-hidden rounded-full border px-2 ${railClass}`}>
+    <div className="mt-2 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(66px,0.26fr)] items-center gap-1.5">
+      <div className={`flex h-[29px] min-w-0 items-center justify-center gap-[clamp(2px,0.7vw,4px)] overflow-hidden rounded-full border px-2 ${railClass}`}>
         {Array.from({ length: 8 }).map((_, index) => <FormDot key={index} value={form[index]} compact />)}
       </div>
-      <div className="font-led grid h-[25px] min-w-[40px] place-items-center rounded-full border border-[#F7D117]/12 bg-[#062819]/94 px-2 text-[9px] uppercase leading-none tracking-[0.035em] text-[#F7D117] shadow-[0_8px_20px_rgba(0,0,0,0.18)]">
+      <div className="font-led grid h-[29px] min-w-[66px] place-items-center rounded-full border border-[#F7D117]/12 bg-[#062819]/94 px-2 text-[8.2px] uppercase leading-none tracking-[0.02em] text-[#F7D117] shadow-[0_8px_20px_rgba(0,0,0,0.18)]">
         {Number(points || 0)}
       </div>
     </div>
@@ -114,12 +114,12 @@ function TeamSummaryCard({ title, team, roundLabel = "GROUP STAGE", highlight = 
   );
 }
 
-function CampaignSummaryBlock({ title, team, form = [], points = null, campaignPoints = null, roundLabel = "GROUP STAGE", highlight = false, medalClass = null }) {
+function CampaignSummaryBlock({ title, team, form = [], points = null, campaignPoints = null, roundLabel = "GROUP STAGE", highlight = false, medalClass = null, className = "" }) {
   const displayPoints = Number(points ?? campaignPoints ?? 0);
   const card = <TeamSummaryCard title={title} team={team} roundLabel={roundLabel} highlight={highlight} medalClass={medalClass} />;
 
   return (
-    <div className="min-w-0">
+    <div className={`min-w-0 ${className}`}>
       {card}
       <CampaignStatusRail form={form} points={displayPoints} highlight={highlight} />
     </div>
@@ -207,9 +207,9 @@ function NicknameEditor({ displayName, onNicknameUpdate, isGuest = false, onRegi
           setEditing(true);
           setStatus("");
         }}
-        className={`${isGuest ? "mt-[-4px] mb-4" : "mt-0.5"} mx-auto block text-center home-copy-regular text-[10px] uppercase tracking-[0.16em] text-[#F5F1E8]/72`}
+        className={`${isGuest ? "mt-[-4px] mb-2" : "mt-0.5"} mx-auto block text-center home-copy-regular text-[10px] uppercase tracking-[0.16em] text-[#F5F1E8]/72`}
       >
-        {isGuest ? "JOIN THE CLUB" : "EDIT NICKNAME"}
+        {isGuest ? "JOIN THE MONDAY CLUB" : "EDIT NICKNAME"}
       </button>
     );
   }
@@ -269,6 +269,13 @@ function ClubhouseRegisterAuthOverlay({ onClose, onAuthComplete }) {
   );
 }
 
+const CLUBHOUSE_PANEL_STYLE = {
+  background: "rgba(11,95,53,0.44)",
+  border: "1px solid rgba(245,241,232,0.12)",
+  boxShadow: "inset 0 1px 0 rgba(245,241,232,0.08), 0 8px 20px rgba(0,0,0,0.12)",
+  outline: "1px solid rgba(245,241,232,0.10)",
+};
+
 export function ClubhouseScreen({
   menuProps,
   team,
@@ -311,26 +318,25 @@ export function ClubhouseScreen({
     <main className="home-main-font relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
       <ScreenTopBar {...menuProps}>CLUBHOUSE</ScreenTopBar>
       <DrawerContent>
-        <MenuPanel title={displayName}>
+        <MenuPanel title={displayName} style={CLUBHOUSE_PANEL_STYLE}>
           <NicknameEditor displayName={displayName} onNicknameUpdate={onNicknameUpdate} isGuest={isGuest} onRegister={() => setRegisterAuthOpen(true)} />
-          <div className="space-y-3 p-4 pt-3">
-            <div className="grid grid-cols-2 gap-2">
-              <CampaignSummaryBlock title="Current Campaign" {...currentSummary} highlight />
-              <CampaignSummaryBlock title="Best Campaign" {...bestSummary} medalClass={campaignMedalClass(bestSummary)} />
-            </div>
-
-            <div className="grid grid-cols-4 gap-2">
+          <div className="space-y-4 p-4 pt-2">
+            <div className="grid grid-cols-4 gap-3">
               <StatTile label="Total goals" value={allTimeGoals || 0} />
               <StatTile label="Conversion" value={`${conversion}%`} />
               <StatTile label="Monday Cups won" value={mondayCupsWon || 0} />
               <RankStatTile value={leaderboardRank || "#--"} />
             </div>
+
+            <div className="grid grid-cols-4 gap-3">
+              <CampaignSummaryBlock className="col-span-2" title="Current Campaign" {...currentSummary} highlight />
+              <CampaignSummaryBlock className="col-span-2" title="Best Campaign" {...bestSummary} medalClass={campaignMedalClass(bestSummary)} />
+            </div>
           </div>
         </MenuPanel>
 
-        <MenuPanel title="UPGRADES" className="mt-4">
+        <MenuPanel title="UPGRADES" className="mt-4" style={CLUBHOUSE_PANEL_STYLE}>
           <div className="p-4 pt-2">
-            <AllTeamsUnlockButton unlocked={Boolean(allTeamsUnlocked)} guestLocked={isGuest} onUnlock={() => { if (isGuest) setRegisterAuthOpen(true); else onUnlockAllTeams?.(); }} />
             <div className="grid grid-cols-4 gap-2">
               <CosmeticUpgradeCard
                 id="goldenBoot"
@@ -373,6 +379,9 @@ export function ClubhouseScreen({
                 onToggle={(id) => { if (isGuest) setRegisterAuthOpen(true); else onToggleCosmetic?.(id); }}
               />
             </div>
+            <div className="mt-3">
+              <AllTeamsUnlockButton unlocked={Boolean(allTeamsUnlocked)} guestLocked={isGuest} onUnlock={() => { if (isGuest) setRegisterAuthOpen(true); else onUnlockAllTeams?.(); }} />
+            </div>
           </div>
         </MenuPanel>
       </DrawerContent>
@@ -396,55 +405,47 @@ const PODIUM_BADGES = [
     key: "thirdPlaceFinish",
     title: "Third Place",
     assetSrc: "/assets/badges/mc-third-place.png",
-    accent: "#CD7F32",
+    placeholderSrc: "/assets/badges/bronze_shield.png",
+    accent: "#D9822B",
+    podiumClass: "border-[#D9822B]/82 bg-[#D9822B] text-[#072D1D] ring-[#D9822B]/28",
   },
   {
     key: "runnerUpFinish",
     title: "Runner-Up",
     assetSrc: "/assets/badges/mc-runner-up.png",
+    placeholderSrc: "/assets/badges/silver_shield.png",
     accent: "#C8C8C8",
+    podiumClass: "border-[#C8C8C8]/82 bg-[#C8C8C8] text-[#072D1D] ring-[#F5F1E8]/28",
   },
   {
     key: "championFinish",
     title: "Champion",
     assetSrc: "/assets/badges/mc-champs2.png",
+    placeholderSrc: "/assets/badges/gold_shield.png",
     accent: "#D8B62F",
+    podiumClass: "border-[#D8B62F]/82 bg-[#D8B62F] text-[#072D1D] ring-[#F7D117]/28",
   },
 ];
 
-function PodiumPlaceholderIcon({ color = "#D8B62F" }) {
+function PodiumBadgeCard({ unlocked, title, assetSrc, placeholderSrc, podiumClass = "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18" }) {
   return (
-    <svg viewBox="0 0 64 64" className="h-12 w-12" fill="none" aria-hidden="true">
-      <circle cx="32" cy="32" r="30" fill="#072D1D" opacity="0.98" />
-      <circle cx="32" cy="32" r="22" stroke={color} strokeWidth="3.5" opacity="0.46" />
-      <path d="M32 14l5.4 10.9 12 1.7-8.7 8.5 2.1 12-10.8-5.7-10.8 5.7 2.1-12-8.7-8.5 12-1.7L32 14Z" fill={color} opacity="0.95" />
-      <path d="M32 20.5l3.2 6.5 7.2 1-5.2 5.1 1.2 7.2-6.4-3.4-6.4 3.4 1.2-7.2-5.2-5.1 7.2-1 3.2-6.5Z" fill="#072D1D" opacity="0.92" />
-    </svg>
-  );
-}
-
-function PodiumBadgeCard({ unlocked, title, assetSrc, accent }) {
-  return (
-    <div className={`mb-1.5 grid min-h-[106px] grid-rows-[1fr_auto] place-items-center rounded-[1.25rem] border px-2.5 py-3 text-center ring-1 last:mb-0 ${unlocked ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/16 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`}>
-      <div className="flex min-h-0 items-center justify-center">
-        {unlocked ? (
-          <img src={assetSrc} alt="" className="h-14 w-14 object-contain" />
-        ) : (
-          <PodiumPlaceholderIcon color={accent} />
-        )}
+    <div className={`grid h-[112px] min-h-[112px] grid-rows-[70px_auto] place-items-center rounded-[1.25rem] border px-2.5 py-3 text-center ring-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_7px_14px_rgba(0,0,0,0.12)] ${podiumClass}`}>
+      <div className="flex h-[70px] w-full items-center justify-center overflow-hidden">
+        <img src={unlocked ? assetSrc : placeholderSrc} alt="" className="h-[58px] w-[58px] max-h-[58px] max-w-[58px] object-contain" />
       </div>
-      <div className={`home-copy-bold mt-2 text-[10px] uppercase leading-none tracking-[0.12em] ${unlocked ? "text-[#F7D117]" : "text-[#0B5F35]"}`}>{title}</div>
+      <div className="home-copy-bold mt-1 text-[9px] uppercase leading-none tracking-[0.11em] text-[#072D1D]">{title}</div>
     </div>
   );
 }
 
 function NationFlagTile({ team, unlocked }) {
+  const displayName = team === "Bosnia-Herzegovina" ? "Bosnia" : team;
   return (
-    <div className={`rounded-[1.05rem] border px-1.5 py-2 text-center ring-1 ${unlocked ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/16" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`}>
+    <div className={`rounded-[1.05rem] border px-2 py-1.5 text-center ring-1 ${unlocked ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/16" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`}>
       <div className={`mx-auto flex h-[24px] w-[36px] items-center justify-center overflow-hidden rounded-[0.4rem] ${unlocked ? "ring-1 ring-[#F7D117]/55" : "opacity-35 saturate-0 brightness-[0.78]"}`}>
         <Flag team={team} className="h-[24px] w-[36px] rounded-[0.4rem]" />
       </div>
-      <div className={`mt-1 home-copy-bold text-[5.8px] uppercase leading-tight tracking-[0.08em] ${unlocked ? "text-[#F7D117]" : "text-[#0B5F35]/56"}`}>{team}</div>
+      <div className={`mt-1 home-copy-bold text-[5.8px] uppercase leading-tight tracking-[0.08em] ${unlocked ? "text-[#F7D117]" : "text-[#0B5F35]/56"}`}>{displayName}</div>
     </div>
   );
 }
@@ -462,10 +463,10 @@ function TrophyToggle({ value, onChange }) {
 function TrophySection({ title, children }) {
   return (
     <section className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] border border-[#F5F1E8]/12 bg-[#0B5F35]/44 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F5F1E8]/10">
-      <div className="px-3 pb-4 pt-3 text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">
+      <div className="px-4 pb-5 pt-4 text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">
         {title}
       </div>
-      <div className="px-2 pb-3">{children}</div>
+      <div className="px-3.5 pb-4">{children}</div>
     </section>
   );
 }
@@ -501,11 +502,13 @@ function SvgTrophy({ unlocked }) {
   );
 }
 
-function SvgTrophyCard({ title, unlocked }) {
+function SvgTrophyCard({ title, description, unlocked, number }) {
   return (
-    <div className={`grid min-h-[86px] place-items-center rounded-[1.1rem] border px-1.5 py-2 text-center ring-1 ${unlocked ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/16" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`}>
+    <div className={`relative flex min-h-[98px] flex-col items-center justify-center rounded-[1.1rem] border px-1.5 py-2 text-center ring-1 ${unlocked ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/16" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`}>
+      <div className={`absolute left-3 top-2 home-copy-bold font-black text-[7px] uppercase leading-none tracking-[0.08em] ${unlocked ? "text-[#F7D117]/90" : "text-[#0B5F35]/58"}`}>#{number}</div>
       <SvgTrophy unlocked={unlocked} />
       <div className={`home-copy-bold mt-2 text-[8px] uppercase leading-none tracking-[0.12em] ${unlocked ? "text-[#F7D117]" : "text-[#0B5F35]"}`}>{title}</div>
+      <div className={`mt-1 max-w-full truncate home-copy-regular text-[5.5px] uppercase leading-none tracking-[0.08em] ${unlocked ? "text-[#F5F1E8]/70" : "text-[#0B5F35]/58"}`}>{description}</div>
     </div>
   );
 }
@@ -515,35 +518,35 @@ export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWin
   const [achievementPage, setAchievementPage] = useState(0);
   const completedCount = ALL_NATIONS.filter((team) => nationCupWins?.[team]?.unlocked).length;
   const svgTrophies = [
-    { key: "ourTime", title: "Our Time" },
-    { key: "kickOff", title: "Kick Off" },
-    { key: "woodwork", title: "Woodwork" },
-    { key: "targetMan", title: "Target Man" },
-    { key: "ptsOnTheBoard", title: "PTS On The Board" },
-    { key: "victory", title: "Victory" },
-    { key: "cleanSweep", title: "Clean Sweep" },
-    { key: "qualified", title: "Qualified" },
-    { key: "tko", title: "TKO" },
-    { key: "quarterFinalist", title: "Quarter-Finalist" },
-    { key: "semiFinalist", title: "Semi-Finalist" },
-    { key: "finalist", title: "Finalist" },
-    { key: "cleanSheet", title: "Clean Sheet" },
-    { key: "perfect", title: "Perfect" },
-    { key: "comebackKing", title: "Comeback King" },
-    { key: "iceCold", title: "Ice Cold" },
-    { key: "goldenTouch", title: "Golden Touch" },
-    { key: "corruptionScandal", title: "Corruption Scandal" },
-    { key: "mondayLegend", title: "Monday Legend" },
-    { key: "invincible", title: "Invincible" },
-    { key: "nationalTreasure", title: "National Treasure" },
-    { key: "globalIcon", title: "Global Icon", unlocked: completedCount >= ALL_NATIONS.length || Boolean(achievements?.globalIcon) },
-    { key: "siuuu", title: "SIUUU!" },
-    { key: "goat", title: "G.O.A.T." },
+    { key: "ourTime", title: "Our Time", description: "Start as a host" },
+    { key: "kickOff", title: "Kick Off", description: "Complete one match" },
+    { key: "woodwork", title: "Woodwork", description: "Hit post or bar" },
+    { key: "targetMan", title: "Target Man", description: "Score first goal" },
+    { key: "ptsOnTheBoard", title: "PTS On The Board", description: "Earn group points" },
+    { key: "victory", title: "Victory", description: "Win first match" },
+    { key: "cleanSweep", title: "Clean Sweep", description: "Win all groups" },
+    { key: "qualified", title: "Qualified", description: "Escape the group" },
+    { key: "tko", title: "TKO", description: "Win R32" },
+    { key: "quarterFinalist", title: "Quarter-Finalist", description: "Win R16" },
+    { key: "semiFinalist", title: "Semi-Finalist", description: "Win QF" },
+    { key: "finalist", title: "Finalist", description: "Win SF" },
+    { key: "cleanSheet", title: "Clean Sheet", description: "Concede zero" },
+    { key: "perfect", title: "Perfect", description: "Score all pens" },
+    { key: "comebackKing", title: "Comeback King", description: "Win from behind" },
+    { key: "iceCold", title: "Ice Cold", description: "Win sudden death" },
+    { key: "goldenTouch", title: "Golden Touch", description: "Win with cosmetic" },
+    { key: "corruptionScandal", title: "Corruption Scandal", description: "Use Golden Ticket" },
+    { key: "mondayLegend", title: "Monday Legend", description: "Win 5 cups" },
+    { key: "invincible", title: "Invincible", description: "Win all 8 matches" },
+    { key: "nationalTreasure", title: "National Treasure", description: "Collect podium" },
+    { key: "globalIcon", title: "Global Icon", description: "Complete flag wall", unlocked: completedCount >= ALL_NATIONS.length || Boolean(achievements?.globalIcon) },
+    { key: "siuuu", title: "SIUUU!", description: "Score 1000 goals" },
+    { key: "goat", title: "G.O.A.T.", description: "Collect all trophies" },
   ].map((item) => ({ ...item, unlocked: item.unlocked ?? Boolean(achievements?.[item.key]) }));
   const achievementsPerPage = 6;
   const achievementPageCount = Math.ceil(svgTrophies.length / achievementsPerPage);
   const visibleAchievements = svgTrophies.slice(achievementPage * achievementsPerPage, achievementPage * achievementsPerPage + achievementsPerPage);
-  const unlockedOnPage = visibleAchievements.filter((item) => item.unlocked).length;
+  const achievementUnlockedCount = svgTrophies.filter((item) => item.unlocked).length;
   const podiumUnlockedCount = PODIUM_BADGES.filter((badge) => Boolean(achievements?.[badge.key])).length;
   const previousAchievementPage = () => setAchievementPage((page) => (page - 1 + achievementPageCount) % achievementPageCount);
   const nextAchievementPage = () => setAchievementPage((page) => (page + 1) % achievementPageCount);
@@ -551,39 +554,40 @@ export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWin
   return (
     <main className="relative z-[1] flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden text-[#F5F1E8]">
       <ScreenTitle {...menuProps}>TROPHIES</ScreenTitle>
-      <div className="px-0 pb-2 pt-3">
+      <div className="px-0 pb-3 pt-3">
         <TrophyToggle value={trophyView} onChange={setTrophyView} />
       </div>
       <section className="min-h-0 flex-1 overflow-auto pb-1 pt-0.5">
-        <div className="space-y-2.5 pb-2">
+        <div className="space-y-2 pb-2">
           {trophyView === "badges" && (
             <>
               <TrophySection title="PODIUM">
-                <div className="grid grid-cols-3 gap-1.5">
+                <div className="grid grid-cols-3 gap-3">
                   {PODIUM_BADGES.map((badge) => (
                     <PodiumBadgeCard
                       key={badge.key}
                       unlocked={Boolean(achievements?.[badge.key])}
                       title={badge.title}
                       assetSrc={badge.assetSrc}
-                      accent={badge.accent}
+                      placeholderSrc={badge.placeholderSrc}
+                      podiumClass={badge.podiumClass}
                     />
                   ))}
                 </div>
                 <TrophyCount>{podiumUnlockedCount}/3</TrophyCount>
               </TrophySection>
               <TrophySection title={<AchievementSectionTitle onPrevious={previousAchievementPage} onNext={nextAchievementPage} />}>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {visibleAchievements.map((trophy) => <SvgTrophyCard key={trophy.key} {...trophy} />)}
+                <div className="grid grid-cols-3 gap-3">
+                  {visibleAchievements.map((trophy, index) => <SvgTrophyCard key={trophy.key} {...trophy} number={(achievementPage * achievementsPerPage) + index + 1} />)}
                 </div>
-                <TrophyCount>{unlockedOnPage}/{visibleAchievements.length}</TrophyCount>
+                <TrophyCount>{achievementUnlockedCount}/{svgTrophies.length}</TrophyCount>
               </TrophySection>
             </>
           )}
 
           {trophyView === "flagWall" && (
             <TrophySection title="FLAG WALL">
-              <div className="grid grid-cols-6 gap-1.5">
+              <div className="grid grid-cols-6 gap-2.5">
                 {ALL_NATIONS.map((nation) => (
                   <NationFlagTile key={nation} team={nation} unlocked={Boolean(nationCupWins?.[nation]?.unlocked)} />
                 ))}
@@ -598,16 +602,55 @@ export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWin
 }
 
 
-const LEADERBOARD_GRID = "46px minmax(0,1fr) 44px 58px";
+const LEADERBOARD_GRID = "36px minmax(0,1fr) 16px 16px 16px 8px 20px 8px 36px 8px 54px";
+const COSMETIC_ICON_CLASS = "h-[15px] w-[15px] object-contain";
+
+function leaderboardCosmetics(row = {}) {
+  const applied = row.cosmeticsApplied || row.bestCampaign?.cosmeticsApplied || row.bestCampaign || {};
+  return {
+    goldenBoot: Boolean(applied.goldenBoot || applied.cosmetic3),
+    goldenBall: Boolean(applied.goldenBall || applied.cosmeticBallEquipped),
+    goldenGlove: Boolean(applied.goldenGlove || applied.cosmeticGloveEquipped),
+    goldenTicket: Boolean(applied.goldenTicket || applied.cosmetic4 || applied.goldenTicketUsed),
+  };
+}
+
+function leaderboardUsedUpgrade(row = {}) {
+  const cosmetics = leaderboardCosmetics(row);
+  return Boolean(cosmetics.goldenBoot || cosmetics.goldenBall || cosmetics.goldenGlove || cosmetics.goldenTicket);
+}
+
+function leaderboardHasPodium(row = {}) {
+  const status = String(row.status || row.finish || row.bestCampaign?.status || row.bestCampaign?.roundLabel || row.bestCampaign?.stage || "").toLowerCase();
+  return Boolean(row.podium || status.includes("champion") || status.includes("runner") || status.includes("third"));
+}
+
+function LeaderboardMiniIcon({ active, type, isUser = false }) {
+  if (!active) return <span className="block h-[14px] w-[14px] rounded-full border border-[#0B5F35]/18 bg-[#0B5F35]/8 opacity-35" aria-hidden="true" />;
+
+  const src = type === "boot"
+    ? "/assets/game/golden-boot.png"
+    : type === "ball"
+      ? "/assets/game/golden-ball.png"
+      : type === "glove"
+        ? "/assets/game/golden-glove.png"
+        : null;
+
+  if (src) return <img src={src} alt="" className={COSMETIC_ICON_CLASS} />;
+
+  return (
+    <span className={`grid h-[15px] w-[15px] place-items-center rounded-full border ${isUser ? "border-[#F7D117]/50 bg-[#F7D117]/18 text-[#F7D117]" : "border-[#0B5F35]/30 bg-[#0B5F35]/10 text-[#0B5F35]"}`} aria-hidden="true">
+      <svg viewBox="0 0 24 24" className="h-[9px] w-[9px]" fill="currentColor">
+        <path d="M12 2.8l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9L12 2.8Z" />
+      </svg>
+    </span>
+  );
+}
 
 function LeaderboardFlag({ team, isUser = false }) {
-  const flagClass = `h-[16px] w-[24px] rounded-[4px] object-cover ${isUser ? "ring-1 ring-[#F7D117]/45" : "ring-1 ring-[#0B5F35]/18"}`;
+  const flagClass = `h-[18px] w-[27px] rounded-[5px] object-cover ${isUser ? "ring-1 ring-[#F7D117]/45" : "ring-1 ring-[#0B5F35]/18"}`;
   if (!team) {
-    return (
-      <div className={`grid h-[18px] w-[31px] place-items-center rounded-[5px] border ${isUser ? "border-[#F7D117]/35 bg-[#0B5F35] text-[#F5F1E8]" : "border-[#0B5F35]/20 bg-[#0B5F35] text-[#F5F1E8]"}`}>
-        <span className="home-copy-bold text-[8px] uppercase leading-none tracking-[0.035em]">TBC</span>
-      </div>
-    );
+    return <span className={`grid h-[18px] w-[27px] place-items-center text-center home-copy-bold text-[11px] leading-none ${isUser ? "text-[#F5F1E8]/82" : "text-[#0B5F35]/65"}`}>-</span>;
   }
   return <Flag team={team} className={flagClass} />;
 }
@@ -615,54 +658,158 @@ function LeaderboardFlag({ team, isUser = false }) {
 function LeaderboardHeader() {
   return (
     <div
-      className="grid items-center gap-2 px-3 pb-2 text-center home-copy-bold text-[8px] uppercase leading-none tracking-[0.11em] text-[#F5F1E8]"
+      className="grid items-center gap-0 px-3 pb-1.5 text-center home-copy-bold text-[7px] uppercase leading-none tracking-[0.11em] text-[#F5F1E8]"
       style={{ gridTemplateColumns: LEADERBOARD_GRID }}
     >
       <span className="justify-self-center text-center">Rank</span>
       <span className="justify-self-start text-left">Username</span>
-      <span className="justify-self-center text-center">Team</span>
-      <span className="justify-self-center text-center">Score</span>
+      <span aria-hidden="true" />
+      <span aria-hidden="true" />
+      <span aria-hidden="true" />
+      <span aria-hidden="true" />
+      <span aria-hidden="true" />
+      <span aria-hidden="true" />
+      <span className="flex min-w-0 items-center justify-center text-center">Team</span>
+      <span aria-hidden="true" />
+      <span className="flex min-w-0 items-center justify-center text-center">Score</span>
     </div>
   );
+}
+
+
+function leaderboardPodiumRowClass(rank) {
+  const numericRank = Number(rank);
+  if (numericRank === 1) return "border-[#D8B62F]/70 bg-[#D8B62F] text-[#072D1D] ring-1 ring-[#F7D117]/25";
+  if (numericRank === 2) return "border-[#C8C8C8]/70 bg-[#C8C8C8] text-[#072D1D] ring-1 ring-[#F5F1E8]/25";
+  if (numericRank === 3) return "border-[#CD7F32]/70 bg-[#CD7F32] text-[#072D1D] ring-1 ring-[#CD7F32]/25";
+  return "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-1 ring-[#F5F1E8]/18";
+}
+
+function leaderboardPodiumTextClass(row, isUser = false) {
+  const numericRank = Number(row?.rank);
+  if (isUser) return "text-[#F7D117]";
+  if ([1, 2, 3].includes(numericRank)) return "text-[#355243]";
+  return "text-[#0B5F35]/65";
+}
+
+function leaderboardNameTextClass(row, isUser = false) {
+  const numericRank = Number(row?.rank);
+  if (isUser) return "text-[#F7D117]";
+  if ([1, 2, 3].includes(numericRank)) return "text-[#355243]";
+  return "text-[#26352E]";
+}
+
+function leaderboardScoreTextClass(row, isUser = false) {
+  const numericRank = Number(row?.rank);
+  if (isUser) return "text-[#F5F1E8]";
+  if ([1, 2, 3].includes(numericRank)) return "text-[#355243]";
+  return "text-[#0B5F35]";
 }
 
 function LeaderboardRow({ row, isUser = false }) {
+  const cosmetics = leaderboardCosmetics(row);
+  const hasPodium = leaderboardHasPodium(row);
+  const rowClass = isUser
+    ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F5F1E8]/16"
+    : leaderboardPodiumRowClass(row.rank);
+
   return (
     <div
-      className={`grid h-14 items-center gap-2 rounded-[1.2rem] border px-3 py-0 shadow-[0_8px_18px_rgba(0,0,0,0.10)] ${isUser ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F5F1E8]/16" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-1 ring-[#F5F1E8]/18"}`}
+      className={`grid h-[39px] items-center gap-0 rounded-[1.05rem] border px-3 py-0 shadow-[0_6px_14px_rgba(0,0,0,0.10)] ${rowClass}`}
       style={{ gridTemplateColumns: LEADERBOARD_GRID }}
     >
-      <div className={`flex min-w-0 items-center justify-center text-center home-copy-bold text-[14px] leading-none ${isUser ? "text-[#F7D117]" : "text-[#0B5F35]/65"}`}>#{row.rank || "--"}</div>
-      <div className={`flex min-w-0 items-center justify-start truncate text-left home-copy-bold text-[14px] uppercase leading-none tracking-[0.04em] ${isUser ? "text-[#F7D117]" : "text-[#26352E]"}`}>{row.username || "-"}</div>
+      <div className={`flex min-w-0 items-center justify-center text-center home-copy-bold text-[13px] leading-none ${leaderboardPodiumTextClass(row, isUser)}`}>#{row.rank || "--"}</div>
+      <div className={`flex min-w-0 items-center justify-start truncate text-left home-copy-bold text-[13px] uppercase leading-none tracking-[0.04em] ${leaderboardNameTextClass(row, isUser)}`}>{row.username || "-"}</div>
+      <div className="flex min-w-0 items-center justify-center"><LeaderboardMiniIcon type="boot" active={cosmetics.goldenBoot} isUser={isUser} /></div>
+      <div className="flex min-w-0 items-center justify-center"><LeaderboardMiniIcon type="ball" active={cosmetics.goldenBall} isUser={isUser} /></div>
+      <div className="flex min-w-0 items-center justify-center"><LeaderboardMiniIcon type="glove" active={cosmetics.goldenGlove} isUser={isUser} /></div>
+      <span aria-hidden="true" />
+      <div className="flex min-w-0 items-center justify-center"><LeaderboardMiniIcon type="podium" active={hasPodium} isUser={isUser} /></div>
+      <span aria-hidden="true" />
       <div className="flex min-w-0 items-center justify-center"><LeaderboardFlag team={row.team} isUser={isUser} /></div>
-      <div className={`flex min-w-0 items-center justify-center text-center home-copy-bold text-[15px] leading-none ${isUser ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{Number(row.campaignPoints || 0)}</div>
+      <span aria-hidden="true" />
+      <div className={`flex min-w-0 items-center justify-center text-center home-copy-bold text-[14px] leading-none ${leaderboardScoreTextClass(row, isUser)}`}>{Number(row.campaignPoints || 0)}</div>
     </div>
   );
 }
 
-function ScoringTypeBox({ label, points }) {
+function ScoringTypeBox({ label, points, tone = "ivory" }) {
+  const toneClass = {
+    red: "border-red-500/50 bg-red-500 text-[#F5F1E8]",
+    yellow: "border-[#F7D117]/60 bg-[#F7D117] text-[#072D1D]",
+    green: "border-green-500/55 bg-green-500 text-[#F5F1E8]",
+    bronze: "border-[#CD7F32]/70 bg-[#CD7F32] text-[#072D1D]",
+    silver: "border-[#C8C8C8]/80 bg-[#C8C8C8] text-[#072D1D]",
+    gold: "border-[#D8B62F]/80 bg-[#D8B62F] text-[#072D1D]",
+    ivory: "border-[#F5F1E8]/70 bg-[#F5F1E8] text-[#072D1D]",
+  }[tone] || "border-[#F5F1E8]/70 bg-[#F5F1E8] text-[#072D1D]";
+
   return (
-    <div className="rounded-[0.9rem] border border-[#F5F1E8]/70 bg-[#F5F1E8] p-2.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_5px_10px_rgba(0,0,0,0.10)]">
-      <div className="home-copy-bold text-[22px] leading-none text-[#0B5F35]">+{points}</div>
-      <div className="mt-1.5 home-copy-bold text-[9px] uppercase leading-tight tracking-[0.07em] text-[#072D1D]">{label}</div>
+    <div className={`rounded-[0.9rem] border p-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_5px_10px_rgba(0,0,0,0.10)] ${toneClass}`}>
+      <div className="home-copy-bold text-[17px] leading-none">+{points}</div>
+      <div className="mt-1 home-copy-bold text-[7px] uppercase leading-tight tracking-[0.07em]">{label}</div>
     </div>
   );
 }
 
-function ScoringSection({ title, items }) {
+function ScoringMeter({ title }) {
+  return (
+    <div className="rounded-[1rem] border border-[#F5F1E8]/14 bg-[#072D1D]/64 px-3 py-3">
+      <div className="mb-1 text-center home-copy-bold text-[10px] uppercase leading-none tracking-[0.08em] text-[#F7D117]">+0-50</div>
+      <div className="mb-2 text-center home-copy-bold text-[8px] uppercase tracking-[0.10em] text-[#F5F1E8]">{title}</div>
+      <div className="relative h-[15px] overflow-hidden rounded-full border border-[#F5F1E8]/18 bg-[#031D13]">
+        <div className="absolute inset-y-0 left-[40%] w-[20%] bg-green-500/80 shadow-[0_0_12px_rgba(34,197,94,0.45)]" />
+        <div className="absolute inset-y-0 left-[49%] w-[2px] bg-[#F5F1E8]/85" />
+      </div>
+      <div className="relative mt-1.5 h-[9px] home-copy-bold text-[7px] uppercase leading-none text-[#F7D117]">
+        <span className="absolute left-0 top-0">0</span>
+        <span className="absolute left-1/2 top-0 -translate-x-1/2">50</span>
+        <span className="absolute right-0 top-0">0</span>
+      </div>
+    </div>
+  );
+}
+
+function ScoringSection({ title, items, columns = 2 }) {
   return (
     <div className="space-y-2">
-      <div className="text-center home-copy-bold text-[14px] uppercase leading-none tracking-[0.11em] text-[#F5F1E8]">{title}</div>
-      <div className="grid grid-cols-2 gap-2">
+      {title && <div className="text-center home-copy-bold text-[14px] uppercase leading-none tracking-[0.11em] text-[#F5F1E8]">{title}</div>}
+      <div className={`grid gap-2 ${columns === 5 ? "grid-cols-5" : columns === 4 ? "grid-cols-4" : columns === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
         {items.map((item) => <ScoringTypeBox key={item.label} {...item} />)}
       </div>
     </div>
   );
 }
 
+function ScoringOutcomeSection({ title, items = [] }) {
+  return (
+    <div className="space-y-2">
+      {title && <div className="text-center home-copy-bold text-[14px] uppercase leading-none tracking-[0.11em] text-[#F5F1E8]">{title}</div>}
+      <div className="grid grid-cols-5 gap-2">
+        {items.map((item) => <ScoringTypeBox key={item.label} {...item} />)}
+      </div>
+    </div>
+  );
+}
+
+function LeaderboardSection({ title = null, children, className = "" }) {
+  return (
+    <section className={`mx-auto w-[94%] overflow-hidden rounded-[1.6rem] border border-[#F5F1E8]/12 bg-[#0B5F35]/44 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F5F1E8]/10 ${className}`}>
+      {title && (
+        <div className="px-3 pb-2 pt-3 text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">
+          {title}
+        </div>
+      )}
+      {children}
+    </section>
+  );
+}
+
 export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore = 0, bestCampaignScore = 0, team = "", bestCampaignSummary = null, currentUser = auth.currentUser }) {
   const [leaderboardView, setLeaderboardView] = useState("scores");
-  const placeholderRows = Array.from({ length: 5 }, (_, index) => ({
+  const [leaderboardPage, setLeaderboardPage] = useState(0);
+  const [includeUpgradedRows, setIncludeUpgradedRows] = useState(true);
+  const placeholderRows = Array.from({ length: 10 }, (_, index) => ({
     id: `placeholder-${index}`,
     username: "-",
     team: "",
@@ -687,102 +834,160 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
         username: currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST",
         team: leaderboardTeam,
         campaignPoints: activeUserScore,
+        cosmeticsApplied: bestCampaignSummary?.cosmeticsApplied || bestCampaignSummary || {},
+        status: bestCampaignSummary?.status || bestCampaignSummary?.roundLabel || bestCampaignSummary?.stage || "inProgress",
         isUserPreview: true,
       }]
     : [];
 
   const baseRows = rows.length ? rows : placeholderRows;
-  const rankedRows = [...previewUserRow, ...baseRows]
+  const filterLeaderboardRow = (row) => includeUpgradedRows || row.isPlaceholder || row.isUserPreview || !leaderboardUsedUpgrade(row);
+  const rankedRows = [...previewUserRow, ...baseRows].filter(filterLeaderboardRow)
     .sort((a, b) => Number(b.campaignPoints || 0) - Number(a.campaignPoints || 0))
     .slice(0, 50)
     .map((row, index) => ({ ...row, rank: index + 1 }));
 
   const visibleRows = rankedRows.length ? rankedRows : placeholderRows.map((row, index) => ({ ...row, rank: index + 1 }));
+  const pageSize = 10;
+  const totalLeaderboardPages = Math.max(1, Math.ceil(visibleRows.length / pageSize));
+  const safeLeaderboardPage = Math.min(leaderboardPage, totalLeaderboardPages - 1);
+  const pageStartRank = safeLeaderboardPage * pageSize + 1;
+  const pageEndRank = Math.min(pageStartRank + pageSize - 1, Math.max(visibleRows.length, pageSize));
+  const pagedRows = visibleRows.slice(safeLeaderboardPage * pageSize, safeLeaderboardPage * pageSize + pageSize);
+  const topTenTitle = safeLeaderboardPage === 0 ? "TOP 10" : `RANK ${pageStartRank}-${pageEndRank}`;
+  const previousLeaderboardPage = () => setLeaderboardPage((page) => (page <= 0 ? totalLeaderboardPages - 1 : page - 1));
+  const nextLeaderboardPage = () => setLeaderboardPage((page) => (page >= totalLeaderboardPages - 1 ? 0 : page + 1));
   const myRankRow = rankedRows.find((row) => row.isUserPreview || (currentUser?.uid && row.userId === currentUser.uid)) || {
     id: "my-rank-empty",
     rank: "--",
     username: currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST",
     team: leaderboardTeam,
     campaignPoints: activeUserScore,
+    cosmeticsApplied: bestCampaignSummary?.cosmeticsApplied || bestCampaignSummary || {},
+    status: bestCampaignSummary?.status || bestCampaignSummary?.roundLabel || bestCampaignSummary?.stage || "inProgress",
     isUserPreview: true,
   };
 
-  const sliderButtonClass = (active) => `rounded-full px-3 py-2 home-copy-bold text-[14px] uppercase tracking-[0.08em] transition-all ${
+  const sliderButtonClass = (active) => `flex h-8 items-center justify-center rounded-[0.75rem] px-3 home-copy-bold text-[14px] uppercase leading-none tracking-[0.08em] transition-all ${
     active
-      ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.22)]"
+      ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]"
       : "bg-[#0B5F35] text-[#F5F1E8]/72"
   }`;
 
+  const rankArrowClass = () => "flex h-8 w-8 items-center justify-center text-[#F5F1E8] opacity-100 drop-shadow-[0_2px_5px_rgba(0,0,0,0.32)] active:scale-[0.96]";
+
   const scoringSections = [
     {
-      title: "Match Results",
+      title: "MATCH RESULT",
+      columns: 4,
       items: [
-        { label: "Match Played", points: LEADERBOARD_POINTS.MATCH_PLAYED },
-        { label: "Match Drawn", points: LEADERBOARD_POINTS.MATCH_DRAWN },
-        { label: "Match Won", points: LEADERBOARD_POINTS.MATCH_WON },
+        { label: "Match Played", points: LEADERBOARD_POINTS.MATCH_PLAYED, tone: "ivory" },
+        { label: "Match Lost", points: LEADERBOARD_POINTS.MATCH_LOST ?? 0, tone: "red" },
+        { label: "Match Drawn", points: LEADERBOARD_POINTS.MATCH_DRAWN, tone: "yellow" },
+        { label: "Match Won", points: LEADERBOARD_POINTS.MATCH_WON, tone: "green" },
       ],
     },
     {
-      title: "Shot Skill",
+      title: "SHOT OUTCOME",
       items: [
-        { label: "Accuracy Meter", points: `0-${LEADERBOARD_POINTS.ACCURACY_METER_MAX}` },
-        { label: "Power Meter", points: `0-${LEADERBOARD_POINTS.POWER_METER_MAX}` },
-        { label: "Goal Scored", points: LEADERBOARD_POINTS.GOAL_SCORED },
-        { label: "Perfect Shootout Win", points: LEADERBOARD_POINTS.PERFECT_SHOOTOUT_WIN },
+        { label: "Shot Miss", points: LEADERBOARD_POINTS.SHOT_MISS ?? 0, tone: "red" },
+        { label: "Hit Woodwork", points: LEADERBOARD_POINTS.SHOT_WOODWORK, tone: "red" },
+        { label: "Shot Saved", points: LEADERBOARD_POINTS.SHOT_SAVED, tone: "red" },
+        { label: "Goal Scored", points: LEADERBOARD_POINTS.GOAL_SCORED, tone: "green" },
+        { label: "Perfect Shootout", points: LEADERBOARD_POINTS.PERFECT_SHOOTOUT_WIN, tone: "green" },
       ],
     },
     {
-      title: "Tournament Progress",
+      title: "CUP RUN",
+      columns: 5,
       items: [
-        { label: "Qualify Group", points: LEADERBOARD_POINTS.QUALIFY_FROM_GROUP },
-        { label: "Reach Round of 16", points: LEADERBOARD_POINTS.REACH_ROUND_OF_16 },
-        { label: "Reach Quarter Final", points: LEADERBOARD_POINTS.REACH_QUARTER_FINAL },
-        { label: "Reach Semi Final", points: LEADERBOARD_POINTS.REACH_SEMI_FINAL },
-        { label: "Reach Final", points: LEADERBOARD_POINTS.REACH_FINAL },
-        { label: "Win Third Place", points: LEADERBOARD_POINTS.WIN_THIRD_PLACE_PLAY_OFF },
-        { label: "Runner-Up Finish", points: LEADERBOARD_POINTS.RUNNER_UP_FINISH },
-        { label: "Win Monday Cup", points: LEADERBOARD_POINTS.WIN_MONDAY_CUP },
+        { label: "Round of 32", points: LEADERBOARD_POINTS.QUALIFY_FROM_GROUP },
+        { label: "Round of 16", points: LEADERBOARD_POINTS.REACH_ROUND_OF_16 },
+        { label: "Quarter-Finals", points: LEADERBOARD_POINTS.REACH_QUARTER_FINAL },
+        { label: "Semi-Finals", points: LEADERBOARD_POINTS.REACH_SEMI_FINAL },
+        { label: "Final", points: LEADERBOARD_POINTS.REACH_FINAL },
+      ],
+    },
+    {
+      title: "PODIUM",
+      columns: 3,
+      items: [
+        { label: "Third Place", points: LEADERBOARD_POINTS.WIN_THIRD_PLACE_PLAY_OFF, tone: "bronze" },
+        { label: "Runner-Up", points: LEADERBOARD_POINTS.RUNNER_UP_FINISH, tone: "silver" },
+        { label: "Champions", points: LEADERBOARD_POINTS.WIN_MONDAY_CUP, tone: "gold" },
       ],
     },
   ];
 
   return (
     <main className="home-main-font relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
-      <ScreenTopBar {...menuProps}>RANKING</ScreenTopBar>
+      <ScreenTopBar {...menuProps}>LEADERBOARD</ScreenTopBar>
       <DrawerContent>
-        <div className="mx-auto mb-2 grid w-[94%] grid-cols-2 gap-2 rounded-full border border-[#F5F1E8]/14 bg-[#0B5F35]/82 p-1 shadow-[inset_0_1px_0_rgba(245,241,232,0.08),0_8px_20px_rgba(0,0,0,0.12)]">
-          <button type="button" onClick={() => setLeaderboardView("scores")} className={sliderButtonClass(leaderboardView === "scores")}>HIGH SCORES</button>
-          <button type="button" onClick={() => setLeaderboardView("model")} className={sliderButtonClass(leaderboardView === "model")}>POINTS SYSTEM</button>
+        <div className="px-0 pb-3 pt-3">
+          <div className="mx-auto grid w-[94%] grid-cols-2 rounded-[0.95rem] border border-[#F5F1E8]/20 bg-[#0B5F35]/82 p-0.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.08),0_8px_20px_rgba(0,0,0,0.12)]">
+            <button type="button" onClick={() => setLeaderboardView("scores")} className={sliderButtonClass(leaderboardView === "scores")}>SCORES</button>
+            <button type="button" onClick={() => setLeaderboardView("model")} className={sliderButtonClass(leaderboardView === "model")}>SCORING</button>
+          </div>
         </div>
 
-        <MenuPanel title={leaderboardView === "model" ? null : "LEADERBOARD"}>
-          <div className="p-4 pt-2">
+        <section className="min-h-0 flex-1 overflow-auto pt-0.5 pb-1 [scroll-padding-top:0px]">
+          <div className="space-y-2 pb-2">
             {leaderboardView === "model" ? (
-              <div className="space-y-3.5">
-                {scoringSections.map((section) => <ScoringSection key={section.title} {...section} />)}
-              </div>
-            ) : (
-              <div>
-                <LeaderboardHeader />
-                    <div className="space-y-2 pr-1">
-                  {visibleRows.slice(0, 5).map((row) => {
-                    const isUser = Boolean((currentUser && row.userId === currentUser.uid) || row.isUserPreview);
-                    return <LeaderboardRow key={`${row.userId || row.id || row.username}-${row.completedAt || row.rank}`} row={row} isUser={isUser} />;
-                  })}
+              <LeaderboardSection title="BEST CAMPAIGN SCORE">
+                <div className="space-y-3 px-3 pb-3 pt-2">
+                  <div className="space-y-2">
+                    <div className="text-center home-copy-bold text-[14px] uppercase leading-none tracking-[0.11em] text-[#F5F1E8]">SHOT SKILL</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <ScoringMeter title="Power Meter" />
+                      <ScoringMeter title="Accuracy Meter" />
+                    </div>
+                  </div>
+                  <ScoringOutcomeSection {...scoringSections[1]} />
+                  <ScoringSection {...scoringSections[0]} />
+                  <ScoringSection {...scoringSections[2]} />
+                  <ScoringSection {...scoringSections[3]} />
                 </div>
-              </div>
+              </LeaderboardSection>
+            ) : (
+              <>
+                <LeaderboardSection>
+                  <div className="px-2 pb-2 pt-2">
+                    <div className="mb-2 grid grid-cols-[36px_minmax(0,1fr)_36px] items-center gap-2 px-1">
+                      <button type="button" aria-label="Previous leaderboard page" onClick={previousLeaderboardPage} className={rankArrowClass()}><svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5L8 12L15 19" /></svg></button>
+                      <div className="text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">{topTenTitle}</div>
+                      <button type="button" aria-label="Next leaderboard page" onClick={nextLeaderboardPage} className={rankArrowClass()}><svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5L16 12L9 19" /></svg></button>
+                    </div>
+                    <label className="mx-auto mb-2 flex w-fit items-center justify-center gap-2 text-center home-copy-bold text-[8px] uppercase leading-none tracking-[0.11em] text-[#F5F1E8]/82">
+                      <span className={`grid h-6 w-6 place-items-center rounded-[0.28rem] ${includeUpgradedRows ? "bg-[#F7D117] text-[#072D1D]" : "border border-[#F5F1E8]/34 bg-transparent text-transparent"}`}>
+                        {includeUpgradedRows && (
+                          <svg viewBox="0 0 24 24" className="h-[15px] w-[15px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M4 12.5l5 5L20 5.5" />
+                          </svg>
+                        )}
+                      </span>
+                      <input type="checkbox" checked={includeUpgradedRows} onChange={(event) => { setIncludeUpgradedRows(event.target.checked); setLeaderboardPage(0); }} className="sr-only" />
+                      <span>Upgrades</span>
+                    </label>
+                    <LeaderboardHeader />
+                    <div className="space-y-1.5 pr-1">
+                      {pagedRows.map((row) => {
+                        const isUser = Boolean((currentUser && row.userId === currentUser.uid) || row.isUserPreview);
+                        return <LeaderboardRow key={`${row.userId || row.id || row.username}-${row.completedAt || row.rank}`} row={row} isUser={isUser} />;
+                      })}
+                    </div>
+                  </div>
+                </LeaderboardSection>
+
+                <LeaderboardSection title="MY RANKING">
+                  <div className="px-2 pb-2 pt-0">
+                    <LeaderboardRow row={myRankRow} isUser />
+                  </div>
+                </LeaderboardSection>
+              </>
             )}
           </div>
-        </MenuPanel>
-        {leaderboardView === "scores" && (
-          <MenuPanel title="MY RANK" className="mt-4">
-            <div className="p-4 pt-2">
-              <LeaderboardRow row={myRankRow} isUser />
-            </div>
-          </MenuPanel>
-        )}
+        </section>
       </DrawerContent>
     </main>
   );
 }
-

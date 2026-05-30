@@ -508,6 +508,9 @@ export async function saveLeaderboardHighScore(uid, entry = {}) {
   const cosmeticsApplied = normaliseCosmeticsApplied(entry.cosmeticsApplied, entry.bestCampaign || entry);
   const username = cleanUsername(entry.username || entry.nickname || "PLAYER").toUpperCase();
 
+  const finish = entry.status || entry.finish || entry.bestCampaign?.status || entry.bestCampaign?.roundLabel || entry.bestCampaign?.stage || "inProgress";
+  const podiumAchieved = Boolean(entry.podium || entry.podiumAchieved || /champion|runner|third/i.test(String(finish || "")));
+
   await setDoc(doc(db, "leaderboard", uid), {
     uid,
     userId: uid,
@@ -515,6 +518,10 @@ export async function saveLeaderboardHighScore(uid, entry = {}) {
     teamFlag: entry.teamFlag || entry.flag || entry.team?.flag || entry.team || "",
     gameScore: Number(entry.gameScore ?? entry.campaignPoints ?? entry.points ?? 0),
     cosmeticsApplied,
+    podium: entry.podium || null,
+    podiumAchieved,
+    status: finish,
+    finish,
     updatedAt: serverTimestamp(),
 
     // Temporary aliases so existing leaderboard UI keeps working while migrated.
@@ -551,6 +558,10 @@ export async function loadLeaderboardRows(limitCount = 50) {
       gameScore,
       campaignPoints: gameScore,
       cosmeticsApplied: normaliseCosmeticsApplied(data.cosmeticsApplied, data.bestCampaign || data),
+      podium: data.podium || null,
+      podiumAchieved: Boolean(data.podiumAchieved || data.podium || /champion|runner|third/i.test(String(data.status || data.finish || data.bestCampaign?.roundLabel || data.bestCampaign?.stage || ""))),
+      status: data.status || data.finish || data.bestCampaign?.roundLabel || data.bestCampaign?.stage || "inProgress",
+      finish: data.finish || data.status || data.bestCampaign?.roundLabel || data.bestCampaign?.stage || "inProgress",
       updatedAt: data.updatedAt || null,
     };
 

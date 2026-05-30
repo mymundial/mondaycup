@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import { MC_COLORS, MC_SIZES, MC_SHADOWS, MC_TYPE, mcPanelBorder, mcIvoryBorder } from "../../styles/theme.js";
 
-export const MenuPanel = forwardRef(function MenuPanel({ children, className = "", title = null, subtitle = null }, ref) {
+export const MenuPanel = forwardRef(function MenuPanel({ children, className = "", title = null, subtitle = null, style = {} }, ref) {
   return (
     <section
       ref={ref}
@@ -11,6 +11,7 @@ export const MenuPanel = forwardRef(function MenuPanel({ children, className = "
         border: mcPanelBorder,
         background: MC_COLORS.greenPanel,
         boxShadow: `${MC_SHADOWS.soft}, inset 0 1px 0 rgba(245,241,232,0.05)`,
+        ...style,
       }}
     >
       {(title || subtitle) && (
