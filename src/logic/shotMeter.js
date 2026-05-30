@@ -8,6 +8,17 @@ export const ACCURACY_TARGET_ZONE = [40, 60];
 export const UPGRADED_POWER_TARGET_ZONE = [35, 65];
 export const UPGRADED_ACCURACY_TARGET_ZONE = [35, 65];
 
+export const COSMETIC_ZONE_CONFIG = Object.freeze({
+  goldenBoot: {
+    baseZone: POWER_TARGET_ZONE,
+    upgradedZone: UPGRADED_POWER_TARGET_ZONE,
+  },
+  goldenBall: {
+    baseZone: ACCURACY_TARGET_ZONE,
+    upgradedZone: UPGRADED_ACCURACY_TARGET_ZONE,
+  },
+});
+
 export function hasCosmetic(activeCosmetics, key) {
   return Boolean(activeCosmetics?.[key]);
 }
@@ -21,6 +32,9 @@ export function getAccuracyTargetZone(activeCosmetics = {}) {
 }
 
 function expandedBand(value, targetZone, woodworkMargin = 10) {
+  // Always judge the displayed/snap value, not a fractional animation value.
+  // This keeps Golden Boot/Golden Ball visual zone extensions perfectly aligned
+  // with the actual gameplay parameters on mobile and desktop.
   const displayed = displayedMeterValue(value);
   const [targetMin, targetMax] = targetZone;
   const woodworkMin = Math.max(0, targetMin - woodworkMargin);
@@ -34,7 +48,7 @@ function expandedBand(value, targetZone, woodworkMargin = 10) {
 }
 
 export function accuracySpeedForPower(power, activeCosmetics = {}) {
-  const safe = clamp(Number(power) || 0, 0, 100);
+  const safe = displayedMeterValue(power);
   const [targetMin, targetMax] = getPowerTargetZone(activeCosmetics);
   const nearMin = Math.max(0, targetMin - 10);
   const nearMax = Math.min(100, targetMax + 10);
@@ -60,6 +74,10 @@ export function displayedMeterValue(value) {
   const numericValue = Number(value);
   if (!Number.isFinite(numericValue)) return 0;
   return clamp(Math.round(clamp(numericValue, 0, 100)), 0, 100);
+}
+
+export function snapMeterValueForOutcome(value) {
+  return displayedMeterValue(value);
 }
 
 export function accuracyBandForValue(value, activeCosmetics = {}) {

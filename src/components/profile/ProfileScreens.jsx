@@ -805,6 +805,54 @@ function LeaderboardSection({ title = null, children, className = "" }) {
   );
 }
 
+
+function LeaderboardMiniCheckbox({ checked }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        width: "14px",
+        height: "14px",
+        minWidth: "14px",
+        minHeight: "14px",
+        maxWidth: "14px",
+        maxHeight: "14px",
+        flex: "0 0 14px",
+        borderRadius: "4px",
+        display: "inline-grid",
+        placeItems: "center",
+        backgroundColor: checked ? "#F7D117" : "transparent",
+        border: checked ? "0" : "1px solid rgba(245,241,232,0.38)",
+        color: "#072D1D",
+        lineHeight: 1,
+        boxSizing: "border-box",
+      }}
+    >
+      {checked ? (
+        <svg
+          viewBox="0 0 24 24"
+          style={{
+            width: "9px",
+            height: "9px",
+            minWidth: "9px",
+            minHeight: "9px",
+            maxWidth: "9px",
+            maxHeight: "9px",
+            display: "block",
+          }}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="4.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M4.25 12.5l4.7 4.7L20 5.8" />
+        </svg>
+      ) : null}
+    </span>
+  );
+}
+
 export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore = 0, bestCampaignScore = 0, team = "", bestCampaignSummary = null, currentUser = auth.currentUser }) {
   const [leaderboardView, setLeaderboardView] = useState("scores");
   const [leaderboardPage, setLeaderboardPage] = useState(0);
@@ -952,19 +1000,13 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
               <>
                 <LeaderboardSection>
                   <div className="px-2 pb-2 pt-2">
-                    <div className="mb-2 grid grid-cols-[36px_minmax(0,1fr)_36px] items-center gap-2 px-1">
+                    <div className="mb-1 grid grid-cols-[36px_minmax(0,1fr)_36px] items-center gap-2 px-1">
                       <button type="button" aria-label="Previous leaderboard page" onClick={previousLeaderboardPage} className={rankArrowClass()}><svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5L8 12L15 19" /></svg></button>
                       <div className="text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">{topTenTitle}</div>
                       <button type="button" aria-label="Next leaderboard page" onClick={nextLeaderboardPage} className={rankArrowClass()}><svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5L16 12L9 19" /></svg></button>
                     </div>
-                    <label className="mx-auto mb-2 flex w-fit items-center justify-center gap-2 text-center home-copy-bold text-[8px] uppercase leading-none tracking-[0.11em] text-[#F5F1E8]/82">
-                      <span className={`grid h-6 w-6 place-items-center rounded-[0.28rem] ${includeUpgradedRows ? "bg-[#F7D117] text-[#072D1D]" : "border border-[#F5F1E8]/34 bg-transparent text-transparent"}`}>
-                        {includeUpgradedRows && (
-                          <svg viewBox="0 0 24 24" className="h-[15px] w-[15px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <path d="M4 12.5l5 5L20 5.5" />
-                          </svg>
-                        )}
-                      </span>
+                    <label className="mx-auto mb-1.5 flex w-fit items-center justify-center gap-1.5 text-center home-copy-bold text-[7px] uppercase leading-none tracking-[0.10em] text-[#F5F1E8]/82">
+                      <LeaderboardMiniCheckbox checked={includeUpgradedRows} />
                       <input type="checkbox" checked={includeUpgradedRows} onChange={(event) => { setIncludeUpgradedRows(event.target.checked); setLeaderboardPage(0); }} className="sr-only" />
                       <span>Upgrades</span>
                     </label>

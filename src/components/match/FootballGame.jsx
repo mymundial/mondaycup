@@ -34,6 +34,7 @@ import {
   POWER_SWEEP_MS,
   accuracyOutcomeForValue,
   accuracySpeedForPower,
+  displayedMeterValue,
   directionLabel,
   getAccuracyTargetZone,
   getPowerTargetZone,
@@ -70,7 +71,7 @@ function PowerChargeMeter({ value, ideal = GAME.powerIdeal, charging = false, fi
   );
 }
 
-function AccuracyMeter({ value, ideal, running = false }) {
+function AccuracyMeter({ value, ideal, running = false, fillRef = null }) {
   const left = `${ideal[0]}%`;
   const width = `${ideal[1] - ideal[0]}%`;
 
@@ -84,7 +85,8 @@ function AccuracyMeter({ value, ideal, running = false }) {
         />
         <div className="absolute inset-y-[-3px] left-1/2 w-[3px] -translate-x-1/2 rounded-full bg-[#F5F1E8] shadow-[0_0_7px_rgba(245,241,232,0.75)]" />
         <div
-          className="absolute inset-y-[-2px] w-[4px] -translate-x-1/2 rounded-full bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.65)]"
+          ref={fillRef}
+          className="absolute inset-y-[-2px] w-[3px] -translate-x-1/2 rounded-full bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.65)]"
           style={{ left: `${value}%`, willChange: "left" }}
         />
         <div className={`pointer-events-none absolute inset-0 ${running ? "animate-pulse" : ""} bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(0,0,0,0.13))]`} />
@@ -271,6 +273,7 @@ function ControlOverlay({
   powerTargetZone,
   accuracyValue,
   accuracyRunning,
+  accuracyFillRef,
   handleLockAccuracy,
   accuracyTargetZone,
   opponentTeam,
@@ -310,7 +313,7 @@ function ControlOverlay({
       {canAccuracy && (
         <div className="pointer-events-auto absolute inset-x-[4%] bottom-0 flex flex-col gap-[clamp(8px,1.05dvh,16px)]">
           <div className={titleClass}>SHOT ACCURACY</div>
-          <AccuracyMeter value={accuracyValue} ideal={accuracyTargetZone} running={accuracyRunning} />
+          <AccuracyMeter value={accuracyValue} ideal={accuracyTargetZone} running={accuracyRunning} fillRef={accuracyFillRef} />
           <ConfirmButton onClick={handleLockAccuracy}>TAP FOR ACCURACY</ConfirmButton>
         </div>
       )}
@@ -357,6 +360,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   const powerLastFrameRef = useRef(0);
   const powerDirectionRef = useRef(1);
   const powerFillRef = useRef(null);
+  const accuracyFillRef = useRef(null);
   const accuracyValueRef = useRef(0);
   const accuracyFrameRef = useRef(null);
   const accuracyLastFrameRef = useRef(0);
@@ -561,7 +565,16 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   function setAccuracyVisual(nextAccuracy) {
     const safeAccuracy = clamp(nextAccuracy, 0, 100);
     accuracyValueRef.current = safeAccuracy;
+    if (accuracyFillRef.current) {
+      accuracyFillRef.current.style.left = `${safeAccuracy}%`;
+    }
     setAccuracyValue(safeAccuracy);
+  }
+
+  function readVisualMeterValue(fillRef, fallbackValue) {
+    const rawLeft = fillRef?.current?.style?.left;
+    const parsed = Number.parseFloat(String(rawLeft || "").replace("%", ""));
+    return Number.isFinite(parsed) ? clamp(parsed, 0, 100) : clamp(Number(fallbackValue) || 0, 0, 100);
   }
 
   function stopPowerFrame() {
@@ -641,7 +654,14 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
 
     stopPowerFrame();
     setPowerCharging(false);
-    const finalPower = clamp(powerValueRef.current, 0, 100);
+
+    // Golden Boot expands the visible power sweet spot. Use the same visual
+    // needle position the player sees, then snap it to the displayed value
+    // before judging the upgraded/standard power zone and accuracy speed.
+    const finalPower = displayedMeterValue(readVisualMeterValue(powerFillRef, powerValueRef.current));
+    powerValueRef.current = finalPower;
+    setPowerValue(finalPower);
+
     const nextAccuracySpeed = accuracySpeedForPower(finalPower, activeCosmetics);
     setLockedPower(finalPower);
     setAccuracySweepMs(nextAccuracySpeed);
@@ -659,7 +679,14 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
 
     stopAccuracyFrame();
     setAccuracyRunning(false);
-    const finalAccuracy = clamp(accuracyValueRef.current, 0, 100);
+
+    // Use the meter needle's visual position as the source of truth, then snap
+    // to the same displayed integer value used by the outcome bands. This keeps
+    // mobile touch timing, the green target band, and shot results aligned.
+    const finalAccuracy = displayedMeterValue(readVisualMeterValue(accuracyFillRef, accuracyValueRef.current));
+    accuracyValueRef.current = finalAccuracy;
+    setAccuracyValue(finalAccuracy);
+
     const finalPower = clamp(lockedPower ?? powerValueRef.current, 0, 100);
     const accuracyOutcome = accuracyOutcomeForValue(finalAccuracy, lockedDirection, activeCosmetics);
     commitShot("user", lockedDirection, finalPower, score, attempts, null, finalAccuracy, accuracyOutcome);
@@ -732,6 +759,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         powerTargetZone={powerTargetZone}
         accuracyValue={accuracyValue}
         accuracyRunning={accuracyRunning}
+        accuracyFillRef={accuracyFillRef}
         handleLockAccuracy={handleLockAccuracy}
         accuracyTargetZone={accuracyTargetZone}
         opponentTeam={opponent}
