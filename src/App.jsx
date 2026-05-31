@@ -10,7 +10,9 @@ import { HomeScreen, HostSelectScreen, TeamSelectScreen } from "./components/sel
 import { FixturesScreen } from "./components/schedule/ScheduleScreens.jsx";
 import { GroupsScreen } from "./components/standings/StandingsScreens.jsx";
 import { MatchScreen } from "./components/match/MatchScreen.jsx";
+import { ShareScreen } from "./components/share/ShareScreen.jsx";
 import { DrawerShell } from "./components/layout/Layout.jsx";
+import AppFooter from "./components/ui/AppFooter.jsx";
 import { ensureUserDocument, isNicknameTaken, loadCurrentProgress, loadLeaderboardRows, loadUserProfile, saveAllTeamsUnlocked, saveCurrentProgress, saveLeaderboardHighScore, saveUserNickname, saveUserProfile, unlockCosmetic, consumeGoldenTicket } from "./lib/firebaseUser.js";
 import { ClubhouseScreen, TrophyCabinetScreen, LeaderboardScreen } from "./components/profile/ProfileScreens.jsx";
 import {
@@ -72,22 +74,7 @@ const CORE_ACHIEVEMENT_KEYS = [
 ];
 
 function NonMatchFooter() {
-  return (
-    <footer className="pointer-events-none fixed inset-x-0 bottom-0 z-[1200] h-[30px] overflow-hidden">
-      <div className="mx-auto h-full w-full max-w-md overflow-hidden">
-        <div className="relative h-full w-full bg-[#0d6c3d]">
-          <div
-            className="absolute inset-0 opacity-60"
-            style={{
-              backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.045) 0%, rgba(245,241,232,0.045) 10%, rgba(11,45,29,0.12) 10%, rgba(11,45,29,0.12) 20%), linear-gradient(rgba(245,241,232,0.02), rgba(11,45,29,0.05))",
-            }}
-            aria-hidden="true"
-          />
-          <div className="absolute inset-x-[-12%] top-[-19px] h-[31px] rounded-[0_0_50%_50%] border-b border-[#F5F1E8]/13 shadow-[0_10px_18px_rgba(0,0,0,0.28)]" aria-hidden="true" />
-        </div>
-      </div>
-    </footer>
-  );
+  return <AppFooter fixed />;
 }
 
 function withNonMatchFooter(content) {
@@ -790,6 +777,7 @@ export default function App() {
   const openClubhouse = () => { closeMenu(); setDrawer("clubhouse"); };
   const openTrophyCabinet = () => { closeMenu(); setDrawer("trophyCabinet"); };
   const openLeaderboard = () => { closeMenu(); setDrawer("leaderboard"); };
+  const openShare = () => { closeMenu(); setDrawer("share"); };
   const unlockAllTeams = () => {
     setAllTeamsUnlocked(true);
     safeWriteJson(ALL_TEAMS_UNLOCKED_KEY, true);
@@ -1146,7 +1134,7 @@ export default function App() {
     setScreen("home");
   };
 
-  const menuProps = { menuOpen, menuInitialView, menuInitialAuthMode, menuAuthShowLogoBack, menuAuthRequestId, onToggleMenu: () => { setMenuInitialView("menu"); setMenuInitialAuthMode("signin"); setMenuAuthShowLogoBack(false); setMenuOpen((open) => !open); }, onCloseMenu: closeMenu, onOpenAuthMenu: openAuthMenu, onMatch: openMatch, onFixtures: openFixtures, onGroups: openGroups, onClubhouse: openClubhouse, onTrophyCabinet: openTrophyCabinet, onLeaderboard: openLeaderboard, onRestart: resetTournament, onSignOut: handleSignOut, canSignOut: Boolean(currentUser), onAuthComplete: handleAuthComplete };
+  const menuProps = { menuOpen, menuInitialView, menuInitialAuthMode, menuAuthShowLogoBack, menuAuthRequestId, onToggleMenu: () => { setMenuInitialView("menu"); setMenuInitialAuthMode("signin"); setMenuAuthShowLogoBack(false); setMenuOpen((open) => !open); }, onCloseMenu: closeMenu, onOpenAuthMenu: openAuthMenu, onMatch: openMatch, onFixtures: openFixtures, onGroups: openGroups, onClubhouse: openClubhouse, onTrophyCabinet: openTrophyCabinet, onLeaderboard: openLeaderboard, onShare: openShare, onRestart: resetTournament, onSignOut: handleSignOut, canSignOut: Boolean(currentUser), onAuthComplete: handleAuthComplete };
 
   const drawerElement = drawer === "groups"
     ? <DrawerShell><GroupsScreen allGroups={allGroups} qualifiers={qualifiers} menuProps={menuProps} standingsView={standingsView} onStandingsViewChange={setStandingsView} knockoutFixtures={visibleKnockoutFixtures} qualifiedTeams={qualifiedTeams} userTeam={team} podium={podium} /></DrawerShell>
@@ -1178,7 +1166,9 @@ export default function App() {
         ? <DrawerShell><TrophyCabinetScreen menuProps={menuProps} achievements={achievements} nationCupWins={nationCupWins} /></DrawerShell>
         : drawer === "leaderboard"
           ? <DrawerShell><LeaderboardScreen menuProps={menuProps} rows={leaderboardRows} currentCampaignScore={scoringState.campaignPoints} bestCampaignScore={bestCampaignScore} team={team} bestCampaignSummary={bestCampaignSummary} activeCosmetics={activeCosmetics} currentUser={currentUser} /></DrawerShell>
-          : drawer === "fixtures"
+          : drawer === "share"
+            ? <DrawerShell><ShareScreen menuProps={menuProps} team={team} opponent={opponent} score={score} matchResult={matchResult} stageLabel={matchStage} /></DrawerShell>
+            : drawer === "fixtures"
             ? <DrawerShell><FixturesScreen fixtureView={fixtureView} onFixtureViewChange={setFixtureView} schedule={schedule} menuProps={menuProps} knockoutFixtures={visibleKnockoutFixtures} userTeam={team} /></DrawerShell>
             : null;
 

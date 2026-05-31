@@ -1,3 +1,5 @@
+import { footerAwareStyle } from '../ui/AppFooter.jsx';
+
 export function AppFrame({ children, className = "" }) {
   return (
     <div className="fixed inset-0 z-50 flex justify-center bg-[#F5F0E6] antialiased">
@@ -8,9 +10,12 @@ export function AppFrame({ children, className = "" }) {
   );
 }
 
-export function AppFrameContent({ children, className = "" }) {
+export function AppFrameContent({ children, className = "", footerAware = true, style }) {
   return (
-    <div className={`relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden pb-[calc(30px+env(safe-area-inset-bottom))] ${className}`}>
+    <div
+      className={`relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden ${className}`}
+      style={footerAware ? footerAwareStyle(style, 'content') : style}
+    >
       {children}
     </div>
   );

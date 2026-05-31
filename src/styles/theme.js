@@ -27,7 +27,7 @@ export const MC_SIZES = {
   panelRadius: 24,
   cardRadius: 18,
   pillRadius: 999,
-  topBarHeight: 56,
+  topBarHeight: 54,
   buttonHeight: 52,
   inputHeight: 46,
   sliderHeight: 42,

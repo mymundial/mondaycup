@@ -1,7 +1,8 @@
 import { MondayLogo } from "../shared.jsx";
 import { AppFrame, AppFrameContent } from "./AppFrame.jsx";
 import { PitchPageBackground } from "./PitchPageBackground.jsx";
-import { MC_COLORS, MC_SIZES, mcPanelBorder } from "../../styles/theme.js";
+import AppFooter from "../ui/AppFooter.jsx";
+import AppPanel from "../ui/AppPanel.jsx";
 
 export function Shell({ children }) {
   return <div className="flex min-h-[100dvh] justify-center bg-[#F5F0E6] text-[#072D1D] antialiased"><div className="min-h-[100dvh] w-full max-w-md">{children}</div></div>;
@@ -12,23 +13,14 @@ export function PageFrame({ children }) {
 }
 
 export function Footer() {
-  return (
-    <footer className="relative mt-auto h-[30px] shrink-0 overflow-hidden text-center">
-      <div className="absolute inset-0 bg-[#0d6c3d]" aria-hidden="true" />
-      <div className="absolute inset-0 opacity-60" style={{ backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.045) 0%, rgba(245,241,232,0.045) 10%, rgba(11,45,29,0.12) 10%, rgba(11,45,29,0.12) 20%), linear-gradient(rgba(245,241,232,0.02), rgba(11,45,29,0.05))" }} aria-hidden="true" />
-      <div className="absolute inset-x-[-12%] top-[-19px] h-[31px] rounded-[0_0_50%_50%] border-b border-[#F5F1E8]/13 shadow-[0_10px_18px_rgba(0,0,0,0.28)]" aria-hidden="true" />
-    </footer>
-  );
+  return <AppFooter />;
 }
 
 export function GreenCard({ children, className = "" }) {
   return (
-    <section
-      className={`text-[#F5F0E6] ${className}`}
-      style={{ borderRadius: MC_SIZES.panelRadius, border: mcPanelBorder, background: MC_COLORS.greenPanel, padding: 20 }}
-    >
+    <AppPanel variant="standard" className={`text-[#F5F0E6] ${className}`} style={{ padding: 20 }}>
       {children}
-    </section>
+    </AppPanel>
   );
 }
 

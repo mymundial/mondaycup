@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "../../firebase";
 import { HOST_TEAMS, GROUPS, GROUP_LETTERS, TEAM_RANK, getTeamTheme } from "../../data/teams.js";
@@ -8,6 +8,7 @@ import { Flag } from "../shared.jsx";
 import { ensureUserDocument } from "../../lib/firebaseUser.js";
 import { GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
 import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
+import { footerAwareStyle } from "../ui/AppFooter.jsx";
 import { AuthEmailCommsCheckbox, AuthForgotPasswordButton, AuthPrimaryButton, AuthTabs, AuthTextInput, PasswordVisibilityButton } from "../auth/AuthFormParts.jsx";
 import "./FlashTeamTicker.css";
 
@@ -366,7 +367,7 @@ function HomeFooter() {
 function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {} }) {
   return (
     <Shell>
-      <div className="home-main-font relative flex h-[100dvh] flex-col overflow-hidden bg-[#0d6c3d] pb-[calc(30px+env(safe-area-inset-bottom))] text-[#072D1D]">
+      <div className="home-main-font relative flex h-[100dvh] flex-col overflow-hidden bg-[#0d6c3d] text-[#072D1D]" style={footerAwareStyle({}, "content")}>
         <ScoreboardPlaceholder allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} />
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
@@ -491,6 +492,14 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
     setAuthSuccess("");
   };
 
+  const authActionSettings = () => {
+    if (typeof window === "undefined") return undefined;
+    return {
+      url: window.location.origin,
+      handleCodeInApp: false,
+    };
+  };
+
   const switchMode = (nextMode) => {
     resetMessages();
     setMode(nextMode);
@@ -516,12 +525,24 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
       await ensureUserDocument(credential.user, trimmedUsername, {
         username: trimmedUsername,
         emailOptIn,
+        accountStatus: { emailVerified: false, verificationRequired: true },
         updatedAt: serverTimestamp(),
       });
+
+      try {
+        await sendEmailVerification(credential.user);
+        setAuthSuccess("Account created verification email sent");
+      } catch (verificationError) {
+        const code = String(verificationError?.code || "");
+        if (code.includes("too-many-requests")) {
+          setAuthError("Account created but verification email was rate limited please try again later");
+        } else {
+          setAuthError("Account created but verification email did not send please use Sign In to resend");
+        }
+      }
+
       await onAuthComplete?.(credential.user, { navigate: false });
       onSignedIn?.(credential.user);
-
-      setAuthSuccess("Account created welcome to the Monday Club");
     } catch (error) {
       setAuthError(authErrorMessage(error));
     } finally {
@@ -553,7 +574,7 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
 
   const handleForgotPassword = async (event) => {
     event.preventDefault();
-    const trimmedEmail = email.trim();
+    const trimmedEmail = email.trim().toLowerCase().replace(",", ".");
 
     if (!trimmedEmail) {
       setAuthError("Please enter your email address first");
@@ -564,10 +585,13 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
     try {
       setAuthLoading(true);
       resetMessages();
-      await sendPasswordResetEmail(auth, trimmedEmail);
-      setAuthSuccess("Password reset link sent");
+      await sendPasswordResetEmail(auth, trimmedEmail, authActionSettings());
+      setAuthSuccess("If that email is registered, a password reset link has been sent");
     } catch (error) {
-      setAuthError(authErrorMessage(error));
+      const code = String(error?.code || "");
+      if (code.includes("invalid-email")) setAuthError("Please enter a valid email address");
+      else if (code.includes("too-many-requests")) setAuthError("Please wait before requesting another reset link");
+      else setAuthError("Could not send reset link please try again");
     } finally {
       setAuthLoading(false);
     }
@@ -602,7 +626,9 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
           <AuthEmailCommsCheckbox checked={emailOptIn} onChange={setEmailOptIn} />
         )}
         {!isRegister && (
-<AuthForgotPasswordButton onClick={() => { resetMessages(); setForgotPassword(true); }} />
+<AuthForgotPasswordButton onClick={() => { resetMessages(); setForgotPassword(true); }}>
+  FORGOT PASSWORD?
+</AuthForgotPasswordButton>
         )}
       </form>
     </HomeMenuShell>

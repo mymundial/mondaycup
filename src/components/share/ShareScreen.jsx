@@ -7,7 +7,6 @@ import { teamToGameTeam } from "../../logic/matchPresentation.js";
 import { DIRECTIONS, GAME, getDirection, keeperTransform } from "../../logic/penaltyEngine.js";
 import { GROUPS } from "../../data/teams.js";
 import { ASSETS } from "../../data/assets.js";
-import { auth } from "../../firebase.js";
 
 const EXPORT_STATES = [
   { id: "match", label: "MATCH" },
@@ -60,20 +59,8 @@ const SD_OPTIONS = [0, 1, 2, 3];
 const LED_YELLOW = "#F7D117";
 const IVORY = "#F5F1E8";
 const DARK_GREEN = "#072D1D";
-const SHARE_PREVIEW_CLASS = "w-[min(var(--share-preview-size,340px),calc(100vw-32px))] max-w-[var(--share-preview-size,340px)]";
-const SHARE_DESIGN_SIZE = 400;
-const SHARE_EXPORT_FRAME_SIZE = 800;
-const PUBLIC_EXPORT_STATE_IDS = new Set(["match", "shirt"]);
-const PREVIEW_SIZE_OPTIONS = [
-  { value: "compact", label: "PHONE" },
-  { value: "post", label: "POST" },
-  { value: "large", label: "LARGE" },
-];
-const PREVIEW_SIZE_MAP = { compact: 300, post: 340, large: 390 };
-const SHIRT_NAME_MAX_LENGTH = 18;
+const SHARE_PREVIEW_CLASS = "w-[min(400px,calc(100vw-32px))] max-w-[400px]";
 const DIRECTION_TO_SLOT = { LT: "1", CT: "2", RT: "3", LM: "4", CM: "5", RM: "6", LB: "7", CB: "8", RB: "9" };
-const SHARE_EDITOR_EMAIL = "alexjashworth@gmail.com";
-const DEFAULT_POSTER_SUBTITLE = "MONDAY 1ST JUNE 2026";
 
 function scoreFromProps({ team, opponent, score, matchResult }) {
   if (matchResult?.home && matchResult?.away) {
@@ -123,25 +110,6 @@ function previewTicker({ team, opponent, matchResult }) {
   if (matchResult.isDraw) return "DRAW!";
   if (matchResult.winner) return `${String(matchResult.winner).toUpperCase()} WINS!`;
   return `${String(matchResult.won ? team : opponent).toUpperCase()} WINS!`;
-}
-
-function extractShareMoment(matchResult, team) {
-  const moment = matchResult?.shareMoment || matchResult?.lastMoment || matchResult?.lastShot || matchResult?.lastAttempt || null;
-  const direction = moment?.direction || moment?.shotDirection || moment?.ballDirection || moment?.target || moment?.slot || null;
-  const keeper = moment?.keeperDirection || moment?.keeper || moment?.saveDirection || null;
-  const outcome = String(moment?.commentary || moment?.result || moment?.shotResult || moment?.outcome || "").toUpperCase();
-  const hasMoment = Boolean(moment || direction || keeper);
-  let commentary = moment?.commentary || "";
-  if (!commentary && outcome.includes("GOAL")) commentary = "GOAL!";
-  if (!commentary && (outcome.includes("SAVE") || outcome.includes("SAVED"))) commentary = "SAVED!";
-  if (!commentary && matchResult?.winner) commentary = `${String(matchResult.winner).toUpperCase()} WINS!`;
-  if (!commentary && matchResult?.won) commentary = `${String(team || matchResult.home || "TEAM").toUpperCase()} WINS!`;
-  return {
-    hasMoment,
-    commentary,
-    ballPosition: direction && DIRECTIONS.some((item) => item.id === direction) ? direction : "spot",
-    goalkeeperPosition: keeper && DIRECTIONS.some((item) => item.id === keeper) ? keeper : "CM",
-  };
 }
 
 function fontFamilyFor(value) {
@@ -506,11 +474,11 @@ function ShareMatchPreview({
   );
 }
 
-function BracketMiniSlot({ label, team, winner = false, className = "" }) {
+function BracketSlot({ label, team, winner = false }) {
   return (
-    <div className={`relative flex h-[26px] min-w-0 items-center justify-between rounded-[7px] border px-2 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ${winner ? "border-[#F7D117]/90 bg-[#F7D117] text-[#072D1D]" : "border-[#F5F1E8]/24 bg-[#051A11]/78 text-[#F5F1E8]"} ${className}`}>
-      <span className="home-copy-bold shrink-0 text-[6px] font-black uppercase tracking-[0.11em] opacity-70">{label}</span>
-      <span className="home-copy-bold ml-1 min-w-0 truncate text-right text-[8px] font-black uppercase tracking-[0.07em]">{team}</span>
+    <div className={`relative flex h-[30px] items-center justify-between rounded-[8px] border px-2 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ${winner ? "border-[#F7D117]/90 bg-[#F7D117] text-[#072D1D]" : "border-[#F5F1E8]/24 bg-[#051A11]/72 text-[#F5F1E8]"}`}>
+      <span className="home-copy-bold text-[7px] font-black uppercase tracking-[0.13em] opacity-70">{label}</span>
+      <span className="home-copy-bold max-w-[74%] truncate text-[9px] font-black uppercase tracking-[0.08em]">{team}</span>
     </div>
   );
 }
@@ -519,43 +487,37 @@ function BracketPreview({ bracketTitle, bracketTeams, champion }) {
   const qf = padArray(bracketTeams, 8, ["Ghana", "France", "Brazil", "England", "Canada", "Spain", "Argentina", "Portugal"]);
   const sf = [qf[0], qf[3], qf[4], qf[7]];
   const finalists = [sf[0], sf[3]];
-  const champ = champion || finalists[0];
-
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#0d6c3d] text-[#F5F1E8]">
       <PitchMow />
-      <div className="absolute inset-[4px] border border-[#F5F1E8]/18" />
-      <div className="relative z-[1] flex h-full flex-col p-5">
-        <div className="text-center">
-          <div className="led-text-glow font-led text-[15px] font-black uppercase leading-none tracking-[0.14em] text-[#F7D117]">{bracketTitle || "ROAD TO THE FINAL"}</div>
-          <div className="mt-2 home-copy-bold text-[7px] font-black uppercase tracking-[0.22em] text-[#F5F1E8]/72">QUARTER-FINALS ONWARDS</div>
+      <div className="relative z-[1] flex h-full flex-col p-6">
+        <div className="mb-4 text-center">
+          <div className="led-text-glow font-led text-[15px] font-black uppercase tracking-[0.14em] text-[#F7D117]">{bracketTitle || "ROAD TO THE FINAL"}</div>
+          <div className="mt-1 home-copy-bold text-[8px] font-black uppercase tracking-[0.22em] text-[#F5F1E8]/78">QUARTER-FINALS ONWARDS</div>
         </div>
-
-        <div className="relative mt-3 min-h-0 flex-1">
-          <div className="absolute left-0 top-[6px] flex w-[112px] flex-col gap-[12px]">
-            {qf.slice(0, 4).map((team, index) => <BracketMiniSlot key={`lqf-${team}-${index}`} label={`QF${index + 1}`} team={team} />)}
+        <div className="grid min-h-0 flex-1 grid-cols-[1fr_0.8fr_0.8fr_1fr] gap-3">
+          <div className="flex flex-col justify-around">
+            {qf.slice(0, 4).map((team, index) => <BracketSlot key={`left-${team}-${index}`} label={`QF${index + 1}`} team={team} />)}
           </div>
-          <div className="absolute left-[90px] top-[47px] flex w-[98px] flex-col gap-[54px]">
-            <BracketMiniSlot label="SF1" team={sf[0]} winner />
-            <BracketMiniSlot label="SF2" team={sf[1]} />
+          <div className="flex flex-col justify-center gap-[58px]">
+            <BracketSlot label="SF1" team={sf[0]} winner />
+            <BracketSlot label="SF2" team={sf[1]} />
           </div>
-
-          <div className="absolute left-1/2 top-[72px] flex w-[132px] -translate-x-1/2 flex-col items-center gap-2 rounded-[14px] border border-[#F7D117]/62 bg-[#051A11]/86 p-3 text-center shadow-[0_14px_30px_rgba(0,0,0,0.30),inset_0_1px_0_rgba(245,241,232,0.08)]">
-            <div className="grid w-full grid-cols-1 gap-1.5">
-              <BracketMiniSlot label="FINAL" team={finalists[0]} />
-              <BracketMiniSlot label="FINAL" team={finalists[1]} />
-            </div>
-            <div className="led-text-glow font-led text-[8px] font-black uppercase tracking-[0.14em] text-[#F7D117]">CHAMPION</div>
-            <div className="home-copy-bold w-full truncate text-[17px] font-black uppercase leading-none tracking-[0.06em] text-[#F5F1E8]">{champ}</div>
+          <div className="flex flex-col justify-center gap-[58px]">
+            <BracketSlot label="SF3" team={sf[2]} />
+            <BracketSlot label="SF4" team={sf[3]} winner />
           </div>
-
-          <div className="absolute right-[90px] top-[47px] flex w-[98px] flex-col gap-[54px]">
-            <BracketMiniSlot label="SF3" team={sf[2]} />
-            <BracketMiniSlot label="SF4" team={sf[3]} winner />
+          <div className="flex flex-col justify-around">
+            {qf.slice(4, 8).map((team, index) => <BracketSlot key={`right-${team}-${index}`} label={`QF${index + 5}`} team={team} />)}
           </div>
-          <div className="absolute right-0 top-[6px] flex w-[112px] flex-col gap-[12px]">
-            {qf.slice(4, 8).map((team, index) => <BracketMiniSlot key={`rqf-${team}-${index}`} label={`QF${index + 5}`} team={team} />)}
+        </div>
+        <div className="relative z-[2] mx-auto -mt-4 flex w-[58%] flex-col items-center gap-2 rounded-[14px] border border-[#F7D117]/50 bg-[#051A11]/78 p-3 shadow-[0_12px_28px_rgba(0,0,0,0.26),inset_0_1px_0_rgba(245,241,232,0.08)]">
+          <div className="grid w-full grid-cols-2 gap-2">
+            <BracketSlot label="FINAL" team={finalists[0]} />
+            <BracketSlot label="FINAL" team={finalists[1]} />
           </div>
+          <div className="led-text-glow font-led text-[10px] font-black uppercase tracking-[0.14em] text-[#F7D117]">CHAMPION</div>
+          <div className="home-copy-bold w-full truncate text-center text-[18px] font-black uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">{champion || finalists[0]}</div>
         </div>
       </div>
     </div>
@@ -567,6 +529,8 @@ function PosterPreview({
   posterSubtitle,
   posterSecondSubtitle,
   posterShowLogo,
+  posterLogoGlow,
+  posterLogoShadow,
   posterBgMode,
   posterBgTeam,
   posterCustomBg,
@@ -575,51 +539,67 @@ function PosterPreview({
   posterSubtitleFontType,
   posterSecondSubtitleFontType,
   posterShowBrothers,
+  posterLogoScale,
+  posterTitleScale,
+  posterSubtitleScale,
+  posterSecondSubtitleScale,
+  posterBrothersScale,
+  posterLogoY,
+  posterTitleY,
+  posterSubtitleY,
+  posterSecondSubtitleY,
+  posterBrothersY,
+  posterLogoX = 0,
+  posterTitleX = 0,
+  posterSubtitleX = 0,
+  posterSecondSubtitleX = 0,
+  posterBrothersX = 0,
   posterTitleColour,
   posterSubtitleColour,
   posterSecondSubtitleColour,
   posterOutlineWeight = 0,
   posterOutlineColour = DARK_GREEN,
+  posterGlowColour,
+  posterGlowOpacity,
+  posterGlowBrightness,
+  posterShadowOpacity,
 }) {
   const team = teamToGameTeam(posterBgTeam);
   const background = backgroundFor(posterBgMode, team, posterCustomBg);
   const showPitch = posterBgMode === "pitch";
-  const title = String(posterTitle || "COMING SOON").toUpperCase().slice(0, 28);
-  const subtitle = String(posterSubtitle || DEFAULT_POSTER_SUBTITLE).toUpperCase().slice(0, 42);
-  const secondSubtitle = String(posterSecondSubtitle || "").toUpperCase().slice(0, 42);
-  const hasSecondSubtitle = Boolean(secondSubtitle);
-  const titleSize = title.length > 18 ? 23 : title.length > 12 ? 27 : 31;
-  const logoTop = hasSecondSubtitle ? 26 : 30;
-  const titleTop = hasSecondSubtitle ? 176 : 188;
-  const subtitleTop = hasSecondSubtitle ? 250 : 264;
-  const secondTop = 279;
-
+  const hasSubtitle = Boolean(posterSubtitle);
+  const hasSecondSubtitle = Boolean(posterSecondSubtitle);
+  const logoWidth = Math.max(24, Math.min(48, 36 * Number(posterLogoScale || 1)));
+  const titleSize = Math.max(18, Math.min(48, 30 * Number(posterTitleScale || 1)));
+  const subtitleSize = Math.max(8, Math.min(22, 12 * Number(posterSubtitleScale || 1)));
+  const secondSubtitleSize = Math.max(7, Math.min(20, 10 * Number(posterSecondSubtitleScale || 1)));
+  const brothersWidth = Math.max(18, Math.min(40, 28 * Number(posterBrothersScale || 1)));
+  const contentBottomPadding = posterShowBrothers ? 78 : 32;
+  const glowOpacity = Math.max(0, Math.min(1, Number(posterGlowOpacity || 0)));
+  const glowBrightness = Math.max(0.4, Math.min(2, Number(posterGlowBrightness || 1)));
+  const shadowOpacity = Math.max(0, Math.min(1, Number(posterShadowOpacity || 0)));
   return (
     <div className="relative h-full w-full overflow-hidden text-[#F5F1E8]" style={{ background }}>
       {showPitch && <PitchMow />}
       <div className="absolute inset-[4px] border border-[#F5F1E8]/20" />
-      {posterShowLogo && (
-        <div className="absolute left-1/2 grid -translate-x-1/2 place-items-center" style={{ top: logoTop, width: 112 }}>
-          <div className="absolute h-[98%] w-[108%] rounded-full bg-black/10 blur-md" />
-          <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="relative z-[1] w-full object-contain drop-shadow-[0_5px_8px_rgba(0,0,0,0.22)]" draggable={false} />
+      <div className="relative z-[1] flex h-full flex-col items-center justify-center px-7 text-center" style={{ gap: posterShowLogo ? 15 : 23, paddingBottom: contentBottomPadding, paddingTop: posterShowLogo ? 30 : 46 }}>
+        {posterShowLogo && (
+          <div className="relative grid shrink-0 place-items-center" style={{ width: `${logoWidth}%`, transform: `translate(${Number(posterLogoX || 0)}px, ${Number(posterLogoY || 0)}px)` }}>
+            {posterLogoGlow && <div className="absolute h-[128%] w-[150%] rounded-full blur-2xl" style={{ background: hexWithAlpha(posterGlowColour, glowOpacity), filter: `brightness(${glowBrightness})` }} />}
+            {posterLogoGlow && <div className="absolute h-[92%] w-[112%] rounded-full blur-xl" style={{ background: hexWithAlpha(posterGlowColour, glowOpacity * 0.72), filter: `brightness(${glowBrightness})` }} />}
+            {posterLogoShadow && <div className="absolute h-[92%] w-[110%] translate-y-[12%] rounded-full bg-black blur-xl" style={{ opacity: shadowOpacity }} />}
+            <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="relative z-[1] w-full object-contain drop-shadow-[0_16px_22px_rgba(0,0,0,0.32)]" draggable={false} />
+          </div>
+        )}
+        <div className="flex min-h-0 max-w-full flex-col items-center justify-center gap-3">
+          <div className="led-text-glow max-w-full whitespace-normal break-words uppercase leading-[0.92] tracking-[0.12em]" style={{ color: posterTitleColour || posterFontColour, fontFamily: fontFamilyFor(posterTitleFontType), fontSize: titleSize, fontWeight: posterTitleFontType === "light" ? 300 : 900, WebkitTextStroke: textStroke(posterOutlineWeight, posterOutlineColour), transform: `translate(${Number(posterTitleX || 0)}px, ${Number(posterTitleY || 0)}px)` }}>
+            {posterTitle || "COMING SOON"}
+          </div>
+          {hasSubtitle && <div className="home-copy-bold max-w-full uppercase leading-none tracking-[0.20em]" style={{ color: posterSubtitleColour || posterFontColour, fontFamily: fontFamilyFor(posterSubtitleFontType), fontSize: subtitleSize, fontWeight: posterSubtitleFontType === "light" ? 300 : 900, WebkitTextStroke: textStroke(posterOutlineWeight, posterOutlineColour), transform: `translate(${Number(posterSubtitleX || 0)}px, ${Number(posterSubtitleY || 0)}px)` }}>{posterSubtitle}</div>}
+          {hasSecondSubtitle && <div className="home-copy-bold max-w-full uppercase leading-none tracking-[0.17em] opacity-90" style={{ color: posterSecondSubtitleColour || posterFontColour, fontFamily: fontFamilyFor(posterSecondSubtitleFontType), fontSize: secondSubtitleSize, fontWeight: posterSecondSubtitleFontType === "light" ? 300 : 900, WebkitTextStroke: textStroke(posterOutlineWeight, posterOutlineColour), transform: `translate(${Number(posterSecondSubtitleX || 0)}px, ${Number(posterSecondSubtitleY || 0)}px)` }}>{posterSecondSubtitle}</div>}
         </div>
-      )}
-      <div className="absolute left-1/2 w-[86%] -translate-x-1/2 text-center led-text-glow font-led uppercase leading-[0.9] tracking-[0.13em]" style={{ top: titleTop, color: posterTitleColour || posterFontColour, fontFamily: fontFamilyFor(posterTitleFontType), fontSize: titleSize, fontWeight: 900, WebkitTextStroke: textStroke(posterOutlineWeight, posterOutlineColour) }}>
-        {title}
+        {posterShowBrothers && <img src={ASSETS.branding.myMundialLogo} alt="Brothers" className="absolute left-1/2 object-contain opacity-95 drop-shadow-[0_8px_14px_rgba(0,0,0,0.30)]" style={{ bottom: 28, width: `${brothersWidth}%`, transform: `translate(calc(-50% + ${Number(posterBrothersX || 0)}px), ${Number(posterBrothersY || 0)}px)` }} draggable={false} />}
       </div>
-      {subtitle && (
-        <div className="absolute left-1/2 w-[82%] -translate-x-1/2 text-center home-copy-bold uppercase leading-none tracking-[0.18em]" style={{ top: subtitleTop, color: posterSubtitleColour || posterFontColour, fontFamily: fontFamilyFor(posterSubtitleFontType), fontSize: 9, fontWeight: posterSubtitleFontType === "light" ? 300 : 900, WebkitTextStroke: textStroke(posterOutlineWeight, posterOutlineColour) }}>
-          {subtitle}
-        </div>
-      )}
-      {secondSubtitle && (
-        <div className="absolute left-1/2 w-[82%] -translate-x-1/2 text-center home-copy-bold uppercase leading-none tracking-[0.16em] opacity-90" style={{ top: secondTop, color: posterSecondSubtitleColour || posterFontColour, fontFamily: fontFamilyFor(posterSecondSubtitleFontType), fontSize: 8, fontWeight: posterSecondSubtitleFontType === "light" ? 300 : 900, WebkitTextStroke: textStroke(posterOutlineWeight, posterOutlineColour) }}>
-          {secondSubtitle}
-        </div>
-      )}
-      {posterShowBrothers && (
-        <img src={ASSETS.branding.myMundialLogo} alt="Brothers" className="absolute left-1/2 object-contain opacity-95 drop-shadow-[0_7px_12px_rgba(0,0,0,0.24)]" style={{ bottom: 37, width: 112, transform: "translateX(-50%)" }} draggable={false} />
-      )}
     </div>
   );
 }
@@ -628,47 +608,76 @@ function ShirtPosterPreview({
   shirtTeam,
   shirtName,
   shirtNumber,
+  shirtShowMondayLogo,
+  shirtShowBrothers,
+  shirtShowTeam,
+  shirtBgMode,
+  shirtCustomBg,
+  shirtTextColour,
+  shirtNumberColour,
+  shirtOutlineEnabled,
+  shirtOutlineColour,
+  shirtFontWeight,
+  shirtFontStyle,
+  shirtFontType = "bold",
+  shirtShowName = true,
+  shirtShowNumber = true,
+  shirtOutlineWeight = 2,
+  shirtMondayScale,
+  shirtNameScale,
+  shirtNumberScale,
+  shirtBrothersScale,
+  shirtTeamScale = 1,
+  shirtTeamX = 0,
+  shirtTeamY = 0,
+  shirtMondayX = 0,
+  shirtMondayY = 0,
+  shirtNameX = 0,
+  shirtNameY = 0,
+  shirtNumberX = 0,
+  shirtNumberY = 0,
+  shirtBrothersX = 0,
+  shirtBrothersY = 0,
 }) {
   const kit = teamToGameTeam(shirtTeam);
-  const background = kit.primaryColour;
-  const foreground = kit.textColour || IVORY;
-  const cleanName = String(shirtName || "VAN DUUREN")
-    .toUpperCase()
-    .replace(/[^A-Z0-9\- ]/g, "")
-    .slice(0, SHIRT_NAME_MAX_LENGTH)
-    .trim() || "VAN DUUREN";
-  const cleanNumber = String(shirtNumber || "99").replace(/\D/g, "").slice(0, 2) || "0";
-  const nameSize = cleanName.length > 15 ? 32 : cleanName.length > 12 ? 36 : cleanName.length > 9 ? 40 : 44;
-  const numberSize = cleanNumber.length > 1 ? 198 : 214;
-
+  const background = shirtBgMode === "custom" ? shirtCustomBg : kit.primaryColour;
+  const nameLength = String(shirtName || "").length;
+  const nameBase = nameLength > 12 ? 24 : nameLength > 9 ? 29 : 34;
+  const nameSize = Math.max(18, Math.min(42, nameBase * Number(shirtNameScale || 1)));
+  const numberSize = Math.max(104, Math.min(190, 160 * Number(shirtNumberScale || 1)));
+  const mondayHeight = Math.max(34, Math.min(78, 54 * Number(shirtMondayScale || 1)));
+  const brothersWidth = Math.max(22, Math.min(42, 31 * Number(shirtBrothersScale || 1)));
+  const stroke = shirtOutlineEnabled ? textStroke(shirtOutlineWeight, shirtOutlineColour) : "0 transparent";
+  const shirtFontFamily = fontFamilyFor(shirtFontType);
   return (
-    <div className="relative h-full w-full overflow-hidden" style={{ background, color: foreground }}>
-      <div
-        className="absolute inset-0"
-        style={{
-          background: "radial-gradient(circle at 50% 10%, rgba(255,255,255,0.16), rgba(255,255,255,0.055) 24%, transparent 52%), linear-gradient(180deg, rgba(255,255,255,0.055), rgba(0,0,0,0.08))",
-        }}
-      />
-      <div className="absolute inset-[4px] border border-black/12" />
-      <div className="relative z-[1] flex h-full flex-col items-center px-8 text-center">
-        <div className="flex h-[95px] shrink-0 items-end justify-center pb-1">
-          <div className="relative grid h-[54px] w-[62px] place-items-center">
-            <div className="absolute h-[102%] w-[106%] rounded-full bg-black/10 blur-md" />
-            <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="relative z-[1] h-full w-full object-contain drop-shadow-[0_5px_8px_rgba(0,0,0,0.23)]" draggable={false} />
-          </div>
+    <div className="relative h-full w-full overflow-hidden text-[#F5F1E8]" style={{ background }}>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_16%,rgba(255,255,255,0.18),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.10),rgba(0,0,0,0.06))]" />
+      <div className="absolute inset-y-0 left-[11%] w-px bg-black/10" />
+      <div className="absolute inset-y-0 right-[11%] w-px bg-black/10" />
+      <div className="relative z-[1] flex h-full flex-col items-center px-7 pb-6 pt-4 text-center">
+        <div className="flex h-[96px] shrink-0 flex-col items-center justify-start gap-1">
+          {shirtShowTeam && <TeamFlag team={kit} className="h-[12px] w-[20px] shadow-[0_2px_5px_rgba(0,0,0,0.20)]" style={{ transform: editorTransform({ x: shirtTeamX, y: shirtTeamY, scale: shirtTeamScale }) }} />}
+          {shirtShowMondayLogo && (
+            <div className="relative grid shrink-0 place-items-center" style={{ height: mondayHeight, width: mondayHeight * 1.05, transform: editorTransform({ x: shirtMondayX, y: shirtMondayY, scale: 1 }) }}>
+              <div className="absolute h-[116%] w-[128%] rounded-full bg-black/14 blur-lg" />
+              <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="relative z-[1] h-full w-full object-contain" draggable={false} />
+            </div>
+          )}
         </div>
-
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center self-stretch overflow-hidden pb-5">
-          <div className="home-copy-bold w-full truncate uppercase leading-[0.9] tracking-[0.065em]" style={{ color: foreground, fontFamily: "Arial, Helvetica, sans-serif", fontSize: nameSize, fontWeight: 900, textShadow: "0 2px 0 rgba(0,0,0,0.10)" }}>
-            {cleanName}
-          </div>
-          <div className="home-copy-bold w-full tabular-nums uppercase leading-[0.78]" style={{ color: foreground, fontFamily: "Arial Black, Arial, Helvetica, sans-serif", fontSize: numberSize, fontWeight: 900, letterSpacing: cleanNumber.length > 1 ? "-0.065em" : "-0.035em", textAlign: "center", textIndent: cleanNumber.length > 1 ? "-0.04em" : "0", textShadow: "0 6px 0 rgba(0,0,0,0.10)" }}>
-            {cleanNumber}
-          </div>
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center self-stretch overflow-hidden">
+          {shirtShowName && (
+            <div className="home-copy-bold w-full truncate uppercase leading-none tracking-[0.08em]" style={{ color: shirtTextColour, fontFamily: shirtFontFamily, fontSize: nameSize, fontWeight: shirtFontWeight, fontStyle: shirtFontStyle, WebkitTextStroke: stroke, textShadow: "0 2px 0 rgba(0,0,0,0.12)", transform: editorTransform({ x: shirtNameX, y: shirtNameY, scale: 1 }) }}>
+              {shirtName || "VAN DUUREN"}
+            </div>
+          )}
+          {shirtShowNumber && (
+            <div className="home-copy-bold max-w-full uppercase leading-[0.82] tracking-[-0.08em]" style={{ color: shirtNumberColour, fontFamily: shirtFontFamily, fontSize: numberSize, fontWeight: 900, fontStyle: shirtFontStyle, WebkitTextStroke: stroke, textShadow: "0 6px 0 rgba(0,0,0,0.12)", transform: editorTransform({ x: shirtNumberX, y: shirtNumberY, scale: 1 }) }}>
+              {String(shirtNumber || "99").slice(0, 2)}
+            </div>
+          )}
         </div>
-
-        <div className="flex h-[54px] shrink-0 items-start justify-center pt-1">
-          <img src={ASSETS.branding.myMundialLogo} alt="Brothers" className="w-[53px] object-contain drop-shadow-[0_5px_8px_rgba(0,0,0,0.20)]" draggable={false} />
+        <div className="flex h-[52px] shrink-0 items-end justify-center">
+          {shirtShowBrothers && <img src={ASSETS.branding.myMundialLogo} alt="Brothers" className="object-contain drop-shadow-[0_8px_14px_rgba(0,0,0,0.26)]" style={{ width: `${brothersWidth}%`, transform: editorTransform({ x: shirtBrothersX, y: shirtBrothersY, scale: 1 }) }} draggable={false} />}
         </div>
       </div>
     </div>
@@ -680,8 +689,7 @@ function PitchMow() {
     <div
       className="pointer-events-none absolute inset-0"
       style={{
-        backgroundColor: "#0d6c3d",
-        backgroundImage: "linear-gradient(90deg, rgba(0,0,0,0.16) 0 12.5%, rgba(255,255,255,0.055) 12.5% 25%, rgba(0,0,0,0.10) 25% 37.5%, rgba(255,255,255,0.045) 37.5% 50%, rgba(0,0,0,0.13) 50% 62.5%, rgba(255,255,255,0.05) 62.5% 75%, rgba(0,0,0,0.11) 75% 87.5%, rgba(255,255,255,0.035) 87.5% 100%)",
+        backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 11.1%, rgba(11,45,29,0.08) 11.1%, rgba(11,45,29,0.08) 22.2%), linear-gradient(rgba(245,241,232,0.025), rgba(11,45,29,0.08))",
       }}
     />
   );
@@ -703,8 +711,8 @@ function Field({ label, children }) {
 const inputClass = "h-10 min-w-0 rounded-[12px] border border-[#F5F1E8]/18 bg-[#051A11]/78 px-3 home-copy-bold text-[12px] font-black uppercase tracking-[0.08em] text-[#F5F1E8] outline-none ring-1 ring-[#0B5F35]/45 focus:border-[#F7D117]/65";
 const smallButtonBase = "grid h-9 place-items-center rounded-[12px] border px-2 home-copy-bold text-[10px] font-black uppercase tracking-[0.11em] transition";
 
-function TextInput({ value, onChange, type = "text", min, max, maxLength, inputMode, pattern }) {
-  return <input className={inputClass} type={type} min={min} max={max} maxLength={maxLength} inputMode={inputMode} pattern={pattern} value={value} onChange={(event) => onChange(event.target.value)} />;
+function TextInput({ value, onChange, type = "text", min, max }) {
+  return <input className={inputClass} type={type} min={min} max={max} value={value} onChange={(event) => onChange(event.target.value)} />;
 }
 
 function ColourInput({ value, onChange }) {
@@ -814,18 +822,14 @@ export function ShareScreen({
   stageLabel = "FINAL",
 }) {
   const frameRef = useRef(null);
-  const exportFrameRef = useRef(null);
   const [shareBusy, setShareBusy] = useState(false);
-  const [exportLayerMounted, setExportLayerMounted] = useState(false);
 
   const initialTeamA = team || matchResult?.home || "Ghana";
   const initialTeamB = opponent || matchResult?.away || "France";
   const initialScore = scoreFromProps({ team: initialTeamA, opponent: initialTeamB, score, matchResult });
   const initialTicker = previewTicker({ team: initialTeamA, opponent: initialTeamB, matchResult });
-  const initialMoment = extractShareMoment(matchResult, initialTeamA);
 
   const [exportIndex, setExportIndex] = useState(0);
-  const [previewSizeKey, setPreviewSizeKey] = useState("post");
   const [teamA, setTeamA] = useState(initialTeamA);
   const [teamB, setTeamB] = useState(initialTeamB);
   const [scoreA, setScoreA] = useState(initialScore.user);
@@ -839,16 +843,16 @@ export function ShareScreen({
   const [username, setUsername] = useState("MYMUNDIAL");
   const [teamAMarkers, setTeamAMarkers] = useState(() => initialAttemptSequence(matchResult?.attempts?.user, initialScore.user));
   const [teamBMarkers, setTeamBMarkers] = useState(() => initialAttemptSequence(matchResult?.attempts?.opponent, initialScore.opponent));
-  const [flashText, setFlashText] = useState(initialMoment.commentary || initialTicker);
+  const [flashText, setFlashText] = useState(initialTicker);
   const [flashBgMode, setFlashBgMode] = useState("teamA");
   const [customFlashBg, setCustomFlashBg] = useState(LED_YELLOW);
   const [flashFontColour, setFlashFontColour] = useState(IVORY);
   const [crowdStage, setCrowdStage] = useState(stageLabel || "FINAL");
   const [badgeMode, setBadgeMode] = useState("none");
-  const [showGoalkeeper, setShowGoalkeeper] = useState(initialMoment.hasMoment && Boolean(initialMoment.goalkeeperPosition));
-  const [goalkeeperPosition, setGoalkeeperPosition] = useState(initialMoment.goalkeeperPosition || "CM");
-  const [showBall, setShowBall] = useState(initialMoment.hasMoment && Boolean(initialMoment.ballPosition));
-  const [ballPosition, setBallPosition] = useState(initialMoment.ballPosition || "spot");
+  const [showGoalkeeper, setShowGoalkeeper] = useState(false);
+  const [goalkeeperPosition, setGoalkeeperPosition] = useState("CM");
+  const [showBall, setShowBall] = useState(false);
+  const [ballPosition, setBallPosition] = useState("spot");
   const [matchScoreboardHeight, setMatchScoreboardHeight] = useState(34);
   const [matchTextColour, setMatchTextColour] = useState(LED_YELLOW);
   const [matchFontType, setMatchFontType] = useState("led");
@@ -899,10 +903,10 @@ export function ShareScreen({
   const [matchPitchHeight, setMatchPitchHeight] = useState(620);
 
   const [posterTitle, setPosterTitle] = useState("COMING SOON");
-  const [posterSubtitle, setPosterSubtitle] = useState(DEFAULT_POSTER_SUBTITLE);
+  const [posterSubtitle, setPosterSubtitle] = useState("");
   const [posterSecondSubtitle, setPosterSecondSubtitle] = useState("");
   const [posterShowLogo, setPosterShowLogo] = useState(true);
-  const [posterLogoGlow, setPosterLogoGlow] = useState(false);
+  const [posterLogoGlow, setPosterLogoGlow] = useState(true);
   const [posterLogoShadow, setPosterLogoShadow] = useState(false);
   const [posterBgMode, setPosterBgMode] = useState("pitch");
   const [posterBgTeam, setPosterBgTeam] = useState(initialTeamA);
@@ -974,14 +978,7 @@ export function ShareScreen({
   const [shirtBrothersX, setShirtBrothersX] = useState(0);
   const [shirtBrothersY, setShirtBrothersY] = useState(0);
 
-  const currentUserEmail = String(menuProps?.currentUser?.email || auth?.currentUser?.email || "").toLowerCase();
-  const canEditShareGraphics = currentUserEmail === SHARE_EDITOR_EMAIL;
-  const availableExportStates = canEditShareGraphics ? EXPORT_STATES : EXPORT_STATES.filter((state) => PUBLIC_EXPORT_STATE_IDS.has(state.id));
-  const activeState = availableExportStates[exportIndex % availableExportStates.length] || availableExportStates[0];
-  const canSwitchExportStates = availableExportStates.length > 1;
-  const canShowControlPanel = canEditShareGraphics || activeState.id === "shirt";
-  const previewSize = PREVIEW_SIZE_MAP[previewSizeKey] || PREVIEW_SIZE_MAP.post;
-  const previewStyle = { "--share-preview-size": `${previewSize}px` };
+  const activeState = EXPORT_STATES[exportIndex];
   const userTeam = useMemo(() => teamToGameTeam(teamA), [teamA]);
   const opponentTeam = useMemo(() => teamToGameTeam(teamB), [teamB]);
   const totalMarkerSlots = GAME.regulationPens + Number(suddenDeathSlots || 0);
@@ -1049,8 +1046,7 @@ export function ShareScreen({
   };
 
   const updateExportIndex = (delta) => {
-    if (!canSwitchExportStates) return;
-    setExportIndex((current) => (current + delta + availableExportStates.length) % availableExportStates.length);
+    setExportIndex((current) => (current + delta + EXPORT_STATES.length) % EXPORT_STATES.length);
   };
 
   const toggleMarker = (teamKey, index) => {
@@ -1064,10 +1060,10 @@ export function ShareScreen({
 
   const resetPoster = () => {
     setPosterTitle("COMING SOON");
-    setPosterSubtitle(DEFAULT_POSTER_SUBTITLE);
+    setPosterSubtitle("");
     setPosterSecondSubtitle("");
     setPosterShowLogo(true);
-    setPosterLogoGlow(false);
+    setPosterLogoGlow(true);
     setPosterLogoShadow(false);
     setPosterBgMode("pitch");
     setPosterBgTeam(initialTeamA);
@@ -1103,121 +1099,18 @@ export function ShareScreen({
     setPosterShadowOpacity(0.3);
   };
 
-  const renderShareFrameContent = () => (
-    <>
-      {activeState.id === "match" && (
-        <ShareMatchPreview
-          userTeam={userTeam}
-          opponentTeam={opponentTeam}
-          score={{ user: scoreA, opponent: scoreB }}
-          stageTitle={stageTitle}
-          flashText={flashText}
-          flashStyle={flashStyle}
-          crowdStage={crowdStage}
-          showMarkers={showMarkers}
-          markerText={markerText}
-          usernameEnabled={usernameEnabled}
-          username={username}
-          teamAMarkers={teamAMarkers}
-          teamBMarkers={teamBMarkers}
-          totalMarkerSlots={totalMarkerSlots}
-          badgeMode={badgeMode}
-          showGoalkeeper={showGoalkeeper}
-          goalkeeperPosition={goalkeeperPosition}
-          showBall={showBall}
-          ballPosition={ballPosition}
-          matchDesign={matchDesign}
-        />
-      )}
-      {activeState.id === "bracket" && <BracketPreview bracketTitle={bracketTitle} bracketTeams={bracketTeams} champion={bracketChampion} />}
-      {activeState.id === "poster" && (
-        <PosterPreview
-          posterTitle={posterTitle}
-          posterSubtitle={posterSubtitle}
-          posterSecondSubtitle={posterSecondSubtitle}
-          posterShowLogo={posterShowLogo}
-          posterLogoGlow={posterLogoGlow}
-          posterLogoShadow={posterLogoShadow}
-          posterBgMode={posterBgMode}
-          posterBgTeam={posterBgTeam}
-          posterCustomBg={posterCustomBg}
-          posterFontColour={posterFontColour}
-          posterTitleFontType={posterTitleFontType}
-          posterSubtitleFontType={posterSubtitleFontType}
-          posterSecondSubtitleFontType={posterSecondSubtitleFontType}
-          posterShowBrothers={posterShowBrothers}
-          posterLogoScale={posterLogoScale}
-          posterTitleScale={posterTitleScale}
-          posterSubtitleScale={posterSubtitleScale}
-          posterSecondSubtitleScale={posterSecondSubtitleScale}
-          posterBrothersScale={posterBrothersScale}
-          posterLogoY={posterLogoY}
-          posterTitleY={posterTitleY}
-          posterSubtitleY={posterSubtitleY}
-          posterSecondSubtitleY={posterSecondSubtitleY}
-          posterBrothersY={posterBrothersY}
-          posterLogoX={posterLogoX}
-          posterTitleX={posterTitleX}
-          posterSubtitleX={posterSubtitleX}
-          posterSecondSubtitleX={posterSecondSubtitleX}
-          posterBrothersX={posterBrothersX}
-          posterTitleColour={posterTitleColour}
-          posterSubtitleColour={posterSubtitleColour}
-          posterSecondSubtitleColour={posterSecondSubtitleColour}
-          posterOutlineWeight={posterOutlineWeight}
-          posterOutlineColour={posterOutlineColour}
-          posterGlowColour={posterGlowColour}
-          posterGlowOpacity={posterGlowOpacity}
-          posterGlowBrightness={posterGlowBrightness}
-          posterShadowOpacity={posterShadowOpacity}
-        />
-      )}
-      {activeState.id === "shirt" && (
-        <ShirtPosterPreview
-          shirtTeam={shirtTeam}
-          shirtName={shirtName}
-          shirtNumber={shirtNumber}
-        />
-      )}
-    </>
-  );
-
-  const renderShareFrame = ({ exportFrame = false } = {}) => {
-    const scale = exportFrame ? SHARE_EXPORT_FRAME_SIZE / SHARE_DESIGN_SIZE : 1;
-    return (
-      <div
-        data-share-layout={activeState.id}
-        data-share-render-size={exportFrame ? String(SHARE_EXPORT_FRAME_SIZE) : String(SHARE_DESIGN_SIZE)}
-        className="overflow-hidden border border-[#F5F1E8]/22 bg-[#0d6c3d] shadow-[0_14px_30px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/24"
-        style={{ width: exportFrame ? SHARE_EXPORT_FRAME_SIZE : "100%", height: exportFrame ? SHARE_EXPORT_FRAME_SIZE : "100%" }}
-      >
-        <div
-          className="origin-top-left"
-          style={{ width: SHARE_DESIGN_SIZE, height: SHARE_DESIGN_SIZE, transform: exportFrame ? `scale(${scale})` : "none" }}
-        >
-          {renderShareFrameContent()}
-        </div>
-      </div>
-    );
-  };
-
   const handleExport = async () => {
-    if (shareBusy) return;
+    if (!frameRef.current || shareBusy) return;
     const previewWindow = reserveShareWindow();
     setShareBusy(true);
-    setExportLayerMounted(true);
     try {
-      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      const captureTarget = exportFrameRef.current || frameRef.current;
-      if (!captureTarget) throw new Error("Share capture area was not found");
-      const blob = await captureShareElementBlob(captureTarget, teamA);
+      const blob = await captureShareElementBlob(frameRef.current, teamA);
       await shareOrDownloadResult({ blob, filename: `monday-cup-${activeState.id}-share.png`, previewWindow });
     } catch (error) {
       if (previewWindow && !previewWindow.closed) previewWindow.close();
       console.error("Share page export failed", error);
       window.alert("Sorry, the share preview could not be exported. Please try again.");
     } finally {
-      setExportLayerMounted(false);
       setShareBusy(false);
     }
   };
@@ -1225,58 +1118,141 @@ export function ShareScreen({
   return (
     <main className="home-main-font relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
       <PitchPageBackground />
-      <ScreenTopBar {...menuProps}>EXPORT</ScreenTopBar>
+      <ScreenTopBar {...menuProps}>SHARE</ScreenTopBar>
       <section className="relative z-[1] flex min-h-0 flex-1 flex-col items-center overflow-auto px-4 pb-24 pt-4">
-        <div className={`${SHARE_PREVIEW_CLASS} mb-2 grid ${canSwitchExportStates ? "grid-cols-[44px_1fr_44px]" : "grid-cols-1"} items-center gap-2 text-center`} style={previewStyle}>
-          {canSwitchExportStates && <button type="button" onClick={() => updateExportIndex(-1)} className="grid h-10 w-10 place-items-center rounded-[12px] border border-[#F5F1E8]/20 bg-[#051A11]/76 text-[25px] leading-none text-[#F7D117] shadow-[0_8px_18px_rgba(0,0,0,0.22)] backdrop-blur-[2px]" aria-label="Previous export state">‹</button>}
+        <div className={`${SHARE_PREVIEW_CLASS} mb-2 grid grid-cols-[44px_1fr_44px] items-center gap-2 text-center`}>
+          <button type="button" onClick={() => updateExportIndex(-1)} className="grid h-10 w-10 place-items-center rounded-[12px] border border-[#F5F1E8]/20 bg-[#051A11]/76 text-[25px] leading-none text-[#F7D117] shadow-[0_8px_18px_rgba(0,0,0,0.22)] backdrop-blur-[2px]" aria-label="Previous export state">‹</button>
           <div className="min-w-0">
             <div className="home-copy-bold text-[10px] font-black uppercase tracking-[0.2em] text-[#F5F1E8]/68">EXPORT STATE</div>
             <div className="led-text-glow font-led mt-1 truncate text-[18px] font-black uppercase tracking-[0.16em] text-[#F7D117]">{activeState.label}</div>
           </div>
-          {canSwitchExportStates && <button type="button" onClick={() => updateExportIndex(1)} className="grid h-10 w-10 place-items-center rounded-[12px] border border-[#F5F1E8]/20 bg-[#051A11]/76 text-[25px] leading-none text-[#F7D117] shadow-[0_8px_18px_rgba(0,0,0,0.22)] backdrop-blur-[2px]" aria-label="Next export state">›</button>}
+          <button type="button" onClick={() => updateExportIndex(1)} className="grid h-10 w-10 place-items-center rounded-[12px] border border-[#F5F1E8]/20 bg-[#051A11]/76 text-[25px] leading-none text-[#F7D117] shadow-[0_8px_18px_rgba(0,0,0,0.22)] backdrop-blur-[2px]" aria-label="Next export state">›</button>
         </div>
 
-        <div className={`${SHARE_PREVIEW_CLASS} relative aspect-square`} style={previewStyle}>
-          <div ref={frameRef} className="absolute inset-0">
-            {renderShareFrame()}
-          </div>
-        </div>
-
-        {exportLayerMounted && (
+        <div className={`${SHARE_PREVIEW_CLASS} relative aspect-square`}>
           <div
-            data-share-export-ignore="true"
-            aria-hidden="true"
-            tabIndex={-1}
-            className="pointer-events-none fixed overflow-hidden"
-            style={{
-              width: SHARE_EXPORT_FRAME_SIZE,
-              height: SHARE_EXPORT_FRAME_SIZE,
-              left: -10000,
-              top: 0,
-              zIndex: 0,
-              contain: "layout style paint",
-              userSelect: "none",
-            }}
+            ref={frameRef}
+            data-share-layout={activeState.id}
+            className="absolute inset-0 overflow-hidden border border-[#F5F1E8]/22 bg-[#0d6c3d] shadow-[0_14px_30px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/24"
           >
-            <div ref={exportFrameRef}>
-              {renderShareFrame({ exportFrame: true })}
-            </div>
+            {activeState.id === "match" && (
+              <ShareMatchPreview
+                userTeam={userTeam}
+                opponentTeam={opponentTeam}
+                score={{ user: scoreA, opponent: scoreB }}
+                stageTitle={stageTitle}
+                flashText={flashText}
+                flashStyle={flashStyle}
+                crowdStage={crowdStage}
+                showMarkers={showMarkers}
+                markerText={markerText}
+                usernameEnabled={usernameEnabled}
+                username={username}
+                teamAMarkers={teamAMarkers}
+                teamBMarkers={teamBMarkers}
+                totalMarkerSlots={totalMarkerSlots}
+                badgeMode={badgeMode}
+                showGoalkeeper={showGoalkeeper}
+                goalkeeperPosition={goalkeeperPosition}
+                showBall={showBall}
+                ballPosition={ballPosition}
+                matchDesign={matchDesign}
+              />
+            )}
+            {activeState.id === "bracket" && <BracketPreview bracketTitle={bracketTitle} bracketTeams={bracketTeams} champion={bracketChampion} />}
+            {activeState.id === "poster" && (
+              <PosterPreview
+                posterTitle={posterTitle}
+                posterSubtitle={posterSubtitle}
+                posterSecondSubtitle={posterSecondSubtitle}
+                posterShowLogo={posterShowLogo}
+                posterLogoGlow={posterLogoGlow}
+                posterLogoShadow={posterLogoShadow}
+                posterBgMode={posterBgMode}
+                posterBgTeam={posterBgTeam}
+                posterCustomBg={posterCustomBg}
+                posterFontColour={posterFontColour}
+                posterTitleFontType={posterTitleFontType}
+                posterSubtitleFontType={posterSubtitleFontType}
+                posterSecondSubtitleFontType={posterSecondSubtitleFontType}
+                posterShowBrothers={posterShowBrothers}
+                posterLogoScale={posterLogoScale}
+                posterTitleScale={posterTitleScale}
+                posterSubtitleScale={posterSubtitleScale}
+                posterSecondSubtitleScale={posterSecondSubtitleScale}
+                posterBrothersScale={posterBrothersScale}
+                posterLogoY={posterLogoY}
+                posterTitleY={posterTitleY}
+                posterSubtitleY={posterSubtitleY}
+                posterSecondSubtitleY={posterSecondSubtitleY}
+                posterBrothersY={posterBrothersY}
+                posterLogoX={posterLogoX}
+                posterTitleX={posterTitleX}
+                posterSubtitleX={posterSubtitleX}
+                posterSecondSubtitleX={posterSecondSubtitleX}
+                posterBrothersX={posterBrothersX}
+                posterTitleColour={posterTitleColour}
+                posterSubtitleColour={posterSubtitleColour}
+                posterSecondSubtitleColour={posterSecondSubtitleColour}
+                posterOutlineWeight={posterOutlineWeight}
+                posterOutlineColour={posterOutlineColour}
+                posterGlowColour={posterGlowColour}
+                posterGlowOpacity={posterGlowOpacity}
+                posterGlowBrightness={posterGlowBrightness}
+                posterShadowOpacity={posterShadowOpacity}
+              />
+            )}
+            {activeState.id === "shirt" && (
+              <ShirtPosterPreview
+                shirtTeam={shirtTeam}
+                shirtName={shirtName}
+                shirtNumber={shirtNumber}
+                shirtShowMondayLogo={shirtShowMondayLogo}
+                shirtShowBrothers={shirtShowBrothers}
+                shirtShowTeam={shirtShowTeam}
+                shirtShowName={shirtShowName}
+                shirtShowNumber={shirtShowNumber}
+                shirtBgMode={shirtBgMode}
+                shirtCustomBg={shirtCustomBg}
+                shirtTextColour={shirtTextColour}
+                shirtNumberColour={shirtNumberColour}
+                shirtOutlineEnabled={shirtOutlineEnabled}
+                shirtOutlineColour={shirtOutlineColour}
+                shirtFontWeight={shirtFontWeight}
+                shirtFontStyle={shirtFontStyle}
+                shirtFontType={shirtFontType}
+                shirtOutlineWeight={shirtOutlineWeight}
+                shirtMondayScale={shirtMondayScale}
+                shirtNameScale={shirtNameScale}
+                shirtNumberScale={shirtNumberScale}
+                shirtBrothersScale={shirtBrothersScale}
+                shirtTeamScale={shirtTeamScale}
+                shirtTeamX={shirtTeamX}
+                shirtTeamY={shirtTeamY}
+                shirtMondayX={shirtMondayX}
+                shirtMondayY={shirtMondayY}
+                shirtNameX={shirtNameX}
+                shirtNameY={shirtNameY}
+                shirtNumberX={shirtNumberX}
+                shirtNumberY={shirtNumberY}
+                shirtBrothersX={shirtBrothersX}
+                shirtBrothersY={shirtBrothersY}
+              />
+            )}
           </div>
-        )}
+        </div>
 
-        <div className={`${SHARE_PREVIEW_CLASS} mt-4 grid grid-cols-1 gap-3`} style={previewStyle}>
+        <div className={`${SHARE_PREVIEW_CLASS} mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]`}>
           <button type="button" onClick={handleExport} disabled={shareBusy} className="grid h-[50px] min-h-[50px] place-items-center rounded-[16px] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[16px] font-black uppercase leading-none tracking-[0.14em] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65">
             {shareBusy ? "PREPARING" : "SAVE AS PHOTO"}
           </button>
-          <div className="rounded-[16px] border border-[#F5F1E8]/14 bg-[#051A11]/70 p-2">
-            <div className="mb-2 text-center home-copy-bold text-[9px] font-black uppercase tracking-[0.18em] text-[#F5F1E8]/64">Preview scale</div>
-            <MiniSegment options={PREVIEW_SIZE_OPTIONS} value={previewSizeKey} onChange={setPreviewSizeKey} />
+          <div className="grid h-[50px] place-items-center rounded-[16px] border border-[#F5F1E8]/16 bg-[#051A11]/70 px-4 home-copy-bold text-[11px] font-black uppercase tracking-[0.16em] text-[#F5F1E8]/70">
+            400 x 400 PREVIEW
           </div>
         </div>
 
-        {canShowControlPanel && (
-        <div className={`${SHARE_PREVIEW_CLASS} mt-4 rounded-[18px] border border-[#F5F1E8]/14 bg-[#072D1D]/84 p-3 shadow-[0_16px_34px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(245,241,232,0.06)] sm:p-4`} style={previewStyle}>
-          {canEditShareGraphics && activeState.id === "match" && (
+        <div className={`${SHARE_PREVIEW_CLASS} mt-4 rounded-[18px] border border-[#F5F1E8]/14 bg-[#072D1D]/84 p-3 shadow-[0_16px_34px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(245,241,232,0.06)] sm:p-4`}>
+          {activeState.id === "match" && (
             <div className="grid gap-4">
               <CheckboxControl checked={editMatchState} onChange={setEditMatchState} label="Edit starting state" />
               {!editMatchState ? (
@@ -1375,7 +1351,7 @@ export function ShareScreen({
             </div>
           )}
 
-          {canEditShareGraphics && activeState.id === "bracket" && (
+          {activeState.id === "bracket" && (
             <div className="grid gap-3">
               <Field label="Bracket title"><TextInput value={bracketTitle} onChange={setBracketTitle} /></Field>
               <Field label="Champion"><TeamSelect value={bracketChampion} onChange={setBracketChampion} /></Field>
@@ -1383,7 +1359,7 @@ export function ShareScreen({
             </div>
           )}
 
-          {canEditShareGraphics && activeState.id === "poster" && (
+          {activeState.id === "poster" && (
             <div className="grid gap-3">
               <button type="button" onClick={resetPoster} className="grid h-10 place-items-center rounded-[12px] border border-[#F7D117]/55 bg-[#F7D117] px-3 home-copy-bold text-[11px] font-black uppercase tracking-[0.13em] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.18)]">Reset poster</button>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -1393,20 +1369,40 @@ export function ShareScreen({
                 <Field label="Background"><SelectInput value={posterBgMode} onChange={setPosterBgMode} options={BG_OPTIONS} /></Field>
                 <Field label="Team colour"><TeamSelect value={posterBgTeam} onChange={setPosterBgTeam} /></Field>
                 <Field label="Custom bg"><ColourInput value={posterCustomBg} onChange={setPosterCustomBg} /></Field>
+                <Field label="Base font colour"><ColourInput value={posterFontColour} onChange={setPosterFontColour} /></Field>
                 <Field label="Main colour"><ColourInput value={posterTitleColour} onChange={setPosterTitleColour} /></Field>
                 <Field label="Subtitle colour"><ColourInput value={posterSubtitleColour} onChange={setPosterSubtitleColour} /></Field>
                 <Field label="Second colour"><ColourInput value={posterSecondSubtitleColour} onChange={setPosterSecondSubtitleColour} /></Field>
                 <Field label="Main font"><SelectInput value={posterTitleFontType} onChange={setPosterTitleFontType} options={FONT_OPTIONS} /></Field>
                 <Field label="Subtitle font"><SelectInput value={posterSubtitleFontType} onChange={setPosterSubtitleFontType} options={FONT_OPTIONS} /></Field>
                 <Field label="Second font"><SelectInput value={posterSecondSubtitleFontType} onChange={setPosterSecondSubtitleFontType} options={FONT_OPTIONS} /></Field>
+                <Field label="Outline colour"><ColourInput value={posterOutlineColour} onChange={setPosterOutlineColour} /></Field>
+                <Field label="Outline weight"><RangeInput value={posterOutlineWeight} onChange={setPosterOutlineWeight} min={0} max={4} step={0.25} suffix="px" /></Field>
               </div>
               <div className="grid gap-2 sm:grid-cols-2">
-                <CheckboxControl checked={posterShowLogo} onChange={setPosterShowLogo} label="Monday logo" />
+                <CheckboxControl checked={posterShowLogo} onChange={setPosterShowLogo} label="Include logo" />
+                <CheckboxControl checked={posterLogoGlow} onChange={setPosterLogoGlow} label="Logo glow" />
+                <CheckboxControl checked={posterLogoShadow} onChange={setPosterLogoShadow} label="Logo shadow" />
                 <CheckboxControl checked={posterShowBrothers} onChange={setPosterShowBrothers} label="Brothers logo" />
               </div>
-              <div className="home-copy-bold rounded-[14px] border border-[#F5F1E8]/10 bg-[#051A11]/48 p-3 text-[11px] font-black uppercase leading-relaxed tracking-[0.12em] text-[#F5F1E8]/66">
-                Poster layout now auto-spaces logo, title, subtitles and Brothers mark so the preview matches the exported image.
+              <div className="grid gap-3 rounded-[14px] border border-[#F5F1E8]/10 bg-[#051A11]/48 p-3 sm:grid-cols-2">
+                <Field label="Glow colour"><ColourInput value={posterGlowColour} onChange={setPosterGlowColour} /></Field>
+                <Field label="Glow transparency"><RangeInput value={posterGlowOpacity} onChange={setPosterGlowOpacity} min={0} max={1} step={0.05} suffix="" /></Field>
+                <Field label="Glow brightness"><RangeInput value={posterGlowBrightness} onChange={setPosterGlowBrightness} min={0.5} max={2} step={0.05} suffix="×" /></Field>
+                <Field label="Shadow opacity"><RangeInput value={posterShadowOpacity} onChange={setPosterShadowOpacity} min={0} max={1} step={0.05} suffix="" /></Field>
               </div>
+              <div className="grid gap-3 rounded-[14px] border border-[#F5F1E8]/10 bg-[#051A11]/48 p-3 sm:grid-cols-2">
+                <Field label="Logo scale"><RangeInput value={posterLogoScale} onChange={setPosterLogoScale} min={0.65} max={1.45} step={0.05} /></Field>
+                <Field label="Title scale"><RangeInput value={posterTitleScale} onChange={setPosterTitleScale} min={0.65} max={1.5} step={0.05} /></Field>
+                <Field label="Subtitle scale"><RangeInput value={posterSubtitleScale} onChange={setPosterSubtitleScale} min={0.65} max={1.6} step={0.05} /></Field>
+                <Field label="Second scale"><RangeInput value={posterSecondSubtitleScale} onChange={setPosterSecondSubtitleScale} min={0.65} max={1.6} step={0.05} /></Field>
+                <Field label="Brothers scale"><RangeInput value={posterBrothersScale} onChange={setPosterBrothersScale} min={0.65} max={1.45} step={0.05} /></Field>
+              </div>
+              <XYScaleControls title="Logo position" x={posterLogoX} setX={setPosterLogoX} y={posterLogoY} setY={setPosterLogoY} scale={posterLogoScale} setScale={setPosterLogoScale} xRange={90} yRange={70} minScale={0.65} maxScale={1.45} />
+              <XYScaleControls title="Main text position" x={posterTitleX} setX={setPosterTitleX} y={posterTitleY} setY={setPosterTitleY} scale={posterTitleScale} setScale={setPosterTitleScale} xRange={90} yRange={70} minScale={0.65} maxScale={1.5} />
+              <XYScaleControls title="Subtitle position" x={posterSubtitleX} setX={setPosterSubtitleX} y={posterSubtitleY} setY={setPosterSubtitleY} scale={posterSubtitleScale} setScale={setPosterSubtitleScale} xRange={90} yRange={70} minScale={0.65} maxScale={1.6} />
+              <XYScaleControls title="Second subtitle position" x={posterSecondSubtitleX} setX={setPosterSecondSubtitleX} y={posterSecondSubtitleY} setY={setPosterSecondSubtitleY} scale={posterSecondSubtitleScale} setScale={setPosterSecondSubtitleScale} xRange={90} yRange={70} minScale={0.65} maxScale={1.6} />
+              <XYScaleControls title="Brothers position" x={posterBrothersX} setX={setPosterBrothersX} y={posterBrothersY} setY={setPosterBrothersY} scale={posterBrothersScale} setScale={setPosterBrothersScale} xRange={90} yRange={50} minScale={0.65} maxScale={1.45} />
             </div>
           )}
 
@@ -1414,16 +1410,34 @@ export function ShareScreen({
             <div className="grid gap-3">
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Team"><TeamSelect value={shirtTeam} onChange={setShirtTeam} /></Field>
-                <Field label="Name"><TextInput value={shirtName} maxLength={SHIRT_NAME_MAX_LENGTH} onChange={(value) => setShirtName(value.toUpperCase().replace(/[^A-Z0-9\- ]/g, "").slice(0, SHIRT_NAME_MAX_LENGTH))} /></Field>
-                <Field label="Number"><TextInput inputMode="numeric" pattern="[0-9]*" value={shirtNumber} onChange={(value) => setShirtNumber(String(value).replace(/\D/g, "").slice(0, 2))} /></Field>
+                <Field label="Name"><TextInput value={shirtName} onChange={(value) => setShirtName(value.toUpperCase())} /></Field>
+                <Field label="Number"><TextInput type="number" min="0" max="99" value={shirtNumber} onChange={(value) => setShirtNumber(String(value).slice(0, 2))} /></Field>
+                <Field label="Background"><SelectInput value={shirtBgMode} onChange={setShirtBgMode} options={[{ value: "team", label: "TEAM" }, { value: "custom", label: "CUSTOM" }]} /></Field>
+                <Field label="Custom bg"><ColourInput value={shirtCustomBg} onChange={setShirtCustomBg} /></Field>
+                <Field label="Text colour"><ColourInput value={shirtTextColour} onChange={setShirtTextColour} /></Field>
+                <Field label="Number colour"><ColourInput value={shirtNumberColour} onChange={setShirtNumberColour} /></Field>
+                <Field label="Outline colour"><ColourInput value={shirtOutlineColour} onChange={setShirtOutlineColour} /></Field>
+                <Field label="Font"><SelectInput value={shirtFontType} onChange={setShirtFontType} options={FONT_OPTIONS} /></Field>
+                <Field label="Font weight"><SelectInput value={shirtFontWeight} onChange={setShirtFontWeight} options={FONT_WEIGHT_OPTIONS} /></Field>
+                <Field label="Font style"><SelectInput value={shirtFontStyle} onChange={setShirtFontStyle} options={FONT_STYLE_OPTIONS} /></Field>
+                <Field label="Outline weight"><RangeInput value={shirtOutlineWeight} onChange={setShirtOutlineWeight} min={0} max={6} step={0.25} suffix="px" /></Field>
               </div>
-              <div className="home-copy-bold rounded-[14px] border border-[#F5F1E8]/10 bg-[#051A11]/48 p-3 text-[11px] font-black uppercase leading-relaxed tracking-[0.12em] text-[#F5F1E8]/66">
-                Shirt export is public. Team selection controls the background and text colour. Name and number stay centred together, with Monday Cup above and Brothers beneath.
+              <div className="grid gap-2 sm:grid-cols-2">
+                <CheckboxControl checked={shirtShowMondayLogo} onChange={setShirtShowMondayLogo} label="Monday logo" />
+                <CheckboxControl checked={shirtShowBrothers} onChange={setShirtShowBrothers} label="Brothers logo" />
+                <CheckboxControl checked={shirtShowTeam} onChange={setShirtShowTeam} label="Team flag" />
+                <CheckboxControl checked={shirtShowName} onChange={setShirtShowName} label="Shirt name" />
+                <CheckboxControl checked={shirtShowNumber} onChange={setShirtShowNumber} label="Shirt number" />
+                <CheckboxControl checked={shirtOutlineEnabled} onChange={setShirtOutlineEnabled} label="Outline text" />
               </div>
+              <XYScaleControls title="Team flag position" x={shirtTeamX} setX={setShirtTeamX} y={shirtTeamY} setY={setShirtTeamY} scale={shirtTeamScale} setScale={setShirtTeamScale} xRange={90} yRange={60} minScale={0.6} maxScale={1.8} />
+              <XYScaleControls title="Monday logo position" x={shirtMondayX} setX={setShirtMondayX} y={shirtMondayY} setY={setShirtMondayY} scale={shirtMondayScale} setScale={setShirtMondayScale} xRange={90} yRange={70} minScale={0.65} maxScale={1.35} />
+              <XYScaleControls title="Name position" x={shirtNameX} setX={setShirtNameX} y={shirtNameY} setY={setShirtNameY} scale={shirtNameScale} setScale={setShirtNameScale} xRange={100} yRange={90} minScale={0.7} maxScale={1.35} />
+              <XYScaleControls title="Number position" x={shirtNumberX} setX={setShirtNumberX} y={shirtNumberY} setY={setShirtNumberY} scale={shirtNumberScale} setScale={setShirtNumberScale} xRange={100} yRange={90} minScale={0.7} maxScale={1.25} />
+              <XYScaleControls title="Brothers position" x={shirtBrothersX} setX={setShirtBrothersX} y={shirtBrothersY} setY={setShirtBrothersY} scale={shirtBrothersScale} setScale={setShirtBrothersScale} xRange={90} yRange={60} minScale={0.65} maxScale={1.35} />
             </div>
           )}
         </div>
-        )}
       </section>
     </main>
   );

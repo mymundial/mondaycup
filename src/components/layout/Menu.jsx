@@ -10,7 +10,7 @@ import {
 import { ASSETS } from "../../data/assets.js";
 import { auth } from "../../firebase";
 import { ensureUserDocument } from "../../lib/firebaseUser";
-import { HamburgerIcon } from "../shared.jsx";
+import { MC_COLORS, MC_SIZES, MC_TYPE } from "../../styles/theme.js";
 import { AuthEmailCommsCheckbox, AuthForgotPasswordButton, AuthPrimaryButton, AuthTabs, AuthTextInput, PasswordVisibilityButton } from "../auth/AuthFormParts.jsx";
 
 const MENU_ITEMS = [
@@ -20,16 +20,20 @@ const MENU_ITEMS = [
   { title: "CLUBHOUSE", action: "onClubhouse" },
   { title: "TROPHIES", action: "onTrophyCabinet" },
   { title: "LEADERBOARD", action: "onLeaderboard" },
+  { title: "SHARE", action: "onShare" },
 ];
 
+const MENU_TOP_OFFSET_PX = MC_SIZES.topBarHeight + 30;
+const MENU_SAFE_HEIGHT_OFFSET_PX = MC_SIZES.topBarHeight + 50;
+
 const MENU_FRAME =
-  "w-[calc(100vw_-_16px)] max-w-[468px] max-h-[calc(100dvh-106px)] overflow-hidden rounded-[1.65rem]";
+  "w-[calc(100vw_-_16px)] max-w-[468px] overflow-hidden rounded-[1.65rem]";
 
 const MENU_HEADER =
   "relative mb-4 grid h-14 grid-cols-[44px_1fr_44px] items-center gap-2 px-0";
 
 const MENU_TITLE_CLASS =
-  "home-copy-bold text-[27px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]";
+  "home-copy-bold text-[clamp(24px,5.7vw,30px)] uppercase leading-none text-[#F5F1E8]";
 
 const inputClass =
   "home-copy-regular h-9 w-full rounded-[0.85rem] border border-[#F5F0E6]/18 bg-[#F5F0E6]/94 py-0 pl-11 pr-4 text-[15px] uppercase tracking-[0.055em] text-[#0B5F35] outline-none placeholder:text-[#0B5F35]/34 focus:border-[#F7D117]";
@@ -152,7 +156,10 @@ function MenuHeader({ title = "MENU", onClose, onBack, authView = false, authLog
         )}
       </button>
 
-      <h2 className={`${MENU_TITLE_CLASS} flex h-10 items-center justify-center text-center`}>
+      <h2
+        className={`${MENU_TITLE_CLASS} flex h-10 items-center justify-center text-center`}
+        style={MC_TYPE.title}
+      >
         {title}
       </h2>
 
@@ -240,6 +247,14 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
     setSuccess("");
   };
 
+  const authActionSettings = () => {
+    if (typeof window === "undefined") return undefined;
+    return {
+      url: window.location.origin,
+      handleCodeInApp: false,
+    };
+  };
+
   const switchMode = (nextMode) => {
     resetMessages();
     setMode(nextMode);
@@ -289,7 +304,16 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
         await ensureUserDocument(cred.user, cleanNickname, profile);
         setVerifyProfile(profile);
         setVerifyUser(cred.user);
-        setVerifyButtonText("VERIFY YOUR EMAIL ADDRESS");
+        try {
+          await sendEmailVerification(cred.user);
+          setVerifyButtonText("RESEND VERIFICATION EMAIL");
+          setSuccess("Verification email sent please check your inbox");
+        } catch (verificationError) {
+          const code = String(verificationError?.code || "");
+          setVerifyButtonText("SEND VERIFICATION EMAIL");
+          if (code.includes("too-many-requests")) setError("Verification email not sent please wait before trying again");
+          else setError("Account created but verification email did not send please tap the button below");
+        }
         return;
       }
 
@@ -342,7 +366,8 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
       const alreadyVerified = await checkEmailVerification();
       if (alreadyVerified) return;
       await sendEmailVerification(user);
-      setVerifyButtonText("PLEASE CHECK YOUR EMAIL");
+      setVerifyButtonText("RESEND VERIFICATION EMAIL");
+      setSuccess("Verification email sent please check your inbox");
     } catch (err) {
       const code = String(err?.code || "");
       if (code.includes("too-many-requests")) setError("Please wait before sending another email");
@@ -354,6 +379,7 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
 
   async function handleForgotPassword(event) {
     event.preventDefault();
+    if (loading) return;
     resetMessages();
 
     const cleanEmail = email.trim().toLowerCase().replace(",", ".");
@@ -364,12 +390,13 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
 
     try {
       setLoading(true);
-      await sendPasswordResetEmail(auth, cleanEmail);
-      setSuccess("Password reset link sent");
+      await sendPasswordResetEmail(auth, cleanEmail, authActionSettings());
+      setSuccess("If that email is registered, a password reset link has been sent");
     } catch (err) {
       const code = String(err?.code || "");
       if (code.includes("invalid-email")) setError("Please enter a valid email address");
-      else setError(err?.message || "Something went wrong please try again");
+      else if (code.includes("too-many-requests")) setError("Please wait before requesting another reset link");
+      else setError("Could not send reset link please try again");
     } finally {
       setLoading(false);
     }
@@ -385,6 +412,7 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
             Check the inbox for {verifyUser.email}. Return to this window after verifying.
           </p>
           {error && <div className="home-copy-regular rounded-[0.8rem] bg-red-500/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-red-100">{error}</div>}
+          {success && <div className="home-copy-regular rounded-[0.8rem] bg-[#B7FF3C]/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-[#B7FF3C]">{success}</div>}
           <AuthPrimaryButton type="button" loading={loading} disabled={verificationComplete} onClick={handleSendVerification}>
             {loading ? "SENDING..." : verifyButtonText}
           </AuthPrimaryButton>
@@ -466,7 +494,9 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
         )}
 
         {!isSignup && (
-          <AuthForgotPasswordButton onClick={() => { resetMessages(); setForgotPassword(true); }} />
+          <AuthForgotPasswordButton onClick={() => { resetMessages(); setForgotPassword(true); }}>
+            FORGOT PASSWORD?
+          </AuthForgotPasswordButton>
         )}
       </form>
     </>
@@ -481,6 +511,7 @@ export function MenuDropdown({
   onClubhouse,
   onTrophyCabinet,
   onLeaderboard,
+  onShare,
   onRestart,
   onSignOut,
   canSignOut = false,
@@ -495,7 +526,7 @@ export function MenuDropdown({
   useEffect(() => {
     setView(initialView || "menu");
   }, [initialView, initialAuthMode, authShowLogoBack, authRequestId]);
-  const handlers = { onMatch, onFixtures, onGroups, onClubhouse, onTrophyCabinet, onLeaderboard };
+  const handlers = { onMatch, onFixtures, onGroups, onClubhouse, onTrophyCabinet, onLeaderboard, onShare };
   const authLabel = canSignOut ? "SIGN OUT" : "SIGN IN";
   const authActive = view === "auth";
 
@@ -509,16 +540,25 @@ export function MenuDropdown({
 
   const menu = (
     <div
-      className="fixed inset-0 isolate flex items-start justify-center overflow-y-auto bg-[#031B12]/36 px-2 pb-[max(14px,env(safe-area-inset-bottom))] pt-[calc(86px+env(safe-area-inset-top))] backdrop-blur-[2px]"
-      style={{ zIndex: 2147483647 }}
+      className="fixed inset-0 isolate flex items-start justify-center overflow-y-auto bg-[#031B12]/36 px-2 pb-[max(14px,env(safe-area-inset-bottom))] backdrop-blur-[2px]"
+      style={{
+        zIndex: 2147483647,
+        paddingTop: `calc(${MENU_TOP_OFFSET_PX}px + env(safe-area-inset-top))`,
+      }}
     >
       <button aria-label="Close menu" onClick={onClose} className="absolute inset-0 z-[0]" type="button" />
 
-      <aside className={`pointer-events-auto relative z-[1] ${MENU_FRAME} border border-[#F5F1E8]/14 bg-[#0B5F35]/88 text-[#F5F1E8] shadow-[0_24px_54px_rgba(0,0,0,0.32),inset_0_-2px_6px_rgba(0,0,0,0.06)]`}>
+      <aside
+        className={`pointer-events-auto relative z-[1] ${MENU_FRAME} border border-[#F5F1E8]/14 text-[#F5F1E8] shadow-[0_24px_54px_rgba(0,0,0,0.32),inset_0_-2px_6px_rgba(0,0,0,0.06)]`}
+        style={{ backgroundColor: `${MC_COLORS.greenPanelSolid}e0` }}
+      >
         <div className="pointer-events-none absolute inset-0 rounded-[1.65rem] shadow-[inset_0_6px_14px_rgba(255,255,255,0.025)]" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 rounded-[1.65rem] bg-[radial-gradient(circle_at_20%_6%,rgba(245,241,232,0.08),transparent_20%),radial-gradient(circle_at_80%_8%,rgba(255,214,0,0.05),transparent_18%),linear-gradient(180deg,rgba(4,22,14,0.18),rgba(4,22,14,0.04))]" aria-hidden="true" />
 
-        <div className="relative max-h-[calc(100dvh-106px)] overflow-y-auto p-3 sm:p-4">
+        <div
+          className="relative overflow-y-auto p-3 sm:p-4"
+          style={{ maxHeight: `calc(100dvh - ${MENU_SAFE_HEIGHT_OFFSET_PX}px)` }}
+        >
           {authActive ? (
             <AuthMenuPanel
               key={`${initialAuthMode}-${authShowLogoBack}-${authRequestId}`}
@@ -564,68 +604,4 @@ export function MenuDropdown({
 
   if (typeof document === "undefined") return menu;
   return createPortal(menu, document.body);
-}
-
-export function HeaderMenuButton({ onClick, isOpen = false }) {
-  return (
-    <button
-      onClick={onClick}
-      aria-label={isOpen ? "Close menu" : "Open menu"}
-      className="absolute right-3 top-1/2 z-[2] flex h-10 w-10 -translate-y-1/2 items-center justify-center text-[#F5F0E6]"
-      type="button"
-    >
-      {isOpen ? <CloseIcon small /> : <HamburgerIcon />}
-    </button>
-  );
-}
-
-export function ScreenTitle({
-  children,
-  menuOpen,
-  menuInitialView = "menu",
-  menuInitialAuthMode = "signin",
-  menuAuthShowLogoBack = false,
-  menuAuthRequestId = 0,
-  onToggleMenu,
-  onCloseMenu,
-  onMatch,
-  onFixtures,
-  onGroups,
-  onClubhouse,
-  onTrophyCabinet,
-  onLeaderboard,
-  onRestart,
-  onSignOut,
-  canSignOut,
-  onAuthComplete,
-}) {
-  return (
-    <section className="relative z-[220] flex h-[54px] shrink-0 items-center justify-center overflow-visible bg-[#072D1D] px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.16)]">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.16))]" aria-hidden="true" />
-      <span className="pointer-events-none absolute left-3 top-1/2 z-[1] flex h-10 w-10 -translate-y-1/2 items-center justify-center overflow-hidden">
-        <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="h-full w-full object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
-      </span>
-      <h2 className="relative z-[1] home-copy-bold text-[clamp(25px,6.1vw,34px)] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">{children}</h2>
-      <HeaderMenuButton onClick={menuOpen ? (onCloseMenu || onToggleMenu) : onToggleMenu} isOpen={menuOpen} />
-      {menuOpen && (
-        <MenuDropdown
-          onClose={onCloseMenu || onToggleMenu}
-          onMatch={onMatch}
-          onFixtures={onFixtures}
-          onGroups={onGroups}
-          onClubhouse={onClubhouse}
-          onTrophyCabinet={onTrophyCabinet}
-          onLeaderboard={onLeaderboard}
-          onRestart={onRestart}
-          onSignOut={onSignOut}
-          canSignOut={canSignOut}
-          onAuthComplete={onAuthComplete}
-          initialView={menuInitialView}
-          initialAuthMode={menuInitialAuthMode}
-          authShowLogoBack={menuAuthShowLogoBack}
-          authRequestId={menuAuthRequestId}
-        />
-      )}
-    </section>
-  );
 }
