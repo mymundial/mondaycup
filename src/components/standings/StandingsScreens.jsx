@@ -6,15 +6,17 @@ import { ScreenTitle } from "../layout/Menu.jsx";
 import { FixturesToggle, PAGE_TOGGLE_TOP_PADDING } from "../schedule/ScheduleScreens.jsx";
 
 const GROUP_TABLE_GRID = "grid-cols-[22px_32px_minmax(0,1.8fr)_18px_repeat(6,24px)]";
+const STANDINGS_SECTION_BG = "bg-[#0B5F35]/44";
 
 const rowClass = ({ isUserTeam }) => [
   `mb-1 grid ${GROUP_TABLE_GRID} items-center gap-[3px] rounded-xl px-2 py-1.5 text-center text-[11px] leading-none last:mb-0 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)] tabular-nums`, 
-  isUserTeam ? "border border-[#F7D117]/28 bg-[#072D1D]/82 text-[#F5F1E8] ring-[#F7D117]/16" : "border border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18",
+  isUserTeam ? "border border-[#F7D117]/28 bg-[#072D1D]/82 text-[#F5F1E8] ring-[#F7D117]/16" : "border border-[#F5F1E8] bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/30",
 ].join(" ");
 
 function PlaceholderSlot({ value, compact = false, large = false }) {
-  const sizeClass = large ? "h-[34px] w-[48px] text-[7px]" : compact ? "h-[13px] w-[19px] text-[4px]" : "h-[13px] w-[19px] text-[4px]";
-  return <span className={`relative flex ${sizeClass} shrink-0 items-center justify-center overflow-hidden rounded bg-[#0B5F35] font-black uppercase tracking-[0.035em] text-[#F5F1E8] ring-1 ring-[#F5F1E8]/35`}>{value || "TBC"}</span>;
+  const sizeClass = large ? "h-[34px] w-[48px]" : compact ? "h-[13px] w-[19px]" : "h-[13px] w-[19px]";
+  const textClass = large ? "text-[7px]" : "text-[5px]";
+  return <span className={`relative flex ${sizeClass} ${textClass} shrink-0 items-center justify-center overflow-hidden rounded bg-[#0B5F35] home-copy-bold tracking-[0.035em] text-[#F5F1E8] ring-1 ring-[#F5F1E8]/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]`}>TBC</span>;
 }
 
 function BracketSlot({ value, compact = false, large = false }) {
@@ -28,12 +30,16 @@ function BracketSlot({ value, compact = false, large = false }) {
 function BracketFixture({ fixture, layout = "vertical", userTeam = null, large = false }) {
   const compact = layout === "r32";
   const widthClass = large ? "w-[72px]" : layout === "horizontal" ? "w-[58px]" : compact ? "w-[34px]" : "w-[38px]";
+  const heightClass = !large && layout === "horizontal" ? "h-[34px]" : "";
   const slotDirection = layout === "horizontal" ? "flex-row" : "flex-col";
   const isUserFixture = userTeam && (fixture?.home === userTeam || fixture?.away === userTeam);
-  const cardClass = isUserFixture ? "border-[#F5F1E8]/22 bg-[#072D1D] text-[#F5F1E8] ring-[#0B5F35]/45" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18";
-  const labelClass = isUserFixture ? "text-[#F7D117]" : "text-[#0B5F35]";
-  return <div className={`mx-auto flex ${widthClass} flex-col items-center rounded-[0.55rem] border ${cardClass} px-[5px] py-[4px] ring-1 ${large ? "py-[6px]" : ""}`}>
-    <div className={`mb-[2px] text-[5.5px] font-black uppercase tracking-[0.05em] ${labelClass}`}>M{fixture?.matchNo || ""}</div>
+  const cardClass = isUserFixture ? "border-[#F5F1E8]/22 bg-[#072D1D] text-[#F5F1E8] ring-[#0B5F35]/45" : "border-[#F5F1E8] bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/30";
+  const matchNo = Number(fixture?.matchNo);
+  const showPlayoffLabel = matchNo === 103;
+  return <div data-bracket-match-no={fixture?.matchNo || ""} className={`mx-auto flex ${widthClass} ${heightClass} flex-col items-center justify-center rounded-[0.55rem] border ${cardClass} px-[5px] py-[4px] ring-1 ${large ? "py-[6px]" : ""}`}>
+    {showPlayoffLabel && (
+      <div className="mb-[2px] max-w-full whitespace-nowrap text-center text-[4.4px] font-black uppercase leading-none tracking-[0.035em] text-[#0B5F35]">PLAY-OFF</div>
+    )}
     <div className={`flex ${slotDirection} items-center gap-[6px]`}>
       <BracketSlot value={fixture?.home || fixture?.homeSeed || "TBC"} compact={compact} large={large} />
       <BracketSlot value={fixture?.away || fixture?.awaySeed || "TBC"} compact={compact} large={large} />
@@ -46,19 +52,38 @@ function BracketRow({ count, fixtures = [], gap = "gap-[2px]", layout = "vertica
   return <div className={`grid w-full ${cols} ${gap} items-start`}>{Array.from({ length: count }).map((_, index) => <BracketFixture key={index} fixture={fixtures[index]} layout={layout} userTeam={userTeam} />)}</div>;
 }
 
-function StageLabel({ children }) {
-  return <div className="text-center home-copy-bold text-[8px] uppercase tracking-[0.14em] text-[#F5F1E8]/72">{children}</div>;
+function StageLabel({ children, connectorCount = 1 }) {
+  const inset = `${50 / Math.max(1, Number(connectorCount || 1))}%`;
+  return (
+    <div className="relative flex h-[10px] items-center justify-center text-center home-copy-bold text-[8px] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]">
+      <span aria-hidden="true" className="absolute top-1/2 h-px -translate-y-1/2 bg-[#F5F1E8]" style={{ left: inset, right: inset }} />
+      <span className="relative z-[3] bg-[#0B5F35] px-1 leading-none">{children}</span>
+    </div>
+  );
+}
+
+function RoundFixtureConnectors({ count = 1, className = "" }) {
+  const safeCount = Math.max(1, Number(count || 1));
+  return (
+    <div className={`grid h-[13px] w-full items-stretch ${className}`} style={{ gridTemplateColumns: `repeat(${safeCount}, minmax(0, 1fr))` }}>
+      {Array.from({ length: safeCount }).map((_, index) => (
+        <span key={index} className="mx-auto block h-full w-px bg-[#F5F1E8]" />
+      ))}
+    </div>
+  );
 }
 
 function PodiumBox({ title, team, className }) {
-  return <div className={`mx-auto flex w-[68px] flex-col items-center rounded-[0.55rem] px-[5px] py-[4px] ${className}`}>
-    <div className="mb-[2px] text-[5.5px] font-black uppercase leading-none tracking-[0.05em] text-[#072D1D]/70">{title}</div>
-    <BracketSlot value={team || "TBC"} />
+  return <div className={`mx-auto flex h-[34px] w-[58px] flex-col items-center justify-center rounded-[0.55rem] border border-[#F5F1E8] px-[5px] py-[4px] ring-1 ring-[#F5F1E8]/30 ${className}`}>
+    <div className="mb-[2px] max-w-[48px] whitespace-nowrap text-center text-[4.4px] font-black uppercase leading-none tracking-[0.035em] text-[#072D1D]/72">{title}</div>
+    <div className="flex h-[13px] items-center justify-center">
+      <BracketSlot value={team || "TBC"} />
+    </div>
   </div>;
 }
 
 export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam = null }) {
-  return <div className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] border border-[#F5F1E8]/12 bg-[#0B5F35]/72 text-[#F5F1E8] ring-1 ring-[#F5F1E8]/12 shadow-[0_10px_26px_rgba(0,0,0,0.16),inset_0_1px_0_rgba(245,241,232,0.08)] backdrop-blur-[1px]">
+  return <div className={`mx-auto w-[94%] overflow-hidden rounded-[1.6rem] border border-[#F5F1E8]/12 ${STANDINGS_SECTION_BG} text-[#F5F1E8] ring-1 ring-[#F5F1E8]/10 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]`}>
     <div className="px-3 pb-1.5 pt-3 text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F0E6]">{title}</div>
     <div className="p-2 pt-1.5">
       <div className={`mb-1 grid ${GROUP_TABLE_GRID} items-center gap-[3px] px-2 text-center text-[11px] home-copy-bold uppercase leading-none tracking-[0.1em] text-[#F5F1E8]/72 tabular-nums`}>
@@ -78,21 +103,33 @@ export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam =
   </div>;
 }
 
-function BracketStageBox({ title, children, className = "" }) {
+function BracketStageBox({ title, children, className = "", titlePosition = "above", connectorCount = 1 }) {
+  const titleNode = <StageLabel connectorCount={connectorCount}>{title}</StageLabel>;
   return (
     <section className={`p-0 text-[#F5F1E8] ${className}`}>
-      <StageLabel>{title}</StageLabel>
-      <div className="mt-1.5">{children}</div>
+      {titlePosition === "above" ? (
+        <>
+          {titleNode}
+          <RoundFixtureConnectors count={connectorCount} className="-mt-[5px]" />
+          <div>{children}</div>
+        </>
+      ) : (
+        <>
+          <div>{children}</div>
+          <RoundFixtureConnectors count={connectorCount} className="-mb-[5px]" />
+          {titleNode}
+        </>
+      )}
     </section>
   );
 }
 
 function PodiumStageBox({ winner, runnerUp, thirdPlace }) {
   return (
-    <div className="mx-auto flex w-[68px] flex-col items-center justify-center gap-1 text-[#F5F1E8]">
-      <PodiumBox title="CHAMPIONS" team={winner} className="bg-[#D8B62F]" />
+    <div className="mx-auto grid h-[62px] w-full max-w-[228px] grid-cols-3 items-center justify-center gap-1.5 text-[#F5F1E8]">
+      <PodiumBox title="THIRD PLACE" team={thirdPlace} className="bg-[#D9822B]" />
       <PodiumBox title="RUNNER-UP" team={runnerUp} className="bg-[#C8C8C8]" />
-      <PodiumBox title="THIRD" team={thirdPlace} className="bg-[#D9822B]" />
+      <PodiumBox title="CHAMPIONS" team={winner} className="bg-[#D8B62F]" />
     </div>
   );
 }
@@ -100,8 +137,9 @@ function PodiumStageBox({ winner, runnerUp, thirdPlace }) {
 function BracketHalfBox({ title, fixtures = [], count, gap = "gap-1.5", layout = "horizontal", userTeam = null }) {
   return (
     <section className="p-0 text-[#F5F1E8]">
-      <StageLabel>{title}</StageLabel>
-      <div className="mt-1.5">
+      <StageLabel connectorCount={count}>{title}</StageLabel>
+      <RoundFixtureConnectors count={count} className="-mt-[5px]" />
+      <div>
         <BracketRow count={count} fixtures={fixtures} gap={gap} layout={layout} userTeam={userTeam} />
       </div>
     </section>
@@ -117,26 +155,82 @@ function BracketStageColumn({ title, topFixtures = [], bottomFixtures = [], coun
   );
 }
 
-function KnockoutRoundBand({ title, fixtures = [], count, gap = "gap-1.5", layout = "horizontal", userTeam = null, className = "" }) {
+function KnockoutRoundBand({ title, fixtures = [], count, gap = "gap-1.5", layout = "horizontal", userTeam = null, className = "", titlePosition = "above" }) {
   return (
-    <BracketStageBox title={title} className={`mx-auto w-full overflow-hidden ${className}`}>
+    <BracketStageBox title={title} titlePosition={titlePosition} connectorCount={count} className={`mx-auto w-full overflow-visible ${className}`}>
       <BracketRow count={count} fixtures={fixtures} gap={gap} layout={layout} userTeam={userTeam} />
     </BracketStageBox>
   );
 }
 
+function CentreFixtureStageBox({ title, fixture, userTeam = null, splitThirdPlace = false }) {
+  if (splitThirdPlace) {
+    return (
+      <section className="mx-auto flex w-[68px] flex-col items-center justify-start text-[#F5F1E8]">
+        <div className="relative h-[8px] w-full overflow-visible text-center home-copy-bold text-[8px] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]">
+          <span className="absolute bottom-0 left-1/2 block -translate-x-1/2 whitespace-nowrap leading-none">
+            <span className="block">THIRD PLACE</span>
+            <span className="block">PLAY-OFF</span>
+          </span>
+        </div>
+        <span aria-hidden="true" className="block h-[13px] w-px bg-[#F5F1E8]" />
+        <div className="flex h-[62px] w-[68px] items-center justify-center">
+          <BracketFixture fixture={fixture} layout="vertical" userTeam={userTeam} />
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="mx-auto flex w-[68px] flex-col items-center justify-start text-[#F5F1E8]">
+      <StageLabel connectorCount={1}>{title}</StageLabel>
+      <RoundFixtureConnectors count={1} className="-mt-[5px]" />
+      <div className="flex h-[62px] w-[68px] items-center justify-center">
+        <BracketFixture fixture={fixture} layout="vertical" userTeam={userTeam} />
+      </div>
+    </section>
+  );
+}
+
+function FinalCentreStageBox({ fixture, userTeam = null }) {
+  return (
+    <section className="relative mx-auto w-[68px] overflow-visible text-[#F5F1E8]">
+      <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[68px] w-[68px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#F5F1E8]" />
+      <div className="relative z-[3]">
+        <StageLabel connectorCount={1}>FINAL</StageLabel>
+      </div>
+      <RoundFixtureConnectors count={1} className="relative z-0 -mt-[5px]" />
+      <div className="relative z-[2] flex justify-center">
+        <BracketFixture fixture={fixture} layout="vertical" userTeam={userTeam} />
+      </div>
+      <RoundFixtureConnectors count={1} className="relative z-0 -mb-[5px]" />
+      <div className="relative z-[3]">
+        <StageLabel connectorCount={1}>FINAL</StageLabel>
+      </div>
+    </section>
+  );
+}
+
 function KnockoutCentreBand({ finalFixture, thirdFixture, winner, runnerUp, thirdPlace, userTeam = null }) {
   return (
-    <div className="mx-auto grid w-full max-w-[228px] grid-cols-[76px_68px_76px] items-center justify-center gap-1.5">
-      <BracketStageBox title="THIRD PLACE PLAY-OFF" className="mx-auto flex h-[62px] w-[68px] flex-col justify-center p-1.5">
-        <BracketFixture fixture={thirdFixture} layout="vertical" userTeam={userTeam} />
-      </BracketStageBox>
+    <div className="relative mx-auto flex w-full justify-center">
+      <div
+        data-align-ref="R16-M89"
+        className="pointer-events-none absolute left-[20%] top-[0px] z-[2] flex -translate-x-1/2 flex-col items-center justify-start gap-1.5"
+      >
+        <PodiumBox title="THIRD PLACE" team={thirdPlace} className="bg-[#D9822B]" />
+        <BracketFixture fixture={thirdFixture} layout="horizontal" userTeam={userTeam} />
+      </div>
 
-      <PodiumStageBox winner={winner} runnerUp={runnerUp} thirdPlace={thirdPlace} />
+      <FinalCentreStageBox fixture={finalFixture} userTeam={userTeam} />
 
-      <BracketStageBox title="FINAL" className="mx-auto flex h-[62px] w-[68px] flex-col justify-center p-1.5">
-        <BracketFixture fixture={finalFixture} layout="vertical" userTeam={userTeam} />
-      </BracketStageBox>
+      <div
+        data-align-ref="R16-M94"
+        className="pointer-events-none absolute left-[80%] top-[0px] z-[2] flex -translate-x-1/2 flex-col items-center justify-start gap-1.5"
+      >
+        <PodiumBox title="CHAMPIONS" team={winner} className="bg-[#D8B62F]" />
+        <PodiumBox title="RUNNER-UP" team={runnerUp} className="bg-[#C8C8C8]" />
+      </div>
     </div>
   );
 }
@@ -146,7 +240,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
 
   return (
     <div className="mx-auto w-full max-w-full overflow-hidden px-2 text-[#F5F1E8]">
-      <div className="mx-auto flex w-[94%] max-w-[400px] flex-col gap-2 rounded-[1.6rem] border border-[#F5F1E8]/12 bg-[#0B5F35]/72 px-2 py-3 shadow-[0_10px_26px_rgba(0,0,0,0.16),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F5F1E8]/12">
+      <div className={`mx-auto flex w-[94%] flex-col gap-2 rounded-[1.6rem] border border-[#F5F1E8]/12 ${STANDINGS_SECTION_BG} px-2 py-3 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F5F1E8]/10`}>
         <KnockoutRoundBand
           title="ROUND OF 32"
           fixtures={r32.slice(0, 8)}
@@ -203,6 +297,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
           gap="gap-1"
           layout="horizontal"
           userTeam={userTeam}
+          titlePosition="below"
         />
 
         <KnockoutRoundBand
@@ -213,6 +308,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
           gap="gap-2"
           layout="horizontal"
           userTeam={userTeam}
+          titlePosition="below"
         />
 
         <KnockoutRoundBand
@@ -223,6 +319,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
           gap="gap-1.5"
           layout="horizontal"
           userTeam={userTeam}
+          titlePosition="below"
         />
 
         <KnockoutRoundBand
@@ -232,7 +329,10 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
           gap="gap-[1px]"
           layout="r32"
           userTeam={userTeam}
+          titlePosition="below"
         />
+
+
       </div>
     </div>
   );

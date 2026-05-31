@@ -12,7 +12,16 @@ export function PageFrame({ children }) {
 }
 
 export function Footer() {
-  return <footer className="mt-auto h-[48px] shrink-0 bg-[#F5F0E6] pt-1.5 text-center"><div className="flex h-full items-start justify-center pt-2"><BrandMark /></div></footer>;
+  return (
+    <footer className="relative mt-auto h-[54px] shrink-0 overflow-hidden text-center">
+      <div className="absolute inset-0 bg-[#0d6c3d]" aria-hidden="true" />
+      <div className="absolute inset-0 opacity-65 bg-[repeating-linear-gradient(90deg,rgba(6,78,44,0.46)_0px,rgba(6,78,44,0.46)_44px,rgba(16,111,63,0.46)_44px,rgba(16,111,63,0.46)_88px)]" aria-hidden="true" />
+      <div className="absolute inset-x-0 top-0 h-[1px] bg-[#F5F1E8]/18 shadow-[0_2px_12px_rgba(0,0,0,0.42)]" aria-hidden="true" />
+      <div className="relative z-[1] flex h-full items-center justify-center">
+        <BrandMark />
+      </div>
+    </footer>
+  );
 }
 
 export function GreenCard({ children, className = "" }) {

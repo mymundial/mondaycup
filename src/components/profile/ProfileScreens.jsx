@@ -24,7 +24,16 @@ function PadlockIcon({ className = "" }) {
   );
 }
 
-function StatTile({ label, value, highlight = false }) {
+function StatTile({ label, value, highlight = false, toneClass = null }) {
+  if (toneClass) {
+    return (
+      <div className={`flex min-h-[58px] flex-col items-center justify-center rounded-[1.25rem] border p-2 text-center shadow-[0_10px_22px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.22)] ${toneClass}`}>
+        <div className="home-copy-bold text-[18px] uppercase leading-none">{value}</div>
+        <div className="home-copy-regular mt-1 text-[6.5px] uppercase leading-tight tracking-[0.10em] text-[#072D1D]/74">{label}</div>
+      </div>
+    );
+  }
+
   const Card = highlight ? UserHighlightCard : IvoryCard;
   return (
     <Card className="flex min-h-[58px] flex-col items-center justify-center p-2 text-center">
@@ -53,10 +62,35 @@ function RankStatTile({ value }) {
   );
 }
 
-function FormDot({ value, compact = false }) {
-  const dotClass = value === "W" ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.7)]" : value === "L" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.7)]" : value === "D" ? "bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.7)]" : "bg-[#F7D117]/28";
-  const sizeClass = compact ? "h-[clamp(6px,1.7vw,9px)] w-[clamp(6px,1.7vw,9px)]" : "h-[clamp(8px,2.2vw,11px)] w-[clamp(8px,2.2vw,11px)]";
-  return <span className={`block min-w-0 shrink aspect-square ${sizeClass} rounded-full ${dotClass}`} aria-hidden="true" />;
+function conversionToneClass(value) {
+  const conversion = Number(value || 0);
+  if (conversion >= 51) return "border-green-500/80 bg-green-500 text-[#072D1D] ring-1 ring-green-400/32";
+  if (conversion === 50) return "border-[#F7D117]/85 bg-[#F7D117] text-[#072D1D] ring-1 ring-[#F7D117]/32";
+  return "border-red-500/80 bg-red-500 text-[#072D1D] ring-1 ring-red-400/32";
+}
+
+function CupsWonStatTile({ value }) {
+  const cups = Number(value || 0);
+  if (cups > 0) {
+    return (
+      <div className={`flex min-h-[58px] flex-col items-center justify-center rounded-[1.25rem] border p-2 text-center shadow-[0_10px_22px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.22)] ${rankMedalClass(1)}`}>
+        <div className="home-copy-bold text-[18px] uppercase leading-none">{cups}</div>
+        <div className="home-copy-regular mt-1 text-[6.5px] uppercase leading-tight tracking-[0.10em] text-[#0B5F35]">Cups won</div>
+      </div>
+    );
+  }
+  return <StatTile label="Cups won" value={cups} />;
+}
+
+function FormDot({ value }) {
+  const dotClass = value === "W"
+    ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.75),0_0_14px_rgba(34,197,94,0.24)]"
+    : value === "L"
+      ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.75),0_0_14px_rgba(239,68,68,0.24)]"
+      : value === "D"
+        ? "bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.78),0_0_14px_rgba(247,209,23,0.24)]"
+        : "bg-[#F7D117]/28 shadow-[0_0_5px_rgba(247,209,23,0.22)]";
+  return <span className={`block h-[clamp(6px,1.7vw,9px)] w-[clamp(6px,1.7vw,9px)] shrink-0 rounded-full ${dotClass}`} aria-hidden="true" />;
 }
 
 function phaseLabel(label, fallback = "GROUP STAGE") {
@@ -82,23 +116,26 @@ function campaignMedalClass(summary = {}) {
 }
 
 function CampaignStatusRail({ form = [], points = 0 }) {
-  const railClass = "border-[#F7D117]/12 bg-[#062819]/94 text-[#F7D117] shadow-[0_8px_20px_rgba(0,0,0,0.18)]";
   return (
-    <div className="mt-2 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(66px,0.26fr)] items-center gap-1.5">
-      <div className={`flex h-[29px] min-w-0 items-center justify-center gap-[clamp(2px,0.7vw,4px)] overflow-hidden rounded-full border px-2 ${railClass}`}>
-        {Array.from({ length: 8 }).map((_, index) => <FormDot key={index} value={form[index]} compact />)}
+    <div className="mt-2 grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(44px,52px)] items-center gap-1">
+      <div className="relative flex h-[29px] min-w-0 items-center justify-center overflow-hidden rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505]/58 px-2 py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+        <div className="relative z-[1] flex min-w-0 items-center justify-center gap-[clamp(2px,0.7vw,4px)]">
+          {Array.from({ length: 8 }).map((_, index) => <FormDot key={index} value={form[index]} />)}
+        </div>
       </div>
-      <div className="font-led grid h-[29px] min-w-[66px] place-items-center rounded-full border border-[#F7D117]/12 bg-[#062819]/94 px-2 text-[8.2px] uppercase leading-none tracking-[0.02em] text-[#F7D117] shadow-[0_8px_20px_rgba(0,0,0,0.18)]">
-        {Number(points || 0)}
+      <div className="relative flex h-[29px] min-w-[44px] items-center justify-center overflow-hidden rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505]/58 px-1 py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+        <span className="relative z-[1] font-led text-[clamp(6px,1.7vw,9px)] leading-none text-[#F7D117] led-text-glow tabular-nums">{Number(points || 0)}</span>
       </div>
     </div>
   );
 }
 
 function TeamSummaryCard({ title, team, roundLabel = "GROUP STAGE", highlight = false, medalClass = null }) {
-  const cardClass = highlight
-    ? "rounded-[1.35rem] border border-[#F7D117]/18 bg-[#062819] text-[#F5F1E8] shadow-[0_10px_22px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(245,241,232,0.06)] ring-1 ring-[#F7D117]/16"
-    : medalClass || "rounded-[1.35rem] border border-[#F5F1E8]/70 bg-[#F5F1E8] text-[#072D1D] shadow-[0_10px_22px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.70)] ring-1 ring-[#0B5F35]/12";
+  const baseCardClass = "rounded-[1.35rem] border shadow-[0_10px_22px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.70)] ring-1";
+  const colourClass = highlight
+    ? "border-[#F7D117]/18 bg-[#062819] text-[#F5F1E8] ring-[#F7D117]/16 shadow-[0_10px_22px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(245,241,232,0.06)]"
+    : medalClass || "border-[#F5F1E8]/70 bg-[#F5F1E8] text-[#072D1D] ring-[#0B5F35]/12";
+  const cardClass = `${baseCardClass} ${colourClass}`;
   const isMedal = Boolean(medalClass);
   const titleClass = highlight ? "text-[#F5F1E8]" : "text-[#0B5F35]";
   const teamClass = highlight ? "text-[#F7D117]" : isMedal ? "text-[#072D1D]" : "text-[#26352E]";
@@ -116,7 +153,11 @@ function TeamSummaryCard({ title, team, roundLabel = "GROUP STAGE", highlight = 
 
 function CampaignSummaryBlock({ title, team, form = [], points = null, campaignPoints = null, roundLabel = "GROUP STAGE", highlight = false, medalClass = null, className = "" }) {
   const displayPoints = Number(points ?? campaignPoints ?? 0);
-  const card = <TeamSummaryCard title={title} team={team} roundLabel={roundLabel} highlight={highlight} medalClass={medalClass} />;
+  const card = (
+    <div className="mx-auto w-[92%]">
+      <TeamSummaryCard title={title} team={team} roundLabel={roundLabel} highlight={highlight} medalClass={medalClass} />
+    </div>
+  );
 
   return (
     <div className={`min-w-0 ${className}`}>
@@ -285,6 +326,8 @@ export function ClubhouseScreen({
   currentRoundLabel,
   leaderboardRank,
   mondayCupsWon,
+  matchesPlayed = 0,
+  allTimeMatchesPlayed = 0,
   allTimeGoals,
   allTimeShots,
   activeCosmetics,
@@ -298,6 +341,7 @@ export function ClubhouseScreen({
   const isGuest = !currentUser?.uid;
   const displayName = currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST USER";
   const conversion = conversionPercent(allTimeGoals, allTimeShots);
+  const matchesPlayedTotal = Number(allTimeMatchesPlayed || matchesPlayed || 0);
   const currentSummary = {
     team: team || "NO TEAM",
     form: formForSummary(userForm),
@@ -320,15 +364,16 @@ export function ClubhouseScreen({
       <DrawerContent>
         <MenuPanel title={displayName} style={CLUBHOUSE_PANEL_STYLE}>
           <NicknameEditor displayName={displayName} onNicknameUpdate={onNicknameUpdate} isGuest={isGuest} onRegister={() => setRegisterAuthOpen(true)} />
-          <div className="space-y-4 p-4 pt-2">
-            <div className="grid grid-cols-4 gap-3">
+          <div className="space-y-3 p-4 pt-2">
+            <div className="grid grid-cols-5 gap-2">
+              <StatTile label="Matches played" value={matchesPlayedTotal || 0} />
               <StatTile label="Total goals" value={allTimeGoals || 0} />
-              <StatTile label="Conversion" value={`${conversion}%`} />
-              <StatTile label="Monday Cups won" value={mondayCupsWon || 0} />
+              <StatTile label="Conversion" value={`${conversion}%`} toneClass={conversionToneClass(conversion)} />
+              <CupsWonStatTile value={mondayCupsWon || 0} />
               <RankStatTile value={leaderboardRank || "#--"} />
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-4 gap-2">
               <CampaignSummaryBlock className="col-span-2" title="Current Campaign" {...currentSummary} highlight />
               <CampaignSummaryBlock className="col-span-2" title="Best Campaign" {...bestSummary} medalClass={campaignMedalClass(bestSummary)} />
             </div>
@@ -441,11 +486,11 @@ function PodiumBadgeCard({ unlocked, title, assetSrc, placeholderSrc, podiumClas
 function NationFlagTile({ team, unlocked }) {
   const displayName = team === "Bosnia-Herzegovina" ? "Bosnia" : team;
   return (
-    <div className={`rounded-[1.05rem] border px-2 py-1.5 text-center ring-1 ${unlocked ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/16" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`}>
-      <div className={`mx-auto flex h-[24px] w-[36px] items-center justify-center overflow-hidden rounded-[0.4rem] ${unlocked ? "ring-1 ring-[#F7D117]/55" : "opacity-35 saturate-0 brightness-[0.78]"}`}>
-        <Flag team={team} className="h-[24px] w-[36px] rounded-[0.4rem]" />
+    <div className={`grid min-w-0 place-items-center justify-items-center rounded-[1.05rem] border px-1.5 py-1.5 text-center ring-1 ${unlocked ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/16" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`}>
+      <div className={`mx-auto flex h-[24px] w-[36px] shrink-0 items-center justify-center justify-self-center overflow-hidden rounded-[0.4rem] ${unlocked ? "ring-1 ring-[#F7D117]/55" : "opacity-35 saturate-0 brightness-[0.78]"}`}>
+        <Flag team={team} className="block h-[24px] w-[36px] rounded-[0.4rem] object-cover" />
       </div>
-      <div className={`mt-1 home-copy-bold text-[5.8px] uppercase leading-tight tracking-[0.08em] ${unlocked ? "text-[#F7D117]" : "text-[#0B5F35]/56"}`}>{displayName}</div>
+      <div className={`mt-1 block w-full min-w-0 max-w-full truncate text-center home-copy-bold text-[5.8px] uppercase leading-tight tracking-[0.08em] ${unlocked ? "text-[#F7D117]" : "text-[#0B5F35]/56"}`}>{displayName}</div>
     </div>
   );
 }
@@ -463,16 +508,42 @@ function TrophyToggle({ value, onChange }) {
 function TrophySection({ title, children }) {
   return (
     <section className="mx-auto w-[94%] overflow-hidden rounded-[1.6rem] border border-[#F5F1E8]/12 bg-[#0B5F35]/44 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F5F1E8]/10">
-      <div className="px-4 pb-5 pt-4 text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">
-        {title}
-      </div>
-      <div className="px-3.5 pb-4">{children}</div>
+      {title && (
+        <div className="px-4 pb-5 pt-4 text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">
+          {title}
+        </div>
+      )}
+      <div className={title ? "px-3.5 pb-4" : "px-3.5 py-4"}>{children}</div>
     </section>
   );
 }
 
 function TrophyCount({ children }) {
   return <div className="pt-2 text-center home-copy-bold text-[10px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">{children}</div>;
+}
+
+function TrophyProgressMeter({ unlocked = 0, total = 27 }) {
+  const safeTotal = Math.max(1, Number(total || 27));
+  const safeUnlocked = Math.max(0, Math.min(Number(unlocked || 0), safeTotal));
+  const progress = Math.round((safeUnlocked / safeTotal) * 100);
+
+  return (
+    <section className="mx-auto w-[94%] overflow-hidden rounded-[1.35rem] border border-[#F5F1E8]/12 bg-[#0B5F35]/44 px-4 py-3 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F5F1E8]/10">
+      <div className="text-center home-copy-bold text-[12px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">
+        Progress
+      </div>
+      <div className="mt-3 h-[10px] overflow-hidden rounded-full border border-[#F5F1E8]/18 bg-[#062819]/86 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+        <div
+          className="h-full rounded-full bg-[#F7D117] shadow-[0_0_10px_rgba(247,209,23,0.34)]"
+          style={{ width: `${progress}%` }}
+          aria-hidden="true"
+        />
+      </div>
+      <div className="mt-2 text-center home-copy-regular text-[7px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]/72">
+        {progress}% Complete
+      </div>
+    </section>
+  );
 }
 
 function AchievementArrowButton({ direction, onClick }) {
@@ -490,24 +561,30 @@ function AchievementSectionTitle({ onPrevious, onNext }) {
 }
 
 
-function SvgTrophy({ unlocked }) {
-  const color = unlocked ? "#F7D117" : "#0B5F35";
-  const opacity = unlocked ? 1 : 0.42;
+const ACHIEVEMENT_PLACEHOLDER_SRC = "/assets/badges/gold_shield.png";
+const ACHIEVEMENT_TROPHY_SRC = "/assets/badges/mc-trophy.png";
+
+function AchievementIcon({ unlocked }) {
+  const sizeClass = unlocked ? "h-[46px] w-[46px]" : "h-[50px] w-[50px]";
+
   return (
-    <svg viewBox="0 0 64 64" className="h-10 w-10" fill="none" aria-hidden="true">
-      <path d="M22 10h20v9c0 9-4 16-10 19-6-3-10-10-10-19v-9Z" fill={color} opacity={opacity} />
-      <path d="M18 14H9v4c0 8 5 14 13 15M46 14h9v4c0 8-5 14-13 15" stroke={color} strokeWidth="5" strokeLinecap="round" opacity={opacity} />
-      <path d="M32 38v10M22 54h20M18 60h28" stroke={color} strokeWidth="5" strokeLinecap="round" opacity={opacity} />
-    </svg>
+    <div className="flex h-[58px] w-[58px] items-center justify-center bg-transparent">
+      <img
+        src={unlocked ? ACHIEVEMENT_TROPHY_SRC : ACHIEVEMENT_PLACEHOLDER_SRC}
+        alt=""
+        className={`block ${sizeClass} bg-transparent object-contain shadow-none drop-shadow-none`}
+        draggable={false}
+      />
+    </div>
   );
 }
 
 function SvgTrophyCard({ title, description, unlocked, number }) {
   return (
-    <div className={`relative flex min-h-[98px] flex-col items-center justify-center rounded-[1.1rem] border px-1.5 py-2 text-center ring-1 ${unlocked ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/16" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`}>
+    <div className={`relative flex min-h-[112px] flex-col items-center justify-center rounded-[1.1rem] border px-1.5 py-2 text-center ring-1 ${unlocked ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/16" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`}>
       <div className={`absolute left-3 top-2 home-copy-bold font-black text-[7px] uppercase leading-none tracking-[0.08em] ${unlocked ? "text-[#F7D117]/90" : "text-[#0B5F35]/58"}`}>#{number}</div>
-      <SvgTrophy unlocked={unlocked} />
-      <div className={`home-copy-bold mt-2 text-[8px] uppercase leading-none tracking-[0.12em] ${unlocked ? "text-[#F7D117]" : "text-[#0B5F35]"}`}>{title}</div>
+      <AchievementIcon unlocked={unlocked} />
+      <div className={`home-copy-bold mt-1.5 text-[8px] uppercase leading-none tracking-[0.12em] ${unlocked ? "text-[#F7D117]" : "text-[#0B5F35]"}`}>{title}</div>
       <div className={`mt-1 max-w-full truncate home-copy-regular text-[5.5px] uppercase leading-none tracking-[0.08em] ${unlocked ? "text-[#F5F1E8]/70" : "text-[#0B5F35]/58"}`}>{description}</div>
     </div>
   );
@@ -554,14 +631,20 @@ export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWin
   return (
     <main className="relative z-[1] flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden text-[#F5F1E8]">
       <ScreenTitle {...menuProps}>TROPHIES</ScreenTitle>
-      <div className="px-0 pb-3 pt-3">
+      <div className="px-0 pb-2 pt-3">
         <TrophyToggle value={trophyView} onChange={setTrophyView} />
       </div>
       <section className="min-h-0 flex-1 overflow-auto pb-1 pt-0.5">
-        <div className="space-y-2 pb-2">
+        <div className="space-y-2.5 pb-2">
           {trophyView === "badges" && (
             <>
-              <TrophySection title="PODIUM">
+              <TrophySection title={<AchievementSectionTitle onPrevious={previousAchievementPage} onNext={nextAchievementPage} />}>
+                <div className="grid grid-cols-3 gap-3">
+                  {visibleAchievements.map((trophy, index) => <SvgTrophyCard key={trophy.key} {...trophy} number={(achievementPage * achievementsPerPage) + index + 1} />)}
+                </div>
+                <TrophyCount>{achievementUnlockedCount}/{svgTrophies.length}</TrophyCount>
+              </TrophySection>
+              <TrophySection title={null}>
                 <div className="grid grid-cols-3 gap-3">
                   {PODIUM_BADGES.map((badge) => (
                     <PodiumBadgeCard
@@ -574,20 +657,17 @@ export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWin
                     />
                   ))}
                 </div>
-                <TrophyCount>{podiumUnlockedCount}/3</TrophyCount>
               </TrophySection>
-              <TrophySection title={<AchievementSectionTitle onPrevious={previousAchievementPage} onNext={nextAchievementPage} />}>
-                <div className="grid grid-cols-3 gap-3">
-                  {visibleAchievements.map((trophy, index) => <SvgTrophyCard key={trophy.key} {...trophy} number={(achievementPage * achievementsPerPage) + index + 1} />)}
-                </div>
-                <TrophyCount>{achievementUnlockedCount}/{svgTrophies.length}</TrophyCount>
-              </TrophySection>
+              <TrophyProgressMeter
+                unlocked={achievementUnlockedCount + podiumUnlockedCount}
+                total={svgTrophies.length + PODIUM_BADGES.length}
+              />
             </>
           )}
 
           {trophyView === "flagWall" && (
             <TrophySection title="FLAG WALL">
-              <div className="grid grid-cols-6 gap-2.5">
+              <div className="grid grid-cols-6 justify-items-stretch gap-2.5">
                 {ALL_NATIONS.map((nation) => (
                   <NationFlagTile key={nation} team={nation} unlocked={Boolean(nationCupWins?.[nation]?.unlocked)} />
                 ))}
@@ -601,9 +681,7 @@ export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWin
   );
 }
 
-
-const LEADERBOARD_GRID = "36px minmax(0,1fr) 16px 16px 16px 8px 20px 8px 36px 8px 54px";
-const COSMETIC_ICON_CLASS = "h-[15px] w-[15px] object-contain";
+const LEADERBOARD_GRID = "34px minmax(76px,96px) minmax(44px,0.85fr) minmax(92px,1.25fr) minmax(32px,0.55fr) minmax(56px,0.9fr)";
 
 function leaderboardCosmetics(row = {}) {
   const applied = row.cosmeticsApplied || row.bestCampaign?.cosmeticsApplied || row.bestCampaign || {};
@@ -620,37 +698,89 @@ function leaderboardUsedUpgrade(row = {}) {
   return Boolean(cosmetics.goldenBoot || cosmetics.goldenBall || cosmetics.goldenGlove || cosmetics.goldenTicket);
 }
 
-function leaderboardHasPodium(row = {}) {
-  const status = String(row.status || row.finish || row.bestCampaign?.status || row.bestCampaign?.roundLabel || row.bestCampaign?.stage || "").toLowerCase();
-  return Boolean(row.podium || status.includes("champion") || status.includes("runner") || status.includes("third"));
+function leaderboardForm(row = {}) {
+  const form = row.tournamentProgress || row.form || row.bestCampaign?.tournamentProgress || row.bestCampaign?.form || [];
+  return Array.isArray(form) ? form.slice(-8) : [];
 }
 
-function LeaderboardMiniIcon({ active, type, isUser = false }) {
-  if (!active) return <span className="block h-[14px] w-[14px] rounded-full border border-[#0B5F35]/18 bg-[#0B5F35]/8 opacity-35" aria-hidden="true" />;
+function leaderboardFinishStatus(row = {}) {
+  const raw = String(row.status || row.finish || row.finalPosition || row.bestCampaign?.status || row.bestCampaign?.finalPosition || row.bestCampaign?.roundLabel || row.bestCampaign?.stage || "").toLowerCase();
+  if (raw.includes("champion")) return "champion";
+  if (raw.includes("runner")) return "runnerUp";
+  if (raw.includes("third")) return "thirdPlace";
+  return null;
+}
 
-  const src = type === "boot"
-    ? "/assets/game/golden-boot.png"
-    : type === "ball"
-      ? "/assets/game/golden-ball.png"
-      : type === "glove"
-        ? "/assets/game/golden-glove.png"
-        : null;
+const LEADERBOARD_PODIUM_SHIELDS = {
+  champion: "/assets/badges/mc-champs2.png",
+  runnerUp: "/assets/badges/mc-runner-up.png",
+  thirdPlace: "/assets/badges/mc-third-place.png",
+};
 
-  if (src) return <img src={src} alt="" className={COSMETIC_ICON_CLASS} />;
+function LeaderboardPodiumBadge({ row, isUser = false }) {
+  const status = leaderboardFinishStatus(row);
+  const baseClass = isUser ? "border-[#F7D117]/28 bg-[#F7D117]/10" : "border-[#0B5F35]/18 bg-[#0B5F35]/8";
+
+  if (!status) {
+    return <span className={`block h-[20px] w-[20px] rounded-full border ${baseClass} opacity-45`} aria-hidden="true" />;
+  }
+
+  const aria = status === "champion" ? "first place" : status === "runnerUp" ? "second place" : "third place";
 
   return (
-    <span className={`grid h-[15px] w-[15px] place-items-center rounded-full border ${isUser ? "border-[#F7D117]/50 bg-[#F7D117]/18 text-[#F7D117]" : "border-[#0B5F35]/30 bg-[#0B5F35]/10 text-[#0B5F35]"}`} aria-hidden="true">
-      <svg viewBox="0 0 24 24" className="h-[9px] w-[9px]" fill="currentColor">
-        <path d="M12 2.8l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9L12 2.8Z" />
-      </svg>
+    <span className="grid h-[24px] w-[24px] place-items-center" aria-label={aria}>
+      <img
+        src={LEADERBOARD_PODIUM_SHIELDS[status]}
+        alt=""
+        className="block h-[24px] w-[24px] object-contain"
+        draggable={false}
+      />
     </span>
   );
 }
 
+function LeaderboardFormGuide({ form = [], isUser = false }) {
+  const safeForm = Array.from({ length: 8 }).map((_, index) => form[index]);
+  return (
+    <div className="flex min-w-0 items-center justify-center gap-[clamp(3px,0.85vw,6px)]">
+      {safeForm.map((value, index) => (
+        <span key={index} className={`block h-[7px] w-[7px] rounded-full ${
+          value === "W"
+            ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.7)]"
+            : value === "L"
+              ? "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.7)]"
+              : value === "D"
+                ? "bg-[#F7D117] shadow-[0_0_6px_rgba(247,209,23,0.72)]"
+                : isUser ? "bg-[#F7D117]/24" : "bg-[#0B5F35]/12"
+        }`} aria-hidden="true" />
+      ))}
+    </div>
+  );
+}
+
+function LeaderboardFilterSlider({ cleanOnly, onToggle }) {
+  return (
+    <button
+      type="button"
+      aria-label="Toggle clean leaderboard"
+      aria-pressed={cleanOnly}
+      onClick={onToggle}
+      className="mx-auto mb-1.5 grid h-[24px] w-[76px] grid-cols-[1fr_1fr] items-center rounded-full border border-[#F5F1E8]/18 bg-[#062819]/82 p-[2px] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]"
+    >
+      <span className={`relative z-[1] grid h-[20px] place-items-center rounded-full transition-all ${!cleanOnly ? "bg-[#F7D117]" : "bg-transparent"}`}>
+        <img src="/assets/game/golden-ball.png" alt="" className="h-[14px] w-[14px] object-contain" draggable={false} />
+      </span>
+      <span className={`relative z-[1] grid h-[20px] place-items-center rounded-full transition-all ${cleanOnly ? "bg-[#F7D117]" : "bg-transparent"}`}>
+        <img src="/assets/game/ball1.png" alt="" className="h-[14px] w-[14px] object-contain" draggable={false} />
+      </span>
+    </button>
+  );
+}
+
 function LeaderboardFlag({ team, isUser = false }) {
-  const flagClass = `h-[18px] w-[27px] rounded-[5px] object-cover ${isUser ? "ring-1 ring-[#F7D117]/45" : "ring-1 ring-[#0B5F35]/18"}`;
+  const flagClass = `h-[18px] w-[28px] rounded-[5px] object-cover ${isUser ? "ring-1 ring-[#F7D117]/45" : "ring-1 ring-[#0B5F35]/18"}`;
   if (!team) {
-    return <span className={`grid h-[18px] w-[27px] place-items-center text-center home-copy-bold text-[11px] leading-none ${isUser ? "text-[#F5F1E8]/82" : "text-[#0B5F35]/65"}`}>-</span>;
+    return <span className={`grid h-[18px] w-[28px] place-items-center text-center home-copy-bold text-[11px] leading-none ${isUser ? "text-[#F5F1E8]/82" : "text-[#0B5F35]/65"}`}>-</span>;
   }
   return <Flag team={team} className={flagClass} />;
 }
@@ -663,19 +793,13 @@ function LeaderboardHeader() {
     >
       <span className="justify-self-center text-center">Rank</span>
       <span className="justify-self-start text-left">Username</span>
+      <span className="justify-self-center text-center">Team</span>
+      <span className="justify-self-center text-center">Form</span>
       <span aria-hidden="true" />
-      <span aria-hidden="true" />
-      <span aria-hidden="true" />
-      <span aria-hidden="true" />
-      <span aria-hidden="true" />
-      <span aria-hidden="true" />
-      <span className="flex min-w-0 items-center justify-center text-center">Team</span>
-      <span aria-hidden="true" />
-      <span className="flex min-w-0 items-center justify-center text-center">Score</span>
+      <span className="justify-self-center text-center">Score</span>
     </div>
   );
 }
-
 
 function leaderboardPodiumRowClass(rank) {
   const numericRank = Number(rank);
@@ -707,8 +831,7 @@ function leaderboardScoreTextClass(row, isUser = false) {
 }
 
 function LeaderboardRow({ row, isUser = false }) {
-  const cosmetics = leaderboardCosmetics(row);
-  const hasPodium = leaderboardHasPodium(row);
+  const form = leaderboardForm(row);
   const rowClass = isUser
     ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F5F1E8]/16"
     : leaderboardPodiumRowClass(row.rank);
@@ -719,15 +842,12 @@ function LeaderboardRow({ row, isUser = false }) {
       style={{ gridTemplateColumns: LEADERBOARD_GRID }}
     >
       <div className={`flex min-w-0 items-center justify-center text-center home-copy-bold text-[13px] leading-none ${leaderboardPodiumTextClass(row, isUser)}`}>#{row.rank || "--"}</div>
-      <div className={`flex min-w-0 items-center justify-start truncate text-left home-copy-bold text-[13px] uppercase leading-none tracking-[0.04em] ${leaderboardNameTextClass(row, isUser)}`}>{row.username || "-"}</div>
-      <div className="flex min-w-0 items-center justify-center"><LeaderboardMiniIcon type="boot" active={cosmetics.goldenBoot} isUser={isUser} /></div>
-      <div className="flex min-w-0 items-center justify-center"><LeaderboardMiniIcon type="ball" active={cosmetics.goldenBall} isUser={isUser} /></div>
-      <div className="flex min-w-0 items-center justify-center"><LeaderboardMiniIcon type="glove" active={cosmetics.goldenGlove} isUser={isUser} /></div>
-      <span aria-hidden="true" />
-      <div className="flex min-w-0 items-center justify-center"><LeaderboardMiniIcon type="podium" active={hasPodium} isUser={isUser} /></div>
-      <span aria-hidden="true" />
+      <div className={`flex min-w-0 items-center justify-start text-left home-copy-bold text-[13px] uppercase leading-none tracking-[0.04em] ${leaderboardNameTextClass(row, isUser)}`}>
+        <span className="block max-w-[12ch] truncate">{row.username || "-"}</span>
+      </div>
       <div className="flex min-w-0 items-center justify-center"><LeaderboardFlag team={row.team} isUser={isUser} /></div>
-      <span aria-hidden="true" />
+      <LeaderboardFormGuide form={form} isUser={isUser} />
+      <div className="flex min-w-0 items-center justify-center"><LeaderboardPodiumBadge row={row} isUser={isUser} /></div>
       <div className={`flex min-w-0 items-center justify-center text-center home-copy-bold text-[14px] leading-none ${leaderboardScoreTextClass(row, isUser)}`}>{Number(row.campaignPoints || 0)}</div>
     </div>
   );
@@ -755,7 +875,7 @@ function ScoringTypeBox({ label, points, tone = "ivory" }) {
 function ScoringMeter({ title }) {
   return (
     <div className="rounded-[1rem] border border-[#F5F1E8]/14 bg-[#072D1D]/64 px-3 py-3">
-      <div className="mb-1 text-center home-copy-bold text-[10px] uppercase leading-none tracking-[0.08em] text-[#F7D117]">+0-50</div>
+      <div className="mb-1 text-center home-copy-bold text-[17px] uppercase leading-none tracking-[0.08em] text-[#F7D117]">+0-50</div>
       <div className="mb-2 text-center home-copy-bold text-[8px] uppercase tracking-[0.10em] text-[#F5F1E8]">{title}</div>
       <div className="relative h-[15px] overflow-hidden rounded-full border border-[#F5F1E8]/18 bg-[#031D13]">
         <div className="absolute inset-y-0 left-[40%] w-[20%] bg-green-500/80 shadow-[0_0_12px_rgba(34,197,94,0.45)]" />
@@ -806,57 +926,10 @@ function LeaderboardSection({ title = null, children, className = "" }) {
 }
 
 
-function LeaderboardMiniCheckbox({ checked }) {
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        width: "14px",
-        height: "14px",
-        minWidth: "14px",
-        minHeight: "14px",
-        maxWidth: "14px",
-        maxHeight: "14px",
-        flex: "0 0 14px",
-        borderRadius: "4px",
-        display: "inline-grid",
-        placeItems: "center",
-        backgroundColor: checked ? "#F7D117" : "transparent",
-        border: checked ? "0" : "1px solid rgba(245,241,232,0.38)",
-        color: "#072D1D",
-        lineHeight: 1,
-        boxSizing: "border-box",
-      }}
-    >
-      {checked ? (
-        <svg
-          viewBox="0 0 24 24"
-          style={{
-            width: "9px",
-            height: "9px",
-            minWidth: "9px",
-            minHeight: "9px",
-            maxWidth: "9px",
-            maxHeight: "9px",
-            display: "block",
-          }}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="4.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M4.25 12.5l4.7 4.7L20 5.8" />
-        </svg>
-      ) : null}
-    </span>
-  );
-}
-
-export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore = 0, bestCampaignScore = 0, team = "", bestCampaignSummary = null, currentUser = auth.currentUser }) {
+export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore = 0, bestCampaignScore = 0, team = "", bestCampaignSummary = null, activeCosmetics = {}, currentUser = auth.currentUser }) {
   const [leaderboardView, setLeaderboardView] = useState("scores");
   const [leaderboardPage, setLeaderboardPage] = useState(0);
-  const [includeUpgradedRows, setIncludeUpgradedRows] = useState(true);
+  const [cleanLeaderboardOnly, setCleanLeaderboardOnly] = useState(false);
   const placeholderRows = Array.from({ length: 10 }, (_, index) => ({
     id: `placeholder-${index}`,
     username: "-",
@@ -873,6 +946,16 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
   const leaderboardTeam = currentUser?.uid
     ? (bestScore > 0 ? (bestCampaignSummary?.team || "") : "")
     : (guestBestScore > 0 ? (bestCampaignSummary?.team || "") : guestCurrentScore > 0 ? (team || "") : "");
+  const currentCampaignCosmetics = {
+    goldenBoot: Boolean(activeCosmetics?.goldenBoot),
+    goldenBall: Boolean(activeCosmetics?.goldenBall),
+    goldenGlove: Boolean(activeCosmetics?.goldenGlove),
+    goldenTicket: Boolean(activeCosmetics?.goldenTicket),
+    cosmeticBallEquipped: Boolean(activeCosmetics?.goldenBall),
+    cosmeticGloveEquipped: Boolean(activeCosmetics?.goldenGlove),
+    goldenTicketUsed: Boolean(activeCosmetics?.goldenTicket),
+  };
+  const previewCosmetics = bestCampaignSummary?.cosmeticsApplied || (guestCurrentScore > 0 ? currentCampaignCosmetics : {});
   const activeUserId = currentUser?.uid || "guest-preview";
   const hasRegisteredUserRow = Boolean(currentUser?.uid && rows.some((row) => row.userId === currentUser.uid));
   const previewUserRow = activeUserScore > 0 && !hasRegisteredUserRow
@@ -882,25 +965,30 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
         username: currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST",
         team: leaderboardTeam,
         campaignPoints: activeUserScore,
-        cosmeticsApplied: bestCampaignSummary?.cosmeticsApplied || bestCampaignSummary || {},
+        form: bestCampaignSummary?.form || bestCampaignSummary?.tournamentProgress || [],
+        tournamentProgress: bestCampaignSummary?.tournamentProgress || bestCampaignSummary?.form || [],
+        cosmeticsApplied: previewCosmetics,
+        bestCampaign: { ...(bestCampaignSummary || {}), cosmeticsApplied: previewCosmetics },
         status: bestCampaignSummary?.status || bestCampaignSummary?.roundLabel || bestCampaignSummary?.stage || "inProgress",
         isUserPreview: true,
       }]
     : [];
 
   const baseRows = rows.length ? rows : placeholderRows;
-  const filterLeaderboardRow = (row) => includeUpgradedRows || row.isPlaceholder || row.isUserPreview || !leaderboardUsedUpgrade(row);
+  const filterLeaderboardRow = (row) => !cleanLeaderboardOnly || row.isPlaceholder || row.isUserPreview || !leaderboardUsedUpgrade(row);
   const rankedRows = [...previewUserRow, ...baseRows].filter(filterLeaderboardRow)
     .sort((a, b) => Number(b.campaignPoints || 0) - Number(a.campaignPoints || 0))
     .slice(0, 50)
     .map((row, index) => ({ ...row, rank: index + 1 }));
 
   const visibleRows = rankedRows.length ? rankedRows : placeholderRows.map((row, index) => ({ ...row, rank: index + 1 }));
+  const realLeaderboardCount = visibleRows.filter((row) => !row.isPlaceholder).length;
+  const showLeaderboardPaging = realLeaderboardCount > 10;
   const pageSize = 10;
   const totalLeaderboardPages = Math.max(1, Math.ceil(visibleRows.length / pageSize));
-  const safeLeaderboardPage = Math.min(leaderboardPage, totalLeaderboardPages - 1);
+  const safeLeaderboardPage = showLeaderboardPaging ? Math.min(leaderboardPage, totalLeaderboardPages - 1) : 0;
   const pageStartRank = safeLeaderboardPage * pageSize + 1;
-  const pageEndRank = Math.min(pageStartRank + pageSize - 1, Math.max(visibleRows.length, pageSize));
+  const pageEndRank = Math.min(pageStartRank + pageSize - 1, Math.max(realLeaderboardCount, pageSize));
   const pagedRows = visibleRows.slice(safeLeaderboardPage * pageSize, safeLeaderboardPage * pageSize + pageSize);
   const topTenTitle = safeLeaderboardPage === 0 ? "TOP 10" : `RANK ${pageStartRank}-${pageEndRank}`;
   const previousLeaderboardPage = () => setLeaderboardPage((page) => (page <= 0 ? totalLeaderboardPages - 1 : page - 1));
@@ -911,7 +999,10 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
     username: currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST",
     team: leaderboardTeam,
     campaignPoints: activeUserScore,
-    cosmeticsApplied: bestCampaignSummary?.cosmeticsApplied || bestCampaignSummary || {},
+    form: bestCampaignSummary?.form || bestCampaignSummary?.tournamentProgress || [],
+    tournamentProgress: bestCampaignSummary?.tournamentProgress || bestCampaignSummary?.form || [],
+    cosmeticsApplied: previewCosmetics,
+    bestCampaign: { ...(bestCampaignSummary || {}), cosmeticsApplied: previewCosmetics },
     status: bestCampaignSummary?.status || bestCampaignSummary?.roundLabel || bestCampaignSummary?.stage || "inProgress",
     isUserPreview: true,
   };
@@ -1000,16 +1091,14 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
               <>
                 <LeaderboardSection>
                   <div className="px-2 pb-2 pt-2">
-                    <div className="mb-1 grid grid-cols-[36px_minmax(0,1fr)_36px] items-center gap-2 px-1">
-                      <button type="button" aria-label="Previous leaderboard page" onClick={previousLeaderboardPage} className={rankArrowClass()}><svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5L8 12L15 19" /></svg></button>
-                      <div className="text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">{topTenTitle}</div>
-                      <button type="button" aria-label="Next leaderboard page" onClick={nextLeaderboardPage} className={rankArrowClass()}><svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5L16 12L9 19" /></svg></button>
-                    </div>
-                    <label className="mx-auto mb-1.5 flex w-fit items-center justify-center gap-1.5 text-center home-copy-bold text-[7px] uppercase leading-none tracking-[0.10em] text-[#F5F1E8]/82">
-                      <LeaderboardMiniCheckbox checked={includeUpgradedRows} />
-                      <input type="checkbox" checked={includeUpgradedRows} onChange={(event) => { setIncludeUpgradedRows(event.target.checked); setLeaderboardPage(0); }} className="sr-only" />
-                      <span>Upgrades</span>
-                    </label>
+                    {showLeaderboardPaging && (
+                      <div className="mb-1 grid grid-cols-[36px_minmax(0,1fr)_36px] items-center gap-2 px-1">
+                        <button type="button" aria-label="Previous leaderboard page" onClick={previousLeaderboardPage} className={rankArrowClass()}><svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5L8 12L15 19" /></svg></button>
+                        <div className="text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">{topTenTitle}</div>
+                        <button type="button" aria-label="Next leaderboard page" onClick={nextLeaderboardPage} className={rankArrowClass()}><svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5L16 12L9 19" /></svg></button>
+                      </div>
+                    )}
+                    <LeaderboardFilterSlider cleanOnly={cleanLeaderboardOnly} onToggle={() => { setCleanLeaderboardOnly((value) => !value); setLeaderboardPage(0); }} />
                     <LeaderboardHeader />
                     <div className="space-y-1.5 pr-1">
                       {pagedRows.map((row) => {

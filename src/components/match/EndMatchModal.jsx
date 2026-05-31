@@ -50,7 +50,7 @@ function getCampaignPointsTotal({ result, groupRows = [], userTeam = null, userF
   return 0;
 }
 
-function FormTracker({ form = [] }) {
+function FormTracker({ form = [], className = "" }) {
   const ledClass = (value) => {
     if (value === "W") return "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.85),0_0_22px_rgba(34,197,94,0.32)]";
     if (value === "L") return "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.85),0_0_22px_rgba(239,68,68,0.32)]";
@@ -59,9 +59,9 @@ function FormTracker({ form = [] }) {
   };
 
   return (
-    <div className="flex items-center justify-center gap-2">
+    <div className={`flex items-center justify-center gap-[clamp(3px,1vw,7px)] ${className}`}>
       {Array.from({ length: 8 }).map((_, index) => (
-        <span key={index} className={`h-5 w-5 rounded-full ${ledClass(form[index])}`} />
+        <span key={index} className={`h-[clamp(10px,3.2vw,18px)] w-[clamp(10px,3.2vw,18px)] rounded-full ${ledClass(form[index])}`} />
       ))}
     </div>
   );
@@ -180,20 +180,18 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#072D1D]/48 px-3 pb-[max(14px,env(safe-area-inset-bottom))] pt-[calc(78px+env(safe-area-inset-top))]">
-      <div className="relative w-full max-w-sm max-h-[calc(100dvh-96px)] overflow-visible rounded-[2rem] border border-[#F5F1E8]/14 bg-[#0B5F35]/94 text-center text-[#F5F1E8] shadow-[0_10px_26px_rgba(0,0,0,0.22),inset_0_-2px_6px_rgba(0,0,0,0.06)]">
+      <div className="flex w-full max-w-sm flex-col items-stretch">
         {!sharePreviewOpen && (
-          <div className="absolute left-0 right-0 top-[-58px] z-[3] grid grid-cols-[minmax(0,1fr)_minmax(62px,74px)] gap-2 px-3 sm:gap-4 sm:px-5">
-            <div className="relative flex h-10 min-w-0 items-center justify-center overflow-hidden rounded-full border border-[#F5F1E8]/18 bg-[#072D1D] px-4 shadow-[0_6px_14px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.07),inset_0_-1px_0_rgba(0,0,0,0.12)] ring-1 ring-[#F5F1E8]/10">
-              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.18),rgba(24,166,83,0.05),rgba(11,95,53,0.18))]" />
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),rgba(0,0,0,0.15))]" />
+          <div className="mx-auto mb-[14px] grid w-[78%] grid-cols-[minmax(0,1fr)_minmax(82px,96px)] items-center gap-2">
+            <div className="relative flex h-10 min-w-0 items-center justify-center overflow-hidden rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505]/58 px-[clamp(8px,2vw,12px)] py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
               <div className="relative z-[1]"><FormTracker form={userForm} /></div>
             </div>
-            <div className="relative flex h-10 min-w-0 items-center justify-center overflow-hidden rounded-full border border-[#F5F1E8]/18 bg-[#072D1D] px-2 shadow-[0_6px_14px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.07),inset_0_-1px_0_rgba(0,0,0,0.12)] ring-1 ring-[#F5F1E8]/10">
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),rgba(0,0,0,0.15))]" />
-              <span className="relative z-[1] font-led text-[18px] leading-none text-[#F7D117] led-text-glow">{campaignPointsTotal}</span>
+            <div className="relative flex h-10 min-w-0 items-center justify-center overflow-hidden rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505]/58 px-[clamp(8px,2vw,12px)] py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+              <span className="relative z-[1] font-led text-[clamp(10px,3.2vw,18px)] leading-none text-[#F7D117] led-text-glow tabular-nums">{campaignPointsTotal}</span>
             </div>
           </div>
         )}
+        <div className="relative w-full max-h-[calc(100dvh-150px)] overflow-visible rounded-[2rem] border border-[#F5F1E8]/14 bg-[#0B5F35]/94 text-center text-[#F5F1E8] shadow-[0_10px_26px_rgba(0,0,0,0.22),inset_0_-2px_6px_rgba(0,0,0,0.06)]">
         <div className="overflow-hidden rounded-t-[2rem] bg-[#0B5F35]/0 px-4 pb-1.5 pt-2 text-[#F5F0E6] sm:px-5">
           <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-3">
             {sharePreviewOpen ? (
@@ -217,7 +215,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
           </div>
         </div>
 
-        <div className="max-h-[calc(100dvh-190px)] overflow-y-auto px-4 pb-4 pt-1.5 sm:px-5">
+        <div className="max-h-[calc(100dvh-220px)] overflow-y-auto px-4 pb-4 pt-1.5 sm:px-5">
           {!sharePreviewOpen && (isKnockout ? (
             <>
               <div className={`mt-1 rounded-[1.25rem] px-2.5 py-3 ${userInKnockout ? "border border-[#F5F1E8]/22 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F7D117]/18 shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "bg-[#F5F1E8]/90 text-[#26352E] ring-1 ring-[#F5F1E8]/10"}`}>
@@ -248,7 +246,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
                   <div className="pointer-events-none absolute inset-0 ring-1 ring-[#F5F1E8]/16" aria-hidden="true" />
                 </div>
               </div>
-              <button type="button" onClick={handleShare} disabled={shareBusy} className="mx-auto flex h-11 w-full items-center justify-center rounded-full border border-[#F7D117]/75 bg-[#F7D117] home-copy-bold text-[15px] uppercase tracking-[0.14em] text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.24),inset_0_2px_8px_rgba(255,255,255,0.22)] disabled:opacity-70">
+              <button type="button" onClick={handleShare} disabled={shareBusy} className="mx-auto grid h-[clamp(44px,5.1dvh,62px)] min-h-[44px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(14px,2dvh,23px)] font-black uppercase leading-none tracking-[0.14em] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65">
                 {shareBusy ? "PREPARING" : "EXPORT"}
               </button>
             </div>
@@ -257,13 +255,14 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
               type="button"
               onClick={canShareResult ? openSharePreview : onNext}
               disabled={canShareResult && shareBusy}
-              className="mx-auto mt-2.5 flex h-11 min-h-[44px] w-full items-center justify-center rounded-full border border-[#F7D117]/75 bg-[#F7D117] home-copy-bold text-[15px] uppercase tracking-[0.14em] text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.24),inset_0_2px_8px_rgba(255,255,255,0.22)] disabled:opacity-70"
+              className="mx-auto mt-2.5 grid h-[clamp(44px,5.1dvh,62px)] min-h-[44px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(14px,2dvh,23px)] font-black uppercase leading-none tracking-[0.14em] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65"
             >
               {canShareResult ? (shareBusy ? "PREPARING" : "SHARE YOUR RESULT") : modalButton(result)}
             </button>
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

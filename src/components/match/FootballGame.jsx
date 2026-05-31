@@ -328,6 +328,24 @@ function ControlOverlay({
   );
 }
 
+function TemporaryMatchButtons({ onPerfectWin, onRandomWin }) {
+  const buttonClass = "rounded-[0.55rem] border border-[#F7D117]/24 bg-[#062819]/86 px-2.5 py-1.5 text-center home-copy-bold text-[7px] uppercase leading-none tracking-[0.08em] text-[#F7D117] shadow-[0_5px_12px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(245,241,232,0.08)] active:scale-[0.98]";
+
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-[clamp(118px,16dvh,162px)] z-40 flex justify-center">
+      <div className="pointer-events-auto flex max-w-[92%] items-center justify-center gap-2 rounded-[0.75rem] border border-[#F5F1E8]/10 bg-[#031D13]/60 px-2 py-1.5 backdrop-blur-[2px]">
+        <button type="button" className={buttonClass} onClick={onPerfectWin}>
+          TEMP 5-0 PERFECT
+        </button>
+        <button type="button" className={buttonClass} onClick={onRandomWin}>
+          TEMP RANDOM WIN
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
 export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction, showChampionsBadge = false, podiumBadgeMode = null, activeCosmetics: activeCosmeticsProp = null }) {
   const user = useMemo(() => normaliseTeam(userTeam, "Team A"), [userTeam]);
   const opponent = useMemo(() => normaliseTeam(opponentTeam, "Team B"), [opponentTeam]);
@@ -721,6 +739,87 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     };
   }, []);
 
+  function createTempAttempt(side, shotNumber, goal, { perfect = false, isSuddenDeath = false } = {}) {
+    const direction = getDirection("CM");
+    const power = perfect ? 50 : Math.round(35 + Math.random() * 30);
+    const accuracy = perfect ? 50 : Math.round(35 + Math.random() * 30);
+    const result = goal ? "goal" : "save";
+
+    return {
+      shotNumber,
+      side,
+      result,
+      shotResult: result,
+      goal: Boolean(goal),
+      power,
+      powerValue: power,
+      powerPoints: side === "user" ? meterPoints(power, 50) : 0,
+      accuracy,
+      accuracyValue: accuracy,
+      accuracyPoints: side === "user" ? meterPoints(accuracy, 50) : 0,
+      targetZone: side === "user" ? isPowerInTargetZone(power, activeCosmetics) : false,
+      accuracyTargetZone: side === "user" ? isAccuracyInTargetZone(accuracy, activeCosmetics) : false,
+      accuracyOutcome: perfect ? "onTarget" : null,
+      directionSelected: directionLabel(direction),
+      directionId: direction?.id,
+      row: direction?.row,
+      col: direction?.col,
+      quality: result,
+      isSuddenDeath,
+      finalMatchOutcome: "win",
+      userWon: side === "user",
+      matchWon: side === "user",
+      matchDrawn: false,
+    };
+  }
+
+  function completeTemporaryWin({ userGoals = 5, opponentGoals = 0, perfect = false } = {}) {
+    if (hasCompleted) return;
+
+    stopPowerFrame();
+    stopAccuracyFrame();
+
+    const safeUserGoals = clamp(Math.round(Number(userGoals) || 1), 1, 5);
+    const safeOpponentGoals = clamp(Math.round(Number(opponentGoals) || 0), 0, Math.max(0, safeUserGoals - 1));
+    const userAttempts = Array.from({ length: 5 }).map((_, index) =>
+      createTempAttempt("user", index + 1, index < safeUserGoals, { perfect })
+    );
+    const opponentAttempts = Array.from({ length: 5 }).map((_, index) =>
+      createTempAttempt("opponent", index + 1, index < safeOpponentGoals, { perfect: false })
+    );
+    const nextScore = { user: safeUserGoals, opponent: safeOpponentGoals };
+    const nextAttempts = { user: userAttempts, opponent: opponentAttempts };
+    const result = buildResult({
+      fixture,
+      userTeam: user,
+      opponentTeam: opponent,
+      score: nextScore,
+      winnerSide: "user",
+      isDraw: false,
+      attempts: nextAttempts,
+    });
+
+    setScore(nextScore);
+    setAttempts(nextAttempts);
+    setShot(null);
+    setShootingSide("user");
+    setPhase(PHASE.FINISHED);
+    setWinnerSide("user");
+    setTicker(`${user.name.toUpperCase()} WINS!`);
+    setHasCompleted(true);
+    onMatchComplete?.(result);
+  }
+
+  function completeTemporaryPerfectWin() {
+    completeTemporaryWin({ userGoals: 5, opponentGoals: 0, perfect: true });
+  }
+
+  function completeTemporaryRandomWin() {
+    const userGoals = 1 + Math.floor(Math.random() * 5);
+    const opponentGoals = Math.floor(Math.random() * userGoals);
+    completeTemporaryWin({ userGoals, opponentGoals, perfect: false });
+  }
+
   function tickerStyle() {
     const finalTeam = winnerSide === "user" ? user : winnerSide === "opponent" ? opponent : null;
     if (phase === PHASE.FINISHED && finalTeam) return { background: finalTeam.primaryColour, color: finalTeam.textColour };
@@ -746,6 +845,12 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         }
       `}</style>
       <Scoreboard userTeam={user} opponentTeam={opponent} score={score} attempts={attempts} ticker={ticker} tickerStyle={tickerStyle()} stageLabel={stageLabel} totalMarkerSlots={suddenDeathMarkerSlots} />
+      {!hasCompleted && (
+        <TemporaryMatchButtons
+          onPerfectWin={completeTemporaryPerfectWin}
+          onRandomWin={completeTemporaryRandomWin}
+        />
+      )}
       <Pitch ballPoint={ballPoint} keeperPoint={keeperPoint} shot={shot} shotActive={shotActive} activeTeam={activeTeam} defenderTeam={defenderTeam} showAim={showAim} aimDirection={aimDirection} assets={mergedAssets} showChampionsBadge={showChampionsBadge} podiumBadgeMode={podiumBadgeMode} hideMatchActors={hideMatchActors} />
       <ControlOverlay
         phase={phase}

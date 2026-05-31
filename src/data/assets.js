@@ -3,7 +3,7 @@ const branding = {
   mondayCupAd: "/assets/branding/mc-ad-board.png",
   mondayFlat: "/assets/branding/mc-flat.png",
   logo2: "/assets/branding/LOGO2.png",
-  myMundialLogo: "/assets/branding/mmLOGO.png",
+  myMundialLogo: "/assets/branding/brothers.png",
   trophyAd: "/assets/branding/trophy-ad.png",
   trophyPixel: "/assets/branding/trophy_pixel.png",
 };
@@ -35,6 +35,7 @@ export const ASSETS = {
   mondayCupAd: branding.mondayCupAd,
   mondayFlat: branding.mondayFlat,
   myMundialLogo: branding.myMundialLogo,
+  brothersLogo: branding.myMundialLogo,
   trophyAd: branding.trophyAd,
   trophyPixel: branding.trophyPixel,
   ball: game.ball,

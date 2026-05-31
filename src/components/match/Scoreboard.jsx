@@ -10,7 +10,7 @@ function TeamFlag({ team, className = "h-4 w-6" }) {
 function PenaltyMarkers({ attempts, totalSlots = GAME.regulationPens }) {
   const visible = visiblePenaltyMarkers(attempts);
   return (
-    <div className="flex w-full min-w-0 justify-center gap-[clamp(2px,0.72vw,3px)]">
+    <div className="inline-flex min-w-0 justify-center gap-[clamp(2px,0.72vw,3px)]">
       {Array.from({ length: totalSlots }).map((_, idx) => {
         const value = visible[idx];
         const markerValue = typeof value === "string" ? value : value?.result;
@@ -21,41 +21,69 @@ function PenaltyMarkers({ attempts, totalSlots = GAME.regulationPens }) {
   );
 }
 
-export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerStyle, stageLabel, totalMarkerSlots = GAME.regulationPens }) {
+export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerStyle, stageLabel, totalMarkerSlots = GAME.regulationPens, hideStageLabel = false }) {
   return (
-    <section data-share-scoreboard="true" className="relative h-[clamp(94px,16.5dvh,132px)] shrink-0 overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]">
-      <div
-        className="absolute inset-x-0 top-[4px] bottom-[4px] opacity-50"
-        style={{
-          backgroundImage: "radial-gradient(circle, rgba(247,209,23,0.24) 0.78px, transparent 1.55px)",
-          backgroundSize: "7px 7px",
-          backgroundPosition: "3.5px 3.5px",
-        }}
-      />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
-      <div data-share-score-divider="true" className="absolute inset-x-0 bottom-[26%] z-[2] h-px bg-[#F5F1E8]/20 shadow-[0_0_6px_rgba(245,241,232,0.10)]" />
-      <div className="relative z-[1] h-full">
-        <div data-normalise-stage-label="true" className="led-text-glow font-led grid h-[22%] place-items-center py-[2%] text-center text-[clamp(9px,1.35vh,16px)] font-black uppercase tracking-[0.14em] text-[#F7D117]">
-          {normaliseThirdPlaceCopy(stageLabel || "GROUP STAGE")}
-        </div>
-        <div className="h-[52%] px-[clamp(8px,3.5%,18px)] pt-[1%]">
-          <div className="grid h-full grid-cols-[13%_minmax(34px,1fr)_clamp(26px,8vw,38px)_clamp(16px,5vw,26px)_clamp(26px,8vw,38px)_minmax(34px,1fr)_13%] grid-rows-[58%_42%] items-center">
-            <div className="col-start-1 row-start-1 flex items-center justify-center"><TeamFlag team={userTeam} className="h-[clamp(12px,3.6vw,16px)] w-[clamp(18px,5.3vw,24px)] ring-1 ring-[#F7D117]/38 shadow-[0_0_4px_rgba(247,209,23,0.16)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" /></div>
-            <div className="col-start-2 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(16px,3.05dvh,32px)] font-black leading-none tracking-tight text-[#F7D117]">{userTeam.code}</div></div>
-            <div className="led-text-glow font-led col-start-3 row-start-1 flex items-center justify-center text-[clamp(16px,3dvh,32px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.user}</div>
-            <div className="led-text-glow font-led col-start-4 row-start-1 flex items-center justify-center px-[4px] text-[clamp(16px,3dvh,32px)] font-black leading-none tracking-normal text-[#F7D117]">-</div>
-            <div className="led-text-glow font-led col-start-5 row-start-1 flex items-center justify-center text-[clamp(16px,3dvh,32px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.opponent}</div>
-            <div className="col-start-6 row-start-1 flex min-w-0 items-center justify-center px-[2%]"><div className="led-text-glow font-led w-full text-center text-[clamp(16px,3.05dvh,32px)] font-black leading-none tracking-tight text-[#F7D117]">{opponentTeam.code}</div></div>
-            <div className="col-start-7 row-start-1 flex items-center justify-center"><TeamFlag team={opponentTeam} className="h-[clamp(12px,3.6vw,16px)] w-[clamp(18px,5.3vw,24px)] ring-1 ring-[#F7D117]/38 shadow-[0_0_4px_rgba(247,209,23,0.16)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" /></div>
-            <div className="col-start-2 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-0 w-full max-w-[4.4em] justify-center"><PenaltyMarkers attempts={attempts.user} totalSlots={totalMarkerSlots} /></div></div>
-            <div className="col-start-6 row-start-2 flex justify-center pt-[2%]"><div className="flex min-w-0 w-full max-w-[4.4em] justify-center"><PenaltyMarkers attempts={attempts.opponent} totalSlots={totalMarkerSlots} /></div></div>
+    <section data-share-scoreboard="true" className="relative mt-0 h-[calc((100dvh-54px)*0.165)] shrink-0 overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]">
+      <div data-share-scoreboard-main="true" className="relative h-[calc(100%-26%)] overflow-hidden bg-[#050505]">
+        <div
+          className="pointer-events-none absolute left-[2px] right-[2px] top-[2px] bottom-[2px] opacity-50"
+          style={{
+            backgroundImage: "radial-gradient(circle at center, rgba(247,209,23,0.24) 0.72px, transparent 1.44px)",
+            backgroundSize: "6px calc(100% / 12)",
+            backgroundPosition: "center top",
+            backgroundRepeat: "repeat",
+          }}
+        />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
+
+        <div className="relative z-[1] flex h-full items-center px-[clamp(8px,3.5%,18px)] py-0">
+          <div className="grid h-[86%] w-full grid-cols-[42px_minmax(0,1fr)_clamp(34px,10vw,48px)_clamp(34px,9vw,46px)_clamp(34px,10vw,48px)_minmax(0,1fr)_42px] grid-rows-[25%_50%_25%] items-center">
+            <div data-normalise-stage-label="true" className="col-start-2 col-end-7 row-start-1 flex items-center justify-center">
+              <div className="led-text-glow font-led flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center whitespace-nowrap text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117]" style={{ fontFamily: "IntoDotMatrix, monospace", fontWeight: 900 }}>
+                {normaliseThirdPlaceCopy(stageLabel || "GROUP STAGE")}
+              </div>
+            </div>
+
+            <div className="col-start-1 row-start-2 flex h-full items-center justify-center">
+              <TeamFlag team={userTeam} className="h-[clamp(12px,3.6vw,16px)] w-[clamp(18px,5.3vw,24px)] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" />
+            </div>
+            <div className="col-start-2 row-start-2 flex h-full min-w-0 items-center justify-center px-[clamp(8px,3vw,18px)]">
+              <div className="led-text-glow font-led w-full text-center text-[clamp(16px,3.05dvh,32px)] font-normal leading-none tracking-tight text-[#F7D117]">{userTeam.code}</div>
+            </div>
+            <div className="led-text-glow font-led col-start-3 row-start-2 flex h-full items-center justify-center pl-[clamp(5px,1.6vw,12px)] text-[clamp(16px,3dvh,32px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.user}</div>
+            <div className="led-text-glow font-led col-start-4 row-start-2 flex h-full items-center justify-center px-[clamp(8px,2.4vw,16px)] text-[clamp(16px,3dvh,32px)] font-black leading-none tracking-normal text-[#F7D117]">-</div>
+            <div className="led-text-glow font-led col-start-5 row-start-2 flex h-full items-center justify-center pr-[clamp(5px,1.6vw,12px)] text-[clamp(16px,3dvh,32px)] font-black leading-none tracking-normal text-[#F7D117] tabular-nums">{score.opponent}</div>
+            <div className="col-start-6 row-start-2 flex h-full min-w-0 items-center justify-center px-[clamp(8px,3vw,18px)]">
+              <div className="led-text-glow font-led w-full text-center text-[clamp(16px,3.05dvh,32px)] font-normal leading-none tracking-tight text-[#F7D117]">{opponentTeam.code}</div>
+            </div>
+            <div className="col-start-7 row-start-2 flex h-full items-center justify-center">
+              <TeamFlag team={opponentTeam} className="h-[clamp(12px,3.6vw,16px)] w-[clamp(18px,5.3vw,24px)] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" />
+            </div>
+
+            <div className="col-start-2 row-start-3 flex h-full items-center justify-center">
+              <div className="inline-flex max-w-full items-center justify-center rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(5px,1.5vw,9px)] py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+                <span className="flex min-h-[clamp(12px,1.65vh,17px)] items-center justify-center leading-none"><PenaltyMarkers attempts={attempts.user} totalSlots={totalMarkerSlots} /></span>
+              </div>
+            </div>
+            <div data-share-username-slot="true" className="col-start-3 col-end-6 row-start-3 flex h-full items-center justify-center px-[clamp(5px,1.5vw,10px)]" aria-hidden="true">
+              <div className="invisible led-text-glow font-led flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center whitespace-nowrap text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117]">
+                USERNAME0000
+              </div>
+            </div>
+            <div className="col-start-6 row-start-3 flex h-full items-center justify-center">
+              <div className="inline-flex max-w-full items-center justify-center rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(5px,1.5vw,9px)] py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+                <span className="flex min-h-[clamp(12px,1.65vh,17px)] items-center justify-center leading-none"><PenaltyMarkers attempts={attempts.opponent} totalSlots={totalMarkerSlots} /></span>
+              </div>
+            </div>
           </div>
         </div>
-        <div data-share-flash="true" className="grid h-[26%] w-full place-items-center overflow-hidden border-y border-[#F5F1E8]/24 px-[3%] text-center home-copy-bold text-[clamp(12px,2.15dvh,25px)] font-black tracking-[0.075em] shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)]" style={tickerStyle}>
-          {ticker}
-        </div>
+      </div>
+
+      <div data-share-flash="true" className="grid h-[26%] w-full place-items-center overflow-hidden px-[3%] text-center home-copy-bold text-[clamp(13px,2.3vh,28px)] font-black uppercase leading-none tracking-[0.085em] shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)]" style={tickerStyle}>
+        {ticker}
       </div>
     </section>
   );
 }
+
