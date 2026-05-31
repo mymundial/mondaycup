@@ -73,21 +73,17 @@ const CORE_ACHIEVEMENT_KEYS = [
 
 function NonMatchFooter() {
   return (
-    <footer className="pointer-events-none fixed inset-x-0 bottom-0 z-[1200] h-[54px] overflow-hidden">
+    <footer className="pointer-events-none fixed inset-x-0 bottom-0 z-[1200] h-[30px] overflow-hidden">
       <div className="mx-auto h-full w-full max-w-md overflow-hidden">
-        <div className="relative h-full w-full">
-          <div className="absolute inset-0 bg-[#0d6c3d]" aria-hidden="true" />
-          <div className="absolute inset-0 opacity-70 bg-[repeating-linear-gradient(90deg,rgba(6,78,44,0.50)_0px,rgba(6,78,44,0.50)_44px,rgba(16,111,63,0.50)_44px,rgba(16,111,63,0.50)_88px)]" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-[1px] bg-[#F5F1E8]/18 shadow-[0_2px_14px_rgba(0,0,0,0.46)]" aria-hidden="true" />
-          <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-black/18 to-transparent" aria-hidden="true" />
-          <div className="relative z-[1] flex h-full items-center justify-center">
-            <img
-              src="/assets/branding/brothers.png"
-              alt="Brothers"
-              className="h-[28px] w-auto max-w-[152px] object-contain opacity-95 drop-shadow-[0_3px_8px_rgba(0,0,0,0.26)]"
-              draggable={false}
-            />
-          </div>
+        <div className="relative h-full w-full bg-[#0d6c3d]">
+          <div
+            className="absolute inset-0 opacity-60"
+            style={{
+              backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.045) 0%, rgba(245,241,232,0.045) 10%, rgba(11,45,29,0.12) 10%, rgba(11,45,29,0.12) 20%), linear-gradient(rgba(245,241,232,0.02), rgba(11,45,29,0.05))",
+            }}
+            aria-hidden="true"
+          />
+          <div className="absolute inset-x-[-12%] top-[-19px] h-[31px] rounded-[0_0_50%_50%] border-b border-[#F5F1E8]/13 shadow-[0_10px_18px_rgba(0,0,0,0.28)]" aria-hidden="true" />
         </div>
       </div>
     </footer>
@@ -763,7 +759,32 @@ export default function App() {
     if (!restored) setScreen("home");
   };
 
-  const openMatch = () => { closeMenu(); setDrawer(null); };
+  const hasActiveCampaign = () => Boolean(team && (opponent || currentKnockoutMatch || activeGroupFixture));
+
+  const openTeamFlow = () => {
+    setDrawer(null);
+    setScreen("hosts");
+  };
+
+  const openMatch = async () => {
+    closeMenu();
+    setDrawer(null);
+
+    if (hasActiveCampaign()) {
+      setScreen("match");
+      return;
+    }
+
+    const savedProgress = currentUser?.uid
+      ? await loadCurrentProgress(currentUser.uid).catch(() => firebaseProfile?.currentProgress || firebaseProfile?.savedGames?.current || null)
+      : (firebaseProfile?.currentProgress || firebaseProfile?.savedGames?.current || null);
+
+    if (savedProgress?.active && savedProgress?.team && restoreGameSnapshot(savedProgress)) {
+      return;
+    }
+
+    openTeamFlow();
+  };
   const openFixtures = () => { closeMenu(); setFixtureView(groupStageComplete ? "knockout" : "group"); setDrawer("fixtures"); };
   const openGroups = () => { closeMenu(); setStandingsView(groupStageComplete ? "knockout" : standingsView); setDrawer("groups"); };
   const openClubhouse = () => { closeMenu(); setDrawer("clubhouse"); };
@@ -1161,12 +1182,19 @@ export default function App() {
             ? <DrawerShell><FixturesScreen fixtureView={fixtureView} onFixtureViewChange={setFixtureView} schedule={schedule} menuProps={menuProps} knockoutFixtures={visibleKnockoutFixtures} userTeam={team} /></DrawerShell>
             : null;
 
-  if (screen === "home") {
+  if (["home", "hosts", "teams"].includes(screen)) {
     if (drawerElement) return withNonMatchFooter(drawerElement);
-    return withNonMatchFooter(<HomeScreen allTeamsUnlocked={allTeamsUnlocked} onSelectGroup={selectGroup} onSelectTeam={startTeam} onAuthComplete={handleAuthComplete} authReady={authReady} currentUser={currentUser} onOpenClubhouse={openClubhouse} onResumeCampaign={handleResumeCampaign} hasResumeCampaign={Boolean(firebaseProfile?.currentProgress?.active || firebaseProfile?.savedGames?.current?.active)} />);
+
+    if (screen === "home") {
+      return withNonMatchFooter(<HomeScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} onSelectGroup={selectGroup} onSelectTeam={startTeam} onAuthComplete={handleAuthComplete} authReady={authReady} currentUser={currentUser} onOpenClubhouse={openClubhouse} onResumeCampaign={handleResumeCampaign} hasResumeCampaign={Boolean(firebaseProfile?.currentProgress?.active || firebaseProfile?.savedGames?.current?.active)} />);
+    }
+
+    if (screen === "hosts") {
+      return withNonMatchFooter(<HostSelectScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} currentUser={currentUser} onAuthComplete={handleAuthComplete} onBack={() => setScreen("home")} onSelectGroup={selectGroup} onSelectTeam={startTeam} />);
+    }
+
+    return withNonMatchFooter(<TeamSelectScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} selectedGroup={selectedGroup} onBack={() => setScreen("hosts")} onSelectGroup={setSelectedGroup} onSelectTeam={startTeam} />);
   }
-  if (screen === "hosts") return withNonMatchFooter(<HostSelectScreen allTeamsUnlocked={allTeamsUnlocked} currentUser={currentUser} onAuthComplete={handleAuthComplete} onBack={() => setScreen("home")} onSelectGroup={selectGroup} onSelectTeam={startTeam} />);
-  if (screen === "teams") return withNonMatchFooter(<TeamSelectScreen allTeamsUnlocked={allTeamsUnlocked} selectedGroup={selectedGroup} onBack={() => setScreen("hosts")} onSelectGroup={setSelectedGroup} onSelectTeam={startTeam} />);
 
   const matchScreen = <MatchScreen team={team} opponent={opponent} score={score} matchResult={matchResult} modalDismissed={modalDismissed} onDismissModal={() => setModalDismissed(true)} onQuickWin={quickWin} onMatchComplete={handleMatchComplete} onNextMatch={nextMatch} onViewBracket={() => { setStandingsView("knockout"); setDrawer("groups"); setModalDismissed(true); }} onPlayAgain={resetTournament} menuProps={menuProps} stageLabel={matchStage} fixture={currentFixture} groupRows={allGroups.find((item) => item.group === selectedGroup)?.rows || []} qualifiedTeams={qualifiedTeams} selectedGroup={selectedGroup} userForm={userForm} podium={podium} activeCosmetics={activeCosmetics} />;
 

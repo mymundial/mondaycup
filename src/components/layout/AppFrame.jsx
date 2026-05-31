@@ -10,7 +10,7 @@ export function AppFrame({ children, className = "" }) {
 
 export function AppFrameContent({ children, className = "" }) {
   return (
-    <div className={`relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden ${className}`}>
+    <div className={`relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden pb-[calc(30px+env(safe-area-inset-bottom))] ${className}`}>
       {children}
     </div>
   );

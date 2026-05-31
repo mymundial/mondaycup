@@ -366,7 +366,7 @@ function HomeFooter() {
 function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {} }) {
   return (
     <Shell>
-      <div className="home-main-font relative flex h-[100dvh] flex-col overflow-hidden bg-[#0d6c3d] text-[#072D1D]">
+      <div className="home-main-font relative flex h-[100dvh] flex-col overflow-hidden bg-[#0d6c3d] pb-[calc(30px+env(safe-area-inset-bottom))] text-[#072D1D]">
         <ScoreboardPlaceholder allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} />
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
@@ -377,7 +377,6 @@ function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {} }) {
                 {children}
               </div>
             </div>
-            <HomeFooter />
           </div>
         </main>
       </div>
@@ -692,7 +691,7 @@ function HostPanel({ onSelectGroup, onSelectTeam, onBack, currentUser = null, on
     <button onClick={() => { if (currentUser) onSelectGroup("A"); else setAuthMode("signin"); }} className="relative mt-3 flex h-[50px] w-full items-center justify-center rounded-[1rem] border-2 border-[#F7D117]/85 bg-[#F7D117] px-5 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]">
       <PadlockIcon className="absolute left-5 h-7 w-7" />
       <div className="home-copy-bold min-w-0 truncate text-center text-[clamp(13px,3.5vw,17px)] uppercase leading-none tracking-[0.075em]">ALL TEAMS</div>
-      <div className="home-copy-bold absolute right-5 text-right text-[19px] uppercase tracking-[0.06em]">£0.99</div>
+      <div className="home-copy-bold absolute right-5 text-right text-[19px] uppercase tracking-[0.06em]">£1.99</div>
     </button>
   </HomeMenuShell>;
 }

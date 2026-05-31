@@ -109,10 +109,10 @@ async function assetToDataUrl(src) {
 
 async function buildEmbeddedFontCss() {
   const [led, regular, bold, light] = await Promise.all([
-    assetToDataUrl("/fonts/intodotmatrix-webfont.woff2"),
-    assetToDataUrl("/fonts/sumpfdeutschensportschriftsdin-regular-webfont.woff2"),
-    assetToDataUrl("/fonts/sumpfdeutschensportschriftsdin-bold-webfont.woff2"),
-    assetToDataUrl("/fonts/sumpfdeutschensportschriftsdin-light-webfont.woff2"),
+    assetToDataUrl("/fonts/intodotmatrix/intodotmatrix-webfont.woff2"),
+    assetToDataUrl("/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-regular-webfont.woff2"),
+    assetToDataUrl("/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-bold-webfont.woff2"),
+    assetToDataUrl("/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-light-webfont.woff2"),
   ]);
 
   return `
@@ -138,6 +138,7 @@ async function inlineCloneImages(clone) {
 }
 
 function moveFlashAboveScoreboardForExport(clone) {
+  if (clone?.matches?.('[data-share-layout="match-square"]') || clone?.querySelector?.('[data-share-layout="match-square"]')) return;
   const scoreboard = clone.querySelector('[data-share-scoreboard="true"]');
   const scoreboardInner = scoreboard?.querySelector(":scope > div.relative");
   const flash = clone.querySelector('[data-share-flash="true"]');
@@ -155,6 +156,8 @@ function moveFlashAboveScoreboardForExport(clone) {
 
 function applySharePreviewOverrides(clone, userTeam = null, badgeMode = null) {
   if (!clone) return;
+
+  clone.querySelectorAll('[data-share-export-ignore="true"]').forEach((node) => node.remove());
 
   clone.querySelectorAll('[data-normalise-stage-label="true"]').forEach((node) => {
     node.textContent = normaliseThirdPlaceCopy(node.textContent);
@@ -188,6 +191,23 @@ async function composeShareExportCanvas(sourceCanvas, userTeam = null) {
   return canvas;
 }
 
+
+function imageFromBlob(blob) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("The share image could not be loaded"));
+    };
+    image.src = url;
+  });
+}
+
 function getCanvasBlob(canvas) {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -195,6 +215,43 @@ function getCanvasBlob(canvas) {
       else reject(new Error("The share image could not be created"));
     }, "image/png", 0.95);
   });
+}
+
+async function renderElementToCanvasWithHtml2Canvas(shareElement, userTeam = null) {
+  const html2canvasModule = await import("html2canvas");
+  const html2canvas = html2canvasModule.default || html2canvasModule;
+  const rect = shareElement.getBoundingClientRect();
+  const cropSize = Math.max(1, Math.min(rect.width, rect.height || rect.width));
+  const scale = Math.max(1, Math.min(6, SHARE_EXPORT_SIZE / cropSize));
+  const source = await html2canvas(shareElement, {
+    backgroundColor: window.getComputedStyle(shareElement).backgroundColor || "#0d6c3d",
+    width: cropSize,
+    height: cropSize,
+    scale,
+    useCORS: true,
+    allowTaint: true,
+    logging: false,
+    imageTimeout: 10000,
+    removeContainer: true,
+    ignoreElements: (node) => Boolean(node?.dataset?.shareExportIgnore),
+    onclone: (clonedDocument) => {
+      clonedDocument.querySelectorAll("*").forEach((node) => {
+        node.style.animation = "none";
+        node.style.transition = "none";
+        node.style.caretColor = "transparent";
+      });
+    },
+  });
+
+  const sourceCanvas = document.createElement("canvas");
+  sourceCanvas.width = SHARE_EXPORT_SIZE;
+  sourceCanvas.height = SHARE_EXPORT_SIZE;
+  const ctx = sourceCanvas.getContext("2d");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  const drawSize = Math.min(source.width, source.height);
+  ctx.drawImage(source, 0, 0, drawSize, drawSize, 0, 0, SHARE_EXPORT_SIZE, SHARE_EXPORT_SIZE);
+  return composeShareExportCanvas(sourceCanvas, userTeam);
 }
 
 async function renderElementToCanvasWithSvg(shareElement, userTeam = null, badgeMode = null) {
@@ -262,36 +319,155 @@ async function renderElementToCanvasWithSvg(shareElement, userTeam = null, badge
   }
 }
 
+async function captureShareElementBlobFallback(shareElement, userTeam = null, badgeMode = null) {
+  const { toBlob } = await import("html-to-image");
+  const blob = await toBlob(shareElement, {
+    cacheBust: false,
+    pixelRatio: Math.max(1, SHARE_EXPORT_SIZE / Math.max(1, shareElement.getBoundingClientRect().width || SHARE_EXPORT_SIZE)),
+    backgroundColor: window.getComputedStyle(shareElement).backgroundColor || "#0d6c3d",
+    filter: (node) => !node?.dataset?.shareExportIgnore,
+    style: { animation: "none", transition: "none" },
+  });
+  if (!blob) throw new Error("The share image could not be created");
+
+  const image = await imageFromBlob(blob);
+  const sourceCanvas = document.createElement("canvas");
+  sourceCanvas.width = SHARE_EXPORT_SIZE;
+  sourceCanvas.height = SHARE_EXPORT_SIZE;
+  const ctx = sourceCanvas.getContext("2d");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  const cropSize = Math.min(image.naturalWidth || image.width, image.naturalHeight || image.height);
+  ctx.drawImage(image, 0, 0, cropSize, cropSize, 0, 0, SHARE_EXPORT_SIZE, SHARE_EXPORT_SIZE);
+  const canvas = await composeShareExportCanvas(sourceCanvas, userTeam);
+  return getCanvasBlob(canvas);
+}
+
 export async function captureShareElementBlob(shareElement, userTeam = null, badgeMode = null) {
   if (!shareElement) throw new Error("Share capture area was not found");
   if (document?.fonts?.ready) await document.fonts.ready.catch(() => null);
   await preloadImagesInElement(shareElement);
-  const canvas = await renderElementToCanvasWithSvg(shareElement, userTeam, badgeMode);
-  return getCanvasBlob(canvas);
-}
 
-export async function shareOrDownloadResult({ blob, buildBlob, filename = SHARE_CANVAS_NAME }) {
-  const finalBlob = blob || await buildBlob?.();
-  if (!finalBlob) throw new Error("No share image could be created");
-  const file = new File([finalBlob], filename, { type: "image/png" });
+  const errors = [];
+  const attempts = [
+    ["html2canvas", () => renderElementToCanvasWithHtml2Canvas(shareElement, userTeam)],
+    ["svg", () => renderElementToCanvasWithSvg(shareElement, userTeam, badgeMode)],
+    ["html-to-image", async () => {
+      const blob = await captureShareElementBlobFallback(shareElement, userTeam, badgeMode);
+      return { blobOnly: blob };
+    }],
+  ];
 
-  if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+  for (const [name, attempt] of attempts) {
     try {
-      await navigator.share({ files: [file], title: "Monday Cup Result", text: "My Monday Cup result" });
-      return;
+      const result = await attempt();
+      if (result?.blobOnly) return result.blobOnly;
+      return getCanvasBlob(result);
     } catch (error) {
-      if (error?.name === "AbortError") return;
-      console.warn("Native share failed, downloading instead", error);
+      console.warn(`${name} share export failed`, error);
+      errors.push(`${name}: ${error?.message || error}`);
     }
   }
 
-  const url = URL.createObjectURL(finalBlob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.rel = "noopener";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  throw new Error(`The share image could not be exported. ${errors.join(" | ")}`);
+}
+
+function isIOSLikeDevice() {
+  const userAgent = navigator.userAgent || "";
+  return /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function isAndroidDevice() {
+  return /Android/i.test(navigator.userAgent || "");
+}
+
+function isMobileLikeDevice() {
+  return isIOSLikeDevice() || isAndroidDevice();
+}
+
+function triggerBlobDownload(blob, filename = SHARE_CANVAS_NAME) {
+  try {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.rel = "noopener";
+    link.style.position = "fixed";
+    link.style.left = "-9999px";
+    link.style.top = "-9999px";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    return true;
+  } catch (error) {
+    console.warn("Direct image download failed", error);
+    return false;
+  }
+}
+
+function openBlobPreview(blob, filename = SHARE_CANVAS_NAME, previewWindow = null) {
+  const url = URL.createObjectURL(blob);
+  const opened = previewWindow && !previewWindow.closed
+    ? previewWindow
+    : window.open("", "_blank", "noopener,noreferrer");
+  if (!opened) {
+    URL.revokeObjectURL(url);
+    return false;
+  }
+
+  opened.document.title = filename;
+  opened.document.body.style.margin = "0";
+  opened.document.body.style.background = "#072D1D";
+  opened.document.body.innerHTML = `<main style="min-height:100vh;display:grid;place-items:center;background:#072D1D;padding:14px;box-sizing:border-box;"><img src="${url}" alt="Monday Cup result" style="max-width:100%;height:auto;box-shadow:0 14px 34px rgba(0,0,0,.34);" /><a href="${url}" download="${filename}" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);padding:12px 16px;border-radius:14px;background:#F7D117;color:#072D1D;font-family:sans-serif;font-weight:900;text-decoration:none;letter-spacing:.08em;">SAVE IMAGE</a></main>`;
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  return true;
+}
+
+export function reserveShareWindow() {
+  if (!isIOSLikeDevice()) return null;
+  try {
+    const opened = window.open("", "_blank", "noopener,noreferrer");
+    if (!opened) return null;
+    opened.document.title = "Preparing Monday Cup export";
+    opened.document.body.style.margin = "0";
+    opened.document.body.style.background = "#072D1D";
+    opened.document.body.innerHTML = `<main style="min-height:100vh;display:grid;place-items:center;background:#072D1D;color:#F5F1E8;font-family:sans-serif;font-weight:900;letter-spacing:.08em;text-transform:uppercase;">Preparing image…</main>`;
+    return opened;
+  } catch {
+    return null;
+  }
+}
+
+export async function shareOrDownloadResult({ blob, buildBlob, filename = SHARE_CANVAS_NAME, previewWindow = null }) {
+  const finalBlob = blob || await buildBlob?.();
+  if (!finalBlob) throw new Error("No share image could be created");
+  const file = new File([finalBlob], filename, { type: "image/png" });
+  const shareTitle = "Monday Cup Result";
+  const shareText = "My Monday Cup result";
+
+  const canNativeFileShare = Boolean(isMobileLikeDevice() && navigator.share && (!navigator.canShare || (() => {
+    try { return navigator.canShare({ files: [file] }); }
+    catch { return false; }
+  })()));
+
+  if (canNativeFileShare) {
+    try {
+      await navigator.share({ files: [file], title: shareTitle, text: shareText });
+      if (previewWindow && !previewWindow.closed) previewWindow.close();
+      return;
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        if (previewWindow && !previewWindow.closed) previewWindow.close();
+        return;
+      }
+      console.warn("Native file share failed, falling back to image save", error);
+    }
+  }
+
+  if (isIOSLikeDevice() && openBlobPreview(finalBlob, filename, previewWindow)) return;
+  if (previewWindow && !previewWindow.closed) previewWindow.close();
+  if (triggerBlobDownload(finalBlob, filename)) return;
+  if (openBlobPreview(finalBlob, filename, null)) return;
+  throw new Error("The browser blocked the image export. Try again with pop-ups/downloads allowed.");
 }

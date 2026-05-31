@@ -15,21 +15,21 @@ import { AuthEmailCommsCheckbox, AuthForgotPasswordButton, AuthPrimaryButton, Au
 
 const MENU_ITEMS = [
   { title: "MATCH", action: "onMatch" },
-  { title: "CLUBHOUSE", action: "onClubhouse" },
   { title: "SCHEDULE", action: "onFixtures" },
-  { title: "TROPHIES", action: "onTrophyCabinet" },
   { title: "STANDINGS", action: "onGroups" },
-  { title: "RANKING", action: "onLeaderboard" },
+  { title: "CLUBHOUSE", action: "onClubhouse" },
+  { title: "TROPHIES", action: "onTrophyCabinet" },
+  { title: "LEADERBOARD", action: "onLeaderboard" },
 ];
 
 const MENU_FRAME =
-  "w-[calc(100vw_-_24px)] max-w-[408px] max-h-[calc(100dvh-82px)] overflow-hidden rounded-[1.65rem]";
+  "w-[calc(100vw_-_16px)] max-w-[468px] max-h-[calc(100dvh-106px)] overflow-hidden rounded-[1.65rem]";
 
 const MENU_HEADER =
   "relative mb-4 grid h-14 grid-cols-[44px_1fr_44px] items-center gap-2 px-0";
 
 const MENU_TITLE_CLASS =
-  "home-copy-bold text-[28px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]";
+  "home-copy-bold text-[27px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]";
 
 const inputClass =
   "home-copy-regular h-9 w-full rounded-[0.85rem] border border-[#F5F0E6]/18 bg-[#F5F0E6]/94 py-0 pl-11 pr-4 text-[15px] uppercase tracking-[0.055em] text-[#0B5F35] outline-none placeholder:text-[#0B5F35]/34 focus:border-[#F7D117]";
@@ -122,9 +122,9 @@ function MenuTile({ title, onClick, variant = "primary" }) {
     <button
       type="button"
       onClick={onClick}
-      className={`flex min-h-[52px] items-center justify-center rounded-[0.95rem] border px-3 py-3 text-center shadow-[0_9px_18px_rgba(0,0,0,0.14)] transition-transform active:scale-[0.98] ${classes[variant]}`}
+      className={`flex min-h-[48px] items-center justify-center rounded-[0.95rem] border px-2 py-2 text-center shadow-[0_9px_18px_rgba(0,0,0,0.14)] transition-transform active:scale-[0.98] ${classes[variant]}`}
     >
-      <span className="home-copy-bold text-[14px] font-black uppercase leading-none tracking-[0.08em]">
+      <span className="home-copy-bold text-[clamp(10px,2.55vw,13px)] font-black uppercase leading-none tracking-[0.06em]">
         {title}
       </span>
     </button>
@@ -378,7 +378,7 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
   if (verifyUser) {
     return (
       <>
-        <MenuHeader title="CLUBHOUSE" onClose={onClose} onBack={onBack} authView authLogoBack={showLogoBack} />
+        <MenuHeader title="MONDAY CLUB" onClose={onClose} onBack={onBack} authView authLogoBack={showLogoBack} />
         <div className="mt-2 space-y-2 text-center">
           <div className="home-copy-bold text-[20px] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">VERIFY YOUR EMAIL</div>
           <p className="home-copy-regular mx-auto max-w-[280px] text-[10px] uppercase leading-snug tracking-[0.07em] text-[#F5F1E8]/78">
@@ -419,7 +419,7 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
 
   return (
     <>
-      <MenuHeader title="CLUBHOUSE" onClose={onClose} onBack={onBack} authView authLogoBack={showLogoBack} />
+      <MenuHeader title="MONDAY CLUB" onClose={onClose} onBack={onBack} authView authLogoBack={showLogoBack} />
 
       <div className="mt-2">
         <AuthTabs mode={mode} onChange={switchMode} />
@@ -509,22 +509,16 @@ export function MenuDropdown({
 
   const menu = (
     <div
-      className="fixed inset-0 isolate flex items-start justify-center overflow-y-auto bg-[#031B12]/36 px-3 pb-[max(14px,env(safe-area-inset-bottom))] pt-[calc(62px+env(safe-area-inset-top))] backdrop-blur-[2px]"
+      className="fixed inset-0 isolate flex items-start justify-center overflow-y-auto bg-[#031B12]/36 px-2 pb-[max(14px,env(safe-area-inset-bottom))] pt-[calc(86px+env(safe-area-inset-top))] backdrop-blur-[2px]"
       style={{ zIndex: 2147483647 }}
     >
       <button aria-label="Close menu" onClick={onClose} className="absolute inset-0 z-[0]" type="button" />
 
-      <aside className={`pointer-events-auto relative z-[1] ${MENU_FRAME} text-[#F5F1E8] shadow-[0_24px_54px_rgba(0,0,0,0.32)]`}>
-        <div
-          className="absolute inset-0 rounded-[1.65rem] bg-[repeating-linear-gradient(90deg,#07542F_0px,#07542F_48px,#0B643A_48px,#0B643A_96px)]"
-          aria-hidden="true"
-        />
-        <div
-          className="absolute inset-0 rounded-[1.65rem] border border-[#F5F1E8]/12"
-          aria-hidden="true"
-        />
+      <aside className={`pointer-events-auto relative z-[1] ${MENU_FRAME} border border-[#F5F1E8]/14 bg-[#0B5F35]/88 text-[#F5F1E8] shadow-[0_24px_54px_rgba(0,0,0,0.32),inset_0_-2px_6px_rgba(0,0,0,0.06)]`}>
+        <div className="pointer-events-none absolute inset-0 rounded-[1.65rem] shadow-[inset_0_6px_14px_rgba(255,255,255,0.025)]" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 rounded-[1.65rem] bg-[radial-gradient(circle_at_20%_6%,rgba(245,241,232,0.08),transparent_20%),radial-gradient(circle_at_80%_8%,rgba(255,214,0,0.05),transparent_18%),linear-gradient(180deg,rgba(4,22,14,0.18),rgba(4,22,14,0.04))]" aria-hidden="true" />
 
-        <div className="relative max-h-[calc(100dvh-82px)] overflow-y-auto p-4">
+        <div className="relative max-h-[calc(100dvh-106px)] overflow-y-auto p-3 sm:p-4">
           {authActive ? (
             <AuthMenuPanel
               key={`${initialAuthMode}-${authShowLogoBack}-${authRequestId}`}
@@ -538,7 +532,7 @@ export function MenuDropdown({
             <>
               <MenuHeader title="MENU" onClose={onClose} />
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {MENU_ITEMS.map((item) => (
                   <MenuTile
                     key={item.title}

@@ -21,9 +21,10 @@ function PenaltyMarkers({ attempts, totalSlots = GAME.regulationPens }) {
   );
 }
 
-export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerStyle, stageLabel, totalMarkerSlots = GAME.regulationPens, hideStageLabel = false }) {
+export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerStyle, stageLabel, totalMarkerSlots = GAME.regulationPens, hideStageLabel = false, sharePreview = false }) {
+  const heightClass = sharePreview ? "h-[22%]" : "h-[calc((100dvh-54px)*0.165)]";
   return (
-    <section data-share-scoreboard="true" className="relative mt-0 h-[calc((100dvh-54px)*0.165)] shrink-0 overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]">
+    <section data-share-scoreboard="true" className={`relative mt-0 ${heightClass} shrink-0 overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]`}>
       <div data-share-scoreboard-main="true" className="relative h-[calc(100%-26%)] overflow-hidden bg-[#050505]">
         <div
           className="pointer-events-none absolute left-[2px] right-[2px] top-[2px] bottom-[2px] opacity-50"
@@ -40,8 +41,10 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
         <div className="relative z-[1] flex h-full items-center px-[clamp(8px,3.5%,18px)] py-0">
           <div className="grid h-[86%] w-full grid-cols-[42px_minmax(0,1fr)_clamp(34px,10vw,48px)_clamp(34px,9vw,46px)_clamp(34px,10vw,48px)_minmax(0,1fr)_42px] grid-rows-[25%_50%_25%] items-center">
             <div data-normalise-stage-label="true" className="col-start-2 col-end-7 row-start-1 flex items-center justify-center">
-              <div className="led-text-glow font-led flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center whitespace-nowrap text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117]" style={{ fontFamily: "IntoDotMatrix, monospace", fontWeight: 900 }}>
-                {normaliseThirdPlaceCopy(stageLabel || "GROUP STAGE")}
+              <div className="inline-flex max-w-full items-center justify-center rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(7px,2vw,12px)] py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+                <div className="led-text-glow font-led flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center whitespace-nowrap text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117]" style={{ fontFamily: "IntoDotMatrix, monospace", fontWeight: 900 }}>
+                  {normaliseThirdPlaceCopy(stageLabel || "GROUP STAGE")}
+                </div>
               </div>
             </div>
 

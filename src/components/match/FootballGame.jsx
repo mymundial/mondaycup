@@ -110,7 +110,18 @@ function CrowdPerson({ x, y, scale = 1, shirt = "#0d6c3d", skin = "#c98f65", pos
   );
 }
 
-function CrowdBackdrop({ crowdColours = [] }) {
+function crowdDensityForStage(stageLabel = "GROUP STAGE") {
+  const label = String(stageLabel || "").toUpperCase();
+  if (label.includes("FINAL")) return 1;
+  if (label.includes("3RD") || label.includes("THIRD")) return 0.96;
+  if (label.includes("SEMI")) return 0.92;
+  if (label.includes("QUARTER")) return 0.84;
+  if (label.includes("16")) return 0.76;
+  if (label.includes("32")) return 0.68;
+  return 0.58;
+}
+
+function CrowdBackdrop({ crowdColours = [], stageLabel = "GROUP STAGE" }) {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = 8;
   const boardTop = goalLine - boardHeight;
@@ -133,12 +144,14 @@ function CrowdBackdrop({ crowdColours = [] }) {
     }));
   };
 
+  const density = crowdDensityForStage(stageLabel);
   const rowConfigs = Array.from({ length: 16 }, (_, index) => {
     const t = index / 15;
     const y = 2.5 + 94 * Math.pow(t, 1.24);
+    const baseCount = 62 - t * 34;
     return {
-      count: Math.round(62 - t * 34),
-      step: 1.68 + t * 2.45,
+      count: Math.max(10, Math.round(baseCount * density)),
+      step: (1.68 + t * 2.45) / density,
       y,
       scale: 0.26 + t * 0.78,
       opacity: 0.16 + t * 0.84,
@@ -199,27 +212,27 @@ function GoalFrame({ showAim, aimDirection }) {
   );
 }
 
-function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderTeam, showAim, aimDirection, assets, showChampionsBadge = false, podiumBadgeMode = null, hideMatchActors = false }) {
+function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderTeam, showAim, aimDirection, assets, stageLabel = "GROUP STAGE", showChampionsBadge = false, podiumBadgeMode = null, hideMatchActors = false }) {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const activeBadgeMode = podiumBadgeMode || (showChampionsBadge ? PODIUM_BADGE_MODE.CHAMPION : null);
   const podiumBadge = getPodiumBadgeVisuals(activeBadgeMode);
   const showPodiumBadge = Boolean(podiumBadge);
   return (
-    <section className="relative flex-1 shrink overflow-hidden bg-[#0d6c3d]">
-      <CrowdBackdrop crowdColours={assets.crowdColours} />
+    <section className="relative h-full flex-1 shrink overflow-hidden bg-[#0d6c3d]">
+      <CrowdBackdrop crowdColours={assets.crowdColours} stageLabel={stageLabel} />
       <LedAdvertisingHoard />
       {showPodiumBadge && (
         <div
           className="pointer-events-none absolute left-1/2 z-[7] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
-          style={{ top: `${(goalLine - 8) / 2}%`, width: "40%", height: "30%" }}
+          style={{ top: `${(goalLine - 8) / 2}%`, width: "34%", height: "24%" }}
           aria-hidden="true"
         >
           <div
-            className="absolute left-1/2 top-1/2 h-[76%] w-[82%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
+            className="absolute left-1/2 top-1/2 h-[86%] w-[96%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
             style={{ background: podiumBadge.glowOuter }}
           />
           <div
-            className="absolute left-1/2 top-1/2 h-[54%] w-[62%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-xl"
+            className="absolute left-1/2 top-1/2 h-[58%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-xl"
             style={{ background: podiumBadge.glowInner }}
           />
           <img
@@ -250,6 +263,32 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
         </div>
       )}
     </section>
+  );
+}
+
+
+export function MatchPitchPreview({ userTeam, opponentTeam, stageLabel = "FINAL", assets = {}, showActors = false }) {
+  const user = normaliseTeam(userTeam, "Team A");
+  const opponent = normaliseTeam(opponentTeam, "Team B");
+  const mergedAssets = {
+    ...DEFAULT_ASSETS,
+    ...assets,
+    sounds: { ...DEFAULT_ASSETS.sounds, ...(assets?.sounds || {}) },
+  };
+  return (
+    <Pitch
+      ballPoint={GAME.spot}
+      keeperPoint={pointForDirection(getDirection("CM"))}
+      shot={null}
+      shotActive={false}
+      activeTeam={user}
+      defenderTeam={opponent}
+      showAim={false}
+      aimDirection={getDirection("CM")}
+      assets={mergedAssets}
+      stageLabel={stageLabel}
+      hideMatchActors={!showActors}
+    />
   );
 }
 
@@ -287,7 +326,7 @@ function ControlOverlay({
   const titleClass = "home-copy-bold text-center text-[clamp(15px,2.05dvh,24px)] font-black tracking-[0.08em] text-[#f5f1e8] drop-shadow-md";
 
   return (
-    <section className="pointer-events-none absolute bottom-[max(10px,env(safe-area-inset-bottom))] left-[4%] right-[4%] z-30 h-[min(28%,176px)]">
+    <section className="pointer-events-none absolute bottom-[max(42px,calc(env(safe-area-inset-bottom)+30px))] left-[4%] right-[4%] z-30 h-[min(28%,176px)]">
       {canChoose && (
         <div className="pointer-events-auto absolute inset-x-[4%] bottom-0 top-0 flex flex-col">
           <div className={titleClass}>SHOT DIRECTION</div>
@@ -851,7 +890,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
           onRandomWin={completeTemporaryRandomWin}
         />
       )}
-      <Pitch ballPoint={ballPoint} keeperPoint={keeperPoint} shot={shot} shotActive={shotActive} activeTeam={activeTeam} defenderTeam={defenderTeam} showAim={showAim} aimDirection={aimDirection} assets={mergedAssets} showChampionsBadge={showChampionsBadge} podiumBadgeMode={podiumBadgeMode} hideMatchActors={hideMatchActors} />
+      <Pitch ballPoint={ballPoint} keeperPoint={keeperPoint} shot={shot} shotActive={shotActive} activeTeam={activeTeam} defenderTeam={defenderTeam} showAim={showAim} aimDirection={aimDirection} assets={mergedAssets} stageLabel={stageLabel} showChampionsBadge={showChampionsBadge} podiumBadgeMode={podiumBadgeMode} hideMatchActors={hideMatchActors} />
       <ControlOverlay
         phase={phase}
         selected={selected}

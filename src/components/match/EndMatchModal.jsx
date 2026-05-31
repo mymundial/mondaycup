@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ASSETS } from "../../data/assets.js";
 import { Flag } from "../shared.jsx";
+import { PODIUM_BADGE_MODE } from "../../logic/resultStatus.js";
 import {
   modalButton,
   modalHeaderTitle,
@@ -59,9 +60,9 @@ function FormTracker({ form = [], className = "" }) {
   };
 
   return (
-    <div className={`flex items-center justify-center gap-[clamp(3px,1vw,7px)] ${className}`}>
+    <div className={`grid w-full min-w-0 grid-cols-8 items-center justify-center gap-[clamp(2px,0.7vw,4px)] ${className}`}>
       {Array.from({ length: 8 }).map((_, index) => (
-        <span key={index} className={`h-[clamp(10px,3.2vw,18px)] w-[clamp(10px,3.2vw,18px)] rounded-full ${ledClass(form[index])}`} />
+        <span key={index} className={`mx-auto block h-[clamp(10px,3.2vw,18px)] w-[clamp(10px,3.2vw,18px)] rounded-full ${ledClass(form[index])}`} />
       ))}
     </div>
   );
@@ -82,9 +83,9 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
         const isUser = row.team === userTeam;
         const isQualified = qualifiedTeams.has(row.team);
         return (
-          <div key={row.team} className={`mb-1 grid items-center gap-[3px] rounded-xl border px-2 py-[5px] text-center text-[12px] leading-none last:mb-0 ring-1 ${isUser ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/18 shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`} style={{ gridTemplateColumns: tableColumns }}>
+          <div key={row.team} className={`mb-1 grid items-center gap-[3px] rounded-xl border px-2 py-[5px] text-center text-[12px] leading-none last:mb-0 ring-1 ${isUser ? "border-[#F7D117]/70 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10),0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`} style={{ gridTemplateColumns: tableColumns }}>
             <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{index + 1}</span>
-            <span className="flex justify-center"><Flag team={row.team} className="h-4 w-6 rounded-[4px] ring-1 ring-[#F5F1E8]/35" /></span>
+            <span className="flex justify-center"><Flag team={row.team} className={`h-4 w-6 rounded-[4px] ring-1 ${isUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></span>
             <span className={`min-w-0 truncate pl-2 text-left uppercase home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#26352E]"}`} style={tightTeamStyle(row.team)}>{row.team}</span>
             <span className={`flex h-full items-center justify-center text-[12px] home-copy-bold font-black leading-none ${isUser ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{isQualified ? "Q" : ""}</span>
             <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.played}</span>
@@ -96,6 +97,53 @@ function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = 
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function ChampionConfetti({ count = 92 }) {
+  const pieces = useMemo(() => Array.from({ length: count }, (_, index) => ({
+    id: index,
+    left: `${3 + Math.random() * 94}%`,
+    delay: `${Math.random() * 0.7}s`,
+    duration: `${3.1 + Math.random() * 1.35}s`,
+    drift: `${(Math.random() - 0.5) * 150}px`,
+    rotate: `${Math.random() * 720 - 360}deg`,
+    width: `${5 + Math.random() * 5}px`,
+    height: `${9 + Math.random() * 12}px`,
+    start: `${-18 - Math.random() * 30}%`,
+  })), [count]);
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+      <style>{`
+        @keyframes championConfettiFall {
+          0% { opacity: 0; transform: translate3d(0, -18%, 0) rotate(0deg); }
+          8% { opacity: 1; }
+          78% { opacity: 0.95; }
+          100% { opacity: 0; transform: translate3d(var(--drift), 124dvh, 0) rotate(var(--rotate)); }
+        }
+        @keyframes championConfettiShine {
+          0%, 100% { filter: brightness(0.95) saturate(1.05); }
+          45% { filter: brightness(1.65) saturate(1.35); }
+        }
+      `}</style>
+      {pieces.map((piece) => (
+        <span
+          key={piece.id}
+          className="absolute top-0 block rounded-[2px] shadow-[0_0_8px_rgba(247,209,23,0.38)]"
+          style={{
+            left: piece.left,
+            top: piece.start,
+            width: piece.width,
+            height: piece.height,
+            background: "linear-gradient(115deg,#fff7b0 0%,#f7d117 32%,#b98a08 58%,#fff1a0 76%,#d2a20a 100%)",
+            animation: `championConfettiFall ${piece.duration} cubic-bezier(0.16,0.78,0.28,1) ${piece.delay} 1 forwards, championConfettiShine 0.72s ease-in-out ${piece.delay} 5 alternate`,
+            "--drift": piece.drift,
+            "--rotate": piece.rotate,
+          }}
+        />
+      ))}
     </div>
   );
 }
@@ -113,6 +161,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
   const canShareResult = isTerminalShareResult({ result, fixture, stageLabel, podium, team: userTeam });
   const campaignPointsTotal = getCampaignPointsTotal({ result, groupRows, userTeam, userForm });
   const activeBadgeMode = getPodiumBadgeMode({ result, fixture, stageLabel, podium, team: userTeam });
+  const resultActionButtonClass = "mx-auto grid h-[clamp(44px,5.1dvh,62px)] min-h-[44px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(14px,2dvh,23px)] font-black uppercase leading-none tracking-[0.14em] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
 
   const buildShareBlob = () => captureShareElementBlob(shareCaptureRef?.current, userTeam, activeBadgeMode);
 
@@ -180,14 +229,15 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#072D1D]/48 px-3 pb-[max(14px,env(safe-area-inset-bottom))] pt-[calc(78px+env(safe-area-inset-top))]">
-      <div className="flex w-full max-w-sm flex-col items-stretch">
+      {activeBadgeMode === PODIUM_BADGE_MODE.CHAMPION && <ChampionConfetti />}
+      <div className="relative z-[1] flex w-full max-w-sm flex-col items-stretch">
         {!sharePreviewOpen && (
-          <div className="mx-auto mb-[14px] grid w-[78%] grid-cols-[minmax(0,1fr)_minmax(82px,96px)] items-center gap-2">
-            <div className="relative flex h-10 min-w-0 items-center justify-center overflow-hidden rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505]/58 px-[clamp(8px,2vw,12px)] py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
-              <div className="relative z-[1]"><FormTracker form={userForm} /></div>
+          <div className="mx-auto mb-[12px] grid w-[90%] grid-cols-[minmax(0,0.76fr)_minmax(96px,116px)] items-center gap-2">
+            <div className="relative flex h-9 min-w-0 items-center justify-center overflow-visible rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505]/58 px-[clamp(6px,1.45vw,9px)] py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+              <div className="relative z-[1] w-full max-w-[172px]"><FormTracker form={userForm} /></div>
             </div>
-            <div className="relative flex h-10 min-w-0 items-center justify-center overflow-hidden rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505]/58 px-[clamp(8px,2vw,12px)] py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
-              <span className="relative z-[1] font-led text-[clamp(10px,3.2vw,18px)] leading-none text-[#F7D117] led-text-glow tabular-nums">{campaignPointsTotal}</span>
+            <div className="relative flex h-11 min-w-0 items-center justify-center overflow-visible rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505]/58 px-[clamp(10px,2.2vw,14px)] py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+              <span className="relative z-[1] font-led text-[clamp(14px,4.8vw,25px)] leading-none text-[#F7D117] led-text-glow tabular-nums">{campaignPointsTotal}</span>
             </div>
           </div>
         )}
@@ -218,13 +268,13 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
         <div className="max-h-[calc(100dvh-220px)] overflow-y-auto px-4 pb-4 pt-1.5 sm:px-5">
           {!sharePreviewOpen && (isKnockout ? (
             <>
-              <div className={`mt-1 rounded-[1.25rem] px-2.5 py-3 ${userInKnockout ? "border border-[#F5F1E8]/22 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F7D117]/18 shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "bg-[#F5F1E8]/90 text-[#26352E] ring-1 ring-[#F5F1E8]/10"}`}>
+              <div className={`mt-1 rounded-[1.25rem] px-2.5 py-3 ${userInKnockout ? "border border-[#F7D117]/70 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10),0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "bg-[#F5F1E8]/90 text-[#26352E] ring-1 ring-[#F5F1E8]/10"}`}>
                 <div className={`grid min-h-[32px] grid-cols-[24px_minmax(0,1fr)_32px_minmax(0,1fr)_24px] items-center gap-1 home-main-font text-[clamp(13px,3.4vw,15px)] uppercase leading-none ${userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`}>
-                  <div className="flex items-center justify-center"><Flag team={result.home} className="h-[18px] w-[25px] rounded-[4px] ring-1 ring-[#F5F1E8]/35" /></div>
+                  <div className="flex items-center justify-center"><Flag team={result.home} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${homeIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
                   <span className={`block min-w-0 truncate text-center home-copy-regular ${homeIsUser ? "text-[#F7D117]" : userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(result.home)} title={result.home}>{result.home}</span>
                   <span className={`flex items-center justify-center home-copy-bold tabular-nums leading-none ${userInKnockout ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{result.homeGoals}-{result.awayGoals}</span>
                   <span className={`block min-w-0 truncate text-center home-copy-regular ${awayIsUser ? "text-[#F7D117]" : userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(result.away)} title={result.away}>{result.away}</span>
-                  <div className="flex items-center justify-center"><Flag team={result.away} className="h-[18px] w-[25px] rounded-[4px] ring-1 ring-[#F5F1E8]/35" /></div>
+                  <div className="flex items-center justify-center"><Flag team={result.away} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${awayIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
                 </div>
               </div>
             </>
@@ -246,8 +296,8 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
                   <div className="pointer-events-none absolute inset-0 ring-1 ring-[#F5F1E8]/16" aria-hidden="true" />
                 </div>
               </div>
-              <button type="button" onClick={handleShare} disabled={shareBusy} className="mx-auto grid h-[clamp(44px,5.1dvh,62px)] min-h-[44px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(14px,2dvh,23px)] font-black uppercase leading-none tracking-[0.14em] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65">
-                {shareBusy ? "PREPARING" : "EXPORT"}
+              <button type="button" onClick={handleShare} disabled={shareBusy} className={resultActionButtonClass}>
+                {shareBusy ? "PREPARING" : "SAVE AS PHOTO"}
               </button>
             </div>
           ) : (
@@ -255,7 +305,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
               type="button"
               onClick={canShareResult ? openSharePreview : onNext}
               disabled={canShareResult && shareBusy}
-              className="mx-auto mt-2.5 grid h-[clamp(44px,5.1dvh,62px)] min-h-[44px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(14px,2dvh,23px)] font-black uppercase leading-none tracking-[0.14em] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65"
+              className={`${resultActionButtonClass} mt-2.5`}
             >
               {canShareResult ? (shareBusy ? "PREPARING" : "SHARE YOUR RESULT") : modalButton(result)}
             </button>

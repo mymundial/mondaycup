@@ -4,7 +4,7 @@ import { MC_COLORS, MC_SIZES, MC_TYPE } from '../../styles/theme.js';
 export default function UpgradeCard({
   title,
   subtitle,
-  price = '£0.99',
+  price = '£1.99',
   icon,
   active = false,
   disabled = false,

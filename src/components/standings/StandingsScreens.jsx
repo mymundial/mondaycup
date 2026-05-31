@@ -10,7 +10,7 @@ const STANDINGS_SECTION_BG = "bg-[#0B5F35]/44";
 
 const rowClass = ({ isUserTeam }) => [
   `mb-1 grid ${GROUP_TABLE_GRID} items-center gap-[3px] rounded-xl px-2 py-1.5 text-center text-[11px] leading-none last:mb-0 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)] tabular-nums`, 
-  isUserTeam ? "border border-[#F7D117]/28 bg-[#072D1D]/82 text-[#F5F1E8] ring-[#F7D117]/16" : "border border-[#F5F1E8] bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/30",
+  isUserTeam ? "border border-[#F7D117]/72 bg-[#072D1D]/82 text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10)]" : "border border-[#F5F1E8] bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/30",
 ].join(" ");
 
 function PlaceholderSlot({ value, compact = false, large = false }) {
@@ -19,11 +19,11 @@ function PlaceholderSlot({ value, compact = false, large = false }) {
   return <span className={`relative flex ${sizeClass} ${textClass} shrink-0 items-center justify-center overflow-hidden rounded bg-[#0B5F35] home-copy-bold tracking-[0.035em] text-[#F5F1E8] ring-1 ring-[#F5F1E8]/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]`}>TBC</span>;
 }
 
-function BracketSlot({ value, compact = false, large = false }) {
+function BracketSlot({ value, compact = false, large = false, isUserTeam = false }) {
   if (!isRealBracketTeam(value)) return <PlaceholderSlot value={value || "TBC"} compact={compact} large={large} />;
   const sizeClass = large ? "h-[34px] w-[48px]" : compact ? "h-[13px] w-[19px]" : "h-[13px] w-[19px]";
-  return <span className={`relative inline-flex ${sizeClass} shrink-0 overflow-hidden rounded`}>
-    <Flag team={value} className={`${sizeClass} rounded ring-1 ring-[#F5F1E8]/35`} />
+  return <span className={`relative inline-flex ${sizeClass} shrink-0 overflow-visible rounded ${isUserTeam ? "outline outline-[1.5px] outline-offset-[2px] outline-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]" : ""}`}>
+    <Flag team={value} className={`${sizeClass} rounded ring-1 ${isUserTeam ? "ring-[#F7D117]" : "ring-[#F5F1E8]/35"}`} />
   </span>;
 }
 
@@ -33,7 +33,7 @@ function BracketFixture({ fixture, layout = "vertical", userTeam = null, large =
   const heightClass = !large && layout === "horizontal" ? "h-[34px]" : "";
   const slotDirection = layout === "horizontal" ? "flex-row" : "flex-col";
   const isUserFixture = userTeam && (fixture?.home === userTeam || fixture?.away === userTeam);
-  const cardClass = isUserFixture ? "border-[#F5F1E8]/22 bg-[#072D1D] text-[#F5F1E8] ring-[#0B5F35]/45" : "border-[#F5F1E8] bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/30";
+  const cardClass = isUserFixture ? "border-[#F7D117]/72 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/30" : "border-[#F5F1E8] bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/30";
   const matchNo = Number(fixture?.matchNo);
   const showPlayoffLabel = matchNo === 103;
   return <div data-bracket-match-no={fixture?.matchNo || ""} className={`mx-auto flex ${widthClass} ${heightClass} flex-col items-center justify-center rounded-[0.55rem] border ${cardClass} px-[5px] py-[4px] ring-1 ${large ? "py-[6px]" : ""}`}>
@@ -41,8 +41,8 @@ function BracketFixture({ fixture, layout = "vertical", userTeam = null, large =
       <div className="mb-[2px] max-w-full whitespace-nowrap text-center text-[4.4px] font-black uppercase leading-none tracking-[0.035em] text-[#0B5F35]">PLAY-OFF</div>
     )}
     <div className={`flex ${slotDirection} items-center gap-[6px]`}>
-      <BracketSlot value={fixture?.home || fixture?.homeSeed || "TBC"} compact={compact} large={large} />
-      <BracketSlot value={fixture?.away || fixture?.awaySeed || "TBC"} compact={compact} large={large} />
+      <BracketSlot value={fixture?.home || fixture?.homeSeed || "TBC"} compact={compact} large={large} isUserTeam={fixture?.home === userTeam} />
+      <BracketSlot value={fixture?.away || fixture?.awaySeed || "TBC"} compact={compact} large={large} isUserTeam={fixture?.away === userTeam} />
     </div>
   </div>;
 }
@@ -73,11 +73,11 @@ function RoundFixtureConnectors({ count = 1, className = "" }) {
   );
 }
 
-function PodiumBox({ title, team, className }) {
+function PodiumBox({ title, team, className, userTeam = null }) {
   return <div className={`mx-auto flex h-[34px] w-[58px] flex-col items-center justify-center rounded-[0.55rem] border border-[#F5F1E8] px-[5px] py-[4px] ring-1 ring-[#F5F1E8]/30 ${className}`}>
     <div className="mb-[2px] max-w-[48px] whitespace-nowrap text-center text-[4.4px] font-black uppercase leading-none tracking-[0.035em] text-[#072D1D]/72">{title}</div>
     <div className="flex h-[13px] items-center justify-center">
-      <BracketSlot value={team || "TBC"} />
+      <BracketSlot value={team || "TBC"} isUserTeam={team === userTeam} />
     </div>
   </div>;
 }
@@ -94,7 +94,7 @@ export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam =
         const isUserTeam = userTeam === row.team;
         return <div key={row.team} className={rowClass({ isUserTeam })}>
           <span className={isUserTeam ? "text-[#F7D117]" : ""}>{index + 1}</span>
-          <span className="flex justify-center"><Flag team={row.team} className="h-4 w-6 rounded-[4px] ring-1 ring-[#F5F1E8]/35" /></span><span className={`min-w-0 truncate pl-2 text-left uppercase tracking-[0.015em] ${isUserTeam ? "text-[#F7D117]" : ""}`}>{row.team}</span>
+          <span className="flex justify-center"><Flag team={row.team} className={`h-4 w-6 rounded-[4px] ring-1 ${isUserTeam ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></span><span className={`min-w-0 truncate pl-2 text-left uppercase tracking-[0.015em] ${isUserTeam ? "text-[#F7D117]" : ""}`}>{row.team}</span>
           <span className={`flex items-center justify-center text-[10px] home-copy-bold font-black ${isUserTeam ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{isQualified ? "Q" : ""}</span>
           <span className={`flex items-center justify-center ${isUserTeam ? "text-[#F7D117]" : ""}`}>{row.played}</span><span className={`flex items-center justify-center ${isUserTeam ? "text-[#F7D117]" : ""}`}>{row.won}</span><span className={`flex items-center justify-center ${isUserTeam ? "text-[#F7D117]" : ""}`}>{row.lost}</span><span className={`flex items-center justify-center ${isUserTeam ? "text-[#F7D117]" : ""}`}>{row.drawn}</span><span className={`flex items-center justify-center ${isUserTeam ? "text-[#F7D117]" : ""}`}>{row.gd}</span><span className={`flex items-center justify-center font-black ${isUserTeam ? "text-[#F7D117]" : ""}`}>{row.pts}</span>
         </div>;
@@ -218,7 +218,7 @@ function KnockoutCentreBand({ finalFixture, thirdFixture, winner, runnerUp, thir
         data-align-ref="R16-M89"
         className="pointer-events-none absolute left-[20%] top-[0px] z-[2] flex -translate-x-1/2 flex-col items-center justify-start gap-1.5"
       >
-        <PodiumBox title="THIRD PLACE" team={thirdPlace} className="bg-[#D9822B]" />
+        <PodiumBox title="THIRD PLACE" team={thirdPlace} userTeam={userTeam} className="bg-[#D9822B]" />
         <BracketFixture fixture={thirdFixture} layout="horizontal" userTeam={userTeam} />
       </div>
 
@@ -228,8 +228,8 @@ function KnockoutCentreBand({ finalFixture, thirdFixture, winner, runnerUp, thir
         data-align-ref="R16-M94"
         className="pointer-events-none absolute left-[80%] top-[0px] z-[2] flex -translate-x-1/2 flex-col items-center justify-start gap-1.5"
       >
-        <PodiumBox title="CHAMPIONS" team={winner} className="bg-[#D8B62F]" />
-        <PodiumBox title="RUNNER-UP" team={runnerUp} className="bg-[#C8C8C8]" />
+        <PodiumBox title="CHAMPIONS" team={winner} userTeam={userTeam} className="bg-[#D8B62F]" />
+        <PodiumBox title="RUNNER-UP" team={runnerUp} userTeam={userTeam} className="bg-[#C8C8C8]" />
       </div>
     </div>
   );
@@ -359,7 +359,7 @@ export function GroupsScreen({ allGroups, menuProps, standingsView, onStandingsV
     return () => cancelAnimationFrame(frame);
   }, [scrollTarget.key, scrollTarget.align, standingsView, knockoutFixtures.length, userTeam, userGroup, allGroups.length]);
 
-  return <main className="relative z-[1] flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden text-[#F5F1E8]"><ScreenTitle {...menuProps}>STANDINGS</ScreenTitle><div className={PAGE_TOGGLE_TOP_PADDING}><FixturesToggle value={standingsView} onChange={onStandingsViewChange} labels={["GROUPS", "BRACKET"]} /></div><section ref={scrollRef} className="min-h-0 flex-1 overflow-auto py-1"><div className="space-y-2.5 pb-2">
+  return <main className="relative z-[1] flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden text-[#F5F1E8]"><ScreenTitle {...menuProps}>STANDINGS</ScreenTitle><div className={PAGE_TOGGLE_TOP_PADDING}><FixturesToggle value={standingsView} onChange={onStandingsViewChange} labels={["GROUPS", "BRACKET"]} /></div><section ref={scrollRef} className="min-h-0 flex-1 overflow-auto pt-1 pb-[calc(66px+env(safe-area-inset-bottom))]"><div className="space-y-2.5 pb-4">
     {standingsView === "group" && allGroups.map(({ group, rows }) => <div key={group} ref={(node) => { if (node) groupRefs.current[group] = node; }}><GroupTable title={`GROUP ${group}`} rows={rows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} /></div>)}
     {standingsView === "knockout" && <KnockoutBracket round32={knockoutFixtures} podium={podium} userTeam={userTeam} />}
   </div></section></main>;

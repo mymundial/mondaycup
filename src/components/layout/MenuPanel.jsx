@@ -45,10 +45,10 @@ export function UserHighlightCard({ children, className = "" }) {
     <div
       className={`rounded-[1.2rem] text-[#F5F1E8] ${className}`}
       style={{
-        border: '1px solid rgba(245,241,232,0.12)',
+        border: '1px solid rgba(247,209,23,0.70)',
         background: MC_COLORS.greenDark,
         boxShadow: '0 8px 18px rgba(0,0,0,0.12), inset 0 1px 0 rgba(245,241,232,0.05)',
-        outline: '1px solid rgba(247,209,23,0.12)',
+        outline: '1px solid rgba(247,209,23,0.32)',
       }}
     >
       {children}

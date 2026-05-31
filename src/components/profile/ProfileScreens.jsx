@@ -10,7 +10,7 @@ import { Flag } from "../shared.jsx";
 import { GROUPS } from "../../data/teams.js";
 
 function DrawerContent({ children }) {
-  return <section className="min-h-0 flex-1 overflow-auto px-0 pb-4 pt-4">{children}</section>;
+  return <section className="min-h-0 flex-1 overflow-auto px-0 pb-[calc(66px+env(safe-area-inset-bottom))] pt-4">{children}</section>;
 }
 
 
@@ -133,7 +133,7 @@ function CampaignStatusRail({ form = [], points = 0 }) {
 function TeamSummaryCard({ title, team, roundLabel = "GROUP STAGE", highlight = false, medalClass = null }) {
   const baseCardClass = "rounded-[1.35rem] border shadow-[0_10px_22px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.70)] ring-1";
   const colourClass = highlight
-    ? "border-[#F7D117]/18 bg-[#062819] text-[#F5F1E8] ring-[#F7D117]/16 shadow-[0_10px_22px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(245,241,232,0.06)]"
+    ? "border-[#F7D117]/70 bg-[#062819] text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10),0_10px_22px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(245,241,232,0.06)]"
     : medalClass || "border-[#F5F1E8]/70 bg-[#F5F1E8] text-[#072D1D] ring-[#0B5F35]/12";
   const cardClass = `${baseCardClass} ${colourClass}`;
   const isMedal = Boolean(medalClass);
@@ -144,7 +144,7 @@ function TeamSummaryCard({ title, team, roundLabel = "GROUP STAGE", highlight = 
   return (
     <section className={`${cardClass} grid min-h-[142px] min-w-0 place-items-center overflow-hidden p-3 text-center`}>
       <div className={`home-copy-bold text-[8.5px] uppercase leading-none tracking-[0.12em] ${titleClass}`}>{title}</div>
-      <Flag team={team} className={`mt-3 h-12 w-[76px] rounded-[9px] object-cover ${highlight ? "ring-1 ring-[#F7D117]/40" : "ring-1 ring-[#0B5F35]/18"}`} />
+      <Flag team={team} className={`mt-3 h-12 w-[76px] rounded-[9px] object-cover ${highlight ? "ring-1 ring-[#F7D117]/85" : "ring-1 ring-[#0B5F35]/18"}`} />
       <div className={`mt-3 max-w-full truncate home-copy-bold text-[16px] uppercase leading-none tracking-[0.08em] ${teamClass}`}>{team || "NO TEAM"}</div>
       <div className={`mt-2 home-copy-bold text-[7.5px] uppercase leading-none tracking-[0.11em] ${stageClass}`}>{phaseLabel(roundLabel)}</div>
     </section>
@@ -496,7 +496,7 @@ function NationFlagTile({ team, unlocked }) {
 }
 
 function TrophyToggle({ value, onChange }) {
-  const buttonClass = (active) => `flex h-8 items-center justify-center rounded-[0.75rem] px-3 home-copy-bold text-[14px] uppercase leading-none tracking-[0.08em] transition-all ${active ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "bg-[#0B5F35] text-[#F5F1E8]/72"}`;
+  const buttonClass = (active) => `flex h-8 items-center justify-center rounded-[0.75rem] px-3 home-copy-bold text-[14px] uppercase leading-none tracking-[0.08em] transition-all ${active ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]" : "bg-transparent text-[#F5F1E8]"}`;
   return (
     <div className="mx-auto grid w-[94%] grid-cols-2 rounded-[0.95rem] border border-[#F5F1E8]/20 bg-[#0B5F35]/82 p-0.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.08),0_8px_20px_rgba(0,0,0,0.12)]">
       <button type="button" onClick={() => onChange("badges")} className={buttonClass(value === "badges")}>BADGES</button>
@@ -634,8 +634,8 @@ export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWin
       <div className="px-0 pb-2 pt-3">
         <TrophyToggle value={trophyView} onChange={setTrophyView} />
       </div>
-      <section className="min-h-0 flex-1 overflow-auto pb-1 pt-0.5">
-        <div className="space-y-2.5 pb-2">
+      <section className="min-h-0 flex-1 overflow-auto pb-[calc(66px+env(safe-area-inset-bottom))] pt-0.5">
+        <div className="space-y-2.5 pb-4">
           {trophyView === "badges" && (
             <>
               <TrophySection title={<AchievementSectionTitle onPrevious={previousAchievementPage} onNext={nextAchievementPage} />}>
@@ -778,7 +778,7 @@ function LeaderboardFilterSlider({ cleanOnly, onToggle }) {
 }
 
 function LeaderboardFlag({ team, isUser = false }) {
-  const flagClass = `h-[18px] w-[28px] rounded-[5px] object-cover ${isUser ? "ring-1 ring-[#F7D117]/45" : "ring-1 ring-[#0B5F35]/18"}`;
+  const flagClass = `h-[18px] w-[28px] rounded-[5px] object-cover ${isUser ? "ring-1 ring-[#F7D117]/85" : "ring-1 ring-[#0B5F35]/18"}`;
   if (!team) {
     return <span className={`grid h-[18px] w-[28px] place-items-center text-center home-copy-bold text-[11px] leading-none ${isUser ? "text-[#F5F1E8]/82" : "text-[#0B5F35]/65"}`}>-</span>;
   }
@@ -833,7 +833,7 @@ function leaderboardScoreTextClass(row, isUser = false) {
 function LeaderboardRow({ row, isUser = false }) {
   const form = leaderboardForm(row);
   const rowClass = isUser
-    ? "border-[#F5F1E8]/20 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F5F1E8]/16"
+    ? "border-[#F7D117]/70 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10)]"
     : leaderboardPodiumRowClass(row.rank);
 
   return (
@@ -1010,7 +1010,7 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
   const sliderButtonClass = (active) => `flex h-8 items-center justify-center rounded-[0.75rem] px-3 home-copy-bold text-[14px] uppercase leading-none tracking-[0.08em] transition-all ${
     active
       ? "bg-[#F7D117] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.24)]"
-      : "bg-[#0B5F35] text-[#F5F1E8]/72"
+      : "bg-transparent text-[#F5F1E8]"
   }`;
 
   const rankArrowClass = () => "flex h-8 w-8 items-center justify-center text-[#F5F1E8] opacity-100 drop-shadow-[0_2px_5px_rgba(0,0,0,0.32)] active:scale-[0.96]";
@@ -1069,8 +1069,8 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
           </div>
         </div>
 
-        <section className="min-h-0 flex-1 overflow-auto pt-0.5 pb-1 [scroll-padding-top:0px]">
-          <div className="space-y-2 pb-2">
+        <section className="min-h-0 flex-1 overflow-auto pt-0.5 pb-[calc(66px+env(safe-area-inset-bottom))] [scroll-padding-top:0px]">
+          <div className="space-y-2 pb-4">
             {leaderboardView === "model" ? (
               <LeaderboardSection title="BEST CAMPAIGN SCORE">
                 <div className="space-y-3 px-3 pb-3 pt-2">
@@ -1091,13 +1091,15 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
               <>
                 <LeaderboardSection>
                   <div className="px-2 pb-2 pt-2">
-                    {showLeaderboardPaging && (
-                      <div className="mb-1 grid grid-cols-[36px_minmax(0,1fr)_36px] items-center gap-2 px-1">
+                    <div className="mb-1 grid grid-cols-[36px_minmax(0,1fr)_36px] items-center gap-2 px-1">
+                      {showLeaderboardPaging ? (
                         <button type="button" aria-label="Previous leaderboard page" onClick={previousLeaderboardPage} className={rankArrowClass()}><svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5L8 12L15 19" /></svg></button>
-                        <div className="text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">{topTenTitle}</div>
+                      ) : <span aria-hidden="true" />}
+                      <div className="text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">{topTenTitle}</div>
+                      {showLeaderboardPaging ? (
                         <button type="button" aria-label="Next leaderboard page" onClick={nextLeaderboardPage} className={rankArrowClass()}><svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 5L16 12L9 19" /></svg></button>
-                      </div>
-                    )}
+                      ) : <span aria-hidden="true" />}
+                    </div>
                     <LeaderboardFilterSlider cleanOnly={cleanLeaderboardOnly} onToggle={() => { setCleanLeaderboardOnly((value) => !value); setLeaderboardPage(0); }} />
                     <LeaderboardHeader />
                     <div className="space-y-1.5 pr-1">

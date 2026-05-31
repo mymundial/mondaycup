@@ -44,7 +44,7 @@ export const TEAM_THEME = {
   France: { bg: "#0D47A1", text: "#FFFFFF" }, Senegal: { bg: "#F7D900", text: "#000000" }, Iraq: { bg: "#157A52", text: "#FFFFFF" }, Norway: { bg: "#D50000", text: "#FFFFFF" },
   Argentina: { bg: "#93BFEA", text: "#000000" }, Algeria: { bg: "#00A86B", text: "#FFFFFF" }, Austria: { bg: "#FF3B30", text: "#000000" }, Jordan: { bg: "#FF1E3C", text: "#000000" },
   Portugal: { bg: "#E10600", text: "#FFFFFF" }, "DR Congo": { bg: "#1E7FF0", text: "#000000" }, Uzbekistan: { bg: "#2437C6", text: "#FFFFFF" }, Colombia: { bg: "#F7D900", text: "#000000" },
-  England: { bg: "#FFFFFF", text: "#000000" }, Croatia: { bg: "#FF1E1E", text: "#FFFFFF" }, Ghana: { bg: "#FFFFFF", text: "#000000" }, Panama: { bg: "#F20D4A", text: "#FFFFFF" },
+  England: { bg: "#FFFFFF", text: "#000000" }, Croatia: { bg: "#FF1E1E", text: "#FFFFFF" }, Ghana: { bg: "#F5C343", text: "#000000" }, Panama: { bg: "#F20D4A", text: "#FFFFFF" },
 };
 
 export const FLAG_CC = {

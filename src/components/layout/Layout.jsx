@@ -1,4 +1,4 @@
-import { BrandMark, MondayLogo } from "../shared.jsx";
+import { MondayLogo } from "../shared.jsx";
 import { AppFrame, AppFrameContent } from "./AppFrame.jsx";
 import { PitchPageBackground } from "./PitchPageBackground.jsx";
 import { MC_COLORS, MC_SIZES, mcPanelBorder } from "../../styles/theme.js";
@@ -13,13 +13,10 @@ export function PageFrame({ children }) {
 
 export function Footer() {
   return (
-    <footer className="relative mt-auto h-[54px] shrink-0 overflow-hidden text-center">
+    <footer className="relative mt-auto h-[30px] shrink-0 overflow-hidden text-center">
       <div className="absolute inset-0 bg-[#0d6c3d]" aria-hidden="true" />
-      <div className="absolute inset-0 opacity-65 bg-[repeating-linear-gradient(90deg,rgba(6,78,44,0.46)_0px,rgba(6,78,44,0.46)_44px,rgba(16,111,63,0.46)_44px,rgba(16,111,63,0.46)_88px)]" aria-hidden="true" />
-      <div className="absolute inset-x-0 top-0 h-[1px] bg-[#F5F1E8]/18 shadow-[0_2px_12px_rgba(0,0,0,0.42)]" aria-hidden="true" />
-      <div className="relative z-[1] flex h-full items-center justify-center">
-        <BrandMark />
-      </div>
+      <div className="absolute inset-0 opacity-60" style={{ backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.045) 0%, rgba(245,241,232,0.045) 10%, rgba(11,45,29,0.12) 10%, rgba(11,45,29,0.12) 20%), linear-gradient(rgba(245,241,232,0.02), rgba(11,45,29,0.05))" }} aria-hidden="true" />
+      <div className="absolute inset-x-[-12%] top-[-19px] h-[31px] rounded-[0_0_50%_50%] border-b border-[#F5F1E8]/13 shadow-[0_10px_18px_rgba(0,0,0,0.28)]" aria-hidden="true" />
     </footer>
   );
 }

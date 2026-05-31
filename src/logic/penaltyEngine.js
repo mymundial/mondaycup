@@ -45,8 +45,8 @@ export const PHASE = {
 
 export const COMMENTARY = {
   goal: "GOAL!",
-  save: "SAVE!",
-  weak: "WEAK SHOT!",
+  save: "SAVED!",
+  weak: "SAVED!",
   wide: "WIDE!",
   over: "OVER!",
   post: "HIT THE POST!",
@@ -304,7 +304,7 @@ export function missCodeFor(direction, power) {
 
 export function commentaryFor(code, goal, quality = "") {
   if (goal) return COMMENTARY.goal;
-  if (quality === "weak" || quality === "very-weak") return COMMENTARY.weak;
+  if (quality === "weak" || quality === "very-weak") return COMMENTARY.save;
   if (code.endsWith("P")) return COMMENTARY.post;
   if (["LX", "CX", "RX"].includes(code)) return COMMENTARY.bar;
   if (["LO", "CO", "RO"].includes(code)) return COMMENTARY.over;

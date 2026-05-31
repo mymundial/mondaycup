@@ -93,21 +93,23 @@ export function getUserFinishStatus({ result = null, fixture = null, stageLabel 
 }
 
 export function getPodiumBadgeMode({ result = null, fixture = null, stageLabel = "", podium = null, team = null } = {}) {
+  if (!result) return null;
   const matchNo = Number(getFixtureMatchNo(fixture, result));
   const didWin = userWonResult(result);
-  const finishStatus = getUserFinishStatus({ result, fixture, stageLabel, podium, team });
+  const status = normalizeResultStatus(result?.status);
 
-  // Badge display is intentionally locked to the real placement fixtures only:
+  // Badge display is intentionally locked to completed placement results only:
   // - Champion: user wins final M104
   // - Runner-up: user loses final M104
   // - Third place: user wins third-place play-off M103
-  // This prevents podium badges showing during semi-final setup or other knockout wins.
+  // This prevents podium badges showing at the start of the final before a result exists.
   if (matchNo === 104) {
-    if (didWin === true || finishStatus === RESULT_STATUS.CHAMPION) return PODIUM_BADGE_MODE.CHAMPION;
-    if (didWin === false || finishStatus === RESULT_STATUS.RUNNER_UP) return PODIUM_BADGE_MODE.RUNNER_UP;
+    if (didWin === true || status === RESULT_STATUS.CHAMPION) return PODIUM_BADGE_MODE.CHAMPION;
+    if (didWin === false || status === RESULT_STATUS.RUNNER_UP) return PODIUM_BADGE_MODE.RUNNER_UP;
+    return null;
   }
 
-  if (matchNo === 103 && (didWin === true || finishStatus === RESULT_STATUS.THIRD_PLACE)) {
+  if (matchNo === 103 && (didWin === true || status === RESULT_STATUS.THIRD_PLACE)) {
     return PODIUM_BADGE_MODE.THIRD;
   }
 
@@ -119,14 +121,14 @@ export function isTerminalShareResult({ result = null, fixture = null, stageLabe
 
   const matchNo = Number(getFixtureMatchNo(fixture, result));
   const didWin = userWonResult(result);
-  const finishStatus = getUserFinishStatus({ result, fixture, stageLabel, podium, team });
+  const status = normalizeResultStatus(result?.status);
 
   if (matchNo === 104) {
-    return didWin === true || didWin === false || finishStatus === RESULT_STATUS.CHAMPION || finishStatus === RESULT_STATUS.RUNNER_UP;
+    return didWin === true || didWin === false || status === RESULT_STATUS.CHAMPION || status === RESULT_STATUS.RUNNER_UP;
   }
 
   if (matchNo === 103) {
-    return didWin === true || finishStatus === RESULT_STATUS.THIRD_PLACE;
+    return didWin === true || status === RESULT_STATUS.THIRD_PLACE;
   }
 
   return false;

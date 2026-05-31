@@ -9,8 +9,8 @@ export default function SegmentedTabs({ options = [], value, onChange, style }) 
         maxWidth: MC_SIZES.contentMaxWidth,
         margin: '0 auto',
         height: MC_SIZES.sliderHeight,
-        borderRadius: MC_SIZES.pillRadius,
-        background: 'rgba(6,53,31,0.42)',
+        borderRadius: 15,
+        background: 'rgba(11,95,53,0.82)',
         padding: 4,
         display: 'grid',
         gridTemplateColumns: `repeat(${Math.max(options.length, 1)}, 1fr)`,
@@ -29,9 +29,9 @@ export default function SegmentedTabs({ options = [], value, onChange, style }) 
             onClick={() => onChange?.(key)}
             style={{
               border: 0,
-              borderRadius: MC_SIZES.pillRadius,
-              background: active ? MC_COLORS.yellow : MC_COLORS.greenPanelSolid,
-              color: active ? MC_COLORS.greenDark : 'rgba(244,239,226,0.70)',
+              borderRadius: 15,
+              background: active ? MC_COLORS.yellow : 'transparent',
+              color: active ? MC_COLORS.greenDark : MC_COLORS.ivory,
               fontSize: 12,
               cursor: 'pointer',
               ...MC_TYPE.label,
