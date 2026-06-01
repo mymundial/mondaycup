@@ -1360,17 +1360,17 @@ export default function App() {
   const withShop = (content) => (<>{content}{shopModalElement}</>);
 
   if (["home", "hosts", "teams"].includes(screen)) {
-    if (drawerElement) return withNonMatchFooter(withShop(drawerElement));
+    if (drawerElement) return withShop(drawerElement);
 
     if (screen === "home") {
-      return withNonMatchFooter(withShop(<HomeScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} onSelectGroup={selectGroup} onSelectTeam={startTeam} onAuthComplete={handleAuthComplete} authReady={authReady} currentUser={currentUser} onOpenClubhouse={openClubhouse} onResumeCampaign={handleResumeCampaign} hasResumeCampaign={Boolean(firebaseProfile?.currentProgress?.active || firebaseProfile?.savedGames?.current?.active)} />));
+      return withShop(<HomeScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} onSelectGroup={selectGroup} onSelectTeam={startTeam} onAuthComplete={handleAuthComplete} authReady={authReady} currentUser={currentUser} onOpenClubhouse={openClubhouse} onResumeCampaign={handleResumeCampaign} hasResumeCampaign={Boolean(firebaseProfile?.currentProgress?.active || firebaseProfile?.savedGames?.current?.active)} />);
     }
 
     if (screen === "hosts") {
-      return withNonMatchFooter(withShop(<HostSelectScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} currentUser={currentUser} onAuthComplete={handleAuthComplete} onBack={() => setScreen("home")} onSelectGroup={selectGroup} onSelectTeam={startTeam} />));
+      return withShop(<HostSelectScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} currentUser={currentUser} onAuthComplete={handleAuthComplete} onBack={() => setScreen("home")} onSelectGroup={selectGroup} onSelectTeam={startTeam} />);
     }
 
-    return withNonMatchFooter(withShop(<TeamSelectScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} selectedGroup={selectedGroup} onBack={() => setScreen("hosts")} onSelectGroup={setSelectedGroup} onSelectTeam={startTeam} />));
+    return withShop(<TeamSelectScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} selectedGroup={selectedGroup} onBack={() => setScreen("hosts")} onSelectGroup={setSelectedGroup} onSelectTeam={startTeam} />);
   }
 
   const matchScreen = <MatchScreen team={team} opponent={opponent} score={score} matchResult={matchResult} modalDismissed={modalDismissed} onDismissModal={() => setModalDismissed(true)} onQuickWin={quickWin} onMatchComplete={handleMatchComplete} onNextMatch={nextMatch} onViewBracket={() => { setStandingsView("knockout"); setDrawer("groups"); setModalDismissed(true); }} onPlayAgain={resetTournament} menuProps={menuProps} stageLabel={matchStage} fixture={currentFixture} groupRows={allGroups.find((item) => item.group === selectedGroup)?.rows || []} qualifiedTeams={qualifiedTeams} selectedGroup={selectedGroup} userForm={userForm} podium={podium} activeCosmetics={activeCosmetics} />;

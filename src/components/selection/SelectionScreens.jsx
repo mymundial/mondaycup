@@ -9,28 +9,39 @@ import { ensureUserDocument } from "../../lib/firebaseUser.js";
 import { GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
 import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
 import SharedCrowdBackdrop from "../crowd/SharedCrowdBackdrop.jsx";
-import { footerAwareStyle } from "../ui/AppFooter.jsx";
 import { AuthEmailCommsCheckbox, AuthForgotPasswordButton, AuthPrimaryButton, AuthTabs, AuthTextInput, PasswordVisibilityButton } from "../auth/AuthFormParts.jsx";
+import { MC_SELECTION_LAYOUT } from "../../styles/theme.js";
 import "./FlashTeamTicker.css";
 
 const GAME = {
-  goal: { left: 10, top: 8, width: 80, height: 30 },
-  spot: { x: 50, y: 54.5 },
+  goal: {
+    left: MC_SELECTION_LAYOUT.goalLeftPercent,
+    top: MC_SELECTION_LAYOUT.goalTopPercent,
+    width: MC_SELECTION_LAYOUT.goalWidthPercent,
+    height: MC_SELECTION_LAYOUT.goalHeightPercent,
+  },
+  spot: { x: MC_SELECTION_LAYOUT.penaltySpotXPercent, y: MC_SELECTION_LAYOUT.penaltySpotYPercent },
 };
 
+const MATCH_TOP_BAR_HEIGHT_PX = MC_SELECTION_LAYOUT.topBarHeight;
+const MATCH_SCOREBOARD_RATIO = MC_SELECTION_LAYOUT.scoreboardRatio;
+const SHARED_AD_BOARD_HEIGHT_PERCENT = MC_SELECTION_LAYOUT.adBoardHeightPercent;
 
-const MONDAY_CUP_AD_SRC = ASSETS.branding.mondayCupAd;
+
+const MONDAY_CUP_AD_SRC = "/assets/branding/mondaycup_co_uk.png";
 const FLOATING_HOME_LOGO_SRC = ASSETS.branding.mondayLogo;
 const SCOREBOARD_STAGE_TEXT = "font-led text-[clamp(9px,1.35vh,16px)] font-black uppercase leading-none tracking-[0.14em] text-[#F7D117]";
 const SCOREBOARD_MAIN_TEXT = "font-led text-[clamp(17px,3.05vh,34px)] font-black uppercase leading-none tracking-normal text-[#F7D117]";
 const SCOREBOARD_MARKER_TEXT = "font-led text-[clamp(6px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.12em] text-[#F7D117]";
 const MENU_TITLE_CLASS = "home-copy-bold text-[28px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]";
-const HOME_MAIN_HEIGHT = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
+const HOME_MAIN_HEIGHT = `calc(100dvh - (${MATCH_TOP_BAR_HEIGHT_PX}px + ((100dvh - ${MATCH_TOP_BAR_HEIGHT_PX}px) * ${MATCH_SCOREBOARD_RATIO})))`;
 const HOME_LOGO_TOP_RATIO = 0;
 const HOME_LOGO_TOP_PADDING = "clamp(18px,3vh,28px)";
-const HOME_LOGO_HEIGHT = "min(167px,15.95vh)";
+const HOME_LOGO_HEIGHT = "min(150px,14.5vh)";
+const HOME_LOGO_CENTER_Y = "17%";
 const HOME_LOGO_GAP = "clamp(18px,2.6vh,30px)";
-const HOME_MENU_TOP_OFFSET = `calc(${HOME_LOGO_TOP_PADDING} + (${HOME_MAIN_HEIGHT} * ${HOME_LOGO_TOP_RATIO}) + ${HOME_LOGO_HEIGHT} + ${HOME_LOGO_GAP})`;
+const HOME_AD_BOARD_TOP_PERCENT = GAME.goal.top + GAME.goal.height - SHARED_AD_BOARD_HEIGHT_PERCENT;
+const HOME_MENU_TOP_OFFSET = `${HOME_AD_BOARD_TOP_PERCENT}%`;
 
 function AtIcon({ className = "" }) {
   return (
@@ -88,7 +99,7 @@ function HomeCrowdPerson({ x, y, scale = 1, shirt = "#0d6c3d", skin = "#c98f65",
 
 function HomeCrowdBackdrop() {
   const goalLine = GAME.goal.top + GAME.goal.height;
-  const boardHeight = 8;
+  const boardHeight = SHARED_AD_BOARD_HEIGHT_PERCENT;
   const boardTop = goalLine - boardHeight;
   const shirts = [
     "#2DA94F", "#F7D117", "#FF1E3C", "#FF3131", "#E1251B", "#2F3ED6", "#8A1538", "#E3000F",
@@ -145,16 +156,16 @@ function HomeUnifiedCrowdBackdrop() {
 
 function HomeLedAdvertisingHoard() {
   const goalLine = GAME.goal.top + GAME.goal.height;
-  const boardHeight = 8;
+  const boardHeight = SHARED_AD_BOARD_HEIGHT_PERCENT;
   return (
     <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-hidden border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)]" style={{ bottom: `${100 - goalLine}%`, height: `${boardHeight}%` }}>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
       <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" />
-      <div className="relative mx-auto flex h-full max-w-[76%] items-center justify-center">
+      <div className="relative mx-auto flex h-full max-w-[61%] items-center justify-center">
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[70%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5F1E8]/16 blur-xl" aria-hidden="true" />
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[48%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/12 blur-lg" aria-hidden="true" />
-        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[82%] w-full object-contain drop-shadow-[0_0_11px_rgba(245,241,232,0.34)]" draggable={false} />
+        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[69%] w-full object-contain drop-shadow-[0_0_9px_rgba(245,241,232,0.24)]" draggable={false} />
       </div>
     </div>
   );
@@ -271,7 +282,7 @@ function BrothersTopBarTitle() {
     <img
       src={ASSETS.branding?.myMundialLogo || ASSETS.myMundialLogo}
       alt="Brothers!"
-      className="mx-auto h-[clamp(21px,4.1vh,30px)] w-auto max-w-[150px] object-contain drop-shadow-[0_3px_7px_rgba(0,0,0,0.26)]"
+      className="mx-auto h-[31px] w-auto max-w-[175px] object-contain drop-shadow-[0_3px_7px_rgba(0,0,0,0.20)]"
       draggable={false}
     />
   );
@@ -279,7 +290,7 @@ function BrothersTopBarTitle() {
 
 function StaticHomeTopBar() {
   return (
-    <section className="relative z-[1000] flex h-[54px] shrink-0 items-center justify-center overflow-visible bg-[#063B25] px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.16)]">
+    <section className="relative z-[1000] flex shrink-0 items-center justify-center overflow-visible bg-[#063B25] px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.16)]" style={{ height: MATCH_TOP_BAR_HEIGHT_PX }}>
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.16))]" aria-hidden="true" />
       <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 z-[1] h-10 w-10 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
       <div className="relative z-[1] flex h-full items-center justify-center"><BrothersTopBarTitle /></div>
@@ -289,20 +300,19 @@ function StaticHomeTopBar() {
 }
 
 function HomeMenuBar({ menuProps = {}, staticRightLogo = false }) {
-  if (staticRightLogo) return <StaticHomeTopBar />;
   return (
-    <ScreenTopBar {...menuProps}>
+    <ScreenTopBar {...menuProps} style={{ height: MATCH_TOP_BAR_HEIGHT_PX }}>
       <BrothersTopBarTitle />
     </ScreenTopBar>
   );
 }
 
 function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, staticRightLogo = false }) {
-  const scoreboardHeight = "calc((100dvh - 54px) * 0.165)";
-  const flashTickerHeight = `calc(${scoreboardHeight} * 0.26)`;
+  const scoreboardHeight = `calc((100dvh - ${MATCH_TOP_BAR_HEIGHT_PX}px) * ${MATCH_SCOREBOARD_RATIO})`;
+  const flashTickerHeight = `calc(${scoreboardHeight} * ${MC_SELECTION_LAYOUT.tickerRatio})`;
   const scoreboardMainHeight = `calc(${scoreboardHeight} - ${flashTickerHeight})`;
   return (
-    <div className="relative z-[1] shrink-0 overflow-hidden bg-transparent" style={{ height: `calc(54px + ${scoreboardHeight})` }} aria-hidden="true">
+    <div className="relative z-[1] shrink-0 overflow-hidden bg-transparent" style={{ height: `calc(${MATCH_TOP_BAR_HEIGHT_PX}px + ${scoreboardHeight})` }} >
       <HomeMenuBar menuProps={menuProps} staticRightLogo={staticRightLogo} />
       <div className="relative mt-0 overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]" style={{ height: scoreboardMainHeight }}>
         <div
@@ -320,7 +330,7 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, stati
           <div className="flex h-[86%] w-full items-center justify-center px-[3.5%] py-0">
             <div className="grid h-full w-full grid-cols-1 grid-rows-[25%_50%_25%] items-center">
               <div className="row-start-1 flex h-full items-center justify-center py-0">
-                <div className="led-text-glow font-led inline-flex w-[clamp(176px,45vw,318px)] max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(10px,3vw,18px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+                <div className="led-text-glow font-led inline-flex w-[clamp(264px,78vw,410px)] max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(10px,3vw,18px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
                   <span className="flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center leading-none">WELCOME TO</span>
                 </div>
               </div>
@@ -328,7 +338,7 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, stati
                 <div className="led-text-glow font-led flex h-full w-full items-center justify-center whitespace-nowrap text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">MONDAY CUP</div>
               </div>
               <div className="row-start-3 flex h-full items-center justify-center py-0">
-                <div className="led-text-glow font-led inline-flex w-[clamp(176px,45vw,318px)] max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(10px,3vw,18px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+                <div className="led-text-glow font-led inline-flex w-[clamp(264px,78vw,410px)] max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(10px,3vw,18px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
                   <span className="flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center leading-none">GLOBAL SHOOTOUT TOURNAMENT</span>
                 </div>
               </div>
@@ -341,23 +351,16 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, stati
   );
 }
 
-function HomeFooter() {
-  return (
-    <div className="relative z-10 flex justify-center pb-5 pt-2">
-      <img src={ASSETS.myMundialLogo} alt="myMUNDIAL" className="h-8 w-auto object-contain opacity-90" draggable={false} />
-    </div>
-  );
-}
-
 function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {}, staticRightLogo = false }) {
   return (
     <Shell>
-      <div className="home-main-font relative flex h-[100dvh] flex-col overflow-hidden bg-[#0d6c3d] text-[#072D1D]" style={footerAwareStyle({}, "content")}>
+      <div className="home-main-font relative flex h-[100dvh] flex-col overflow-hidden bg-[#0d6c3d] text-[#072D1D]">
         <ScoreboardPlaceholder allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo={staticRightLogo} />
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
           <FloatingHomeLogo />
-          <div className="relative z-10 flex h-full flex-col px-5 pb-0" style={{ paddingTop: HOME_MENU_TOP_OFFSET }}>
+          <HomeConfirmSlotBrothersLogo />
+          <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col px-5 pb-0" style={{ top: HOME_MENU_TOP_OFFSET }}>
             <div className="min-h-0 flex-1 overflow-y-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="flex min-h-full flex-col justify-start">
                 {children}
@@ -424,12 +427,29 @@ function HomeMenuShell({ children, className = "", onBack }) {
 
 function FloatingHomeLogo() {
   return (
-    <div className="pointer-events-none absolute inset-x-0 z-[20] flex justify-center" style={{ top: `calc(${HOME_LOGO_TOP_PADDING} + ${HOME_LOGO_TOP_RATIO * 100}%)` }} aria-hidden="true">
+    <div className="pointer-events-none absolute inset-x-0 z-[20] flex justify-center" style={{ top: HOME_LOGO_CENTER_Y, transform: "translateY(-50%)" }} aria-hidden="true">
       <div className="relative flex w-[420px] max-w-[92vw] items-start justify-center" style={{ height: HOME_LOGO_HEIGHT }}>
         <div className="absolute inset-x-10 bottom-2 h-[42%] rounded-full bg-[#F7D117]/28 blur-3xl" />
         <div className="absolute inset-x-14 bottom-3 h-[36%] rounded-full bg-[#F5F1E8]/24 blur-2xl" />
         <img src={FLOATING_HOME_LOGO_SRC} alt="Monday Cup" className="relative z-10 h-full w-auto object-contain drop-shadow-[0_10px_24px_rgba(0,0,0,0.44)]" draggable={false} />
       </div>
+    </div>
+  );
+}
+
+function HomeConfirmSlotBrothersLogo() {
+  return (
+    <div
+      className="pointer-events-none absolute inset-x-0 z-[21] flex justify-center"
+      style={{ bottom: MC_SELECTION_LAYOUT.bottomBrandBottom }}
+      aria-hidden="true"
+    >
+      <img
+        src={ASSETS.branding?.myMundialLogo || ASSETS.myMundialLogo}
+        alt="Brothers!"
+        className="h-[31px] w-auto max-w-[175px] object-contain opacity-95 drop-shadow-[0_3px_7px_rgba(0,0,0,0.20)]"
+        draggable={false}
+      />
     </div>
   );
 }

@@ -6,17 +6,6 @@ export const DEFAULT_CROWD_COLOURS = [
 
 const DEFAULT_SKIN_TONES = ["#c98f65", "#8f5f3f", "#e0b184", "#6f4632"];
 
-export function crowdDensityForStage(stageLabel = "GROUP STAGE") {
-  const label = String(stageLabel || "").toUpperCase();
-  if (label.includes("FINAL")) return 1;
-  if (label.includes("3RD") || label.includes("THIRD")) return 0.96;
-  if (label.includes("SEMI")) return 0.92;
-  if (label.includes("QUARTER")) return 0.84;
-  if (label.includes("16")) return 0.76;
-  if (label.includes("32")) return 0.68;
-  return 0.58;
-}
-
 function CrowdPerson({ x, y, scale = 1, shirt = "#0d6c3d", skin = "#c98f65", pose = "down", opacity = 1 }) {
   const armLeft = pose === "up" ? "M5 13 L1 6" : "M5 13 L2 20";
   const armRight = pose === "up" ? "M13 13 L17 6" : "M13 13 L16 20";
@@ -63,13 +52,11 @@ function buildCrowdRows({ crowdColours = DEFAULT_CROWD_COLOURS, density = 1, row
 export default function SharedCrowdBackdrop({
   crowdColours = DEFAULT_CROWD_COLOURS,
   density = 1,
-  stageLabel = "",
   rowCount = 16,
   className = "pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden",
   style,
 }) {
-  const resolvedDensity = stageLabel ? crowdDensityForStage(stageLabel) : density;
-  const crowdRows = buildCrowdRows({ crowdColours: crowdColours?.length ? crowdColours : DEFAULT_CROWD_COLOURS, density: resolvedDensity, rowCount });
+  const crowdRows = buildCrowdRows({ crowdColours: crowdColours?.length ? crowdColours : DEFAULT_CROWD_COLOURS, density, rowCount });
 
   return (
     <div className={className} style={style} aria-hidden="true">

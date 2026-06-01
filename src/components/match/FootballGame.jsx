@@ -27,7 +27,7 @@ import {
   buildResult,
 } from "../../logic/penaltyEngine.js";
 import { Scoreboard } from "./Scoreboard.jsx";
-import SharedCrowdBackdrop, { crowdDensityForStage } from "../crowd/SharedCrowdBackdrop.jsx";
+import SharedCrowdBackdrop from "../crowd/SharedCrowdBackdrop.jsx";
 import { GOLDEN_BALL_SRC, GOLDEN_GLOVE_SRC, readActiveCosmetics } from "../../logic/cosmetics.js";
 import {
   DEFAULT_ACCURACY_SWEEP_MS,
@@ -46,7 +46,7 @@ import {
 import { getPodiumBadgeVisuals } from "../../logic/matchVisuals.js";
 import { PODIUM_BADGE_MODE } from "../../logic/resultStatus.js";
 
-const MONDAY_CUP_AD_SRC = ASSETS.branding.mondayCupAd;
+const MONDAY_CUP_AD_SRC = "/assets/branding/mondaycup_co_uk.png";
 
 function PowerChargeMeter({ value, ideal = GAME.powerIdeal, charging = false, fillRef = null }) {
   const left = `${ideal[0]}%`;
@@ -96,29 +96,14 @@ function AccuracyMeter({ value, ideal, running = false, fillRef = null }) {
   );
 }
 
-function CrowdPerson({ x, y, scale = 1, shirt = "#0d6c3d", skin = "#c98f65", pose = "down", opacity = 1 }) {
-  const armLeft = pose === "up" ? "M5 13 L1 6" : "M5 13 L2 20";
-  const armRight = pose === "up" ? "M13 13 L17 6" : "M13 13 L16 20";
-  return (
-    <svg className="absolute overflow-visible" style={{ left: `${x}%`, top: `${y}%`, width: `${18 * scale}px`, height: `${30 * scale}px`, opacity, transform: "translate(-50%, -50%)" }} viewBox="0 0 18 30" aria-hidden="true">
-      <path d={armLeft} fill="none" stroke={shirt} strokeWidth="3" strokeLinecap="round" />
-      <path d={armRight} fill="none" stroke={shirt} strokeWidth="3" strokeLinecap="round" />
-      <circle cx="9" cy="6" r="4" fill={skin} />
-      <rect x="4" y="11" width="10" height="12" rx="3" fill={shirt} />
-      <rect x="5" y="22" width="3" height="8" rx="1.5" fill="#0b2d1d" />
-      <rect x="10" y="22" width="3" height="8" rx="1.5" fill="#0b2d1d" />
-    </svg>
-  );
-}
 
-function CrowdBackdrop({ crowdColours = [], stageLabel = "GROUP STAGE" }) {
+function CrowdBackdrop() {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = 8;
   const boardTop = goalLine - boardHeight;
   return (
     <SharedCrowdBackdrop
-      crowdColours={crowdColours}
-      density={crowdDensityForStage(stageLabel)}
+      density={1}
       rowCount={16}
       className="pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden"
       style={{ height: `${boardTop}%` }}
@@ -134,11 +119,33 @@ function LedAdvertisingHoard() {
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
       <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" />
-      <div className="relative mx-auto flex h-full max-w-[76%] items-center justify-center">
-        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[90%] w-full object-contain" draggable={false} />
+      <div className="relative mx-auto flex h-full max-w-[61%] items-center justify-center">
+        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[69%] w-full object-contain" draggable={false} />
       </div>
     </div>
   );
+}
+
+
+function pitchMowStyleForVariant(goalLine, variant = "game") {
+  const baseStyle = {
+    top: `${goalLine}%`,
+    backgroundColor: "#0d6c3d",
+    backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))",
+  };
+
+  if (variant !== "export") return baseStyle;
+
+  return {
+    top: `${goalLine}%`,
+    backgroundColor: "#0b5f35",
+    backgroundImage: [
+      "repeating-linear-gradient(90deg, rgba(245,241,232,0.046) 0%, rgba(245,241,232,0.046) 11.1%, rgba(4,42,25,0.058) 11.1%, rgba(4,42,25,0.058) 22.2%)",
+      "radial-gradient(circle at 50% 0%, rgba(247,209,23,0.045), transparent 34%)",
+      "linear-gradient(180deg, rgba(245,241,232,0.02) 0%, rgba(8,65,38,0.02) 42%, rgba(3,32,20,0.12) 100%)",
+    ].join(", "),
+    boxShadow: "inset 0 24px 46px rgba(4,24,15,0.06), inset 0 -42px 76px rgba(4,24,15,0.18)",
+  };
 }
 
 function GoalFrame({ showAim, aimDirection }) {
@@ -156,14 +163,14 @@ function GoalFrame({ showAim, aimDirection }) {
   );
 }
 
-function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderTeam, showAim, aimDirection, assets, stageLabel = "GROUP STAGE", showChampionsBadge = false, podiumBadgeMode = null, hideMatchActors = false }) {
+function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderTeam, showAim, aimDirection, assets, stageLabel = "GROUP STAGE", showChampionsBadge = false, podiumBadgeMode = null, hideMatchActors = false, pitchMowVariant = "game" }) {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const activeBadgeMode = podiumBadgeMode || (showChampionsBadge ? PODIUM_BADGE_MODE.CHAMPION : null);
   const podiumBadge = getPodiumBadgeVisuals(activeBadgeMode);
   const showPodiumBadge = Boolean(podiumBadge);
   return (
     <section className="relative h-full flex-1 shrink overflow-hidden bg-[#0d6c3d]">
-      <CrowdBackdrop crowdColours={assets.crowdColours} stageLabel={stageLabel} />
+      <CrowdBackdrop />
       <LedAdvertisingHoard />
       {showPodiumBadge && (
         <div
@@ -188,7 +195,7 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
           />
         </div>
       )}
-      <div className="absolute bottom-0 left-0 right-0" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
+      <div className="absolute bottom-0 left-0 right-0" style={pitchMowStyleForVariant(goalLine, pitchMowVariant)} />
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
       <div
         className="pointer-events-none absolute z-[3] rounded-b-[999px] border-b-[clamp(5px,1.55vw,8px)] border-l-[clamp(5px,1.55vw,8px)] border-r-[clamp(5px,1.55vw,8px)] border-[#f5f1e8]"
@@ -211,7 +218,7 @@ function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderT
 }
 
 
-export function MatchPitchPreview({ userTeam, opponentTeam, stageLabel = "FINAL", assets = {}, showActors = false }) {
+export function MatchPitchPreview({ userTeam, opponentTeam, stageLabel = "FINAL", assets = {}, showActors = false, pitchMowVariant = "game" }) {
   const user = normaliseTeam(userTeam, "Team A");
   const opponent = normaliseTeam(opponentTeam, "Team B");
   const mergedAssets = {
@@ -232,6 +239,7 @@ export function MatchPitchPreview({ userTeam, opponentTeam, stageLabel = "FINAL"
       assets={mergedAssets}
       stageLabel={stageLabel}
       hideMatchActors={!showActors}
+      pitchMowVariant={pitchMowVariant}
     />
   );
 }

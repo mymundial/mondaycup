@@ -22,6 +22,9 @@ export function ScreenTopBar({
   onSignOut,
   canSignOut,
   onAuthComplete,
+  className,
+  style,
+  titleClassName,
 }) {
   const closeMenu = onCloseMenu || onToggleMenu;
   return (
@@ -29,6 +32,9 @@ export function ScreenTopBar({
       title={children}
       menuOpen={menuOpen}
       onMenuButtonClick={menuOpen ? closeMenu : onToggleMenu}
+      className={className}
+      style={style}
+      titleClassName={titleClassName}
       menu={
         <MenuDropdown
           onClose={closeMenu}

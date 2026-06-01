@@ -1,4 +1,5 @@
 import { ASSETS } from "../data/assets.js";
+import { MC_SELECTION_LAYOUT } from "../styles/theme.js";
 
 export const DEFAULT_ASSETS = {
   logo: ASSETS.branding.mondayCupAd,
@@ -19,8 +20,16 @@ export const GAME = {
   shotMs: 950,
   aiWaitMs: 500,
   powerChargeMs: 1350,
-  goal: { left: 10, top: 8, width: 80, height: 30 },
-  spot: { x: 50, y: 54.5 },
+  goal: {
+    left: MC_SELECTION_LAYOUT.goalLeftPercent,
+    top: MC_SELECTION_LAYOUT.goalTopPercent,
+    width: MC_SELECTION_LAYOUT.goalWidthPercent,
+    height: MC_SELECTION_LAYOUT.goalHeightPercent,
+  },
+  spot: {
+    x: MC_SELECTION_LAYOUT.penaltySpotXPercent,
+    y: MC_SELECTION_LAYOUT.penaltySpotYPercent,
+  },
 };
 
 export const DIRECTIONS = [

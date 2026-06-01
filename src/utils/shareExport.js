@@ -41,17 +41,10 @@ export function normaliseThirdPlaceCopy(value) {
 }
 
 function getShareBorderColor(team) {
-  if (team && typeof team === "object" && Object.prototype.hasOwnProperty.call(team, "shareBorderColor")) return team.shareBorderColor;
   return SHARE_TEAM_BORDER_COLORS[team] || "#F7D117";
 }
 
-function shouldDrawShareBorder(team) {
-  const borderColor = getShareBorderColor(team);
-  return Boolean(borderColor && borderColor !== "transparent" && borderColor !== "none");
-}
-
 function getShareExportTeamStyle(team) {
-  if (team && typeof team === "object") return { bg: team.bg || getShareBorderColor(team), fg: team.fg || "#072D1D" };
   return SHARE_TEAM_EXPORT_STYLES[team] || { bg: getShareBorderColor(team), fg: "#072D1D" };
 }
 
@@ -144,44 +137,16 @@ async function inlineCloneImages(clone) {
   }));
 }
 
-function moveFlashAboveScoreboardForExport(clone) {
-  if (clone?.matches?.('[data-share-layout="match-square"]') || clone?.querySelector?.('[data-share-layout="match-square"]')) return;
-  const scoreboard = clone.querySelector('[data-share-scoreboard="true"]');
-  const scoreboardInner = scoreboard?.querySelector(":scope > div.relative");
-  const flash = clone.querySelector('[data-share-flash="true"]');
-  const divider = clone.querySelector('[data-share-score-divider="true"]');
-
-  if (divider) divider.remove();
-  if (!scoreboard || !scoreboardInner || !flash) return;
-
-  scoreboardInner.insertBefore(flash, scoreboardInner.firstElementChild);
-  flash.style.margin = "0";
-  flash.style.borderTopWidth = "0px";
-  flash.style.borderBottomWidth = "1px";
-  flash.style.boxShadow = "inset 0 -1px 0 rgba(245,241,232,0.18)";
+function moveFlashAboveScoreboardForExport() {
+  // Intentionally disabled: export must match the visible preview exactly.
 }
 
-function applySharePreviewOverrides(clone, userTeam = null, badgeMode = null) {
+function applySharePreviewOverrides(clone) {
   if (!clone) return;
-
   clone.querySelectorAll('[data-share-export-ignore="true"]').forEach((node) => node.remove());
-
-  clone.querySelectorAll('[data-normalise-stage-label="true"]').forEach((node) => {
-    node.textContent = normaliseThirdPlaceCopy(node.textContent);
-  });
-
-  moveFlashAboveScoreboardForExport(clone);
-
-  const flash = clone.querySelector('[data-share-flash="true"]');
-  if (badgeMode === PODIUM_BADGE_MODE.RUNNER_UP && flash) {
-    const teamStyle = getShareExportTeamStyle(userTeam);
-    flash.textContent = `${String(userTeam || "YOUR TEAM").toUpperCase()} LOST!`;
-    flash.style.background = teamStyle.bg;
-    flash.style.color = teamStyle.fg;
-  }
 }
 
-async function composeShareExportCanvas(sourceCanvas, userTeam = null) {
+async function composeShareExportCanvas(sourceCanvas) {
   const canvas = document.createElement("canvas");
   canvas.width = SHARE_EXPORT_SIZE;
   canvas.height = SHARE_EXPORT_SIZE;
@@ -189,13 +154,17 @@ async function composeShareExportCanvas(sourceCanvas, userTeam = null) {
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
-  ctx.drawImage(sourceCanvas, 0, 0, sourceCanvas.width, sourceCanvas.height, 0, 0, SHARE_EXPORT_SIZE, SHARE_EXPORT_SIZE);
-
-  if (shouldDrawShareBorder(userTeam)) {
-    ctx.strokeStyle = getShareBorderColor(userTeam);
-    ctx.lineWidth = 20;
-    ctx.strokeRect(10, 10, SHARE_EXPORT_SIZE - 20, SHARE_EXPORT_SIZE - 20);
-  }
+  ctx.drawImage(
+    sourceCanvas,
+    0,
+    0,
+    sourceCanvas.width,
+    sourceCanvas.height,
+    0,
+    0,
+    SHARE_EXPORT_SIZE,
+    SHARE_EXPORT_SIZE
+  );
 
   return canvas;
 }
@@ -226,16 +195,18 @@ function getCanvasBlob(canvas) {
   });
 }
 
-async function renderElementToCanvasWithHtml2Canvas(shareElement, userTeam = null) {
+async function renderElementToCanvasWithHtml2Canvas(shareElement) {
   const html2canvasModule = await import("html2canvas");
   const html2canvas = html2canvasModule.default || html2canvasModule;
   const rect = shareElement.getBoundingClientRect();
-  const cropSize = Math.max(1, Math.min(rect.width, rect.height || rect.width));
-  const scale = Math.max(1, Math.min(6, SHARE_EXPORT_SIZE / cropSize));
+  const width = Math.max(1, Math.round(rect.width));
+  const height = Math.max(1, Math.round(rect.height));
+  const scale = Math.max(1, SHARE_EXPORT_SIZE / Math.max(width, height));
+
   const source = await html2canvas(shareElement, {
     backgroundColor: window.getComputedStyle(shareElement).backgroundColor || "#0d6c3d",
-    width: cropSize,
-    height: cropSize,
+    width,
+    height,
     scale,
     useCORS: true,
     allowTaint: true,
@@ -252,15 +223,7 @@ async function renderElementToCanvasWithHtml2Canvas(shareElement, userTeam = nul
     },
   });
 
-  const sourceCanvas = document.createElement("canvas");
-  sourceCanvas.width = SHARE_EXPORT_SIZE;
-  sourceCanvas.height = SHARE_EXPORT_SIZE;
-  const ctx = sourceCanvas.getContext("2d");
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
-  const drawSize = Math.min(source.width, source.height);
-  ctx.drawImage(source, 0, 0, drawSize, drawSize, 0, 0, SHARE_EXPORT_SIZE, SHARE_EXPORT_SIZE);
-  return composeShareExportCanvas(sourceCanvas, userTeam);
+  return composeShareExportCanvas(source);
 }
 
 async function renderElementToCanvasWithSvg(shareElement, userTeam = null, badgeMode = null) {
@@ -270,7 +233,7 @@ async function renderElementToCanvasWithSvg(shareElement, userTeam = null, badge
 
   copyComputedStyles(shareElement, clone);
   await inlineCloneImages(clone);
-  applySharePreviewOverrides(clone, userTeam, badgeMode);
+  applySharePreviewOverrides(clone);
 
   clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
   clone.style.position = "relative";
@@ -321,18 +284,23 @@ async function renderElementToCanvasWithSvg(shareElement, userTeam = null, badge
     const ctx = sourceCanvas.getContext("2d");
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(img, 0, 0, SHARE_EXPORT_SIZE, SHARE_EXPORT_SIZE);
-    return composeShareExportCanvas(sourceCanvas, userTeam);
+    ctx.drawImage(img, 0, 0, sourceCanvas.width, sourceCanvas.height);
+    return composeShareExportCanvas(sourceCanvas);
   } finally {
     URL.revokeObjectURL(url);
   }
 }
 
-async function captureShareElementBlobFallback(shareElement, userTeam = null, badgeMode = null) {
+async function captureShareElementBlobFallback(shareElement) {
   const { toBlob } = await import("html-to-image");
+  const rect = shareElement.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect.width));
+  const height = Math.max(1, Math.round(rect.height));
   const blob = await toBlob(shareElement, {
     cacheBust: false,
-    pixelRatio: Math.max(1, SHARE_EXPORT_SIZE / Math.max(1, shareElement.getBoundingClientRect().width || SHARE_EXPORT_SIZE)),
+    width,
+    height,
+    pixelRatio: Math.max(1, SHARE_EXPORT_SIZE / Math.max(width, height)),
     backgroundColor: window.getComputedStyle(shareElement).backgroundColor || "#0d6c3d",
     filter: (node) => !node?.dataset?.shareExportIgnore,
     style: { animation: "none", transition: "none" },
@@ -346,9 +314,8 @@ async function captureShareElementBlobFallback(shareElement, userTeam = null, ba
   const ctx = sourceCanvas.getContext("2d");
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-  const cropSize = Math.min(image.naturalWidth || image.width, image.naturalHeight || image.height);
-  ctx.drawImage(image, 0, 0, cropSize, cropSize, 0, 0, SHARE_EXPORT_SIZE, SHARE_EXPORT_SIZE);
-  const canvas = await composeShareExportCanvas(sourceCanvas, userTeam);
+  ctx.drawImage(image, 0, 0, SHARE_EXPORT_SIZE, SHARE_EXPORT_SIZE);
+  const canvas = await composeShareExportCanvas(sourceCanvas);
   return getCanvasBlob(canvas);
 }
 
@@ -359,10 +326,10 @@ export async function captureShareElementBlob(shareElement, userTeam = null, bad
 
   const errors = [];
   const attempts = [
-    ["html2canvas", () => renderElementToCanvasWithHtml2Canvas(shareElement, userTeam)],
+    ["html2canvas", () => renderElementToCanvasWithHtml2Canvas(shareElement)],
     ["svg", () => renderElementToCanvasWithSvg(shareElement, userTeam, badgeMode)],
     ["html-to-image", async () => {
-      const blob = await captureShareElementBlobFallback(shareElement, userTeam, badgeMode);
+      const blob = await captureShareElementBlobFallback(shareElement);
       return { blobOnly: blob };
     }],
   ];

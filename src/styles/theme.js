@@ -76,3 +76,20 @@ export const mcPitchMowBackground = ({ angle = '90deg' } = {}) => ({
 
 export const mcPanelBorder = '1px solid rgba(244,239,226,0.16)';
 export const mcIvoryBorder = '1px solid rgba(6,53,31,0.16)';
+
+
+export const MC_SELECTION_LAYOUT = {
+  // Home / team-selection camera. Kept separate from the live-match camera so
+  // menu screens stay balanced while still sharing one editable layout source.
+  topBarHeight: 50,
+  scoreboardRatio: 0.15,
+  tickerRatio: 0.24,
+  goalTopPercent: 8,
+  goalHeightPercent: 30,
+  goalWidthPercent: 80,
+  goalLeftPercent: 10,
+  adBoardHeightPercent: 8,
+  penaltySpotXPercent: 50,
+  penaltySpotYPercent: 54.5,
+  bottomBrandBottom: 'max(42px, calc(env(safe-area-inset-bottom) + 30px))',
+};

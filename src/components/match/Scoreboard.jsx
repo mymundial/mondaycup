@@ -1,6 +1,7 @@
 import { Flag } from "../shared.jsx";
 import { GAME, visiblePenaltyMarkers } from "../../logic/penaltyEngine.js";
 import { normaliseThirdPlaceCopy } from "../../logic/matchVisuals.js";
+import { MC_SELECTION_LAYOUT } from "../../styles/theme.js";
 
 function TeamFlag({ team, className = "h-4 w-6" }) {
   if (team.flag) return <img src={team.flag} alt={`${team.name} flag`} className={`${className} rounded-sm object-cover`} draggable={false} />;
@@ -22,10 +23,13 @@ function PenaltyMarkers({ attempts, totalSlots = GAME.regulationPens }) {
 }
 
 export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerStyle, stageLabel, totalMarkerSlots = GAME.regulationPens, hideStageLabel = false, sharePreview = false }) {
-  const heightClass = sharePreview ? "h-[22%]" : "h-[calc((100dvh-54px)*0.165)]";
+  const scoreboardHeight = `calc((100dvh - ${MC_SELECTION_LAYOUT.topBarHeight}px) * ${MC_SELECTION_LAYOUT.scoreboardRatio})`;
+  const tickerPercent = MC_SELECTION_LAYOUT.tickerRatio * 100;
+  const heightClass = sharePreview ? "h-[22%]" : "";
+  const heightStyle = sharePreview ? undefined : { height: scoreboardHeight };
   return (
-    <section data-share-scoreboard="true" className={`relative mt-0 ${heightClass} shrink-0 overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]`}>
-      <div data-share-scoreboard-main="true" className="relative h-[calc(100%-26%)] overflow-hidden bg-[#050505]">
+    <section data-share-scoreboard="true" className={`relative mt-0 ${heightClass} shrink-0 overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]`} style={heightStyle}>
+      <div data-share-scoreboard-main="true" className="relative overflow-hidden bg-[#050505]" style={{ height: `${100 - tickerPercent}%` }}>
         <div
           className="pointer-events-none absolute left-[2px] right-[2px] top-[2px] bottom-[2px] opacity-50"
           style={{
@@ -83,7 +87,7 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
         </div>
       </div>
 
-      <div data-share-flash="true" className="grid h-[26%] w-full place-items-center overflow-hidden px-[3%] text-center home-copy-bold text-[clamp(13px,2.3vh,28px)] font-black uppercase leading-none tracking-[0.085em] shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)]" style={tickerStyle}>
+      <div data-share-flash="true" className="grid w-full place-items-center overflow-hidden px-[3%] text-center home-copy-bold text-[clamp(13px,2.3vh,28px)] font-black uppercase leading-none tracking-[0.085em] shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)]" style={{ height: `${tickerPercent}%`, ...tickerStyle }}>
         {ticker}
       </div>
     </section>
