@@ -27,6 +27,7 @@ import {
   buildResult,
 } from "../../logic/penaltyEngine.js";
 import { Scoreboard } from "./Scoreboard.jsx";
+import SharedCrowdBackdrop, { crowdDensityForStage } from "../crowd/SharedCrowdBackdrop.jsx";
 import { GOLDEN_BALL_SRC, GOLDEN_GLOVE_SRC, readActiveCosmetics } from "../../logic/cosmetics.js";
 import {
   DEFAULT_ACCURACY_SWEEP_MS,
@@ -110,75 +111,18 @@ function CrowdPerson({ x, y, scale = 1, shirt = "#0d6c3d", skin = "#c98f65", pos
   );
 }
 
-function crowdDensityForStage(stageLabel = "GROUP STAGE") {
-  const label = String(stageLabel || "").toUpperCase();
-  if (label.includes("FINAL")) return 1;
-  if (label.includes("3RD") || label.includes("THIRD")) return 0.96;
-  if (label.includes("SEMI")) return 0.92;
-  if (label.includes("QUARTER")) return 0.84;
-  if (label.includes("16")) return 0.76;
-  if (label.includes("32")) return 0.68;
-  return 0.58;
-}
-
 function CrowdBackdrop({ crowdColours = [], stageLabel = "GROUP STAGE" }) {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = 8;
   const boardTop = goalLine - boardHeight;
-  const shirts = crowdColours.length ? crowdColours : [
-    "#2DA94F", "#F7D117", "#FF1E3C", "#E1251B", "#2F3ED6", "#8A1538", "#FF8A00", "#1E7FF0",
-    "#157A52", "#93BFEA", "#FFFFFF", "#2437C6", "#F20D1B", "#00A86B", "#7CB5E8", "#F7C600",
-    "#E10600", "#1A22C9", "#9B003F", "#D50000", "#FF3B30", "#3131E8"
-  ];
-  const skins = ["#c98f65", "#8f5f3f", "#e0b184", "#6f4632"];
-  const makeRow = ({ count, step, y, scale, opacity, stagger = 0, wave = 0, shirtOffset = 0, skinOffset = 0 }) => {
-    const centredStartX = 50 - (((count - 1) * step) + stagger) / 2;
-    return Array.from({ length: count }, (_, i) => ({
-      x: centredStartX + i * step + (i % 2 ? stagger : 0),
-      y: y + (i % 3) * wave,
-      scale,
-      shirt: shirts[((i * 7) + shirtOffset) % shirts.length],
-      skin: skins[(i + skinOffset) % skins.length],
-      pose: i % 4 === 0 || i % 7 === 0 ? "up" : "down",
-      opacity,
-    }));
-  };
-
-  const density = crowdDensityForStage(stageLabel);
-  const rowConfigs = Array.from({ length: 16 }, (_, index) => {
-    const t = index / 15;
-    const y = 2.5 + 94 * Math.pow(t, 1.24);
-    const baseCount = 62 - t * 34;
-    return {
-      count: Math.max(10, Math.round(baseCount * density)),
-      step: (1.68 + t * 2.45) / density,
-      y,
-      scale: 0.26 + t * 0.78,
-      opacity: 0.16 + t * 0.84,
-      stagger: 0.18 + t * 1.04,
-      wave: 0.12 + t * 0.80,
-      shirtOffset: index,
-      skinOffset: index % skins.length,
-    };
-  });
-  const crowdRows = rowConfigs.flatMap((config) => makeRow(config));
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden bg-[#123822]" style={{ height: `${boardTop}%` }}>
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: "linear-gradient(180deg, rgba(5,26,17,0.52), rgba(5,26,17,0.28) 30%, rgba(5,26,17,0.18) 58%, rgba(5,26,17,0.10) 100%), radial-gradient(circle at 18% 10%, rgba(245,241,232,0.05), transparent 18%), radial-gradient(circle at 82% 14%, rgba(255,214,0,0.04), transparent 16%)",
-        }}
-      />
-      <div className="absolute inset-x-0 top-[6%] h-[6%] bg-[#0b2d1d]/10" />
-      <div className="absolute inset-x-0 top-[16%] h-[7%] bg-[#0b2d1d]/8" />
-      <div className="absolute inset-x-0 top-[28%] h-[8%] bg-[#0b2d1d]/10" />
-      <div className="absolute inset-x-0 top-[41%] h-[9%] bg-[#0b2d1d]/8" />
-      <div className="absolute inset-x-0 top-[55%] h-[10%] bg-[#0b2d1d]/10" />
-      <div className="absolute inset-x-0 top-[70%] h-[11%] bg-[#0b2d1d]/8" />
-      <div className="absolute inset-x-0 top-[85%] h-[10%] bg-[#0b2d1d]/10" />
-      {crowdRows.map((person, index) => <CrowdPerson key={index} {...person} />)}
-    </div>
+    <SharedCrowdBackdrop
+      crowdColours={crowdColours}
+      density={crowdDensityForStage(stageLabel)}
+      rowCount={16}
+      className="pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden"
+      style={{ height: `${boardTop}%` }}
+    />
   );
 }
 
@@ -186,7 +130,7 @@ function LedAdvertisingHoard() {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = 8;
   return (
-    <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-hidden border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)]" style={{ top: `${goalLine - boardHeight}%`, height: `${boardHeight}%` }}>
+    <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-hidden border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)]" style={{ bottom: `${100 - goalLine}%`, height: `${boardHeight}%` }}>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
       <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" />

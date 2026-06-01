@@ -8,6 +8,7 @@ import { Flag } from "../shared.jsx";
 import { ensureUserDocument } from "../../lib/firebaseUser.js";
 import { GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
 import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
+import SharedCrowdBackdrop from "../crowd/SharedCrowdBackdrop.jsx";
 import { footerAwareStyle } from "../ui/AppFooter.jsx";
 import { AuthEmailCommsCheckbox, AuthForgotPasswordButton, AuthPrimaryButton, AuthTabs, AuthTextInput, PasswordVisibilityButton } from "../auth/AuthFormParts.jsx";
 import "./FlashTeamTicker.css";
@@ -128,79 +129,25 @@ function HomeCrowdBackdrop() {
 }
 
 function HomeUnifiedCrowdBackdrop() {
-  const shirts = [
-    "#2DA94F", "#F7D117", "#FF1E3C", "#E1251B", "#2F3ED6", "#8A1538", "#FF8A00", "#1E7FF0",
-    "#157A52", "#93BFEA", "#FFFFFF", "#2437C6", "#F20D1B", "#00A86B", "#7CB5E8", "#F7C600",
-    "#E10600", "#1A22C9", "#9B003F", "#D50000", "#FF3B30", "#3131E8"
-  ];
-  const skins = ["#c98f65", "#8f5f3f", "#e0b184", "#6f4632"];
-  const makeRow = ({ count, step, y, scale, opacity, stagger = 0, wave = 0, shirtOffset = 0, skinOffset = 0 }) => {
-    const centredStartX = 50 - (((count - 1) * step) + stagger) / 2;
-    return Array.from({ length: count }, (_, i) => ({
-      x: centredStartX + i * step + (i % 2 ? stagger : 0),
-      y: y + (i % 3) * wave,
-      scale,
-      shirt: shirts[((i * 7) + shirtOffset) % shirts.length],
-      skin: skins[(i + skinOffset) % skins.length],
-      pose: i % 4 === 0 || i % 7 === 0 ? "up" : "down",
-      opacity,
-    }));
-  };
-
-  // Match crowd uses 9 rows across 30% of the match pitch area.
-  // Home crowd runs from below the top LED to the behind-goal LED board, which is about 1.7x taller
-  // on the target mobile viewport, so 16 rows keeps the visual row density consistent.
-  const rowConfigs = Array.from({ length: 16 }, (_, index) => {
-    const t = index / 15;
-    const y = 2.5 + 94 * Math.pow(t, 1.24);
-    return {
-      count: Math.round(62 - t * 34),
-      step: 1.68 + t * 2.45,
-      y,
-      scale: 0.26 + t * 0.78,
-      opacity: 0.16 + t * 0.84,
-      stagger: 0.18 + t * 1.04,
-      wave: 0.12 + t * 0.80,
-      shirtOffset: index,
-      skinOffset: index % skins.length,
-    };
-  });
-
-  const crowdRows = rowConfigs.flatMap((config) => makeRow(config));
-
-  const boardTop = GAME.goal.top + GAME.goal.height - 8;
-  const headerHeight = "calc(54px + ((100dvh - 54px) * 0.165))";
-  const mainHeight = "calc(100dvh - (54px + ((100dvh - 54px) * 0.165)))";
-  const topLedHeight = `calc(${mainHeight} * 0.08)`;
-  const crowdHeight = `calc(${headerHeight} + (${mainHeight} * ${boardTop / 100}) - ${topLedHeight})`;
+  const goalLine = GAME.goal.top + GAME.goal.height;
+  const boardHeight = 8;
+  const boardTop = goalLine - boardHeight;
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 z-0 overflow-hidden" style={{ top: topLedHeight, height: crowdHeight }} aria-hidden="true">
-      <div className="absolute inset-0 bg-[#123822]" />
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: "linear-gradient(180deg, rgba(5,26,17,0.52), rgba(5,26,17,0.28) 30%, rgba(5,26,17,0.18) 58%, rgba(5,26,17,0.10) 100%), radial-gradient(circle at 18% 10%, rgba(245,241,232,0.05), transparent 18%), radial-gradient(circle at 82% 14%, rgba(255,214,0,0.04), transparent 16%)",
-        }}
-      />
-      <div className="absolute inset-x-0 top-[6%] h-[6%]" style={{ backgroundColor: "rgba(11,45,29,0.10)" }} />
-      <div className="absolute inset-x-0 top-[16%] h-[7%]" style={{ backgroundColor: "rgba(11,45,29,0.08)" }} />
-      <div className="absolute inset-x-0 top-[28%] h-[8%]" style={{ backgroundColor: "rgba(11,45,29,0.10)" }} />
-      <div className="absolute inset-x-0 top-[41%] h-[9%]" style={{ backgroundColor: "rgba(11,45,29,0.08)" }} />
-      <div className="absolute inset-x-0 top-[55%] h-[10%]" style={{ backgroundColor: "rgba(11,45,29,0.10)" }} />
-      <div className="absolute inset-x-0 top-[70%] h-[11%]" style={{ backgroundColor: "rgba(11,45,29,0.08)" }} />
-      <div className="absolute inset-x-0 top-[85%] h-[10%]" style={{ backgroundColor: "rgba(11,45,29,0.10)" }} />
-      {crowdRows.map((person, index) => <HomeCrowdPerson key={index} {...person} />)}
-    </div>
+    <SharedCrowdBackdrop
+      density={1}
+      rowCount={16}
+      className="pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden"
+      style={{ height: `${boardTop}%` }}
+    />
   );
 }
-
 
 function HomeLedAdvertisingHoard() {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = 8;
   return (
-    <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-hidden border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)]" style={{ top: `${goalLine - boardHeight}%`, height: `${boardHeight}%` }}>
+    <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-hidden border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)]" style={{ bottom: `${100 - goalLine}%`, height: `${boardHeight}%` }}>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
       <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" />
@@ -226,7 +173,7 @@ function HomePitchBackdrop() {
   const goalLine = GAME.goal.top + GAME.goal.height;
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#0d6c3d]">
-      <HomeCrowdBackdrop />
+      <HomeUnifiedCrowdBackdrop />
       <HomeLedAdvertisingHoard />
       <div className="absolute bottom-0 left-0 right-0" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
@@ -319,21 +266,44 @@ function HomeLedGroupsTicker() {
   );
 }
 
-function HomeMenuBar({ menuProps = {} }) {
+function BrothersTopBarTitle() {
+  return (
+    <img
+      src={ASSETS.branding?.myMundialLogo || ASSETS.myMundialLogo}
+      alt="Brothers!"
+      className="mx-auto h-[clamp(21px,4.1vh,30px)] w-auto max-w-[150px] object-contain drop-shadow-[0_3px_7px_rgba(0,0,0,0.26)]"
+      draggable={false}
+    />
+  );
+}
+
+function StaticHomeTopBar() {
+  return (
+    <section className="relative z-[1000] flex h-[54px] shrink-0 items-center justify-center overflow-visible bg-[#063B25] px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.16)]">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.16))]" aria-hidden="true" />
+      <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 z-[1] h-10 w-10 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
+      <div className="relative z-[1] flex h-full items-center justify-center"><BrothersTopBarTitle /></div>
+      <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="absolute right-3 top-1/2 z-[1] h-10 w-10 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
+    </section>
+  );
+}
+
+function HomeMenuBar({ menuProps = {}, staticRightLogo = false }) {
+  if (staticRightLogo) return <StaticHomeTopBar />;
   return (
     <ScreenTopBar {...menuProps}>
-      WELCOME
+      <BrothersTopBarTitle />
     </ScreenTopBar>
   );
 }
 
-function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {} }) {
+function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, staticRightLogo = false }) {
   const scoreboardHeight = "calc((100dvh - 54px) * 0.165)";
   const flashTickerHeight = `calc(${scoreboardHeight} * 0.26)`;
   const scoreboardMainHeight = `calc(${scoreboardHeight} - ${flashTickerHeight})`;
   return (
     <div className="relative z-[1] shrink-0 overflow-hidden bg-transparent" style={{ height: `calc(54px + ${scoreboardHeight})` }} aria-hidden="true">
-      <HomeMenuBar menuProps={menuProps} />
+      <HomeMenuBar menuProps={menuProps} staticRightLogo={staticRightLogo} />
       <div className="relative mt-0 overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]" style={{ height: scoreboardMainHeight }}>
         <div
           className="pointer-events-none absolute left-[2px] right-[2px] top-[2px] bottom-[2px] opacity-50"
@@ -347,10 +317,10 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {} }) {
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
         <div className="relative z-[1] flex h-full items-center justify-center">
-          <div className="flex h-[66%] w-full items-center justify-center px-[3.5%] py-0">
-            <div className="grid h-full w-full grid-cols-1 grid-rows-[27%_46%_27%] items-center">
+          <div className="flex h-[86%] w-full items-center justify-center px-[3.5%] py-0">
+            <div className="grid h-full w-full grid-cols-1 grid-rows-[25%_50%_25%] items-center">
               <div className="row-start-1 flex h-full items-center justify-center py-0">
-                <div className="led-text-glow font-led inline-flex max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(10px,3vw,18px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+                <div className="led-text-glow font-led inline-flex w-[clamp(176px,45vw,318px)] max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(10px,3vw,18px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
                   <span className="flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center leading-none">WELCOME TO</span>
                 </div>
               </div>
@@ -358,7 +328,7 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {} }) {
                 <div className="led-text-glow font-led flex h-full w-full items-center justify-center whitespace-nowrap text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">MONDAY CUP</div>
               </div>
               <div className="row-start-3 flex h-full items-center justify-center py-0">
-                <div className="led-text-glow font-led inline-flex max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(10px,3vw,18px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+                <div className="led-text-glow font-led inline-flex w-[clamp(176px,45vw,318px)] max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(10px,3vw,18px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
                   <span className="flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center leading-none">GLOBAL SHOOTOUT TOURNAMENT</span>
                 </div>
               </div>
@@ -379,11 +349,11 @@ function HomeFooter() {
   );
 }
 
-function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {} }) {
+function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {}, staticRightLogo = false }) {
   return (
     <Shell>
       <div className="home-main-font relative flex h-[100dvh] flex-col overflow-hidden bg-[#0d6c3d] text-[#072D1D]" style={footerAwareStyle({}, "content")}>
-        <ScoreboardPlaceholder allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} />
+        <ScoreboardPlaceholder allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo={staticRightLogo} />
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
           <FloatingHomeLogo />
@@ -766,7 +736,7 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
 export function HomeScreen({ onSelectGroup, onSelectTeam, allTeamsUnlocked = false, currentUser = null, onOpenClubhouse, onAuthComplete, onResumeCampaign, hasResumeCampaign = false, menuProps = {} }) {
   const [homeMode, setHomeMode] = useState("landing");
   if (homeMode === "hosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} currentUser={currentUser} onAuthComplete={onAuthComplete} allTeamsUnlocked={allTeamsUnlocked} /></HomeLayout>;
-  return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><LandingPanel currentUser={currentUser} onOpenClubhouse={onOpenClubhouse} onAuthComplete={onAuthComplete} onResumeCampaign={onResumeCampaign} hasResumeCampaign={hasResumeCampaign} onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
+  return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo><LandingPanel currentUser={currentUser} onOpenClubhouse={onOpenClubhouse} onAuthComplete={onAuthComplete} onResumeCampaign={onResumeCampaign} hasResumeCampaign={hasResumeCampaign} onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
 }
 export function HostSelectScreen(props) { return <HomeLayout allTeamsUnlocked={props.allTeamsUnlocked} menuProps={props.menuProps || {}}><HostPanel {...props} /></HomeLayout>; }
 export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam, onBack, allTeamsUnlocked = false, menuProps = {} }) { return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><TeamPanel group={selectedGroup} onBack={onBack} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>; }
