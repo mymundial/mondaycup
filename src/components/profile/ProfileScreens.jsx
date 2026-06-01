@@ -12,6 +12,7 @@ import PageScroll from "../ui/PageScroll.jsx";
 import TeamFlag from "../ui/TeamFlag.jsx";
 import AppPanel, { appPanelStyleForVariant } from "../ui/AppPanel.jsx";
 import { getTeamDisplayName } from "../ui/TeamName.jsx";
+import { normaliseTicketQuantity } from "../../data/storeItems.js";
 import { GROUPS } from "../../data/teams.js";
 
 function DrawerContent({ children }) {
@@ -172,33 +173,78 @@ function CampaignSummaryBlock({ title, team, form = [], points = null, campaignP
   );
 }
 
-function CosmeticUpgradeCard({ id, title, subtitle = "BONUS", price, assetSrc, iconText = null, active, disabled = false, guestLocked = false, onToggle }) {
-  const titleTone = active ? "text-[#F7D117]" : "text-[#072D1D]";
+function StatusPill({ children, active = false, className = "" }) {
+  return (
+    <span className={`inline-flex min-h-[19px] items-center justify-center rounded-full px-2.5 home-copy-bold text-[8.5px] uppercase leading-none tracking-[0.08em] ${active ? "bg-[#052D1D] text-[#F7D117]" : "bg-[#052D1D]/88 text-[#F7D117]"} ${className}`}>
+      {children}
+    </span>
+  );
+}
+
+function CosmeticUpgradeCard({ id, title, subtitle = "BONUS", price, assetSrc, iconText = null, active, owned = false, ticketQuantity = 0, disabled = false, guestLocked = false, onToggle, onOpenShop }) {
+  const isTicket = id === "goldenTicket";
+  const ticketQty = normaliseTicketQuantity(ticketQuantity);
+  const isOwned = isTicket ? ticketQty > 0 : Boolean(owned);
+  const isMaxTicket = isTicket && ticketQty >= 99;
+  const isActive = Boolean(!isTicket && isOwned && active);
+  const titleTone = isActive ? "text-[#F7D117]" : "text-[#072D1D]";
+  const subtitleTone = isActive ? "text-[#F5F1E8]/72" : "text-[#072D1D]/70";
+  const cardTone = isActive
+    ? "border-[#F7D117]/44 bg-[#062819] text-[#F5F1E8] ring-1 ring-[#F7D117]/24"
+    : "border-[#F7D117]/76 bg-[#F7D117] text-[#072D1D] ring-1 ring-[#0B5F35]/10";
+
+  const status = isTicket
+    ? (isMaxTicket ? "MAX" : price)
+    : isOwned
+      ? (isActive ? "EQUIPPED" : "PURCHASED")
+      : price;
+
   return (
     <button
       type="button"
-      onClick={() => { if (!disabled) onToggle?.(id); }}
+      onClick={() => {
+        if (disabled) return;
+        if (guestLocked) { onOpenShop?.(id); return; }
+        if (isTicket || !isOwned) { onOpenShop?.(id); return; }
+        onToggle?.(id);
+      }}
       disabled={disabled}
-      className={`group relative min-h-[108px] overflow-hidden rounded-[1.1rem] border p-2 text-center shadow-[0_8px_16px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all disabled:cursor-default disabled:opacity-70 ${guestLocked ? "cursor-pointer" : ""} ${
-        active
-          ? "border-[#F7D117]/38 bg-[#062819] text-[#F5F1E8] ring-1 ring-[#F7D117]/22"
-          : "border-[#F7D117]/38 bg-[#F7D117] text-[#072D1D] ring-1 ring-[#0B5F35]/10"
-      }`}
+      className={`group relative min-h-[108px] overflow-hidden rounded-[1.1rem] border p-2 text-center shadow-[0_8px_16px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all disabled:cursor-default disabled:opacity-70 ${cardTone}`}
     >
       <div className="flex h-full min-h-[92px] flex-col items-center justify-center">
-        <div className={`mb-2 grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#0B5F35]/18 bg-[#072D1D]`}>
+        <div className="mb-2 grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#0B5F35]/18 bg-[#072D1D]">
           {assetSrc ? <img src={assetSrc} alt="" className="h-10 w-10 object-contain drop-shadow-[0_5px_8px_rgba(0,0,0,0.22)]" draggable={false} /> : <span className="home-copy-bold text-[16px] leading-none text-[#F7D117]">{iconText}</span>}
         </div>
         <div className="flex flex-col items-center gap-0">
           <div className={`home-copy-bold min-h-[12px] text-[10px] uppercase leading-none tracking-[0.075em] ${titleTone}`}>{title}</div>
-          <div className={`home-copy-regular mt-[-1px] text-[6.5px] uppercase leading-none tracking-[0.10em] ${active ? "text-[#F5F1E8]/72" : "text-[#072D1D]/70"}`}>{subtitle}</div>
+          <div className={`home-copy-regular mt-[-1px] text-[6.5px] uppercase leading-none tracking-[0.10em] ${subtitleTone}`}>{subtitle}</div>
         </div>
-        <div className={`mt-2 home-copy-bold text-[11px] uppercase leading-none tracking-[0.06em] ${titleTone}`}>{disabled ? price : active ? "ACTIVE" : price}</div>
+        <div className="mt-2 flex items-center justify-center gap-1.5">
+          {isTicket ? (
+            <>
+              <span className={`home-copy-bold text-[11px] uppercase leading-none tracking-[0.06em] ${titleTone}`}>{status}</span>
+              <span className="rounded-full bg-[#052D1D]/88 px-1.5 py-1 home-copy-bold text-[7px] uppercase leading-none tracking-[0.08em] text-[#F7D117]">{ticketQty}/99</span>
+            </>
+          ) : isOwned ? (
+            <StatusPill active={isActive}>{status}</StatusPill>
+          ) : (
+            <span className={`home-copy-bold text-[11px] uppercase leading-none tracking-[0.06em] ${titleTone}`}>{status}</span>
+          )}
+        </div>
       </div>
     </button>
   );
 }
 
+function OpenPadlockIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="5" y="10" width="14" height="10" rx="2.4" />
+      <path d="M8.4 10V7.6C8.4 5.4 10 4 12 4c1.8 0 3.1 1.1 3.5 2.8" />
+      <path d="M12 14.2v2.3" />
+    </svg>
+  );
+}
 
 function AllTeamsUnlockButton({ unlocked = false, guestLocked = false, onUnlock }) {
   return (
@@ -206,14 +252,14 @@ function AllTeamsUnlockButton({ unlocked = false, guestLocked = false, onUnlock 
       type="button"
       onClick={() => { if (guestLocked) { onUnlock?.(); return; } if (!unlocked) onUnlock?.(); }}
       disabled={unlocked && !guestLocked}
-      className={`relative mb-3 flex h-[50px] w-full items-center justify-center rounded-[1rem] border-2 border-[#F7D117]/85 bg-[#F7D117] px-5 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] transition-transform active:scale-[0.99] disabled:cursor-default disabled:opacity-80 ${guestLocked ? "cursor-pointer" : ""}`}
+      className={`relative mb-3 flex h-[50px] w-full items-center justify-center rounded-[1rem] border-2 border-[#F7D117]/85 px-5 shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] transition-transform active:scale-[0.99] disabled:cursor-default ${unlocked ? "bg-[#062819] text-[#F5F1E8]" : "bg-[#F7D117] text-[#072D1D]"} ${guestLocked ? "cursor-pointer" : ""}`}
     >
-      <PadlockIcon className="absolute left-5 h-7 w-7 text-[#072D1D]" />
-      <div className="home-copy-bold min-w-0 truncate text-center text-[clamp(13px,3.5vw,17px)] uppercase leading-none tracking-[0.075em]">
+      {unlocked ? <OpenPadlockIcon className="absolute left-5 h-7 w-7 text-[#F7D117]" /> : <PadlockIcon className="absolute left-5 h-7 w-7 text-[#072D1D]" />}
+      <div className={`home-copy-bold min-w-0 truncate text-center text-[clamp(13px,3.5vw,17px)] uppercase leading-none tracking-[0.075em] ${unlocked ? "text-[#F7D117]" : "text-[#072D1D]"}`}>
         ALL TEAMS
       </div>
-      <div className="home-copy-bold absolute right-5 text-right text-[19px] uppercase tracking-[0.06em]">
-        £1.99
+      <div className="absolute right-5 text-right">
+        {unlocked ? <StatusPill active>ACTIVE</StatusPill> : <span className="home-copy-bold text-[19px] uppercase tracking-[0.06em] text-[#072D1D]">£1.99</span>}
       </div>
     </button>
   );
@@ -331,7 +377,9 @@ export function ClubhouseScreen({
   allTimeGoals,
   allTimeShots,
   activeCosmetics,
+  ownedItems = {},
   onToggleCosmetic,
+  onOpenShop,
   allTeamsUnlocked = false,
   onUnlockAllTeams,
   onNicknameUpdate,
@@ -386,46 +434,58 @@ export function ClubhouseScreen({
               <CosmeticUpgradeCard
                 id="goldenBoot"
                 title="Golden Boot"
-                subtitle="POWER BONUS"
+                subtitle="10% SHOT POWER"
                 price="£1"
                 assetSrc="/assets/game/golden-boot.png"
-                active={isGuest ? false : Boolean(activeCosmetics?.goldenBoot)}
+                active={isGuest ? false : Boolean(ownedItems?.goldenBoot && activeCosmetics?.goldenBoot)}
+                owned={Boolean(ownedItems?.goldenBoot)}
+                ticketQuantity={Number(activeCosmetics?.goldenTicketQuantity || ownedItems?.goldenTicketQty || 0)}
                 guestLocked={isGuest}
-                onToggle={(id) => { if (isGuest) setRegisterAuthOpen(true); else onToggleCosmetic?.(id); }}
+                onOpenShop={(id) => onOpenShop?.(id)}
+                onToggle={(id) => { if (isGuest) onOpenShop?.(id); else onToggleCosmetic?.(id); }}
               />
               <CosmeticUpgradeCard
                 id="goldenBall"
                 title="Golden Ball"
-                subtitle="ACCURACY BONUS"
+                subtitle="10% SHOT ACCURACY"
                 price="£1"
                 assetSrc="/assets/game/golden-ball.png"
-                active={isGuest ? false : Boolean(activeCosmetics?.goldenBall)}
+                active={isGuest ? false : Boolean(ownedItems?.goldenBall && activeCosmetics?.goldenBall)}
+                owned={Boolean(ownedItems?.goldenBall)}
+                ticketQuantity={Number(activeCosmetics?.goldenTicketQuantity || ownedItems?.goldenTicketQty || 0)}
                 guestLocked={isGuest}
-                onToggle={(id) => { if (isGuest) setRegisterAuthOpen(true); else onToggleCosmetic?.(id); }}
+                onOpenShop={(id) => onOpenShop?.(id)}
+                onToggle={(id) => { if (isGuest) onOpenShop?.(id); else onToggleCosmetic?.(id); }}
               />
               <CosmeticUpgradeCard
                 id="goldenGlove"
                 title="Golden Glove"
-                subtitle="GOALKEEPER BONUS"
+                subtitle="INCREASED GK SAVE"
                 price="£1"
                 assetSrc="/assets/game/golden-glove.png"
-                active={isGuest ? false : Boolean(activeCosmetics?.goldenGlove)}
+                active={isGuest ? false : Boolean(ownedItems?.goldenGlove && activeCosmetics?.goldenGlove)}
+                owned={Boolean(ownedItems?.goldenGlove)}
+                ticketQuantity={Number(activeCosmetics?.goldenTicketQuantity || ownedItems?.goldenTicketQty || 0)}
                 guestLocked={isGuest}
-                onToggle={(id) => { if (isGuest) setRegisterAuthOpen(true); else onToggleCosmetic?.(id); }}
+                onOpenShop={(id) => onOpenShop?.(id)}
+                onToggle={(id) => { if (isGuest) onOpenShop?.(id); else onToggleCosmetic?.(id); }}
               />
               <CosmeticUpgradeCard
                 id="goldenTicket"
                 title="Golden Ticket"
-                subtitle="ADVANCE TO FINAL"
+                subtitle="1x ADVANCE TO FINAL"
                 price="£1"
                 assetSrc="/assets/game/golden-ticket.png"
-                active={isGuest ? false : Boolean(activeCosmetics?.goldenTicket)}
+                active={isGuest ? false : Number(ownedItems?.goldenTicketQty || 0) > 0}
+                owned={Number(ownedItems?.goldenTicketQty || 0) > 0}
+                ticketQuantity={Number(activeCosmetics?.goldenTicketQuantity || ownedItems?.goldenTicketQty || 0)}
                 guestLocked={isGuest}
-                onToggle={(id) => { if (isGuest) setRegisterAuthOpen(true); else onToggleCosmetic?.(id); }}
+                onOpenShop={(id) => onOpenShop?.(id)}
+                onToggle={(id) => { if (isGuest) onOpenShop?.(id); else onToggleCosmetic?.(id); }}
               />
             </div>
             <div className="mt-3">
-              <AllTeamsUnlockButton unlocked={Boolean(allTeamsUnlocked)} guestLocked={isGuest} onUnlock={() => { if (isGuest) setRegisterAuthOpen(true); else onUnlockAllTeams?.(); }} />
+              <AllTeamsUnlockButton unlocked={Boolean(allTeamsUnlocked)} guestLocked={isGuest} onUnlock={() => onUnlockAllTeams?.()} />
             </div>
           </div>
         </MenuPanel>
@@ -702,7 +762,7 @@ function leaderboardUsedUpgrade(row = {}) {
 }
 
 function leaderboardForm(row = {}) {
-  const form = row.tournamentProgress || row.form || row.bestCampaign?.tournamentProgress || row.bestCampaign?.form || [];
+  const form = row.formGuide || row.tournamentProgress || row.form || row.bestCampaign?.formGuide || row.bestCampaign?.tournamentProgress || row.bestCampaign?.form || [];
   return Array.isArray(form) ? form.slice(-8) : [];
 }
 
@@ -976,7 +1036,26 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
       }]
     : [];
 
-  const baseRows = rows.length ? rows : placeholderRows;
+  const bestSummaryForm = bestCampaignSummary?.formGuide || bestCampaignSummary?.form || bestCampaignSummary?.tournamentProgress || [];
+  const hydrateCurrentUserLeaderboardRow = (row) => {
+    if (!currentUser?.uid || row?.userId !== currentUser.uid) return row;
+    const rowForm = leaderboardForm(row);
+    if (rowForm.some(Boolean) || !Array.isArray(bestSummaryForm) || !bestSummaryForm.some(Boolean)) return row;
+    return {
+      ...row,
+      formGuide: bestSummaryForm,
+      form: bestSummaryForm,
+      tournamentProgress: bestSummaryForm,
+      bestCampaign: {
+        ...(row.bestCampaign || {}),
+        ...(bestCampaignSummary || {}),
+        formGuide: bestSummaryForm,
+        form: bestSummaryForm,
+        tournamentProgress: bestSummaryForm,
+      },
+    };
+  };
+  const baseRows = rows.length ? rows.map(hydrateCurrentUserLeaderboardRow) : placeholderRows;
   const filterLeaderboardRow = (row) => !cleanLeaderboardOnly || row.isPlaceholder || row.isUserPreview || !leaderboardUsedUpgrade(row);
   const rankedRows = [...previewUserRow, ...baseRows].filter(filterLeaderboardRow)
     .sort((a, b) => Number(b.campaignPoints || 0) - Number(a.campaignPoints || 0))

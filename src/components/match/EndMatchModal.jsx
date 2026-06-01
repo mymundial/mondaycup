@@ -158,7 +158,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
   const [shareBusy, setShareBusy] = useState(false);
   const [sharePreviewOpen, setSharePreviewOpen] = useState(false);
   const [sharePreviewUrl, setSharePreviewUrl] = useState("");
-  const canShareResult = isTerminalShareResult({ result, fixture, stageLabel, podium, team: userTeam });
+  const canShareResult = false; // Share result is launch-hidden; terminal results fall back to PLAY AGAIN.
   const campaignPointsTotal = getCampaignPointsTotal({ result, groupRows, userTeam, userForm });
   const activeBadgeMode = getPodiumBadgeMode({ result, fixture, stageLabel, podium, team: userTeam });
   const resultActionButtonClass = "mx-auto grid h-[clamp(44px,5.1dvh,62px)] min-h-[44px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(14px,2dvh,23px)] font-black uppercase leading-none tracking-[0.14em] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
@@ -284,7 +284,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
             </>
           ))}
 
-          {canShareResult && sharePreviewOpen ? (
+          {false && sharePreviewOpen ? (
             <div className="mt-1.5 space-y-2.5">
               <div className="mx-auto aspect-square w-full overflow-hidden border border-[#F5F1E8]/22 bg-[#072D1D] p-[3px] shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#0B5F35]/45">
                 <div className="relative h-full w-full overflow-hidden bg-[#0B5F35]">
@@ -303,11 +303,11 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, groupRows, qualifie
           ) : (
             <button
               type="button"
-              onClick={canShareResult ? openSharePreview : onNext}
-              disabled={canShareResult && shareBusy}
+              onClick={onNext}
+              disabled={false}
               className={`${resultActionButtonClass} mt-2.5`}
             >
-              {canShareResult ? (shareBusy ? "PREPARING" : "SHARE YOUR RESULT") : modalButton(result)}
+              {modalButton(result)}
             </button>
           )}
         </div>

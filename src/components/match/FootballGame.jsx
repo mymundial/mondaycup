@@ -884,12 +884,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         }
       `}</style>
       <Scoreboard userTeam={user} opponentTeam={opponent} score={score} attempts={attempts} ticker={ticker} tickerStyle={tickerStyle()} stageLabel={stageLabel} totalMarkerSlots={suddenDeathMarkerSlots} />
-      {!hasCompleted && (
-        <TemporaryMatchButtons
-          onPerfectWin={completeTemporaryPerfectWin}
-          onRandomWin={completeTemporaryRandomWin}
-        />
-      )}
+      {/* Launch build: temporary result/debug buttons hidden. */}
       <Pitch ballPoint={ballPoint} keeperPoint={keeperPoint} shot={shot} shotActive={shotActive} activeTeam={activeTeam} defenderTeam={defenderTeam} showAim={showAim} aimDirection={aimDirection} assets={mergedAssets} stageLabel={stageLabel} showChampionsBadge={showChampionsBadge} podiumBadgeMode={podiumBadgeMode} hideMatchActors={hideMatchActors} />
       <ControlOverlay
         phase={phase}

@@ -3,6 +3,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  increment,
   limit,
   orderBy,
   query,
@@ -11,6 +12,7 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
+import { MAX_GOLDEN_TICKETS, normaliseTicketQuantity } from "../data/storeItems.js";
 import { db } from "../firebase.js";
 
 export const FORM_GUIDE_LENGTH = 8;
@@ -140,10 +142,10 @@ const cleanUsername = (value, fallback = "Player") =>
   String(value || fallback).trim().slice(0, 10) || fallback;
 
 const normaliseGoldenTicket = (source = {}, legacyCosmetics = {}) => {
-  const quantity = Number(source.quantity ?? source.count ?? (legacyCosmetics.goldenTicket ? 1 : 0) ?? 0);
+  const quantity = normaliseTicketQuantity(source.quantity ?? source.count ?? source.qty ?? (legacyCosmetics.goldenTicket ? 1 : 0) ?? 0);
   return {
-    quantity: Math.max(0, Math.floor(Number.isFinite(quantity) ? quantity : 0)),
-    equipped: Boolean(source.equipped ?? legacyCosmetics.goldenTicket ?? quantity > 0),
+    quantity,
+    equipped: quantity > 0,
     totalPurchased: Number(source.totalPurchased ?? 0),
     totalUsed: Number(source.totalUsed ?? 0),
     lastPurchasedAt: source.lastPurchasedAt ?? null,
@@ -157,17 +159,29 @@ const normaliseConsumables = (source = {}, legacyCosmetics = {}) => ({
 
 const normaliseUpgradeMap = (source = {}, legacyCosmetics = {}, legacyUnlocks = {}) => ({
   allTeams: Boolean(source.allTeams ?? legacyUnlocks.allTeams ?? false),
-  goldenBoot: Boolean(source.goldenBoot ?? legacyCosmetics.goldenBoot ?? legacyCosmetics.cosmetic3 ?? false),
-  goldenBall: Boolean(source.goldenBall ?? legacyCosmetics.goldenBall ?? false),
-  goldenGlove: Boolean(source.goldenGlove ?? legacyCosmetics.goldenGlove ?? false),
+  // Ownership must come from purchase entitlements only.
+  // Legacy/applied cosmetics are display/equip state, not proof of purchase.
+  goldenBoot: Boolean(source.goldenBoot ?? false),
+  goldenBall: Boolean(source.goldenBall ?? false),
+  goldenGlove: Boolean(source.goldenGlove ?? false),
 });
 
-const normaliseCosmeticsEquipped = (source = {}, legacyCosmetics = {}, consumables = {}) => ({
-  goldenBoot: Boolean(source.goldenBoot ?? legacyCosmetics.goldenBoot ?? legacyCosmetics.cosmetic3 ?? false),
-  goldenBall: Boolean(source.goldenBall ?? legacyCosmetics.goldenBall ?? false),
-  goldenGlove: Boolean(source.goldenGlove ?? legacyCosmetics.goldenGlove ?? false),
-  goldenTicket: Boolean(consumables.goldenTicket?.equipped ?? source.goldenTicket ?? legacyCosmetics.goldenTicket ?? legacyCosmetics.cosmetic4 ?? false),
-});
+const normaliseCosmeticsActive = (source = {}, legacyEquipped = {}, consumables = {}, upgradesPurchased = {}) => {
+  const activeSource = source && typeof source === "object" ? source : {};
+  const legacyActive = legacyEquipped && typeof legacyEquipped === "object" ? legacyEquipped : {};
+
+  return {
+    // Active state never proves ownership. These can only be active when the owned entitlement exists.
+    goldenBoot: Boolean(upgradesPurchased.goldenBoot && (activeSource.goldenBoot ?? legacyActive.goldenBoot ?? false)),
+    goldenBall: Boolean(upgradesPurchased.goldenBall && (activeSource.goldenBall ?? legacyActive.goldenBall ?? false)),
+    goldenGlove: Boolean(upgradesPurchased.goldenGlove && (activeSource.goldenGlove ?? legacyActive.goldenGlove ?? false)),
+    // Golden Ticket is consumable. Availability comes from quantity, not an equip toggle.
+    goldenTicket: normaliseTicketQuantity(consumables.goldenTicket?.quantity) > 0,
+  };
+};
+
+// Backwards-compatible name while older imports/readers are removed.
+const normaliseCosmeticsEquipped = normaliseCosmeticsActive;
 
 const normaliseCosmeticsApplied = (source = {}, legacy = {}) => ({
   goldenBoot: Boolean(source.goldenBoot ?? legacy.goldenBoot ?? legacy.cosmetic3 ?? false),
@@ -284,6 +298,14 @@ const buildCompatibilityAliases = ({ currentCampaign, bestCampaign, careerStats,
   unlocks: {
     allTeams: Boolean(upgradesPurchased.allTeams),
   },
+  cosmeticsActive: {
+    ...cosmeticsEquipped,
+    goldenTicketQuantity: Number(consumables?.goldenTicket?.quantity || 0),
+  },
+  cosmeticsEquipped: {
+    ...cosmeticsEquipped,
+    goldenTicketQuantity: Number(consumables?.goldenTicket?.quantity || 0),
+  },
   cosmetics: {
     ...cosmeticsEquipped,
     goldenTicketQuantity: Number(consumables?.goldenTicket?.quantity || 0),
@@ -292,9 +314,9 @@ const buildCompatibilityAliases = ({ currentCampaign, bestCampaign, careerStats,
 
 export const createDefaultUserProfile = (user, username = "Player", extra = {}) => {
   const clean = cleanUsername(username || user.displayName || user.email?.split("@")[0] || "Player");
-  const consumables = normaliseConsumables(extra.consumables, extra.cosmetics);
-  const upgradesPurchased = normaliseUpgradeMap(extra.upgradesPurchased, extra.cosmetics, extra.unlocks);
-  const cosmeticsEquipped = normaliseCosmeticsEquipped(extra.cosmeticsEquipped, extra.cosmetics, consumables);
+  const consumables = normaliseConsumables(extra.consumables, {});
+  const upgradesPurchased = normaliseUpgradeMap(extra.upgradesPurchased, {}, extra.unlocks);
+  const cosmeticsEquipped = normaliseCosmeticsActive(extra.cosmeticsActive || extra.cosmeticsEquipped, {}, consumables, upgradesPurchased);
   const currentCampaign = normaliseCurrentCampaign(extra.currentCampaign, extra.currentProgress);
   const bestCampaign = normaliseBestCampaign(extra.bestCampaign);
   const careerStats = normaliseCareerStats(extra.careerStats, extra.stats);
@@ -326,9 +348,9 @@ export const createDefaultUserProfile = (user, username = "Player", extra = {}) 
 };
 
 const normaliseProfileUpdate = (data = {}) => {
-  const consumables = normaliseConsumables(data.consumables, data.cosmetics);
-  const upgradesPurchased = normaliseUpgradeMap(data.upgradesPurchased, data.cosmetics, data.unlocks);
-  const cosmeticsEquipped = normaliseCosmeticsEquipped(data.cosmeticsEquipped, data.cosmetics, consumables);
+  const consumables = normaliseConsumables(data.consumables, {});
+  const upgradesPurchased = normaliseUpgradeMap(data.upgradesPurchased, {}, data.unlocks);
+  const cosmeticsEquipped = normaliseCosmeticsActive(data.cosmeticsActive || data.cosmeticsEquipped, {}, consumables, upgradesPurchased);
   const currentCampaign = normaliseCurrentCampaign(data.currentCampaign, data.currentProgress);
   const bestCampaign = normaliseBestCampaign(data.bestCampaign);
   const careerStats = normaliseCareerStats(data.careerStats, data.stats);
@@ -398,9 +420,9 @@ export async function loadUserProfile(uid) {
   // Normalise old documents in memory so the UI can safely read the new schema immediately.
   const currentCampaign = normaliseCurrentCampaign(data.currentCampaign, data.currentProgress);
   const bestCampaign = normaliseBestCampaign(data.bestCampaign);
-  const consumables = normaliseConsumables(data.consumables, data.cosmetics);
-  const upgradesPurchased = normaliseUpgradeMap(data.upgradesPurchased, data.cosmetics, data.unlocks);
-  const cosmeticsEquipped = normaliseCosmeticsEquipped(data.cosmeticsEquipped, data.cosmetics, consumables);
+  const consumables = normaliseConsumables(data.consumables, {});
+  const upgradesPurchased = normaliseUpgradeMap(data.upgradesPurchased, {}, data.unlocks);
+  const cosmeticsEquipped = normaliseCosmeticsActive(data.cosmeticsActive || data.cosmeticsEquipped, {}, consumables, upgradesPurchased);
   const careerStats = normaliseCareerStats(data.careerStats, data.stats);
 
   return {
@@ -433,6 +455,22 @@ export async function unlockTrophy(uid, trophyKey) {
   });
 }
 
+export async function saveCosmeticActive(uid, cosmeticKey, active = true) {
+  if (!uid || !cosmeticKey || !db) return;
+  const equippable = ["goldenBoot", "goldenBall", "goldenGlove"];
+  if (!equippable.includes(cosmeticKey)) return;
+  const isActive = Boolean(active);
+  await setDoc(doc(db, "users", uid), {
+    [`cosmeticsActive.${cosmeticKey}`]: isActive,
+    [`cosmeticsEquipped.${cosmeticKey}`]: isActive,
+    [`cosmetics.${cosmeticKey}`]: isActive,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
+// Backwards-compatible export. In user-facing language this means ACTIVE, not purchased.
+export const saveCosmeticEquipped = saveCosmeticActive;
+
 export async function unlockCosmetic(uid, cosmeticKey, equipped = true) {
   if (!uid || !cosmeticKey || !db) return;
   const isKnownCosmetic = COSMETIC_KEYS.includes(cosmeticKey);
@@ -442,8 +480,9 @@ export async function unlockCosmetic(uid, cosmeticKey, equipped = true) {
     await setDoc(doc(db, "users", uid), {
       "consumables.goldenTicket.quantity": equipped ? 1 : 0,
       "consumables.goldenTicket.equipped": Boolean(equipped),
-      "consumables.goldenTicket.totalPurchased": equipped ? 1 : 0,
+      "consumables.goldenTicket.totalPurchased": equipped ? increment(1) : 0,
       "consumables.goldenTicket.lastPurchasedAt": equipped ? serverTimestamp() : null,
+      "cosmeticsActive.goldenTicket": Boolean(equipped),
       "cosmeticsEquipped.goldenTicket": Boolean(equipped),
       "cosmetics.goldenTicket": Boolean(equipped),
       "cosmetics.goldenTicketQuantity": equipped ? 1 : 0,
@@ -454,23 +493,25 @@ export async function unlockCosmetic(uid, cosmeticKey, equipped = true) {
 
   await setDoc(doc(db, "users", uid), {
     [`upgradesPurchased.${cosmeticKey}`]: true,
+    [`cosmeticsActive.${cosmeticKey}`]: Boolean(equipped),
     [`cosmeticsEquipped.${cosmeticKey}`]: Boolean(equipped),
-    // Compatibility alias until all pages read cosmeticsEquipped.
     [`cosmetics.${cosmeticKey}`]: Boolean(equipped),
     updatedAt: serverTimestamp(),
   }, { merge: true });
 }
 
-export async function consumeGoldenTicket(uid) {
+export async function consumeGoldenTicket(uid, currentQuantity = 1) {
   if (!uid || !db) return;
+  const nextQuantity = normaliseTicketQuantity(Number(currentQuantity || 0) - 1);
   await setDoc(doc(db, "users", uid), {
-    "consumables.goldenTicket.quantity": 0,
-    "consumables.goldenTicket.equipped": false,
-    "consumables.goldenTicket.totalUsed": 1,
+    "consumables.goldenTicket.quantity": nextQuantity,
+    "consumables.goldenTicket.equipped": nextQuantity > 0,
+    "consumables.goldenTicket.totalUsed": increment(1),
     "consumables.goldenTicket.lastUsedAt": serverTimestamp(),
-    "cosmeticsEquipped.goldenTicket": false,
-    "cosmetics.goldenTicket": false,
-    "cosmetics.goldenTicketQuantity": 0,
+    "cosmeticsActive.goldenTicket": nextQuantity > 0,
+    "cosmeticsEquipped.goldenTicket": nextQuantity > 0,
+    "cosmetics.goldenTicket": nextQuantity > 0,
+    "cosmetics.goldenTicketQuantity": nextQuantity,
     updatedAt: serverTimestamp(),
   }, { merge: true });
 }
@@ -480,9 +521,33 @@ export async function saveAllTeamsUnlocked(uid, purchased = true, equipped = tru
   await setDoc(doc(db, "users", uid), {
     "upgradesPurchased.allTeams": Boolean(purchased),
     "unlocks.allTeams": Boolean(purchased),
-    "allTeamsEquipped": Boolean(equipped),
+    "allTeamsEquipped": Boolean(purchased ? true : equipped),
     updatedAt: serverTimestamp(),
   }, { merge: true });
+}
+
+export async function saveCheckoutStarted(uid, checkout = {}) {
+  if (!uid || !db) return;
+  await setDoc(doc(db, "users", uid), {
+    lastCheckoutStarted: {
+      ...checkout,
+      startedAt: serverTimestamp(),
+    },
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
+export function buildStoreEntitlements(profile = {}) {
+  const upgrades = normaliseUpgradeMap(profile.upgradesPurchased, {}, profile.unlocks);
+  const consumables = normaliseConsumables(profile.consumables, {});
+  return {
+    allTeams: Boolean(upgrades.allTeams),
+    goldenBall: Boolean(upgrades.goldenBall),
+    goldenBoot: Boolean(upgrades.goldenBoot),
+    goldenGlove: Boolean(upgrades.goldenGlove),
+    goldenTicket: normaliseTicketQuantity(consumables.goldenTicket?.quantity) > 0,
+    goldenTicketQty: normaliseTicketQuantity(consumables.goldenTicket?.quantity),
+  };
 }
 
 export async function saveCurrentProgress(uid, snapshot = null) {

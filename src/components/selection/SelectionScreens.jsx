@@ -50,6 +50,16 @@ function PadlockIcon({ className = "" }) {
   );
 }
 
+function OpenPadlockIcon({ className = "" }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="5" y="10" width="14" height="10" rx="2.4" />
+      <path d="M8.4 10V7.6C8.4 5.4 10 4 12 4c1.8 0 3.1 1.1 3.5 2.8" />
+      <path d="M12 14.2v2.3" />
+    </svg>
+  );
+}
+
 function StarIcon({ className = "" }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
@@ -676,7 +686,7 @@ function getTeamGroup(teamName) {
   return GROUP_LETTERS.find((letter) => GROUPS[letter].includes(teamName)) || "A";
 }
 
-function HostPanel({ onSelectGroup, onSelectTeam, onBack, currentUser = null, onAuthComplete }) {
+function HostPanel({ onSelectGroup, onSelectTeam, onBack, currentUser = null, onAuthComplete, allTeamsUnlocked = false }) {
   const hostLabels = { Canada: "CAN", Mexico: "MEX", "United States": "USA" };
   const [authMode, setAuthMode] = useState(null);
 
@@ -714,10 +724,12 @@ function HostPanel({ onSelectGroup, onSelectTeam, onBack, currentUser = null, on
         );
       })}
     </div>
-    <button onClick={() => { if (currentUser) onSelectGroup("A"); else setAuthMode("signin"); }} className="relative mt-3 flex h-[50px] w-full items-center justify-center rounded-[1rem] border-2 border-[#F7D117]/85 bg-[#F7D117] px-5 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]">
-      <PadlockIcon className="absolute left-5 h-7 w-7" />
+    <button onClick={() => { if (currentUser || allTeamsUnlocked) onSelectGroup("A"); else setAuthMode("signin"); }} className="relative mt-3 flex h-[50px] w-full items-center justify-center rounded-[1rem] border-2 border-[#F7D117]/85 bg-[#F7D117] px-5 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]">
+      {allTeamsUnlocked ? <OpenPadlockIcon className="absolute left-5 h-7 w-7" /> : <PadlockIcon className="absolute left-5 h-7 w-7" />}
       <div className="home-copy-bold min-w-0 truncate text-center text-[clamp(13px,3.5vw,17px)] uppercase leading-none tracking-[0.075em]">ALL TEAMS</div>
-      <div className="home-copy-bold absolute right-5 text-right text-[19px] uppercase tracking-[0.06em]">£1.99</div>
+      <div className="absolute right-5 text-right">
+        {allTeamsUnlocked ? <span className="inline-flex min-h-[19px] items-center justify-center rounded-full bg-[#052D1D]/88 px-2.5 home-copy-bold text-[8.5px] uppercase leading-none tracking-[0.08em] text-[#F7D117]">ACTIVE</span> : <span className="home-copy-bold text-[19px] uppercase tracking-[0.06em]">£1.99</span>}
+      </div>
     </button>
   </HomeMenuShell>;
 }
@@ -747,7 +759,7 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
 
 export function HomeScreen({ onSelectGroup, onSelectTeam, allTeamsUnlocked = false, currentUser = null, onOpenClubhouse, onAuthComplete, onResumeCampaign, hasResumeCampaign = false, menuProps = {} }) {
   const [homeMode, setHomeMode] = useState("landing");
-  if (homeMode === "hosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} currentUser={currentUser} onAuthComplete={onAuthComplete} /></HomeLayout>;
+  if (homeMode === "hosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} currentUser={currentUser} onAuthComplete={onAuthComplete} allTeamsUnlocked={allTeamsUnlocked} /></HomeLayout>;
   return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><LandingPanel currentUser={currentUser} onOpenClubhouse={onOpenClubhouse} onAuthComplete={onAuthComplete} onResumeCampaign={onResumeCampaign} hasResumeCampaign={hasResumeCampaign} onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
 }
 export function HostSelectScreen(props) { return <HomeLayout allTeamsUnlocked={props.allTeamsUnlocked} menuProps={props.menuProps || {}}><HostPanel {...props} /></HomeLayout>; }

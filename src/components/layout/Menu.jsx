@@ -512,6 +512,7 @@ export function MenuDropdown({
   onTrophyCabinet,
   onLeaderboard,
   onShare,
+  showShare = false,
   onRestart,
   onSignOut,
   canSignOut = false,
@@ -573,7 +574,7 @@ export function MenuDropdown({
               <MenuHeader title="MENU" onClose={onClose} />
 
               <div className="grid grid-cols-3 gap-2">
-                {MENU_ITEMS.map((item) => (
+                {MENU_ITEMS.filter((item) => item.action !== "onShare" || (showShare && typeof onShare === "function")).map((item) => (
                   <MenuTile
                     key={item.title}
                     title={item.title}

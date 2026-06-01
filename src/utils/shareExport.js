@@ -41,10 +41,17 @@ export function normaliseThirdPlaceCopy(value) {
 }
 
 function getShareBorderColor(team) {
+  if (team && typeof team === "object" && Object.prototype.hasOwnProperty.call(team, "shareBorderColor")) return team.shareBorderColor;
   return SHARE_TEAM_BORDER_COLORS[team] || "#F7D117";
 }
 
+function shouldDrawShareBorder(team) {
+  const borderColor = getShareBorderColor(team);
+  return Boolean(borderColor && borderColor !== "transparent" && borderColor !== "none");
+}
+
 function getShareExportTeamStyle(team) {
+  if (team && typeof team === "object") return { bg: team.bg || getShareBorderColor(team), fg: team.fg || "#072D1D" };
   return SHARE_TEAM_EXPORT_STYLES[team] || { bg: getShareBorderColor(team), fg: "#072D1D" };
 }
 
@@ -184,9 +191,11 @@ async function composeShareExportCanvas(sourceCanvas, userTeam = null) {
 
   ctx.drawImage(sourceCanvas, 0, 0, sourceCanvas.width, sourceCanvas.height, 0, 0, SHARE_EXPORT_SIZE, SHARE_EXPORT_SIZE);
 
-  ctx.strokeStyle = getShareBorderColor(userTeam);
-  ctx.lineWidth = 20;
-  ctx.strokeRect(10, 10, SHARE_EXPORT_SIZE - 20, SHARE_EXPORT_SIZE - 20);
+  if (shouldDrawShareBorder(userTeam)) {
+    ctx.strokeStyle = getShareBorderColor(userTeam);
+    ctx.lineWidth = 20;
+    ctx.strokeRect(10, 10, SHARE_EXPORT_SIZE - 20, SHARE_EXPORT_SIZE - 20);
+  }
 
   return canvas;
 }

@@ -17,6 +17,7 @@ export function ScreenTopBar({
   onTrophyCabinet,
   onLeaderboard,
   onShare,
+  showShare = false,
   onRestart,
   onSignOut,
   canSignOut,
@@ -38,6 +39,7 @@ export function ScreenTopBar({
           onTrophyCabinet={onTrophyCabinet}
           onLeaderboard={onLeaderboard}
           onShare={onShare}
+          showShare={showShare}
           onRestart={onRestart}
           onSignOut={onSignOut}
           canSignOut={canSignOut}

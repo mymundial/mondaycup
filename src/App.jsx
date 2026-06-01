@@ -13,8 +13,9 @@ import { MatchScreen } from "./components/match/MatchScreen.jsx";
 import { ShareScreen } from "./components/share/ShareScreen.jsx";
 import { DrawerShell } from "./components/layout/Layout.jsx";
 import AppFooter from "./components/ui/AppFooter.jsx";
-import { ensureUserDocument, isNicknameTaken, loadCurrentProgress, loadLeaderboardRows, loadUserProfile, saveAllTeamsUnlocked, saveCurrentProgress, saveLeaderboardHighScore, saveUserNickname, saveUserProfile, unlockCosmetic, consumeGoldenTicket } from "./lib/firebaseUser.js";
+import { ensureUserDocument, isNicknameTaken, loadCurrentProgress, loadLeaderboardRows, loadUserProfile, saveAllTeamsUnlocked, saveCurrentProgress, saveLeaderboardHighScore, saveUserNickname, saveUserProfile, consumeGoldenTicket, saveCosmeticActive, saveCheckoutStarted, buildStoreEntitlements } from "./lib/firebaseUser.js";
 import { ClubhouseScreen, TrophyCabinetScreen, LeaderboardScreen } from "./components/profile/ProfileScreens.jsx";
+import ShopModal from "./components/store/ShopModal.jsx";
 import {
   BEST_CAMPAIGN_SCORE_KEY,
   BEST_CAMPAIGN_SUMMARY_KEY,
@@ -46,6 +47,28 @@ const NATION_CUP_WINS_KEY = "mondayCup.nationCupWins";
 const ALL_TIME_MATCHES_PLAYED_KEY = "mondayCup.allTimeMatchesPlayed";
 const HOST_TEAMS = new Set(["Mexico", "Canada", "United States"]);
 const PODIUM_ACHIEVEMENT_KEYS = ["thirdPlaceFinish", "runnerUpFinish", "championFinish"];
+const EMPTY_ACTIVE_COSMETICS = {
+  goldenBoot: false,
+  goldenBall: false,
+  goldenGlove: false,
+  goldenTicket: false,
+  goldenTicketQuantity: 0,
+};
+
+const SHARE_EDITOR_EMAIL = "alexjashworth@gmail.com";
+
+
+const normaliseActiveCosmeticsForEntitlements = (source = {}, entitlements = {}) => {
+  const ticketQty = Math.max(0, Math.min(99, Math.floor(Number(entitlements?.goldenTicketQty || 0))));
+  return {
+    goldenBoot: Boolean(entitlements?.goldenBoot && source?.goldenBoot),
+    goldenBall: Boolean(entitlements?.goldenBall && source?.goldenBall),
+    goldenGlove: Boolean(entitlements?.goldenGlove && source?.goldenGlove),
+    goldenTicket: ticketQty > 0,
+    goldenTicketQuantity: ticketQty,
+  };
+};
+
 const CORE_ACHIEVEMENT_KEYS = [
   "ourTime",
   "kickOff",
@@ -151,9 +174,12 @@ export default function App() {
   const [allTimeMatchesPlayed, setAllTimeMatchesPlayed] = useState(() => safeReadNumber(ALL_TIME_MATCHES_PLAYED_KEY, 0));
   const [achievements, setAchievements] = useState(() => safeReadJson(ACHIEVEMENTS_KEY, {}));
   const [nationCupWins, setNationCupWins] = useState(() => safeReadJson(NATION_CUP_WINS_KEY, {}));
-  const [activeCosmetics, setActiveCosmetics] = useState(() => safeReadJson(COSMETICS_KEY, { goldenBoot: false, goldenBall: false, goldenGlove: false, goldenTicket: false, goldenTicketQuantity: 0 }));
+  const [activeCosmetics, setActiveCosmetics] = useState(() => normaliseActiveCosmeticsForEntitlements(safeReadJson(COSMETICS_KEY, EMPTY_ACTIVE_COSMETICS), {}));
   const [campaignCosmeticsUsed, setCampaignCosmeticsUsed] = useState({ goldenBoot: false, goldenBall: false, goldenGlove: false, goldenTicket: false, cosmeticBallEquipped: false, cosmeticGloveEquipped: false, goldenTicketUsed: false });
   const [firebaseProfile, setFirebaseProfile] = useState(null);
+  const [shopInitialItemId, setShopInitialItemId] = useState(null);
+  const [pendingShopItemId, setPendingShopItemId] = useState(null);
+  const [shopOpen, setShopOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -167,15 +193,23 @@ export default function App() {
           });
           const profile = await loadUserProfile(user.uid);
           setFirebaseProfile(profile || null);
-          if (profile?.unlocks?.allTeams) {
+          const entitlements = buildStoreEntitlements(profile || {});
+          if (entitlements.allTeams) {
             setAllTeamsUnlocked(true);
             safeWriteJson(ALL_TEAMS_UNLOCKED_KEY, true);
+          } else {
+            setAllTeamsUnlocked(false);
+            safeWriteJson(ALL_TEAMS_UNLOCKED_KEY, false);
           }
-          if (profile?.cosmetics) {
-            setActiveCosmetics((current) => {
-              const next = { ...(current || {}), ...(profile.cosmetics || {}) };
-              safeWriteJson(COSMETICS_KEY, next);
-              return next;
+          const nextActiveCosmetics = normaliseActiveCosmeticsForEntitlements(profile?.cosmeticsActive || profile?.cosmeticsEquipped || {}, entitlements);
+          setActiveCosmetics(nextActiveCosmetics);
+          safeWriteJson(COSMETICS_KEY, nextActiveCosmetics);
+          if (user.uid) {
+            ["goldenBoot", "goldenBall", "goldenGlove"].forEach((key) => {
+              const storedActive = Boolean((profile?.cosmeticsActive || profile?.cosmeticsEquipped || {})?.[key]);
+              if (storedActive !== Boolean(nextActiveCosmetics?.[key])) {
+                saveCosmeticActive(user.uid, key, Boolean(nextActiveCosmetics?.[key])).catch(() => {});
+              }
             });
           }
           if (profile?.bestCampaign?.points || profile?.bestCampaign?.campaignPoints) {
@@ -272,20 +306,34 @@ export default function App() {
             cosmetics: activeCosmetics || { goldenBoot: false, goldenBall: false, goldenGlove: false, goldenTicket: false, goldenTicketQuantity: 0 },
             achievements: achievements || {},
             nationCupWins: nationCupWins || {},
-            unlocks: { allTeams: Boolean(allTeamsUnlocked) },
+            unlocks: { allTeams: false },
           });
           await saveCurrentProgress(nextUser.uid, guestSnapshot);
         }
 
         const profile = await loadUserProfile(nextUser.uid);
         setFirebaseProfile(profile || null);
-        if (profile?.unlocks?.allTeams) {
+        const freshEntitlements = buildStoreEntitlements(profile || {});
+        if (freshEntitlements.allTeams) {
           setAllTeamsUnlocked(true);
           safeWriteJson(ALL_TEAMS_UNLOCKED_KEY, true);
+        } else {
+          setAllTeamsUnlocked(false);
+          safeWriteJson(ALL_TEAMS_UNLOCKED_KEY, false);
         }
       } catch (error) {
         console.warn("User profile setup failed", error);
       }
+    }
+
+    if (nextUser && pendingShopItemId) {
+      const itemId = pendingShopItemId;
+      setPendingShopItemId(null);
+      setShopInitialItemId(itemId);
+      setShopOpen(true);
+      setDrawer("clubhouse");
+      setMenuOpen(false);
+      return;
     }
 
     if (options?.navigate !== false) {
@@ -476,11 +524,10 @@ export default function App() {
       RESULT_STATUS.FOURTH_PLACE,
     ]);
     setModalDismissed(snapshot.matchResult?.status && terminalStatuses.has(snapshot.matchResult.status) ? false : Boolean(snapshot.modalDismissed));
-    if (snapshot.activeCosmetics) {
-      setActiveCosmetics(snapshot.activeCosmetics);
-      safeWriteJson(COSMETICS_KEY, snapshot.activeCosmetics);
-    }
-    setCampaignCosmeticsUsed(snapshot.campaignCosmeticsUsed || cosmeticUsageFromActive(snapshot.activeCosmetics || {}));
+    const restoredActiveCosmetics = normaliseActiveCosmeticsForEntitlements(snapshot.activeCosmetics || {}, currentUser?.uid ? storeEntitlements : {});
+    setActiveCosmetics(restoredActiveCosmetics);
+    safeWriteJson(COSMETICS_KEY, restoredActiveCosmetics);
+    setCampaignCosmeticsUsed(snapshot.campaignCosmeticsUsed || cosmeticUsageFromActive(restoredActiveCosmetics));
     if (snapshot.achievements) {
       setAchievements(snapshot.achievements || {});
       safeWriteJson(ACHIEVEMENTS_KEY, snapshot.achievements || {});
@@ -561,7 +608,7 @@ export default function App() {
         team: bestCampaignSummary?.team || null,
       },
       unlocks: {
-        allTeams: Boolean(allTeamsUnlocked),
+        allTeams: Boolean(firebaseProfile?.upgradesPurchased?.allTeams || firebaseProfile?.unlocks?.allTeams || false),
       },
     };
 
@@ -777,7 +824,63 @@ export default function App() {
   const openClubhouse = () => { closeMenu(); setDrawer("clubhouse"); };
   const openTrophyCabinet = () => { closeMenu(); setDrawer("trophyCabinet"); };
   const openLeaderboard = () => { closeMenu(); setDrawer("leaderboard"); };
-  const openShare = () => { closeMenu(); setDrawer("share"); };
+  const canAccessShare = String(currentUser?.email || "").toLowerCase() === SHARE_EDITOR_EMAIL;
+  const openShare = () => {
+    closeMenu();
+    if (!canAccessShare) {
+      if (drawer === "share") setDrawer(null);
+      return;
+    }
+    setDrawer("share");
+  };
+  const openShop = (itemId = null) => {
+    setShopInitialItemId(itemId);
+    setShopOpen(true);
+  };
+  const requestShopItem = (itemId = null) => {
+    if (!currentUser?.uid) {
+      setPendingShopItemId(itemId);
+      setShopOpen(false);
+      openAuthMenu("signup", { showLogoBack: true });
+      return;
+    }
+    openShop(itemId);
+  };
+  const closeShop = () => {
+    setShopOpen(false);
+    setShopInitialItemId(null);
+  };
+
+  const storeEntitlements = buildStoreEntitlements({
+    ...(firebaseProfile || {}),
+    unlocks: firebaseProfile?.unlocks || {},
+    upgradesPurchased: firebaseProfile?.upgradesPurchased || {},
+    consumables: firebaseProfile?.consumables || {},
+  });
+
+  const startStripeCheckout = async (selection = {}) => {
+    if (!currentUser?.uid) throw new Error("Please sign in before buying upgrades");
+    const idToken = await currentUser.getIdToken();
+    await saveCheckoutStarted(currentUser.uid, { selection, source: "clubhouse-shop" }).catch(() => {});
+    const response = await fetch("/api/create-checkout-session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ selection, source: "clubhouse-shop" }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) throw new Error("Stripe checkout endpoint is not deployed yet");
+      throw new Error("Could not start Stripe checkout");
+    }
+
+    const payload = await response.json().catch(() => ({}));
+    if (!payload?.url) throw new Error("Stripe checkout did not return a payment link");
+    window.location.assign(payload.url);
+  };
+
   const unlockAllTeams = () => {
     setAllTeamsUnlocked(true);
     safeWriteJson(ALL_TEAMS_UNLOCKED_KEY, true);
@@ -800,7 +903,7 @@ export default function App() {
     });
 
     if (currentUser?.uid) {
-      consumeGoldenTicket(currentUser.uid).catch((error) => {
+      consumeGoldenTicket(currentUser.uid, ticketQuantity).catch((error) => {
         console.warn("Golden Ticket consume failed", error);
       });
     }
@@ -1048,25 +1151,44 @@ export default function App() {
   };
 
   const toggleCosmetic = (id) => {
+    const equippableIds = new Set(["goldenBoot", "goldenBall", "goldenGlove"]);
+
+    if (!currentUser?.uid) {
+      requestShopItem(id);
+      return;
+    }
+
+    if (id === "goldenTicket") {
+      requestShopItem("goldenTicket");
+      return;
+    }
+
+    if (!equippableIds.has(id)) {
+      requestShopItem(id);
+      return;
+    }
+
+    const entitlements = storeEntitlements;
+    const isOwned = Boolean(entitlements?.[id]);
+
+    if (!isOwned) {
+      setActiveCosmetics((current) => {
+        const next = normaliseActiveCosmeticsForEntitlements({ ...(current || {}), [id]: false }, entitlements);
+        safeWriteJson(COSMETICS_KEY, next);
+        saveCosmeticActive(currentUser.uid, id, false).catch(() => {});
+        return next;
+      });
+      requestShopItem(id);
+      return;
+    }
+
     setActiveCosmetics((current) => {
-      let next;
-
-      if (id === "goldenTicket") {
-        const currentQuantity = Number(current?.goldenTicketQuantity ?? (current?.goldenTicket ? 1 : 0));
-        const nextActive = !current?.goldenTicket;
-        const nextQuantity = nextActive ? Math.max(1, currentQuantity) : currentQuantity;
-        next = { ...(current || {}), goldenTicket: nextActive, goldenTicketQuantity: nextQuantity };
-      } else {
-        next = { ...(current || {}), [id]: !current?.[id] };
-      }
-
+      const next = normaliseActiveCosmeticsForEntitlements({ ...(current || {}), [id]: !current?.[id] }, entitlements);
       safeWriteJson(COSMETICS_KEY, next);
 
-      if (currentUser?.uid) {
-        unlockCosmetic(currentUser.uid, id, Boolean(next[id])).catch((error) => {
-          console.warn("Cosmetic save failed", error);
-        });
-      }
+      saveCosmeticActive(currentUser.uid, id, Boolean(next[id])).catch((error) => {
+        console.warn("Cosmetic active save failed", error);
+      });
 
       return next;
     });
@@ -1103,7 +1225,7 @@ export default function App() {
     setMondayCupsWon(0);
     setAllTimeGoals(0);
     setAllTimeShots(0);
-    setActiveCosmetics({ goldenBall: false, goldenGlove: false });
+    setActiveCosmetics(EMPTY_ACTIVE_COSMETICS);
 
     try {
       window.localStorage.removeItem(BEST_CAMPAIGN_SCORE_KEY);
@@ -1134,7 +1256,7 @@ export default function App() {
     setScreen("home");
   };
 
-  const menuProps = { menuOpen, menuInitialView, menuInitialAuthMode, menuAuthShowLogoBack, menuAuthRequestId, onToggleMenu: () => { setMenuInitialView("menu"); setMenuInitialAuthMode("signin"); setMenuAuthShowLogoBack(false); setMenuOpen((open) => !open); }, onCloseMenu: closeMenu, onOpenAuthMenu: openAuthMenu, onMatch: openMatch, onFixtures: openFixtures, onGroups: openGroups, onClubhouse: openClubhouse, onTrophyCabinet: openTrophyCabinet, onLeaderboard: openLeaderboard, onShare: openShare, onRestart: resetTournament, onSignOut: handleSignOut, canSignOut: Boolean(currentUser), onAuthComplete: handleAuthComplete };
+  const menuProps = { menuOpen, menuInitialView, menuInitialAuthMode, menuAuthShowLogoBack, menuAuthRequestId, onToggleMenu: () => { setMenuInitialView("menu"); setMenuInitialAuthMode("signin"); setMenuAuthShowLogoBack(false); setMenuOpen((open) => !open); }, onCloseMenu: closeMenu, onOpenAuthMenu: openAuthMenu, onMatch: openMatch, onFixtures: openFixtures, onGroups: openGroups, onClubhouse: openClubhouse, onTrophyCabinet: openTrophyCabinet, onLeaderboard: openLeaderboard, onShare: canAccessShare ? openShare : undefined, showShare: canAccessShare, onRestart: resetTournament, onSignOut: handleSignOut, canSignOut: Boolean(currentUser), onAuthComplete: handleAuthComplete };
 
   const drawerElement = drawer === "groups"
     ? <DrawerShell><GroupsScreen allGroups={allGroups} qualifiers={qualifiers} menuProps={menuProps} standingsView={standingsView} onStandingsViewChange={setStandingsView} knockoutFixtures={visibleKnockoutFixtures} qualifiedTeams={qualifiedTeams} userTeam={team} podium={podium} /></DrawerShell>
@@ -1154,9 +1276,11 @@ export default function App() {
             allTimeGoals={allTimeGoals}
             allTimeShots={allTimeShots}
             activeCosmetics={activeCosmetics}
+            ownedItems={storeEntitlements}
             onToggleCosmetic={toggleCosmetic}
+            onOpenShop={requestShopItem}
             allTeamsUnlocked={allTeamsUnlocked}
-            onUnlockAllTeams={unlockAllTeams}
+            onUnlockAllTeams={() => requestShopItem("allTeams")}
             currentUser={currentUser}
             onNicknameUpdate={handleNicknameUpdate}
           />
@@ -1166,43 +1290,56 @@ export default function App() {
         ? <DrawerShell><TrophyCabinetScreen menuProps={menuProps} achievements={achievements} nationCupWins={nationCupWins} /></DrawerShell>
         : drawer === "leaderboard"
           ? <DrawerShell><LeaderboardScreen menuProps={menuProps} rows={leaderboardRows} currentCampaignScore={scoringState.campaignPoints} bestCampaignScore={bestCampaignScore} team={team} bestCampaignSummary={bestCampaignSummary} activeCosmetics={activeCosmetics} currentUser={currentUser} /></DrawerShell>
-          : drawer === "share"
+          : drawer === "share" && canAccessShare
             ? <DrawerShell><ShareScreen menuProps={menuProps} team={team} opponent={opponent} score={score} matchResult={matchResult} stageLabel={matchStage} /></DrawerShell>
             : drawer === "fixtures"
             ? <DrawerShell><FixturesScreen fixtureView={fixtureView} onFixtureViewChange={setFixtureView} schedule={schedule} menuProps={menuProps} knockoutFixtures={visibleKnockoutFixtures} userTeam={team} /></DrawerShell>
             : null;
 
+  const shopModalElement = (
+    <ShopModal
+      open={shopOpen}
+      onClose={closeShop}
+      initialItemId={shopInitialItemId}
+      entitlements={storeEntitlements}
+      currentUser={currentUser}
+      onCheckout={startStripeCheckout}
+    />
+  );
+
+  const withShop = (content) => (<>{content}{shopModalElement}</>);
+
   if (["home", "hosts", "teams"].includes(screen)) {
-    if (drawerElement) return withNonMatchFooter(drawerElement);
+    if (drawerElement) return withNonMatchFooter(withShop(drawerElement));
 
     if (screen === "home") {
-      return withNonMatchFooter(<HomeScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} onSelectGroup={selectGroup} onSelectTeam={startTeam} onAuthComplete={handleAuthComplete} authReady={authReady} currentUser={currentUser} onOpenClubhouse={openClubhouse} onResumeCampaign={handleResumeCampaign} hasResumeCampaign={Boolean(firebaseProfile?.currentProgress?.active || firebaseProfile?.savedGames?.current?.active)} />);
+      return withNonMatchFooter(withShop(<HomeScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} onSelectGroup={selectGroup} onSelectTeam={startTeam} onAuthComplete={handleAuthComplete} authReady={authReady} currentUser={currentUser} onOpenClubhouse={openClubhouse} onResumeCampaign={handleResumeCampaign} hasResumeCampaign={Boolean(firebaseProfile?.currentProgress?.active || firebaseProfile?.savedGames?.current?.active)} />));
     }
 
     if (screen === "hosts") {
-      return withNonMatchFooter(<HostSelectScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} currentUser={currentUser} onAuthComplete={handleAuthComplete} onBack={() => setScreen("home")} onSelectGroup={selectGroup} onSelectTeam={startTeam} />);
+      return withNonMatchFooter(withShop(<HostSelectScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} currentUser={currentUser} onAuthComplete={handleAuthComplete} onBack={() => setScreen("home")} onSelectGroup={selectGroup} onSelectTeam={startTeam} />));
     }
 
-    return withNonMatchFooter(<TeamSelectScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} selectedGroup={selectedGroup} onBack={() => setScreen("hosts")} onSelectGroup={setSelectedGroup} onSelectTeam={startTeam} />);
+    return withNonMatchFooter(withShop(<TeamSelectScreen allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} selectedGroup={selectedGroup} onBack={() => setScreen("hosts")} onSelectGroup={setSelectedGroup} onSelectTeam={startTeam} />));
   }
 
   const matchScreen = <MatchScreen team={team} opponent={opponent} score={score} matchResult={matchResult} modalDismissed={modalDismissed} onDismissModal={() => setModalDismissed(true)} onQuickWin={quickWin} onMatchComplete={handleMatchComplete} onNextMatch={nextMatch} onViewBracket={() => { setStandingsView("knockout"); setDrawer("groups"); setModalDismissed(true); }} onPlayAgain={resetTournament} menuProps={menuProps} stageLabel={matchStage} fixture={currentFixture} groupRows={allGroups.find((item) => item.group === selectedGroup)?.rows || []} qualifiedTeams={qualifiedTeams} selectedGroup={selectedGroup} userForm={userForm} podium={podium} activeCosmetics={activeCosmetics} />;
 
   if (screen === "match") {
     if (drawerElement) {
-      return withNonMatchFooter(
+      return withNonMatchFooter(withShop(
         <>
           <div className="fixed inset-0 -z-10 opacity-0 pointer-events-none" aria-hidden>
             {matchScreen}
           </div>
           {drawerElement}
         </>
-      );
+      ));
     }
 
-    return matchScreen;
+    return withShop(matchScreen);
   }
 
-  if (drawerElement) return withNonMatchFooter(drawerElement);
+  if (drawerElement) return withNonMatchFooter(withShop(drawerElement));
   return matchScreen;
 }
