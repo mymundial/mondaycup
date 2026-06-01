@@ -1,169 +1,103 @@
-# Monday Cup Share Screen Archive
+# Monday Cup Share / Poster Generator Notes
 
-This document records the current share/export structure before the Share screen was removed from the live app navigation.
+This file records the share/export structure so the feature can be rebuilt without repeating the previous drift.
 
-The Share screen code has **not** been deleted. It has only been disconnected from the live menu/routing so the main game can be tested without the export layer or share UI interfering with match, modal, footer, bracket, or menu behaviour.
+## Current live status
 
-## Live app status
+The standalone Share screen has been restored as a **focused poster generator only**.
 
-As of this archive pass:
-
-- `SHARE` is removed from the hamburger menu.
-- `App.jsx` no longer imports `ShareScreen`.
-- `App.jsx` no longer opens `drawer === "share"`.
-- The share/export files remain in the project for later reuse.
-
-## Archived share files
-
-### `src/components/share/ShareScreen.jsx`
-
-Main React screen for the share/export feature.
-
-Current responsibilities:
-
-- Renders the `EXPORT` page.
-- Shows selectable export states.
-- Renders the visible preview frame.
-- Mounts a larger export frame only when saving.
-- Provides edit controls for the admin/editor account.
-- Provides simplified public shirt export state.
-- Calls the export utility when the user presses `SAVE AS PHOTO`.
-
-Important constants inside this file:
-
-- `SHARE_DESIGN_SIZE` — base design size used by the internal frame.
-- `SHARE_EXPORT_FRAME_SIZE` — high-resolution export frame size.
-- `SHARE_EDITOR_EMAIL` — currently `alexjashworth@gmail.com`.
-- `EXPORT_STATES` — list of possible share states.
-- `PUBLIC_EXPORT_STATE_IDS` — share states visible to non-editor users.
-
-Known template concepts currently in this file:
-
-- Match result / moment card.
-- Bracket card.
-- Poster / coming soon card.
-- Shirt-style poster.
-
-### `src/utils/shareExport.js`
-
-Export utility used by `ShareScreen.jsx`.
-
-Current responsibilities:
-
-- Converts the share frame into a PNG blob.
-- Preloads images inside the export element.
-- Waits for document fonts where supported.
-- Tries multiple export methods:
-  1. `html2canvas`
-  2. SVG `foreignObject` clone
-  3. `html-to-image`
-- Composes the output to `SHARE_EXPORT_SIZE`.
-- Adds a team-coloured border to the exported canvas.
-- Handles download/share fallbacks:
-  - native mobile file share where supported,
-  - iPhone/Safari preview window fallback,
-  - desktop direct download fallback,
-  - final image-preview fallback.
-
-Important constants inside this file:
-
-- `SHARE_CANVAS_NAME`
-- `SHARE_EXPORT_SIZE`
-- `SHARE_TEAM_BORDER_COLORS`
-- `SHARE_TEAM_EXPORT_STYLES`
-
-## Why the Share screen was removed from live navigation
-
-The share feature is strategically important, but it grew into a design/export subsystem inside the app. It was creating risk around:
-
-- hidden export layers interfering with live app screens,
-- preview/output drift,
-- mobile Safari image-save limitations,
-- large editable state inside one component,
-- style/layout patches affecting unrelated match and modal screens.
-
-Removing it from live navigation keeps the main tournament game stable while preserving the working image-save code for a cleaner rebuild.
-
-## How to re-enable later
-
-To restore the Share screen later:
-
-1. Re-import the screen in `src/App.jsx`:
-
-```js
-import { ShareScreen } from "./components/share/ShareScreen.jsx";
-```
-
-2. Restore an open handler in `App.jsx`:
-
-```js
-const openShare = () => { closeMenu(); setDrawer("share"); };
-```
-
-3. Add it back to `menuProps`:
-
-```js
-onShare: openShare
-```
-
-4. Restore the drawer route in `App.jsx`:
-
-```jsx
-drawer === "share"
-  ? <DrawerShell><ShareScreen menuProps={menuProps} team={team} opponent={opponent} score={score} matchResult={matchResult} stageLabel={matchStage} /></DrawerShell>
-  : null
-```
-
-5. Restore the `SHARE` tile in `src/components/layout/Menu.jsx`.
-
-## Recommended rebuild direction
-
-When rebuilding the feature, split it into smaller files rather than extending the current single large screen:
+The live menu now includes `SHARE`, which opens:
 
 ```text
-src/components/share/
-  ShareScreen.jsx
-  templates/
-    MatchResultShare.jsx
-    ShirtPosterShare.jsx
-    ComingSoonPosterShare.jsx
-    BracketShare.jsx
-  controls/
-    ShirtPosterControls.jsx
-    MatchAdminControls.jsx
-  export/
-    exportDomFrame.js
+src/components/share/ShareScreen.jsx
 ```
 
-Recommended product order:
+This rebuilt version does **not** restore the old multi-state share suite. It is intentionally limited to a pitch-style poster generator.
+
+## Current poster generator scope
+
+The current screen provides:
+
+- A square pitch-mow poster frame.
+- Monday Cup logo.
+- Brothers! logo.
+- Up to five editable text lines.
+- Font selection per line.
+- Colour selection per line.
+- Text glow toggle per line.
+- X/Y positioning per line.
+- Size scaling per line.
+- X/Y/scale controls for Monday Cup logo.
+- X/Y/scale controls for Brothers! logo.
+- Border colour control.
+- Preview size controls.
+- `SAVE AS PHOTO` export.
+
+The visual principle is unchanged from the archive decision:
+
+> Preview and output must use the same React/CSS layout source.
+
+The screen captures the visible poster frame rather than maintaining a second permanently mounted hidden export layer.
+
+## Export utility
+
+The screen still uses:
+
+```text
+src/utils/shareExport.js
+```
+
+This utility remains shared with the existing end-of-match modal export path.
+
+Important exports:
+
+- `captureShareElementBlob`
+- `reserveShareWindow`
+- `shareOrDownloadResult`
+
+The export utility has one additive compatibility update: it can accept an object with `shareBorderColor` so the poster border colour can match the preview. Existing team-name usage from end-of-match sharing is preserved.
+
+## Files involved in current poster generator
+
+```text
+src/App.jsx
+src/components/layout/Menu.jsx
+src/components/layout/ScreenTopBar.jsx
+src/components/share/ShareScreen.jsx
+src/utils/shareExport.js
+```
+
+## Previous archived share concepts not restored yet
+
+The following older concepts remain deliberately out of scope:
+
+- Match result card.
+- Bracket card.
+- Shirt-style poster.
+- Admin design suite.
+- Hidden 800x800 always-mounted export layer.
+
+Recommended future rebuild order remains:
 
 1. Public shirt poster.
 2. Match result card after completed matches.
-3. Coming soon / promo poster.
+3. Promo poster variants.
 4. Bracket card.
 
-## Notes for future export work
+## iPhone / mobile note
 
-The last known working direction was to use React/CSS as the visual source of truth and export a dedicated frame, rather than manually redrawing the poster on a canvas.
+A web app usually cannot silently save directly into Photos. The practical mobile path is:
 
-The key principle should be:
+```text
+SAVE AS PHOTO → create PNG → native share sheet or image preview → user saves image
+```
 
-> Preview and output must be the same component/layout source.
 
-Avoid rebuilding every visual manually on canvas unless the exact design can be replicated reliably.
+## Poster / shirt generator rebuild note
 
-For iPhone users, a web app generally cannot silently save directly into Photos. The practical fallback is to open/share the generated PNG so the user can save it from the native share sheet or image preview.
+The current focused rebuild restores the `EXPORT` page as two adjacent templates:
 
-## Current remaining live share/export use
+1. `POSTER` — pitch-mow square poster with Monday Cup logo, Brothers! logo, editable text lines, text colours, fonts, shadow controls, optional border, manual X/Y/scale controls, and an auto-align button for a balanced starting layout.
+2. `SHIRT PRINT` — back-of-shirt style social image with team-driven background/print colours, fixed centred Monday Cup logo, prominent name/number, and smaller Brothers! logo at the bottom.
 
-The standalone Share screen has been removed from navigation, but the app still uses `src/utils/shareExport.js` from the end-of-match modal.
-
-Current live use:
-
-- `src/components/match/EndMatchModal.jsx` imports:
-  - `captureShareElementBlob`
-  - `SHARE_CANVAS_NAME`
-  - `shareOrDownloadResult`
-- This is the result-sharing path that can currently save a picture.
-
-Do not delete `src/utils/shareExport.js` unless the end-of-match modal share/export button is also removed or replaced.
+This keeps the archived rule that preview and output should use the same React/CSS frame source rather than separate manual canvas drawing.
