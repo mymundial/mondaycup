@@ -329,16 +329,14 @@ function ControlOverlay({
     <section className="pointer-events-none absolute bottom-[max(42px,calc(env(safe-area-inset-bottom)+30px))] left-[4%] right-[4%] z-30 h-[min(28%,176px)]">
       {canChoose && (
         <div className="pointer-events-auto absolute inset-x-[4%] bottom-0 top-0 flex flex-col">
-          <div className={titleClass}>SHOT DIRECTION</div>
-          <div className="h-[4%]" />
-          <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-3 gap-[clamp(5px,1.2vw,10px)]">
+          <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-3 gap-[clamp(7px,1.55vw,13px)]">
             {DIRECTIONS.map((direction) => (
               <button key={direction.id} onClick={() => setSelected(direction)} className={`flex min-h-0 items-center justify-center overflow-hidden rounded-[clamp(14px,2.2vh,28px)] border home-copy-bold text-[clamp(16px,2.15vh,26px)] font-black leading-none shadow-lg ring-1 transition-all ${selected.id === direction.id ? "border-[#F5F1E8]/55 bg-[#F7D117] text-[#0b2d1d] ring-[#F7D117]/35 shadow-[0_0_12px_rgba(247,209,23,0.20),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.18)]" : "border-[#F5F1E8]/22 bg-[#0b2d1d] text-[#f5f1e8] ring-[#0B5F35]/50 shadow-[0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(245,241,232,0.08)]"}`}>
                 <span className="flex h-full w-full max-h-full max-w-full items-center justify-center leading-none">{direction.arrow}</span>
               </button>
             ))}
           </div>
-          <div className="h-[4%]" />
+          <div className="h-[5%]" />
           <ConfirmButton onClick={handleConfirmDirection}>CONFIRM DIRECTION</ConfirmButton>
         </div>
       )}

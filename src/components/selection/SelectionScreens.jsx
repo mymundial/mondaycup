@@ -348,11 +348,16 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {} }) {
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
         <div className="relative z-[1] flex h-full items-center justify-center">
           <div className="flex h-[66%] w-full items-center justify-center px-[3.5%] py-0">
-            <div className="grid h-full w-full grid-cols-1 grid-rows-[56%_44%] items-center">
-              <div className="row-start-1 flex h-full min-w-0 items-center justify-center px-[2%] py-0">
+            <div className="grid h-full w-full grid-cols-1 grid-rows-[27%_46%_27%] items-center">
+              <div className="row-start-1 flex h-full items-center justify-center py-0">
+                <div className="led-text-glow font-led inline-flex max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(10px,3vw,18px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+                  <span className="flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center leading-none">WELCOME TO</span>
+                </div>
+              </div>
+              <div className="row-start-2 flex h-full min-w-0 items-center justify-center px-[2%] py-0">
                 <div className="led-text-glow font-led flex h-full w-full items-center justify-center whitespace-nowrap text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">MONDAY CUP</div>
               </div>
-              <div className="row-start-2 flex h-full items-center justify-center py-0">
+              <div className="row-start-3 flex h-full items-center justify-center py-0">
                 <div className="led-text-glow font-led inline-flex max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(10px,3vw,18px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
                   <span className="flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center leading-none">GLOBAL SHOOTOUT TOURNAMENT</span>
                 </div>
@@ -551,8 +556,8 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
         }
       }
 
-      await onAuthComplete?.(credential.user, { navigate: false });
-      onSignedIn?.(credential.user);
+      await onAuthComplete?.(credential.user, { navigate: false, source: "home-signup" });
+      onSignedIn?.(credential.user, { isSignup: true });
     } catch (error) {
       setAuthError(authErrorMessage(error));
     } finally {
@@ -565,8 +570,8 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
       setAuthLoading(true);
       resetMessages();
       const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      await onAuthComplete?.(credential.user, { navigate: false });
-      onSignedIn?.(credential.user);
+      await onAuthComplete?.(credential.user, { navigate: false, source: "home-signin" });
+      onSignedIn?.(credential.user, { isSignup: false });
       setAuthSuccess("Signed in welcome back");
     } catch (error) {
       setAuthError(authErrorMessage(error));
@@ -662,12 +667,13 @@ function LandingPanel({ onPlayGuest, currentUser, onOpenClubhouse, onAuthComplet
   const [authMode, setAuthMode] = useState(null);
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
   if (showWelcomeBack) {
-    return <WelcomeBackPanel onResume={onResumeCampaign} onNewCampaign={onPlayGuest} hasResumeCampaign={hasResumeCampaign} onMondayClub={() => setAuthMode("signin")} />;
+    return <WelcomeBackPanel onResume={onResumeCampaign} onNewCampaign={onPlayGuest} hasResumeCampaign={hasResumeCampaign} onMondayClub={() => { if (currentUser?.uid) onOpenClubhouse?.(); else setAuthMode("signin"); }} />;
   }
-  if (authMode) return <AuthPanel mode={authMode} setMode={setAuthMode} onBack={() => setAuthMode(null)} onAuthComplete={onAuthComplete} onSignedIn={() => { setAuthMode(null); setShowWelcomeBack(true); }} />;
+  if (authMode) return <AuthPanel mode={authMode} setMode={setAuthMode} onBack={() => setAuthMode(null)} onAuthComplete={onAuthComplete} onSignedIn={(user, meta) => { setAuthMode(null); if (meta?.isSignup) onPlayGuest?.(); else onOpenClubhouse?.(); }} />;
 
   const handleMondayClub = () => {
-    setAuthMode("signin");
+    if (currentUser?.uid) onOpenClubhouse?.();
+    else setAuthMode("signin");
   };
 
   return <div className="space-y-3">

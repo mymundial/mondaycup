@@ -261,7 +261,7 @@ export default function ShopModal({ open = false, onClose, initialItemId = null,
             <div className="grid h-11 w-11 place-items-center justify-self-start">
               <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="h-10 w-10 object-contain drop-shadow-[0_5px_8px_rgba(0,0,0,0.3)]" draggable={false} />
             </div>
-            <div className="home-copy-bold self-center text-center text-[25px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">MONDAY SHOP</div>
+            <div className="home-copy-bold self-center text-center text-[25px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">CLUB STORE</div>
             <button type="button" onClick={onClose} className="grid h-11 w-11 place-items-center justify-self-end rounded-[0.9rem] bg-[#031B12]/46 text-[#F5F1E8]" aria-label="Close shop"><CloseIcon /></button>
           </div>
 

@@ -27,13 +27,13 @@ const MENU_TOP_OFFSET_PX = MC_SIZES.topBarHeight + 30;
 const MENU_SAFE_HEIGHT_OFFSET_PX = MC_SIZES.topBarHeight + 50;
 
 const MENU_FRAME =
-  "w-[calc(100vw_-_16px)] max-w-[468px] overflow-hidden rounded-[1.65rem]";
+  "w-[calc(100vw_-_24px)] max-w-[430px] overflow-hidden rounded-[1.7rem]";
 
 const MENU_HEADER =
-  "relative mb-4 grid h-14 grid-cols-[44px_1fr_44px] items-center gap-2 px-0";
+  "relative mb-3 grid h-12 grid-cols-[44px_1fr_44px] items-center gap-2 px-0";
 
 const MENU_TITLE_CLASS =
-  "home-copy-bold text-[clamp(24px,5.7vw,30px)] uppercase leading-none text-[#F5F1E8]";
+  "home-copy-bold text-[clamp(24px,5.7vw,30px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]";
 
 const inputClass =
   "home-copy-regular h-9 w-full rounded-[0.85rem] border border-[#F5F0E6]/18 bg-[#F5F0E6]/94 py-0 pl-11 pr-4 text-[15px] uppercase tracking-[0.055em] text-[#0B5F35] outline-none placeholder:text-[#0B5F35]/34 focus:border-[#F7D117]";
@@ -126,7 +126,7 @@ function MenuTile({ title, onClick, variant = "primary" }) {
     <button
       type="button"
       onClick={onClick}
-      className={`flex min-h-[48px] items-center justify-center rounded-[0.95rem] border px-2 py-2 text-center shadow-[0_9px_18px_rgba(0,0,0,0.14)] transition-transform active:scale-[0.98] ${classes[variant]}`}
+      className={`flex min-h-[48px] items-center justify-center rounded-[1rem] border px-2 py-2 text-center shadow-[0_9px_18px_rgba(0,0,0,0.14)] transition-transform active:scale-[0.98] ${classes[variant]}`}
     >
       <span className="home-copy-bold text-[clamp(10px,2.55vw,13px)] font-black uppercase leading-none tracking-[0.06em]">
         {title}
@@ -541,7 +541,7 @@ export function MenuDropdown({
 
   const menu = (
     <div
-      className="fixed inset-0 isolate flex items-start justify-center overflow-y-auto bg-[#031B12]/36 px-2 pb-[max(14px,env(safe-area-inset-bottom))] backdrop-blur-[2px]"
+      className="fixed inset-0 isolate flex items-start justify-center overflow-y-auto bg-[#031B12]/54 px-3 pb-[max(14px,env(safe-area-inset-bottom))] backdrop-blur-[3px]"
       style={{
         zIndex: 2147483647,
         paddingTop: `calc(${MENU_TOP_OFFSET_PX}px + env(safe-area-inset-top))`,
@@ -550,14 +550,17 @@ export function MenuDropdown({
       <button aria-label="Close menu" onClick={onClose} className="absolute inset-0 z-[0]" type="button" />
 
       <aside
-        className={`pointer-events-auto relative z-[1] ${MENU_FRAME} border border-[#F5F1E8]/14 text-[#F5F1E8] shadow-[0_24px_54px_rgba(0,0,0,0.32),inset_0_-2px_6px_rgba(0,0,0,0.06)]`}
-        style={{ backgroundColor: `${MC_COLORS.greenPanelSolid}e0` }}
+        className={`pointer-events-auto relative z-[1] ${MENU_FRAME} border border-[#F5F1E8]/14 text-[#F5F1E8] shadow-[0_24px_54px_rgba(0,0,0,0.35)]`}
+        style={{
+          backgroundColor: "#0B5F35",
+          backgroundImage: "linear-gradient(90deg, rgba(255,255,255,0.045) 0 12.5%, rgba(0,0,0,0.075) 12.5% 25%, rgba(255,255,255,0.035) 25% 37.5%, rgba(0,0,0,0.055) 37.5% 50%, rgba(255,255,255,0.04) 50% 62.5%, rgba(0,0,0,0.06) 62.5% 75%, rgba(255,255,255,0.03) 75% 87.5%, rgba(0,0,0,0.075) 87.5% 100%)",
+          backgroundSize: "100% 100%",
+        }}
       >
-        <div className="pointer-events-none absolute inset-0 rounded-[1.65rem] shadow-[inset_0_6px_14px_rgba(255,255,255,0.025)]" aria-hidden="true" />
-        <div className="pointer-events-none absolute inset-0 rounded-[1.65rem] bg-[radial-gradient(circle_at_20%_6%,rgba(245,241,232,0.08),transparent_20%),radial-gradient(circle_at_80%_8%,rgba(255,214,0,0.05),transparent_18%),linear-gradient(180deg,rgba(4,22,14,0.18),rgba(4,22,14,0.04))]" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 rounded-[1.7rem] bg-[radial-gradient(circle_at_18%_8%,rgba(247,209,23,0.10),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.035),rgba(0,0,0,0.09))]" aria-hidden="true" />
 
         <div
-          className="relative overflow-y-auto p-3 sm:p-4"
+          className="relative overflow-y-auto p-4"
           style={{ maxHeight: `calc(100dvh - ${MENU_SAFE_HEIGHT_OFFSET_PX}px)` }}
         >
           {authActive ? (

@@ -45,6 +45,9 @@ runSelfTests();
 const ACHIEVEMENTS_KEY = "mondayCup.achievements";
 const NATION_CUP_WINS_KEY = "mondayCup.nationCupWins";
 const ALL_TIME_MATCHES_PLAYED_KEY = "mondayCup.allTimeMatchesPlayed";
+const ALL_TIME_MATCHES_WON_KEY = "mondayCup.allTimeMatchesWon";
+const ALL_TIME_MATCHES_DRAWN_KEY = "mondayCup.allTimeMatchesDrawn";
+const ALL_TIME_MATCHES_LOST_KEY = "mondayCup.allTimeMatchesLost";
 const HOST_TEAMS = new Set(["Mexico", "Canada", "United States"]);
 const PODIUM_ACHIEVEMENT_KEYS = ["thirdPlaceFinish", "runnerUpFinish", "championFinish"];
 const EMPTY_ACTIVE_COSMETICS = {
@@ -172,6 +175,9 @@ export default function App() {
   const [allTimeGoals, setAllTimeGoals] = useState(() => safeReadNumber(ALL_TIME_GOALS_KEY, 0));
   const [allTimeShots, setAllTimeShots] = useState(() => safeReadNumber(ALL_TIME_SHOTS_KEY, 0));
   const [allTimeMatchesPlayed, setAllTimeMatchesPlayed] = useState(() => safeReadNumber(ALL_TIME_MATCHES_PLAYED_KEY, 0));
+  const [allTimeMatchesWon, setAllTimeMatchesWon] = useState(() => safeReadNumber(ALL_TIME_MATCHES_WON_KEY, 0));
+  const [allTimeMatchesDrawn, setAllTimeMatchesDrawn] = useState(() => safeReadNumber(ALL_TIME_MATCHES_DRAWN_KEY, 0));
+  const [allTimeMatchesLost, setAllTimeMatchesLost] = useState(() => safeReadNumber(ALL_TIME_MATCHES_LOST_KEY, 0));
   const [achievements, setAchievements] = useState(() => safeReadJson(ACHIEVEMENTS_KEY, {}));
   const [nationCupWins, setNationCupWins] = useState(() => safeReadJson(NATION_CUP_WINS_KEY, {}));
   const [activeCosmetics, setActiveCosmetics] = useState(() => normaliseActiveCosmeticsForEntitlements(safeReadJson(COSMETICS_KEY, EMPTY_ACTIVE_COSMETICS), {}));
@@ -233,7 +239,10 @@ export default function App() {
             setMondayCupsWon(Number(profile.stats.mondayCupsWon || 0));
             setAllTimeGoals(Number(profile.stats.totalGoalsScored || 0));
             setAllTimeShots(Number(profile.stats.totalShotsTaken || profile.stats.totalShots || 0));
-            setAllTimeMatchesPlayed(Number(profile.stats.matchesPlayed || profile.stats.totalMatchesPlayed || 0));
+            setAllTimeMatchesPlayed(Number(profile.stats.matchesPlayed || profile.stats.totalMatchesPlayed || profile.stats.totalMatchesCompleted || 0));
+            setAllTimeMatchesWon(Number(profile.stats.matchesWon || profile.stats.totalMatchesWon || 0));
+            setAllTimeMatchesDrawn(Number(profile.stats.matchesDrawn || profile.stats.totalMatchesDrawn || 0));
+            setAllTimeMatchesLost(Number(profile.stats.matchesLost || profile.stats.totalMatchesLost || 0));
           }
           if (profile?.achievements) {
             setAchievements(profile.achievements || {});
@@ -331,6 +340,12 @@ export default function App() {
       setPendingShopItemId(null);
       setShopInitialItemId(itemId);
       setShopOpen(true);
+      setDrawer("clubhouse");
+      setMenuOpen(false);
+      return;
+    }
+
+    if (nextUser && options?.source === "menu-auth") {
       setDrawer("clubhouse");
       setMenuOpen(false);
       return;
@@ -594,6 +609,12 @@ export default function App() {
         mondayCupsWon: Number(mondayCupsWon || 0),
         matchesPlayed: Number(allTimeMatchesPlayed || 0),
         totalMatchesPlayed: Number(allTimeMatchesPlayed || 0),
+        matchesWon: Number(allTimeMatchesWon || 0),
+        totalMatchesWon: Number(allTimeMatchesWon || 0),
+        matchesDrawn: Number(allTimeMatchesDrawn || 0),
+        totalMatchesDrawn: Number(allTimeMatchesDrawn || 0),
+        matchesLost: Number(allTimeMatchesLost || 0),
+        totalMatchesLost: Number(allTimeMatchesLost || 0),
         totalGoalsScored: goals,
         totalShotsTaken: attempts,
         conversionPercentage,
@@ -683,6 +704,26 @@ export default function App() {
       safeWriteNumber(ALL_TIME_MATCHES_PLAYED_KEY, next);
       return next;
     });
+
+    if (resultCode === "W") {
+      setAllTimeMatchesWon((value) => {
+        const next = Number(value || 0) + 1;
+        safeWriteNumber(ALL_TIME_MATCHES_WON_KEY, next);
+        return next;
+      });
+    } else if (resultCode === "D") {
+      setAllTimeMatchesDrawn((value) => {
+        const next = Number(value || 0) + 1;
+        safeWriteNumber(ALL_TIME_MATCHES_DRAWN_KEY, next);
+        return next;
+      });
+    } else if (resultCode === "L") {
+      setAllTimeMatchesLost((value) => {
+        const next = Number(value || 0) + 1;
+        safeWriteNumber(ALL_TIME_MATCHES_LOST_KEY, next);
+        return next;
+      });
+    }
 
     awardTrophiesForResult({
       baseResult,
@@ -1225,6 +1266,12 @@ export default function App() {
     setMondayCupsWon(0);
     setAllTimeGoals(0);
     setAllTimeShots(0);
+    setAllTimeMatchesWon(0);
+    setAllTimeMatchesDrawn(0);
+    setAllTimeMatchesLost(0);
+    safeWriteNumber(ALL_TIME_MATCHES_WON_KEY, 0);
+    safeWriteNumber(ALL_TIME_MATCHES_DRAWN_KEY, 0);
+    safeWriteNumber(ALL_TIME_MATCHES_LOST_KEY, 0);
     setActiveCosmetics(EMPTY_ACTIVE_COSMETICS);
 
     try {
@@ -1273,6 +1320,9 @@ export default function App() {
             leaderboardRank={myLeaderboardRank}
             mondayCupsWon={mondayCupsWon}
             allTimeMatchesPlayed={allTimeMatchesPlayed}
+            allTimeMatchesWon={allTimeMatchesWon}
+            allTimeMatchesDrawn={allTimeMatchesDrawn}
+            allTimeMatchesLost={allTimeMatchesLost}
             allTimeGoals={allTimeGoals}
             allTimeShots={allTimeShots}
             activeCosmetics={activeCosmetics}

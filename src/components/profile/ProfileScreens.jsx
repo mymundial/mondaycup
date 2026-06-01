@@ -63,12 +63,14 @@ function RankStatTile({ value }) {
   return (
     <div className={`flex min-h-[58px] flex-col items-center justify-center rounded-[1.25rem] border p-2 text-center shadow-[0_10px_22px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.22)] ${medalClass}`}>
       <div className="home-copy-bold text-[18px] uppercase leading-none">{value || "#--"}</div>
-      <div className="home-copy-regular mt-1 text-[6.5px] uppercase leading-tight tracking-[0.10em] text-[#0B5F35]">Leaderboard rank</div>
+      <div className="home-copy-regular mt-1 text-[6.5px] uppercase leading-tight tracking-[0.10em] text-[#0B5F35]">Ranking</div>
     </div>
   );
 }
 
-function conversionToneClass(value) {
+function conversionToneClass(value, shots = 0) {
+  const attempts = Number(shots || 0);
+  if (attempts <= 0) return null;
   const conversion = Number(value || 0);
   if (conversion >= 51) return "border-green-500/80 bg-green-500 text-[#072D1D] ring-1 ring-green-400/32";
   if (conversion === 50) return "border-[#F7D117]/85 bg-[#F7D117] text-[#072D1D] ring-1 ring-[#F7D117]/32";
@@ -374,6 +376,9 @@ export function ClubhouseScreen({
   mondayCupsWon,
   matchesPlayed = 0,
   allTimeMatchesPlayed = 0,
+  allTimeMatchesWon = 0,
+  allTimeMatchesDrawn = 0,
+  allTimeMatchesLost = 0,
   allTimeGoals,
   allTimeShots,
   activeCosmetics,
@@ -389,6 +394,8 @@ export function ClubhouseScreen({
   const isGuest = !currentUser?.uid;
   const displayName = currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST USER";
   const conversion = conversionPercent(allTimeGoals, allTimeShots);
+  const shotsTakenTotal = Number(allTimeShots || 0);
+  const conversionDisplay = shotsTakenTotal > 0 ? `${conversion}%` : "--";
   const matchesPlayedTotal = Number(allTimeMatchesPlayed || matchesPlayed || 0);
   const currentSummary = {
     team: team || "NO TEAM",
@@ -413,12 +420,15 @@ export function ClubhouseScreen({
         <MenuPanel title={displayName} style={CLUBHOUSE_PANEL_STYLE}>
           <NicknameEditor displayName={displayName} onNicknameUpdate={onNicknameUpdate} isGuest={isGuest} onRegister={() => setRegisterAuthOpen(true)} />
           <div className="space-y-3 p-4 pt-2">
-            <div className="grid grid-cols-5 gap-2">
-              <StatTile label="Matches played" value={matchesPlayedTotal || 0} />
-              <StatTile label="Total goals" value={allTimeGoals || 0} />
-              <StatTile label="Conversion" value={`${conversion}%`} toneClass={conversionToneClass(conversion)} />
-              <CupsWonStatTile value={mondayCupsWon || 0} />
+            <div className="grid grid-cols-4 gap-2">
               <RankStatTile value={leaderboardRank || "#--"} />
+              <StatTile label="Matches played" value={matchesPlayedTotal || 0} />
+              <StatTile label="Matches won" value={allTimeMatchesWon || 0} />
+              <StatTile label="Matches drawn" value={allTimeMatchesDrawn || 0} />
+              <StatTile label="Matches lost" value={allTimeMatchesLost || 0} />
+              <StatTile label="Goals scored" value={allTimeGoals || 0} />
+              <StatTile label="Conversion rate" value={conversionDisplay} toneClass={conversionToneClass(conversion, shotsTakenTotal)} />
+              <CupsWonStatTile value={mondayCupsWon || 0} />
             </div>
 
             <div className="grid grid-cols-4 gap-2">
