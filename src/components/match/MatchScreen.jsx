@@ -4,6 +4,7 @@ import { Shell } from "../layout/Layout.jsx";
 import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
 import FootballGame from "./FootballGame.jsx";
 import EndMatchModal from "./EndMatchModal.jsx";
+import { getResultBadge, ResultBadgeShareOverlay } from "./ResultBadge.jsx";
 import {
   createFallbackFixture,
   modalButton,
@@ -19,7 +20,7 @@ import {
 
 function getDisplayUsername() {
   const currentUser = auth.currentUser;
-  return currentUser?.displayName || currentUser?.email?.split("@")[0] || "";
+  return currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST";
 }
 
 
@@ -56,6 +57,8 @@ export function MatchScreen({
   const completedResult = toCompletedGameResult(matchResult, fallbackFixture);
   const activeBadgeMode = getPodiumBadgeMode({ result: matchResult, fixture, stageLabel, podium, team });
   const showChampionsBadge = activeBadgeMode === PODIUM_BADGE_MODE.CHAMPION;
+  const resultBadge = getResultBadge({ result: matchResult, fixture: fallbackFixture, stageLabel });
+  const showSharedResultBadge = Boolean(matchResult && !activeBadgeMode && resultBadge);
 
   return (
     <Shell>
@@ -65,11 +68,6 @@ export function MatchScreen({
         </ScreenTopBar>
 
         <div ref={shareCaptureRef} className="relative min-h-0 flex-1 overflow-hidden bg-[#0d6c3d]">
-          {isTerminalResult && username && (
-            <div className="pointer-events-none absolute left-1/2 top-[11.8%] z-[25] -translate-x-1/2 text-center font-led text-[clamp(9px,1.35vh,16px)] font-black uppercase tracking-[0.14em] text-[#F7D117] led-text-glow">
-              {username}
-            </div>
-          )}
           <FootballGame
             userTeam={userTeam}
             opponentTeam={opponentTeam}
@@ -84,7 +82,9 @@ export function MatchScreen({
             showChampionsBadge={showChampionsBadge}
             podiumBadgeMode={activeBadgeMode}
             activeCosmetics={activeCosmetics}
+            username={username}
           />
+          {showSharedResultBadge && <ResultBadgeShareOverlay badge={resultBadge} />}
         </div>
 
         {matchResult && !modalDismissed && (
@@ -93,6 +93,10 @@ export function MatchScreen({
             fixture={fallbackFixture}
             onNext={onNextMatch}
             onDismiss={onDismissModal}
+            onOpenMenu={() => {
+              onDismissModal?.();
+              menuProps?.onToggleMenu?.();
+            }}
             onViewBracket={onViewBracket}
             onPlayAgain={onPlayAgain}
             groupRows={groupRows}
@@ -103,6 +107,7 @@ export function MatchScreen({
             userForm={userForm}
             shareCaptureRef={shareCaptureRef}
             podium={podium}
+            username={username}
           />
         )}
 

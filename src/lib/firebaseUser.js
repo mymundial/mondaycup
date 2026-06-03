@@ -136,6 +136,51 @@ const normaliseAchievements = (source = {}, legacy = {}) => ({
 
 const normaliseNationCupWins = (source = {}) => (source && typeof source === "object" ? { ...source } : {});
 
+const DEFAULT_USER_SHIRT = {
+  team: "",
+  name: "",
+  number: "11",
+  bg: "#073B26",
+  textColour: "#F5F1E8",
+  numberColour: "#F5F1E8",
+  composition: {
+    mondayScale: 1.18,
+    mondayX: 0,
+    mondayY: -3,
+    nameScale: 1.08,
+    nameX: 0,
+    nameY: -2,
+    numberScale: 1.18,
+    numberX: 0,
+    numberY: 0,
+    brothersScale: 1,
+    brothersX: 0,
+    brothersY: 0,
+  },
+};
+
+const cleanShirtName = (value, fallback = "") => String(value || fallback).replace(/[^a-z0-9 ]/gi, "").trim().toUpperCase().slice(0, 14);
+const cleanShirtNumber = (value, fallback = "11") => String(value ?? fallback).replace(/[^0-9]/g, "").slice(0, 2) || fallback;
+
+const normaliseUserShirt = (source = {}, username = "") => {
+  const shirt = source && typeof source === "object" ? source : {};
+  const name = cleanShirtName(shirt.name, username || "MONDAY");
+  return {
+    ...DEFAULT_USER_SHIRT,
+    ...shirt,
+    team: String(shirt.team || ""),
+    name,
+    number: cleanShirtNumber(shirt.number, "11"),
+    bg: shirt.bg || DEFAULT_USER_SHIRT.bg,
+    textColour: shirt.textColour || DEFAULT_USER_SHIRT.textColour,
+    numberColour: shirt.numberColour || shirt.textColour || DEFAULT_USER_SHIRT.numberColour,
+    composition: {
+      ...DEFAULT_USER_SHIRT.composition,
+      ...(shirt.composition || {}),
+    },
+  };
+};
+
 export const createDefaultAchievements = () => normaliseAchievements();
 
 const cleanUsername = (value, fallback = "Player") =>
@@ -264,7 +309,7 @@ const normaliseCareerStats = (stats = {}, legacy = {}) => {
   };
 };
 
-const buildCompatibilityAliases = ({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables }) => ({
+const buildCompatibilityAliases = ({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables, userShirt }) => ({
   // Backwards compatibility for existing App.jsx/ProfileScreens.jsx readers during migration.
   currentProgress: null,
   currentCampaign: {
@@ -298,6 +343,9 @@ const buildCompatibilityAliases = ({ currentCampaign, bestCampaign, careerStats,
   unlocks: {
     allTeams: Boolean(upgradesPurchased.allTeams),
   },
+  userShirt,
+  shirt: userShirt,
+  shareShirt: userShirt,
   cosmeticsActive: {
     ...cosmeticsEquipped,
     goldenTicketQuantity: Number(consumables?.goldenTicket?.quantity || 0),
@@ -320,6 +368,7 @@ export const createDefaultUserProfile = (user, username = "Player", extra = {}) 
   const currentCampaign = normaliseCurrentCampaign(extra.currentCampaign, extra.currentProgress);
   const bestCampaign = normaliseBestCampaign(extra.bestCampaign);
   const careerStats = normaliseCareerStats(extra.careerStats, extra.stats);
+  const userShirt = normaliseUserShirt(extra.userShirt || extra.shirt || extra.shareShirt, clean);
 
   return {
     uid: user.uid,
@@ -329,6 +378,11 @@ export const createDefaultUserProfile = (user, username = "Player", extra = {}) 
     nickname: clean,
     nicknameLower: clean.toLowerCase(),
     emailOptIn: Boolean(extra.emailOptIn ?? false),
+    accountStatus: {
+      emailVerified: Boolean(extra.accountStatus?.emailVerified ?? user.emailVerified ?? false),
+      verificationRequired: Boolean(extra.accountStatus?.verificationRequired ?? !(extra.accountStatus?.emailVerified ?? user.emailVerified ?? false)),
+      verifiedAt: extra.accountStatus?.emailVerified ? serverTimestamp() : null,
+    },
 
     upgradesPurchased,
     cosmeticsEquipped,
@@ -339,8 +393,9 @@ export const createDefaultUserProfile = (user, username = "Player", extra = {}) 
     careerStats,
     achievements: normaliseAchievements(extra.achievements, extra.trophies),
     nationCupWins: normaliseNationCupWins(extra.nationCupWins),
+    userShirt,
 
-    ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables }),
+    ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables, userShirt }),
 
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -354,6 +409,8 @@ const normaliseProfileUpdate = (data = {}) => {
   const currentCampaign = normaliseCurrentCampaign(data.currentCampaign, data.currentProgress);
   const bestCampaign = normaliseBestCampaign(data.bestCampaign);
   const careerStats = normaliseCareerStats(data.careerStats, data.stats);
+  const shirtUsername = cleanUsername(data.username || data.nickname || data.userShirt?.name || data.shirt?.name || "Player");
+  const userShirt = data.userShirt || data.shirt || data.shareShirt ? normaliseUserShirt(data.userShirt || data.shirt || data.shareShirt, shirtUsername) : undefined;
 
   const update = {
     ...data,
@@ -366,7 +423,8 @@ const normaliseProfileUpdate = (data = {}) => {
     careerStats,
     achievements: data.achievements || data.trophies ? normaliseAchievements(data.achievements, data.trophies) : undefined,
     nationCupWins: data.nationCupWins ? normaliseNationCupWins(data.nationCupWins) : undefined,
-    ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables }),
+    userShirt,
+    ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables, userShirt }),
     updatedAt: serverTimestamp(),
   };
 
@@ -424,6 +482,7 @@ export async function loadUserProfile(uid) {
   const upgradesPurchased = normaliseUpgradeMap(data.upgradesPurchased, {}, data.unlocks);
   const cosmeticsEquipped = normaliseCosmeticsActive(data.cosmeticsActive || data.cosmeticsEquipped, {}, consumables, upgradesPurchased);
   const careerStats = normaliseCareerStats(data.careerStats, data.stats);
+  const userShirt = normaliseUserShirt(data.userShirt || data.shirt || data.shareShirt, data.username || data.nickname || data.displayName || "");
 
   return {
     ...data,
@@ -435,7 +494,8 @@ export async function loadUserProfile(uid) {
     careerStats,
     achievements: normaliseAchievements(data.achievements, data.trophies),
     nationCupWins: normaliseNationCupWins(data.nationCupWins),
-    ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables }),
+    userShirt,
+    ...buildCompatibilityAliases({ currentCampaign, bestCampaign, careerStats, upgradesPurchased, cosmeticsEquipped, consumables, userShirt }),
     currentProgress: data.currentProgress || null,
   };
 }
@@ -443,6 +503,17 @@ export async function loadUserProfile(uid) {
 export async function saveUserProfile(uid, data = {}) {
   if (!uid || !db) return;
   await setDoc(doc(db, "users", uid), normaliseProfileUpdate(data), { merge: true });
+}
+
+export async function saveUserShirtProfile(uid, shirt = {}) {
+  if (!uid || !db) return;
+  const userShirt = normaliseUserShirt(shirt, shirt.name || "MONDAY");
+  await setDoc(doc(db, "users", uid), {
+    userShirt,
+    shirt: userShirt,
+    shareShirt: userShirt,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
 }
 
 export async function unlockTrophy(uid, trophyKey) {
@@ -570,18 +641,51 @@ export async function loadCurrentProgress(uid) {
 export async function saveLeaderboardHighScore(uid, entry = {}) {
   if (!uid || !db) return;
 
-  const cosmeticsApplied = normaliseCosmeticsApplied(entry.cosmeticsApplied, entry.bestCampaign || entry);
+  const rawBestCampaign = entry.bestCampaign || {
+    ...entry,
+    team: entry.team || entry.teamName || entry.teamFlag || "",
+    formGuide: entry.formGuide || entry.form || entry.tournamentProgress || [],
+    form: entry.form || entry.formGuide || entry.tournamentProgress || [],
+    tournamentProgress: entry.tournamentProgress || entry.formGuide || entry.form || [],
+  };
+  const bestCampaign = normaliseBestCampaign(rawBestCampaign);
+  const formGuide = normaliseFormGuide(bestCampaign.formGuide || rawBestCampaign.form || rawBestCampaign.tournamentProgress || entry.formGuide || entry.form || entry.tournamentProgress);
+  const score = Number(entry.gameScore ?? entry.campaignPoints ?? entry.points ?? bestCampaign.gameScore ?? 0);
+  const teamName = entry.team || entry.teamName || entry.teamFlag || bestCampaign.teamName || "";
+  const cosmeticsApplied = normaliseCosmeticsApplied(entry.cosmeticsApplied, bestCampaign.cosmeticsApplied || rawBestCampaign || entry);
   const username = cleanUsername(entry.username || entry.nickname || "PLAYER").toUpperCase();
 
-  const finish = entry.status || entry.finish || entry.bestCampaign?.status || entry.bestCampaign?.roundLabel || entry.bestCampaign?.stage || "inProgress";
+  const finish = entry.status || entry.finish || rawBestCampaign.status || bestCampaign.tournamentPhase || rawBestCampaign.roundLabel || rawBestCampaign.stage || "inProgress";
   const podiumAchieved = Boolean(entry.podium || entry.podiumAchieved || /champion|runner|third/i.test(String(finish || "")));
+  const leaderboardBestCampaign = {
+    ...bestCampaign,
+    team: bestCampaign.teamName || teamName,
+    teamName: bestCampaign.teamName || teamName,
+    stage: bestCampaign.tournamentPhase,
+    roundLabel: bestCampaign.tournamentPhase,
+    points: score,
+    campaignPoints: score,
+    gameScore: score,
+    formGuide,
+    form: formGuide,
+    tournamentProgress: formGuide,
+    cosmeticsApplied,
+    cosmeticBallEquipped: Boolean(cosmeticsApplied.goldenBall),
+    cosmeticGloveEquipped: Boolean(cosmeticsApplied.goldenGlove),
+  };
 
   await setDoc(doc(db, "leaderboard", uid), {
     uid,
+    emailVerified: true,
+    accountStatus: { emailVerified: true, verificationRequired: false },
     userId: uid,
     username,
-    teamFlag: entry.teamFlag || entry.flag || entry.team?.flag || entry.team || "",
-    gameScore: Number(entry.gameScore ?? entry.campaignPoints ?? entry.points ?? 0),
+    teamFlag: entry.teamFlag || entry.flag || entry.team?.flag || teamName || "",
+    gameScore: score,
+    formGuide,
+    form: formGuide,
+    tournamentProgress: formGuide,
+    bestCampaign: leaderboardBestCampaign,
     cosmeticsApplied,
     podium: entry.podium || null,
     podiumAchieved,
@@ -590,8 +694,8 @@ export async function saveLeaderboardHighScore(uid, entry = {}) {
     updatedAt: serverTimestamp(),
 
     // Temporary aliases so existing leaderboard UI keeps working while migrated.
-    team: entry.team || entry.teamName || entry.teamFlag || "",
-    campaignPoints: Number(entry.gameScore ?? entry.campaignPoints ?? entry.points ?? 0),
+    team: teamName,
+    campaignPoints: score,
   }, { merge: true });
 }
 
@@ -606,27 +710,70 @@ export async function loadLeaderboardRows(limitCount = 50) {
 
   const snap = await getDocs(leaderboardQuery);
   const bestByUser = new Map();
+  const hasFormValues = (value) => Array.isArray(value) && value.some(Boolean);
+  const firstUsefulFormGuide = (...values) => normaliseFormGuide(values.find(hasFormValues) || []);
 
-  snap.docs.forEach((item) => {
+  for (const item of snap.docs) {
     const data = item.data() || {};
     const userId = data.uid || data.userId || item.id;
-    if (!userId || userId === "guest-preview" || data.localOnly) return;
+    if (!userId || userId === "guest-preview" || data.localOnly) continue;
+    if (data.emailVerified === false || data.accountStatus?.emailVerified === false) continue;
 
-    const gameScore = Number(data.gameScore ?? data.campaignPoints ?? data.points ?? 0);
+    const leaderboardFormSource = data.formGuide || data.form || data.tournamentProgress || data.bestCampaign?.formGuide || data.bestCampaign?.form || data.bestCampaign?.tournamentProgress || [];
+    let userProfile = null;
+    if (!hasFormValues(leaderboardFormSource)) {
+      try {
+        const userSnap = await getDoc(doc(db, "users", userId));
+        userProfile = userSnap.exists() ? userSnap.data() || {} : null;
+      } catch (error) {
+        console.warn("Leaderboard best campaign fallback failed", error);
+      }
+    }
+
+    const campaignSource = data.bestCampaign || userProfile?.bestCampaign || {
+      ...data,
+      formGuide: leaderboardFormSource,
+      form: leaderboardFormSource,
+      tournamentProgress: leaderboardFormSource,
+    };
+    const gameScore = Number(data.gameScore ?? data.campaignPoints ?? data.points ?? campaignSource?.gameScore ?? campaignSource?.campaignPoints ?? campaignSource?.points ?? 0);
+    const bestCampaign = normaliseBestCampaign(campaignSource);
+    const formGuide = firstUsefulFormGuide(
+      leaderboardFormSource,
+      userProfile?.bestCampaign?.formGuide,
+      userProfile?.bestCampaign?.form,
+      userProfile?.bestCampaign?.tournamentProgress,
+      bestCampaign.formGuide
+    );
+    const rowTeam = data.teamFlag || data.flag || data.team || bestCampaign.teamName || userProfile?.bestCampaign?.teamName || userProfile?.bestCampaign?.team || "";
     const row = {
       id: item.id,
       uid: userId,
       userId,
-      username: data.username || data.nickname || "PLAYER",
-      teamFlag: data.teamFlag || data.flag || data.team || "",
-      team: data.teamFlag || data.flag || data.team || "",
+      username: data.username || data.nickname || userProfile?.username || userProfile?.nickname || "PLAYER",
+      teamFlag: rowTeam,
+      team: rowTeam,
       gameScore,
       campaignPoints: gameScore,
-      cosmeticsApplied: normaliseCosmeticsApplied(data.cosmeticsApplied, data.bestCampaign || data),
+      formGuide,
+      form: formGuide,
+      tournamentProgress: formGuide,
+      bestCampaign: {
+        ...bestCampaign,
+        team: bestCampaign.teamName || rowTeam,
+        teamName: bestCampaign.teamName || rowTeam,
+        formGuide,
+        form: formGuide,
+        tournamentProgress: formGuide,
+        points: gameScore,
+        campaignPoints: gameScore,
+        gameScore,
+      },
+      cosmeticsApplied: normaliseCosmeticsApplied(data.cosmeticsApplied, data.bestCampaign || userProfile?.bestCampaign || data),
       podium: data.podium || null,
-      podiumAchieved: Boolean(data.podiumAchieved || data.podium || /champion|runner|third/i.test(String(data.status || data.finish || data.bestCampaign?.roundLabel || data.bestCampaign?.stage || ""))),
-      status: data.status || data.finish || data.bestCampaign?.roundLabel || data.bestCampaign?.stage || "inProgress",
-      finish: data.finish || data.status || data.bestCampaign?.roundLabel || data.bestCampaign?.stage || "inProgress",
+      podiumAchieved: Boolean(data.podiumAchieved || data.podium || /champion|runner|third/i.test(String(data.status || data.finish || data.bestCampaign?.roundLabel || data.bestCampaign?.stage || userProfile?.bestCampaign?.roundLabel || userProfile?.bestCampaign?.stage || ""))),
+      status: data.status || data.finish || data.bestCampaign?.roundLabel || data.bestCampaign?.stage || userProfile?.bestCampaign?.roundLabel || userProfile?.bestCampaign?.stage || "inProgress",
+      finish: data.finish || data.status || data.bestCampaign?.roundLabel || data.bestCampaign?.stage || userProfile?.bestCampaign?.roundLabel || userProfile?.bestCampaign?.stage || "inProgress",
       updatedAt: data.updatedAt || null,
     };
 
@@ -634,7 +781,7 @@ export async function loadLeaderboardRows(limitCount = 50) {
     if (!existing || gameScore > Number(existing.gameScore || 0)) {
       bestByUser.set(userId, row);
     }
-  });
+  }
 
   return Array.from(bestByUser.values())
     .sort((a, b) => Number(b.gameScore || 0) - Number(a.gameScore || 0))

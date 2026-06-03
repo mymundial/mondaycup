@@ -192,7 +192,21 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
   const [verificationComplete, setVerificationComplete] = useState(false);
 
   useEffect(() => {
+    if (initialMode === "verify") {
+      setMode("signin");
+      const user = auth.currentUser;
+      if (user) {
+        setVerifyProfile({ accountStatus: { emailVerified: false, verificationRequired: true } });
+        setVerifyUser(user);
+        setVerifyButtonText("VERIFY YOUR EMAIL ADDRESS");
+        setVerificationComplete(false);
+      }
+      return;
+    }
+
     setMode(initialMode || "signin");
+    setVerifyUser(null);
+    setVerificationComplete(false);
   }, [initialMode]);
 
   const isSignup = mode === "signup";
@@ -207,7 +221,8 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
     await onAuthComplete?.(user, {
       navigate: false,
       preserveGuestProgress: true,
-      source: "menu-auth",
+      source: profile?.username ? "menu-signup" : "menu-auth",
+      isSignup: Boolean(profile?.username),
       emailVerified: true,
     });
     setVerifyButtonText("EMAIL VERIFIED");
@@ -301,7 +316,6 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
           emailOptIn,
           accountStatus: { emailVerified: false, verificationRequired: true },
         };
-        await ensureUserDocument(cred.user, cleanNickname, profile);
         setVerifyProfile(profile);
         setVerifyUser(cred.user);
         try {

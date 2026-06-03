@@ -32,20 +32,71 @@ export const TEAM_RANK = {
   "New Zealand": 48,
 };
 
-export const TEAM_THEME = {
-  Mexico: { bg: "#2DA94F", text: "#000000" }, "South Africa": { bg: "#F7D117", text: "#000000" }, "South Korea": { bg: "#FF1E3C", text: "#FFFFFF" }, "Czech Republic": { bg: "#FF3131", text: "#FFFFFF" },
-  Canada: { bg: "#E1251B", text: "#FFFFFF" }, "Bosnia-Herzegovina": { bg: "#2F3ED6", text: "#FFFFFF" }, Qatar: { bg: "#8A1538", text: "#FFFFFF" }, Switzerland: { bg: "#E3000F", text: "#FFFFFF" },
-  Brazil: { bg: "#F7D117", text: "#000000" }, Morocco: { bg: "#E10600", text: "#FFFFFF" }, Haiti: { bg: "#1A22C9", text: "#FFFFFF" }, Scotland: { bg: "#2A248A", text: "#FFFFFF" },
-  "United States": { bg: "#1B2BE0", text: "#FFFFFF" }, Paraguay: { bg: "#E10600", text: "#FFFFFF" }, Australia: { bg: "#F7C600", text: "#000000" }, Turkey: { bg: "#E10600", text: "#FFFFFF" },
-  Germany: { bg: "#1A1A1A", text: "#FFFFFF" }, Curacao: { bg: "#2D6FD2", text: "#FFFFFF" }, "Ivory Coast": { bg: "#FF8A00", text: "#000000" }, Ecuador: { bg: "#F7D900", text: "#000000" },
-  Netherlands: { bg: "#FF8500", text: "#000000" }, Japan: { bg: "#3131E8", text: "#FFFFFF" }, Sweden: { bg: "#F7D117", text: "#000000" }, Tunisia: { bg: "#FF1744", text: "#FFFFFF" },
-  Belgium: { bg: "#9B003F", text: "#FFFFFF" }, Egypt: { bg: "#FF1744", text: "#000000" }, Iran: { bg: "#F20D1B", text: "#FFFFFF" }, "New Zealand": { bg: "#000000", text: "#FFFFFF" },
-  Spain: { bg: "#F20D1B", text: "#FFFFFF" }, "Cape Verde": { bg: "#25308F", text: "#FFFFFF" }, "Saudi Arabia": { bg: "#2DA94F", text: "#FFFFFF" }, Uruguay: { bg: "#7CB5E8", text: "#000000" },
-  France: { bg: "#0D47A1", text: "#FFFFFF" }, Senegal: { bg: "#F7D900", text: "#000000" }, Iraq: { bg: "#157A52", text: "#FFFFFF" }, Norway: { bg: "#D50000", text: "#FFFFFF" },
-  Argentina: { bg: "#93BFEA", text: "#000000" }, Algeria: { bg: "#00A86B", text: "#FFFFFF" }, Austria: { bg: "#FF3B30", text: "#000000" }, Jordan: { bg: "#FF1E3C", text: "#000000" },
-  Portugal: { bg: "#E10600", text: "#FFFFFF" }, "DR Congo": { bg: "#1E7FF0", text: "#000000" }, Uzbekistan: { bg: "#2437C6", text: "#FFFFFF" }, Colombia: { bg: "#F7D900", text: "#000000" },
-  England: { bg: "#FFFFFF", text: "#000000" }, Croatia: { bg: "#FF1E1E", text: "#FFFFFF" }, Ghana: { bg: "#F5C343", text: "#000000" }, Panama: { bg: "#F20D4A", text: "#FFFFFF" },
+export const TEAM_COLOURS = {
+  Mexico: { first: "#0B6B3A", second: "#FFFFFF", third: "#C8102E" },
+  "South Africa": { first: "#F7D117", second: "#00843D", third: "#111111" },
+  "South Korea": { first: "#E6002D", second: "#111111", third: "#FFFFFF" },
+  "Czech Republic": { first: "#D7141A", second: "#11457E", third: "#FFFFFF" },
+  Canada: { first: "#E1251B", second: "#FFFFFF", third: "#111111" },
+  "Bosnia-Herzegovina": { first: "#1F4ED8", second: "#F7D117", third: "#FFFFFF" },
+  Qatar: { first: "#8A1538", second: "#FFFFFF", third: "#111111" },
+  Switzerland: { first: "#E3000F", second: "#FFFFFF", third: "#111111" },
+  Brazil: { first: "#F7D117", second: "#009C3B", third: "#002776" },
+  Morocco: { first: "#C1272D", second: "#006233", third: "#FFFFFF" },
+  Haiti: { first: "#00209F", second: "#D21034", third: "#FFFFFF" },
+  Scotland: { first: "#1A2D6B", second: "#FFFFFF", third: "#111111" },
+  "United States": { first: "#FFFFFF", second: "#1F2A44", third: "#C8102E" },
+  Paraguay: { first: "#D52B1E", second: "#0038A8", third: "#FFFFFF" },
+  Australia: { first: "#F7C600", second: "#007A3D", third: "#111111" },
+  Turkey: { first: "#E30A17", second: "#FFFFFF", third: "#111111" },
+  Germany: { first: "#FFFFFF", second: "#111111", third: "#D7A500" },
+  Curacao: { first: "#005EB8", second: "#F7D117", third: "#FFFFFF" },
+  "Ivory Coast": { first: "#F77F00", second: "#009E60", third: "#FFFFFF" },
+  Ecuador: { first: "#F7D900", second: "#002B7F", third: "#CE1126" },
+  Netherlands: { first: "#FF7900", second: "#111111", third: "#FFFFFF" },
+  Japan: { first: "#003DA5", second: "#FFFFFF", third: "#BC002D" },
+  Sweden: { first: "#F7D117", second: "#005293", third: "#111111" },
+  Tunisia: { first: "#FFFFFF", second: "#E70013", third: "#111111" },
+  Belgium: { first: "#D90F2F", second: "#111111", third: "#F7D117" },
+  Egypt: { first: "#CE1126", second: "#FFFFFF", third: "#111111" },
+  Iran: { first: "#FFFFFF", second: "#239F40", third: "#DA0000" },
+  "New Zealand": { first: "#FFFFFF", second: "#111111", third: "#C0C0C0" },
+  Spain: { first: "#C60B1E", second: "#F7D117", third: "#002B7F" },
+  "Cape Verde": { first: "#003893", second: "#F7D117", third: "#FFFFFF" },
+  "Saudi Arabia": { first: "#006C35", second: "#FFFFFF", third: "#111111" },
+  Uruguay: { first: "#7CB5E8", second: "#111111", third: "#FFFFFF" },
+  France: { first: "#102A5E", second: "#FFFFFF", third: "#C8102E" },
+  Senegal: { first: "#FFFFFF", second: "#00853F", third: "#F7D117" },
+  Iraq: { first: "#007A3D", second: "#FFFFFF", third: "#CE1126" },
+  Norway: { first: "#BA0C2F", second: "#00205B", third: "#FFFFFF" },
+  Argentina: { first: "#75AADB", second: "#FFFFFF", third: "#1F2A44" },
+  Algeria: { first: "#FFFFFF", second: "#006233", third: "#D21034" },
+  Austria: { first: "#ED2939", second: "#FFFFFF", third: "#111111" },
+  Jordan: { first: "#FFFFFF", second: "#CE1126", third: "#007A3D" },
+  Portugal: { first: "#B30B18", second: "#006A4E", third: "#FFFFFF" },
+  "DR Congo": { first: "#007FFF", second: "#F7D117", third: "#CE1126" },
+  Uzbekistan: { first: "#FFFFFF", second: "#1EB6E8", third: "#009B77" },
+  Colombia: { first: "#F7D117", second: "#003893", third: "#CE1126" },
+  England: { first: "#FFFFFF", second: "#C8102E", third: "#1F2A44" },
+  Croatia: { first: "#FFFFFF", second: "#C7222A", third: "#23408E" },
+  Ghana: { first: "#FFFFFF", second: "#111111", third: "#F7D117" },
+  Panama: { first: "#C8102E", second: "#FFFFFF", third: "#005293" },
 };
+
+export const TEAM_THEME = Object.fromEntries(
+  Object.entries(TEAM_COLOURS).map(([team, colours]) => [team, {
+    bg: colours.first,
+    text: colours.second,
+    accent: colours.third,
+    primary: colours.first,
+    secondary: colours.second,
+    tertiary: colours.third,
+    first: colours.first,
+    second: colours.second,
+    third: colours.third,
+  }])
+);
+
 
 export const FLAG_CC = {
   Mexico: "mx", "South Africa": "za", "South Korea": "kr", "Czech Republic": "cz", Canada: "ca", "Bosnia-Herzegovina": "ba", Qatar: "qa", Switzerland: "ch", Brazil: "br", Morocco: "ma", Haiti: "ht", Scotland: "gb-sct", "United States": "us", Paraguay: "py", Australia: "au", Turkey: "tr", Germany: "de", Curacao: "cw", "Ivory Coast": "ci", Ecuador: "ec", Netherlands: "nl", Japan: "jp", Sweden: "se", Tunisia: "tn", Belgium: "be", Egypt: "eg", Iran: "ir", "New Zealand": "nz", Spain: "es", "Cape Verde": "cv", "Saudi Arabia": "sa", Uruguay: "uy", France: "fr", Senegal: "sn", Iraq: "iq", Norway: "no", Argentina: "ar", Algeria: "dz", Austria: "at", Jordan: "jo", Portugal: "pt", "DR Congo": "cd", Uzbekistan: "uz", Colombia: "co", England: "gb-eng", Croatia: "hr", Ghana: "gh", Panama: "pa",
@@ -54,7 +105,17 @@ export const FLAG_CC = {
 export const TEAM_CODE = { Mexico: "MEX", "South Africa": "RSA", "South Korea": "KOR", "Czech Republic": "CZE", Canada: "CAN", "Bosnia-Herzegovina": "BIH", Qatar: "QAT", Switzerland: "SUI", Brazil: "BRA", Morocco: "MAR", Haiti: "HAI", Scotland: "SCO", "United States": "USA", Paraguay: "PAR", Australia: "AUS", Turkey: "TUR", Germany: "GER", Curacao: "CUW", "Ivory Coast": "CIV", Ecuador: "ECU", Netherlands: "NED", Japan: "JPN", Sweden: "SWE", Tunisia: "TUN", Belgium: "BEL", Egypt: "EGY", Iran: "IRN", "New Zealand": "NZL", Spain: "ESP", "Cape Verde": "CPV", "Saudi Arabia": "KSA", Uruguay: "URU", France: "FRA", Senegal: "SEN", Iraq: "IRQ", Norway: "NOR", Argentina: "ARG", Algeria: "ALG", Austria: "AUT", Jordan: "JOR", Portugal: "POR", "DR Congo": "COD", Uzbekistan: "UZB", Colombia: "COL", England: "ENG", Croatia: "CRO", Ghana: "GHA", Panama: "PAN" };
 
 export function getTeamTheme(team) {
-  return TEAM_THEME[team] || { bg: "#F7D117", text: "#000000" };
+  return TEAM_THEME[team] || {
+    bg: "#F7D117",
+    text: "#000000",
+    accent: "#FFFFFF",
+    primary: "#F7D117",
+    secondary: "#000000",
+    tertiary: "#FFFFFF",
+    first: "#F7D117",
+    second: "#000000",
+    third: "#FFFFFF",
+  };
 }
 
 export function teamCode(team) {

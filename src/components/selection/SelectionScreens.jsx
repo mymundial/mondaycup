@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
-import { auth, db } from "../../firebase";
+import { auth } from "../../firebase";
 import { HOST_TEAMS, GROUPS, GROUP_LETTERS, TEAM_RANK, getTeamTheme } from "../../data/teams.js";
 import { ASSETS } from "../../data/assets.js";
 import { Flag } from "../shared.jsx";
@@ -37,7 +36,7 @@ const MENU_TITLE_CLASS = "home-copy-bold text-[28px] uppercase leading-none trac
 const HOME_MAIN_HEIGHT = `calc(100dvh - (${MATCH_TOP_BAR_HEIGHT_PX}px + ((100dvh - ${MATCH_TOP_BAR_HEIGHT_PX}px) * ${MATCH_SCOREBOARD_RATIO})))`;
 const HOME_LOGO_TOP_RATIO = 0;
 const HOME_LOGO_TOP_PADDING = "clamp(18px,3vh,28px)";
-const HOME_LOGO_HEIGHT = "min(150px,14.5vh)";
+const HOME_LOGO_HEIGHT = "min(132px,17.5vh)";
 const HOME_LOGO_CENTER_Y = "17%";
 const HOME_LOGO_GAP = "clamp(18px,2.6vh,30px)";
 const HOME_AD_BOARD_TOP_PERCENT = GAME.goal.top + GAME.goal.height - SHARED_AD_BOARD_HEIGHT_PERCENT;
@@ -490,6 +489,10 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authSuccess, setAuthSuccess] = useState("");
+  const [verifyUser, setVerifyUser] = useState(null);
+  const [verifyProfile, setVerifyProfile] = useState(null);
+  const [verifyButtonText, setVerifyButtonText] = useState("VERIFY YOUR EMAIL ADDRESS");
+  const [verificationComplete, setVerificationComplete] = useState(false);
   const isRegister = mode === "register" || mode === "signup";
 
   const resetMessages = () => {
@@ -510,6 +513,75 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
     setMode(nextMode);
   };
 
+  const completeVerifiedAuth = async (user = verifyUser, profile = verifyProfile) => {
+    if (!user || verificationComplete) return;
+    setVerificationComplete(true);
+    await ensureUserDocument(user, profile?.username || user.displayName || "Player", {
+      ...(profile || {}),
+      accountStatus: { emailVerified: true, verificationRequired: false },
+    });
+    await onAuthComplete?.(user, {
+      navigate: false,
+      source: profile?.username ? "home-signup" : "home-signin",
+      isSignup: Boolean(profile?.username),
+      emailVerified: true,
+    });
+    onSignedIn?.(user, { isSignup: Boolean(profile?.username) });
+    setVerifyButtonText("EMAIL VERIFIED");
+  };
+
+  const checkEmailVerification = async () => {
+    const user = verifyUser || auth.currentUser;
+    if (!user) return false;
+    await user.reload();
+    const freshUser = auth.currentUser || user;
+    if (freshUser.emailVerified) {
+      await completeVerifiedAuth(freshUser);
+      return true;
+    }
+    return false;
+  };
+
+  useEffect(() => {
+    if (!verifyUser || verificationComplete) return undefined;
+    const handleFocus = () => { checkEmailVerification().catch(() => {}); };
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") handleFocus();
+    };
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+    const timer = window.setInterval(handleFocus, 5000);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.clearInterval(timer);
+    };
+  }, [verifyUser, verificationComplete]);
+
+  const handleSendVerification = async (event) => {
+    event?.preventDefault?.();
+    resetMessages();
+    const user = verifyUser || auth.currentUser;
+    if (!user) {
+      setAuthError("Please sign in again");
+      return;
+    }
+    try {
+      setAuthLoading(true);
+      const alreadyVerified = await checkEmailVerification();
+      if (alreadyVerified) return;
+      await sendEmailVerification(user);
+      setVerifyButtonText("RESEND VERIFICATION EMAIL");
+      setAuthSuccess("Verification email sent please check your inbox");
+    } catch (error) {
+      const code = String(error?.code || "");
+      if (code.includes("too-many-requests")) setAuthError("Please wait before sending another email");
+      else setAuthError(error?.message || "Could not send verification email");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   const handleRegister = async () => {
     const trimmedUsername = username.trim();
     const trimmedEmail = email.trim();
@@ -527,27 +599,27 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
 
       await updateProfile(credential.user, { displayName: trimmedUsername });
 
-      await ensureUserDocument(credential.user, trimmedUsername, {
+      const profile = {
         username: trimmedUsername,
         emailOptIn,
         accountStatus: { emailVerified: false, verificationRequired: true },
-        updatedAt: serverTimestamp(),
-      });
+      };
+      setVerifyProfile(profile);
+      setVerifyUser(credential.user);
 
       try {
         await sendEmailVerification(credential.user);
-        setAuthSuccess("Account created verification email sent");
+        setVerifyButtonText("RESEND VERIFICATION EMAIL");
+        setAuthSuccess("Verification email sent please check your inbox");
       } catch (verificationError) {
         const code = String(verificationError?.code || "");
+        setVerifyButtonText("SEND VERIFICATION EMAIL");
         if (code.includes("too-many-requests")) {
-          setAuthError("Account created but verification email was rate limited please try again later");
+          setAuthError("Verification email not sent please wait before trying again");
         } else {
-          setAuthError("Account created but verification email did not send please use Sign In to resend");
+          setAuthError("Account created but verification email did not send please tap the button below");
         }
       }
-
-      await onAuthComplete?.(credential.user, { navigate: false, source: "home-signup" });
-      onSignedIn?.(credential.user, { isSignup: true });
     } catch (error) {
       setAuthError(authErrorMessage(error));
     } finally {
@@ -560,8 +632,17 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
       setAuthLoading(true);
       resetMessages();
       const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      await onAuthComplete?.(credential.user, { navigate: false, source: "home-signin" });
-      onSignedIn?.(credential.user, { isSignup: false });
+      await credential.user.reload();
+      const freshUser = auth.currentUser || credential.user;
+      if (!freshUser.emailVerified) {
+        setVerifyProfile({ accountStatus: { emailVerified: false, verificationRequired: true } });
+        setVerifyUser(freshUser);
+        setVerifyButtonText("VERIFY YOUR EMAIL ADDRESS");
+        setAuthSuccess("Please verify your email to unlock Monday Club");
+        return;
+      }
+      await onAuthComplete?.(freshUser, { navigate: false, source: "home-signin", emailVerified: true });
+      onSignedIn?.(freshUser, { isSignup: false });
       setAuthSuccess("Signed in welcome back");
     } catch (error) {
       setAuthError(authErrorMessage(error));
@@ -601,6 +682,26 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
       setAuthLoading(false);
     }
   };
+
+  if (verifyUser) {
+    return <div className="space-y-3">
+      <HomeMenuShell onBack={onBack}>
+        <div className="flex min-h-[30px] items-center justify-center text-center">
+          <div className={MENU_TITLE_CLASS}>VERIFY EMAIL</div>
+        </div>
+        <div className="mt-3 space-y-2 text-center">
+          <p className="home-copy-regular mx-auto max-w-[280px] text-[10px] uppercase leading-snug tracking-[0.07em] text-[#F5F1E8]/78">
+            Check the inbox for {verifyUser.email}. Return here after verifying.
+          </p>
+          {authError && <div className="home-copy-regular rounded-[0.8rem] bg-red-500/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-red-100">{authError}</div>}
+          {authSuccess && <div className="home-copy-regular rounded-[0.8rem] bg-[#B7FF3C]/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-[#B7FF3C]">{authSuccess}</div>}
+          <AuthPrimaryButton type="button" loading={authLoading} disabled={verificationComplete} onClick={handleSendVerification}>
+            {authLoading ? "SENDING..." : verifyButtonText}
+          </AuthPrimaryButton>
+        </div>
+      </HomeMenuShell>
+    </div>;
+  }
 
   if (forgotPassword) {
     return <div className="space-y-3">
@@ -682,7 +783,7 @@ function getTeamGroup(teamName) {
   return GROUP_LETTERS.find((letter) => GROUPS[letter].includes(teamName)) || "A";
 }
 
-function HostPanel({ onSelectGroup, onSelectTeam, onBack, currentUser = null, onAuthComplete, allTeamsUnlocked = false }) {
+function HostPanel({ onSelectGroup, onSelectTeam, onBack, currentUser = null, onAuthComplete, allTeamsUnlocked = false, onUnlockAllTeams }) {
   const hostLabels = { Canada: "CAN", Mexico: "MEX", "United States": "USA" };
   const [authMode, setAuthMode] = useState(null);
 
@@ -720,7 +821,7 @@ function HostPanel({ onSelectGroup, onSelectTeam, onBack, currentUser = null, on
         );
       })}
     </div>
-    <button onClick={() => { if (currentUser || allTeamsUnlocked) onSelectGroup("A"); else setAuthMode("signin"); }} className="relative mt-3 flex h-[50px] w-full items-center justify-center rounded-[1rem] border-2 border-[#F7D117]/85 bg-[#F7D117] px-5 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]">
+    <button onClick={() => { if (allTeamsUnlocked) onSelectGroup("A"); else if (typeof onUnlockAllTeams === "function") onUnlockAllTeams(); else setAuthMode(currentUser?.uid ? "signin" : "signup"); }} className="relative mt-3 flex h-[50px] w-full items-center justify-center rounded-[1rem] border-2 border-[#F7D117]/85 bg-[#F7D117] px-5 text-[#072D1D] shadow-[0_0_14px_rgba(247,209,23,0.18),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]">
       {allTeamsUnlocked ? <OpenPadlockIcon className="absolute left-5 h-7 w-7" /> : <PadlockIcon className="absolute left-5 h-7 w-7" />}
       <div className="home-copy-bold min-w-0 truncate text-center text-[clamp(13px,3.5vw,17px)] uppercase leading-none tracking-[0.075em]">ALL TEAMS</div>
       <div className="absolute right-5 text-right">
@@ -753,9 +854,9 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
   </HomeMenuShell>;
 }
 
-export function HomeScreen({ onSelectGroup, onSelectTeam, allTeamsUnlocked = false, currentUser = null, onOpenClubhouse, onAuthComplete, onResumeCampaign, hasResumeCampaign = false, menuProps = {} }) {
+export function HomeScreen({ onSelectGroup, onSelectTeam, onUnlockAllTeams, allTeamsUnlocked = false, currentUser = null, onOpenClubhouse, onAuthComplete, onResumeCampaign, hasResumeCampaign = false, menuProps = {} }) {
   const [homeMode, setHomeMode] = useState("landing");
-  if (homeMode === "hosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} currentUser={currentUser} onAuthComplete={onAuthComplete} allTeamsUnlocked={allTeamsUnlocked} /></HomeLayout>;
+  if (homeMode === "hosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} currentUser={currentUser} onAuthComplete={onAuthComplete} allTeamsUnlocked={allTeamsUnlocked} onUnlockAllTeams={onUnlockAllTeams} /></HomeLayout>;
   return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo><LandingPanel currentUser={currentUser} onOpenClubhouse={onOpenClubhouse} onAuthComplete={onAuthComplete} onResumeCampaign={onResumeCampaign} hasResumeCampaign={hasResumeCampaign} onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
 }
 export function HostSelectScreen(props) { return <HomeLayout allTeamsUnlocked={props.allTeamsUnlocked} menuProps={props.menuProps || {}}><HostPanel {...props} /></HomeLayout>; }

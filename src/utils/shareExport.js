@@ -1,37 +1,5 @@
-import { PODIUM_BADGE_MODE } from "../logic/resultStatus.js";
-
 export const SHARE_CANVAS_NAME = "monday-cup-result.png";
 export const SHARE_EXPORT_SIZE = 2000;
-
-const SHARE_TEAM_BORDER_COLORS = {
-  Mexico: "#29A64A",
-  Canada: "#E32219",
-  USA: "#2430D9",
-  England: "#F5F1E8",
-  France: "#1454A8",
-  Spain: "#F7D117",
-  Argentina: "#78BCE8",
-  Brazil: "#F7D117",
-  Germany: "#F5F1E8",
-  Portugal: "#0B7A3B",
-  Italy: "#0B7A3B",
-  Netherlands: "#FF6A13",
-};
-
-const SHARE_TEAM_EXPORT_STYLES = {
-  Mexico: { bg: "#29A64A", fg: "#072D1D" },
-  Canada: { bg: "#E32219", fg: "#F5F1E8" },
-  USA: { bg: "#2430D9", fg: "#F5F1E8" },
-  England: { bg: "#F5F1E8", fg: "#072D1D" },
-  France: { bg: "#1454A8", fg: "#F5F1E8" },
-  Spain: { bg: "#F7D117", fg: "#072D1D" },
-  Argentina: { bg: "#78BCE8", fg: "#072D1D" },
-  Brazil: { bg: "#F7D117", fg: "#072D1D" },
-  Germany: { bg: "#F5F1E8", fg: "#072D1D" },
-  Portugal: { bg: "#0B7A3B", fg: "#F5F1E8" },
-  Italy: { bg: "#0B7A3B", fg: "#F5F1E8" },
-  Netherlands: { bg: "#FF6A13", fg: "#072D1D" },
-};
 
 export function normaliseThirdPlaceCopy(value) {
   return String(value || "")
@@ -40,38 +8,38 @@ export function normaliseThirdPlaceCopy(value) {
     .replace(/third\s*place\s*play[-\s]*off/gi, "THIRD PLACE PLAY-OFF");
 }
 
-function getShareBorderColor(team) {
-  return SHARE_TEAM_BORDER_COLORS[team] || "#F7D117";
-}
-
-function getShareExportTeamStyle(team) {
-  return SHARE_TEAM_EXPORT_STYLES[team] || { bg: getShareBorderColor(team), fg: "#072D1D" };
-}
-
 async function preloadImagesInElement(element) {
   const images = Array.from(element?.querySelectorAll?.("img") || []);
-  await Promise.all(images.map((img) => {
-    if (img.complete && img.naturalWidth > 0) return Promise.resolve();
-    if (img.decode) return img.decode().catch(() => null);
-    return new Promise((resolve) => {
-      img.addEventListener("load", resolve, { once: true });
-      img.addEventListener("error", resolve, { once: true });
-    });
-  }));
+  await Promise.all(
+    images.map((img) => {
+      if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+      if (img.decode) return img.decode().catch(() => null);
+      return new Promise((resolve) => {
+        img.addEventListener("load", resolve, { once: true });
+        img.addEventListener("error", resolve, { once: true });
+      });
+    }),
+  );
 }
 
 function copyComputedStyles(source, target) {
   if (!(source instanceof Element) || !(target instanceof Element)) return;
   const computed = window.getComputedStyle(source);
   for (const property of computed) {
-    target.style.setProperty(property, computed.getPropertyValue(property), computed.getPropertyPriority(property));
+    target.style.setProperty(
+      property,
+      computed.getPropertyValue(property),
+      computed.getPropertyPriority(property),
+    );
   }
   target.style.setProperty("animation", "none", "important");
   target.style.setProperty("transition", "none", "important");
 
   const sourceChildren = Array.from(source.children);
   const targetChildren = Array.from(target.children);
-  sourceChildren.forEach((child, index) => copyComputedStyles(child, targetChildren[index]));
+  sourceChildren.forEach((child, index) =>
+    copyComputedStyles(child, targetChildren[index]),
+  );
 }
 
 async function imageToDataUrl(src) {
@@ -110,9 +78,15 @@ async function assetToDataUrl(src) {
 async function buildEmbeddedFontCss() {
   const [led, regular, bold, light] = await Promise.all([
     assetToDataUrl("/fonts/intodotmatrix/intodotmatrix-webfont.woff2"),
-    assetToDataUrl("/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-regular-webfont.woff2"),
-    assetToDataUrl("/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-bold-webfont.woff2"),
-    assetToDataUrl("/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-light-webfont.woff2"),
+    assetToDataUrl(
+      "/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-regular-webfont.woff2",
+    ),
+    assetToDataUrl(
+      "/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-bold-webfont.woff2",
+    ),
+    assetToDataUrl(
+      "/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-light-webfont.woff2",
+    ),
   ]);
 
   return `
@@ -129,21 +103,28 @@ async function buildEmbeddedFontCss() {
 
 async function inlineCloneImages(clone) {
   const images = Array.from(clone.querySelectorAll("img"));
-  await Promise.all(images.map(async (img) => {
-    const src = img.getAttribute("src");
-    if (!src || src.startsWith("data:")) return;
-    img.setAttribute("src", await imageToDataUrl(src));
-    img.setAttribute("crossorigin", "anonymous");
-  }));
+  await Promise.all(
+    images.map(async (img) => {
+      const src = img.getAttribute("src");
+      if (!src || src.startsWith("data:")) return;
+      img.setAttribute("src", await imageToDataUrl(src));
+      img.setAttribute("crossorigin", "anonymous");
+    }),
+  );
 }
 
-function moveFlashAboveScoreboardForExport() {
-  // Intentionally disabled: export must match the visible preview exactly.
-}
+function sanitiseShareCaptureClone(root) {
+  if (!root?.querySelectorAll) return;
 
-function applySharePreviewOverrides(clone) {
-  if (!clone) return;
-  clone.querySelectorAll('[data-share-export-ignore="true"]').forEach((node) => node.remove());
+  root
+    .querySelectorAll('[data-share-export-ignore="true"]')
+    .forEach((node) => node.remove());
+  root.querySelectorAll("*").forEach((node) => {
+    if (!node?.style) return;
+    node.style.animation = "none";
+    node.style.transition = "none";
+    node.style.caretColor = "transparent";
+  });
 }
 
 async function composeShareExportCanvas(sourceCanvas) {
@@ -163,12 +144,11 @@ async function composeShareExportCanvas(sourceCanvas) {
     0,
     0,
     SHARE_EXPORT_SIZE,
-    SHARE_EXPORT_SIZE
+    SHARE_EXPORT_SIZE,
   );
 
   return canvas;
 }
-
 
 function imageFromBlob(blob) {
   return new Promise((resolve, reject) => {
@@ -188,10 +168,14 @@ function imageFromBlob(blob) {
 
 function getCanvasBlob(canvas) {
   return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-      else reject(new Error("The share image could not be created"));
-    }, "image/png", 0.95);
+    canvas.toBlob(
+      (blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error("The share image could not be created"));
+      },
+      "image/png",
+      0.95,
+    );
   });
 }
 
@@ -204,7 +188,8 @@ async function renderElementToCanvasWithHtml2Canvas(shareElement) {
   const scale = Math.max(1, SHARE_EXPORT_SIZE / Math.max(width, height));
 
   const source = await html2canvas(shareElement, {
-    backgroundColor: window.getComputedStyle(shareElement).backgroundColor || "#0d6c3d",
+    backgroundColor:
+      window.getComputedStyle(shareElement).backgroundColor || "#0d6c3d",
     width,
     height,
     scale,
@@ -215,25 +200,25 @@ async function renderElementToCanvasWithHtml2Canvas(shareElement) {
     removeContainer: true,
     ignoreElements: (node) => Boolean(node?.dataset?.shareExportIgnore),
     onclone: (clonedDocument) => {
-      clonedDocument.querySelectorAll("*").forEach((node) => {
-        node.style.animation = "none";
-        node.style.transition = "none";
-        node.style.caretColor = "transparent";
-      });
+      sanitiseShareCaptureClone(clonedDocument);
     },
   });
 
   return composeShareExportCanvas(source);
 }
 
-async function renderElementToCanvasWithSvg(shareElement, userTeam = null, badgeMode = null) {
+async function renderElementToCanvasWithSvg(
+  shareElement,
+  userTeam = null,
+  badgeMode = null,
+) {
   const rect = shareElement.getBoundingClientRect();
   const cropSize = Math.max(1, Math.min(rect.width, rect.height || rect.width));
   const clone = shareElement.cloneNode(true);
 
   copyComputedStyles(shareElement, clone);
   await inlineCloneImages(clone);
-  applySharePreviewOverrides(clone);
+  sanitiseShareCaptureClone(clone);
 
   clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
   clone.style.position = "relative";
@@ -258,12 +243,13 @@ async function renderElementToCanvasWithSvg(shareElement, userTeam = null, badge
   wrapper.style.height = `${cropSize}px`;
   wrapper.style.overflow = "hidden";
   wrapper.style.position = "relative";
-  wrapper.style.background = window.getComputedStyle(shareElement).backgroundColor || "#0d6c3d";
+  wrapper.style.background =
+    window.getComputedStyle(shareElement).backgroundColor || "#0d6c3d";
   wrapper.appendChild(clone);
 
   const serialized = new XMLSerializer().serializeToString(wrapper);
   const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${cropSize}" height="${cropSize}" viewBox="0 0 ${cropSize} ${cropSize}">
+    <svg xmlns="http://www.w3.org/2000/svg" width="${SHARE_EXPORT_SIZE}" height="${SHARE_EXPORT_SIZE}" viewBox="0 0 ${cropSize} ${cropSize}">
       <foreignObject x="0" y="0" width="100%" height="100%">${serialized}</foreignObject>
     </svg>`;
   const svgBlob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
@@ -274,7 +260,8 @@ async function renderElementToCanvasWithSvg(shareElement, userTeam = null, badge
     img.decoding = "async";
     await new Promise((resolve, reject) => {
       img.onload = resolve;
-      img.onerror = () => reject(new Error("The screenshot image could not be rendered"));
+      img.onerror = () =>
+        reject(new Error("The screenshot image could not be rendered"));
       img.src = url;
     });
 
@@ -301,7 +288,8 @@ async function captureShareElementBlobFallback(shareElement) {
     width,
     height,
     pixelRatio: Math.max(1, SHARE_EXPORT_SIZE / Math.max(width, height)),
-    backgroundColor: window.getComputedStyle(shareElement).backgroundColor || "#0d6c3d",
+    backgroundColor:
+      window.getComputedStyle(shareElement).backgroundColor || "#0d6c3d",
     filter: (node) => !node?.dataset?.shareExportIgnore,
     style: { animation: "none", transition: "none" },
   });
@@ -319,19 +307,31 @@ async function captureShareElementBlobFallback(shareElement) {
   return getCanvasBlob(canvas);
 }
 
-export async function captureShareElementBlob(shareElement, userTeam = null, badgeMode = null) {
+export async function captureShareElementBlob(
+  shareElement,
+  userTeam = null,
+  badgeMode = null,
+) {
   if (!shareElement) throw new Error("Share capture area was not found");
   if (document?.fonts?.ready) await document.fonts.ready.catch(() => null);
   await preloadImagesInElement(shareElement);
 
   const errors = [];
   const attempts = [
+    // Capture the live DOM first. This keeps the exported PNG visually matched to
+    // the on-screen preview instead of rebuilding/repositioning a separate scene.
     ["html2canvas", () => renderElementToCanvasWithHtml2Canvas(shareElement)],
-    ["svg", () => renderElementToCanvasWithSvg(shareElement, userTeam, badgeMode)],
-    ["html-to-image", async () => {
-      const blob = await captureShareElementBlobFallback(shareElement);
-      return { blobOnly: blob };
-    }],
+    [
+      "html-to-image",
+      async () => {
+        const blob = await captureShareElementBlobFallback(shareElement);
+        return { blobOnly: blob };
+      },
+    ],
+    [
+      "svg",
+      () => renderElementToCanvasWithSvg(shareElement, userTeam, badgeMode),
+    ],
   ];
 
   for (const [name, attempt] of attempts) {
@@ -345,12 +345,17 @@ export async function captureShareElementBlob(shareElement, userTeam = null, bad
     }
   }
 
-  throw new Error(`The share image could not be exported. ${errors.join(" | ")}`);
+  throw new Error(
+    `The share image could not be exported. ${errors.join(" | ")}`,
+  );
 }
 
 function isIOSLikeDevice() {
   const userAgent = navigator.userAgent || "";
-  return /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  return (
+    /iPad|iPhone|iPod/.test(userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
 }
 
 function isAndroidDevice() {
@@ -382,11 +387,68 @@ function triggerBlobDownload(blob, filename = SHARE_CANVAS_NAME) {
   }
 }
 
-function openBlobPreview(blob, filename = SHARE_CANVAS_NAME, previewWindow = null) {
+export function downloadBlobFile(blob, filename = SHARE_CANVAS_NAME) {
+  if (!blob) throw new Error("No image blob was provided");
+  if (!triggerBlobDownload(blob, filename))
+    throw new Error("The browser blocked the download");
+}
+
+export async function shareNativeImage(
+  blob,
+  filename = SHARE_CANVAS_NAME,
+  { title = "Monday Cup", text = "My Monday Cup shirt" } = {},
+) {
+  if (!blob) throw new Error("No image blob was provided");
+  const file = new File([blob], filename, { type: "image/png" });
+  if (!navigator.share)
+    throw new Error("Native sharing is not available in this browser");
+  if (navigator.canShare) {
+    try {
+      if (!navigator.canShare({ files: [file] }))
+        throw new Error("This browser cannot share image files");
+    } catch (error) {
+      throw error;
+    }
+  }
+  await navigator.share({ files: [file], title, text });
+}
+
+export function printBlobImage(blob, filename = SHARE_CANVAS_NAME) {
+  if (!blob) throw new Error("No image blob was provided");
   const url = URL.createObjectURL(blob);
-  const opened = previewWindow && !previewWindow.closed
-    ? previewWindow
-    : window.open("", "_blank", "noopener,noreferrer");
+  const opened = window.open("", "_blank", "noopener,noreferrer");
+  if (!opened) {
+    URL.revokeObjectURL(url);
+    throw new Error("The print window was blocked");
+  }
+  const html = `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1" /><title>${filename.replace(/\.png$/i, ".pdf")}</title><style>@page{size:200mm 200mm;margin:0;}html,body{margin:0;background:#073B26;}main{min-height:100vh;display:grid;place-items:center;background:#073B26;}img{width:100vmin;height:100vmin;object-fit:contain;display:block;}@media print{html,body,main{width:100%;height:100%;background:#073B26;}img{width:100%;height:100%;}}</style></head><body><main><img src="${url}" alt="Monday Cup shirt poster" /></main><script>window.onload=()=>{setTimeout(()=>window.print(),250)}<\/script></body></html>`;
+  opened.document.open();
+  opened.document.write(html);
+  opened.document.close();
+  setTimeout(() => URL.revokeObjectURL(url), 120000);
+}
+
+export function openImageSavePreview(
+  blob,
+  filename = SHARE_CANVAS_NAME,
+  previewWindow = null,
+) {
+  if (!blob) throw new Error("No image blob was provided");
+  if (openBlobPreview(blob, filename, previewWindow)) return true;
+  if (triggerBlobDownload(blob, filename)) return true;
+  throw new Error("The browser blocked the image save preview");
+}
+
+function openBlobPreview(
+  blob,
+  filename = SHARE_CANVAS_NAME,
+  previewWindow = null,
+) {
+  const url = URL.createObjectURL(blob);
+  const opened =
+    previewWindow && !previewWindow.closed
+      ? previewWindow
+      : window.open("", "_blank", "noopener,noreferrer");
   if (!opened) {
     URL.revokeObjectURL(url);
     return false;
@@ -415,21 +477,38 @@ export function reserveShareWindow() {
   }
 }
 
-export async function shareOrDownloadResult({ blob, buildBlob, filename = SHARE_CANVAS_NAME, previewWindow = null }) {
-  const finalBlob = blob || await buildBlob?.();
+export async function shareOrDownloadResult({
+  blob,
+  buildBlob,
+  filename = SHARE_CANVAS_NAME,
+  previewWindow = null,
+}) {
+  const finalBlob = blob || (await buildBlob?.());
   if (!finalBlob) throw new Error("No share image could be created");
   const file = new File([finalBlob], filename, { type: "image/png" });
   const shareTitle = "Monday Cup Result";
   const shareText = "My Monday Cup result";
 
-  const canNativeFileShare = Boolean(isMobileLikeDevice() && navigator.share && (!navigator.canShare || (() => {
-    try { return navigator.canShare({ files: [file] }); }
-    catch { return false; }
-  })()));
+  const canNativeFileShare = Boolean(
+    isMobileLikeDevice() &&
+    navigator.share &&
+    (!navigator.canShare ||
+      (() => {
+        try {
+          return navigator.canShare({ files: [file] });
+        } catch {
+          return false;
+        }
+      })()),
+  );
 
   if (canNativeFileShare) {
     try {
-      await navigator.share({ files: [file], title: shareTitle, text: shareText });
+      await navigator.share({
+        files: [file],
+        title: shareTitle,
+        text: shareText,
+      });
       if (previewWindow && !previewWindow.closed) previewWindow.close();
       return;
     } catch (error) {
@@ -437,13 +516,19 @@ export async function shareOrDownloadResult({ blob, buildBlob, filename = SHARE_
         if (previewWindow && !previewWindow.closed) previewWindow.close();
         return;
       }
-      console.warn("Native file share failed, falling back to image save", error);
+      console.warn(
+        "Native file share failed, falling back to image save",
+        error,
+      );
     }
   }
 
-  if (isIOSLikeDevice() && openBlobPreview(finalBlob, filename, previewWindow)) return;
+  if (isIOSLikeDevice() && openBlobPreview(finalBlob, filename, previewWindow))
+    return;
   if (previewWindow && !previewWindow.closed) previewWindow.close();
   if (triggerBlobDownload(finalBlob, filename)) return;
   if (openBlobPreview(finalBlob, filename, null)) return;
-  throw new Error("The browser blocked the image export. Try again with pop-ups/downloads allowed.");
+  throw new Error(
+    "The browser blocked the image export. Try again with pop-ups/downloads allowed.",
+  );
 }
