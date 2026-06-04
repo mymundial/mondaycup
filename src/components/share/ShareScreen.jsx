@@ -39,6 +39,7 @@ import {
   ShareMatchPreview,
   ShirtPosterPreview,
 } from "./SharePreviews.jsx";
+import { createShirtPosterBlob, normaliseInitialShirt } from "./ShirtShareModal.jsx";
 import {
   CheckboxControl,
   ColourInput,
@@ -65,6 +66,8 @@ export function ShareScreen({
   score = [0, 0],
   matchResult = null,
   stageLabel = "FINAL",
+  currentUser = null,
+  initialShirt = null,
 }) {
   const frameRef = useRef(null);
   const [shareBusy, setShareBusy] = useState(false);
@@ -73,6 +76,7 @@ export function ShareScreen({
   const initialTeamB = opponent || matchResult?.away || "France";
   const initialScore = scoreFromProps({ team: initialTeamA, opponent: initialTeamB, score, matchResult });
   const initialTicker = previewTicker({ team: initialTeamA, opponent: initialTeamB, matchResult });
+  const initialShareShirt = useMemo(() => normaliseInitialShirt(initialShirt, currentUser), [initialShirt, currentUser]);
 
   const [exportIndex, setExportIndex] = useState(0);
   const [matchEditorPanelIndex, setMatchEditorPanelIndex] = useState(0);
@@ -195,40 +199,65 @@ export function ShareScreen({
   const [bracketTitle, setBracketTitle] = useState("ROAD TO THE FINAL");
   const [bracketChampion, setBracketChampion] = useState(initialTeamA);
 
-  const [shirtTeam, setShirtTeam] = useState("");
-  const [shirtName, setShirtName] = useState("MONDAY");
-  const [shirtNumber, setShirtNumber] = useState("11");
+  const [shirtTeam, setShirtTeam] = useState(initialShareShirt.team);
+  const [shirtName, setShirtName] = useState(initialShareShirt.name);
+  const [shirtNumber, setShirtNumber] = useState(initialShareShirt.number);
   const [shirtShowMondayLogo, setShirtShowMondayLogo] = useState(true);
   const [shirtShowBrothers, setShirtShowBrothers] = useState(true);
   const [shirtShowTeam, setShirtShowTeam] = useState(false);
   const [shirtShowName, setShirtShowName] = useState(true);
   const [shirtShowNumber, setShirtShowNumber] = useState(true);
   const [shirtBgMode, setShirtBgMode] = useState("custom");
-  const [shirtCustomBg, setShirtCustomBg] = useState(SHIRT_DEFAULT_BG);
-  const [shirtTextColour, setShirtTextColour] = useState(IVORY);
-  const [shirtNumberColour, setShirtNumberColour] = useState(IVORY);
+  const [shirtCustomBg, setShirtCustomBg] = useState(initialShareShirt.bg || SHIRT_DEFAULT_BG);
+  const [shirtTextColour, setShirtTextColour] = useState(initialShareShirt.textColour || IVORY);
+  const [shirtNumberColour, setShirtNumberColour] = useState(initialShareShirt.numberColour || IVORY);
+  const [shirtPatternMode, setShirtPatternMode] = useState("team");
+  const [shirtPatternColour, setShirtPatternColour] = useState("#FFFFFF");
   const [shirtOutlineEnabled, setShirtOutlineEnabled] = useState(false);
+  const [shirtNumberOutlineEnabled, setShirtNumberOutlineEnabled] = useState(false);
   const [shirtOutlineColour, setShirtOutlineColour] = useState("#F5F1E8");
   const [shirtFontWeight, setShirtFontWeight] = useState("900");
   const [shirtFontStyle, setShirtFontStyle] = useState("normal");
   const [shirtFontType, setShirtFontType] = useState("bold");
   const [shirtOutlineWeight, setShirtOutlineWeight] = useState(2);
-  const [shirtMondayScale, setShirtMondayScale] = useState(SHIRT_DEFAULT_COMPOSITION.mondayScale);
-  const [shirtNameScale, setShirtNameScale] = useState(SHIRT_DEFAULT_COMPOSITION.nameScale);
-  const [shirtNumberScale, setShirtNumberScale] = useState(SHIRT_DEFAULT_COMPOSITION.numberScale);
+  const [shirtMondayScale, setShirtMondayScale] = useState(initialShareShirt.composition.mondayScale);
+  const [shirtNameScale, setShirtNameScale] = useState(initialShareShirt.composition.nameScale);
+  const [shirtNumberScale, setShirtNumberScale] = useState(initialShareShirt.composition.numberScale);
   const [shirtNameNumberLocked, setShirtNameNumberLocked] = useState(false);
-  const [shirtBrothersScale, setShirtBrothersScale] = useState(SHIRT_DEFAULT_COMPOSITION.brothersScale);
+  const [shirtBrothersScale, setShirtBrothersScale] = useState(initialShareShirt.composition.brothersScale);
   const [shirtTeamScale, setShirtTeamScale] = useState(1);
   const [shirtTeamX, setShirtTeamX] = useState(0);
   const [shirtTeamY, setShirtTeamY] = useState(0);
-  const [shirtMondayX, setShirtMondayX] = useState(SHIRT_DEFAULT_COMPOSITION.mondayX);
-  const [shirtMondayY, setShirtMondayY] = useState(SHIRT_DEFAULT_COMPOSITION.mondayY);
-  const [shirtNameX, setShirtNameX] = useState(SHIRT_DEFAULT_COMPOSITION.nameX);
-  const [shirtNameY, setShirtNameY] = useState(SHIRT_DEFAULT_COMPOSITION.nameY);
-  const [shirtNumberX, setShirtNumberX] = useState(SHIRT_DEFAULT_COMPOSITION.numberX);
-  const [shirtNumberY, setShirtNumberY] = useState(SHIRT_DEFAULT_COMPOSITION.numberY);
-  const [shirtBrothersX, setShirtBrothersX] = useState(SHIRT_DEFAULT_COMPOSITION.brothersX);
-  const [shirtBrothersY, setShirtBrothersY] = useState(SHIRT_DEFAULT_COMPOSITION.brothersY);
+  const [shirtMondayX, setShirtMondayX] = useState(initialShareShirt.composition.mondayX);
+  const [shirtMondayY, setShirtMondayY] = useState(initialShareShirt.composition.mondayY);
+  const [shirtNameX, setShirtNameX] = useState(initialShareShirt.composition.nameX);
+  const [shirtNameY, setShirtNameY] = useState(initialShareShirt.composition.nameY);
+  const [shirtNumberX, setShirtNumberX] = useState(initialShareShirt.composition.numberX);
+  const [shirtNumberY, setShirtNumberY] = useState(initialShareShirt.composition.numberY);
+  const [shirtBrothersX, setShirtBrothersX] = useState(initialShareShirt.composition.brothersX);
+  const [shirtBrothersY, setShirtBrothersY] = useState(initialShareShirt.composition.brothersY);
+
+  useEffect(() => {
+    setShirtTeam(initialShareShirt.team);
+    setShirtName(initialShareShirt.name);
+    setShirtNumber(initialShareShirt.number);
+    setShirtBgMode("custom");
+    setShirtCustomBg(initialShareShirt.bg || SHIRT_DEFAULT_BG);
+    setShirtTextColour(initialShareShirt.textColour || IVORY);
+    setShirtNumberColour(initialShareShirt.numberColour || initialShareShirt.textColour || IVORY);
+    setShirtMondayScale(initialShareShirt.composition.mondayScale);
+    setShirtMondayX(initialShareShirt.composition.mondayX);
+    setShirtMondayY(initialShareShirt.composition.mondayY);
+    setShirtNameScale(initialShareShirt.composition.nameScale);
+    setShirtNameX(initialShareShirt.composition.nameX);
+    setShirtNameY(initialShareShirt.composition.nameY);
+    setShirtNumberScale(initialShareShirt.composition.numberScale);
+    setShirtNumberX(initialShareShirt.composition.numberX);
+    setShirtNumberY(initialShareShirt.composition.numberY);
+    setShirtBrothersScale(initialShareShirt.composition.brothersScale);
+    setShirtBrothersX(initialShareShirt.composition.brothersX);
+    setShirtBrothersY(initialShareShirt.composition.brothersY);
+  }, [initialShareShirt]);
 
   useEffect(() => {
     if (shirtBgMode !== "team") return;
@@ -420,12 +449,48 @@ export function ShareScreen({
     setPosterShadowOpacity(0.3);
   };
 
+  const currentShirtComposition = () => ({
+    mondayScale: shirtMondayScale,
+    mondayX: shirtMondayX,
+    mondayY: shirtMondayY,
+    nameScale: shirtNameScale,
+    nameX: shirtNameX,
+    nameY: shirtNameY,
+    numberScale: shirtNumberScale,
+    numberX: shirtNumberX,
+    numberY: shirtNumberY,
+    brothersScale: shirtBrothersScale,
+    brothersX: shirtBrothersX,
+    brothersY: shirtBrothersY,
+  });
+
   const handleExport = async () => {
     if (!frameRef.current || shareBusy) return;
     const previewWindow = reserveShareWindow();
     setShareBusy(true);
     try {
-      const blob = await captureShareElementBlob(frameRef.current, teamA);
+      const blob = activeState.id === "shirt"
+        ? await createShirtPosterBlob({
+          team: shirtTeam,
+          name: shirtName,
+          number: shirtNumber,
+          background: shirtBgMode === "custom" ? shirtCustomBg : (getTeamTheme(shirtTeam)?.primary || getTeamTheme(shirtTeam)?.bg || SHIRT_DEFAULT_BG),
+          textColour: shirtTextColour,
+          numberColour: shirtNumberColour,
+          composition: currentShirtComposition(),
+          showMondayLogo: shirtShowMondayLogo,
+          showBrothers: shirtShowBrothers,
+          showName: shirtShowName,
+          showNumber: shirtShowNumber,
+          textOutlineEnabled: shirtOutlineEnabled,
+          numberOutlineEnabled: shirtNumberOutlineEnabled,
+          outlineColour: shirtOutlineColour,
+          outlineWeight: shirtOutlineWeight,
+          fontType: shirtFontType,
+          patternMode: shirtPatternMode,
+          patternColour: shirtPatternColour,
+        })
+        : await captureShareElementBlob(frameRef.current, teamA);
       await shareOrDownloadResult({ blob, filename: `monday-cup-${activeState.id}-share.png`, previewWindow });
     } catch (error) {
       if (previewWindow && !previewWindow.closed) previewWindow.close();
@@ -542,7 +607,10 @@ export function ShareScreen({
                 shirtTextColour={shirtTextColour}
                 shirtNumberColour={shirtNumberColour}
                 shirtOutlineEnabled={shirtOutlineEnabled}
+                shirtNumberOutlineEnabled={shirtNumberOutlineEnabled}
                 shirtOutlineColour={shirtOutlineColour}
+                shirtPatternMode={shirtPatternMode}
+                shirtPatternColour={shirtPatternColour}
                 shirtFontWeight={shirtFontWeight}
                 shirtFontStyle={shirtFontStyle}
                 shirtFontType={shirtFontType}
@@ -749,19 +817,22 @@ export function ShareScreen({
                 <div className="grid gap-3">
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Field label="Background"><SelectInput value={shirtBgMode} onChange={setShirtBgMode} options={[{ value: "team", label: "TEAM" }, { value: "custom", label: "CUSTOM" }]} /></Field>
-                    <Field label="Custom bg"><ColourInput value={shirtCustomBg} onChange={setShirtCustomBg} /></Field>
+                    <Field label="Custom bg"><ColourInput value={shirtCustomBg} onChange={(value) => { setShirtBgMode("custom"); setShirtCustomBg(value); }} /></Field>
                     <Field label="Text colour"><ColourInput value={shirtTextColour} onChange={setShirtTextColour} /></Field>
                     <Field label="Number colour"><ColourInput value={shirtNumberColour} onChange={setShirtNumberColour} /></Field>
+                    <Field label="Shirt design"><SelectInput value={shirtPatternMode} onChange={setShirtPatternMode} options={[{ value: "team", label: "TEAM" }, { value: "plain", label: "PLAIN" }, { value: "stripes", label: "STRIPES" }, { value: "checkerboard", label: "CHECKER" }, { value: "hoops", label: "HOOPS" }]} /></Field>
+                    <Field label="Pattern colour"><ColourInput value={shirtPatternColour} onChange={setShirtPatternColour} /></Field>
                     <Field label="Font"><SelectInput value={shirtFontType} onChange={setShirtFontType} options={FONT_OPTIONS} /></Field>
                     <Field label="Font weight"><SelectInput value={shirtFontWeight} onChange={setShirtFontWeight} options={FONT_WEIGHT_OPTIONS} /></Field>
                     <Field label="Font style"><SelectInput value={shirtFontStyle} onChange={setShirtFontStyle} options={FONT_STYLE_OPTIONS} /></Field>
                     <Field label="Outline colour"><ColourInput value={shirtOutlineColour} onChange={setShirtOutlineColour} /></Field>
-                    <Field label="Outline weight"><RangeInput value={shirtOutlineWeight} onChange={setShirtOutlineWeight} min={0} max={6} step={0.25} suffix="px" /></Field>
+                    <Field label="Outline weight"><RangeInput value={shirtOutlineWeight} onChange={setShirtOutlineWeight} min={0} max={16} step={0.25} suffix="px" /></Field>
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <CheckboxControl checked={shirtShowMondayLogo} onChange={setShirtShowMondayLogo} label="Monday logo" />
                     <CheckboxControl checked={shirtShowBrothers} onChange={setShirtShowBrothers} label="Brothers logo" />
                     <CheckboxControl checked={shirtOutlineEnabled} onChange={setShirtOutlineEnabled} label="Outline text" />
+                    <CheckboxControl checked={shirtNumberOutlineEnabled} onChange={setShirtNumberOutlineEnabled} label="Outline number" />
                     <CheckboxControl checked={shirtNameNumberLocked} onChange={setShirtNameNumberLocked} label="Lock name + number scale" />
                   </div>
                 </div>

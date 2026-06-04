@@ -90,7 +90,7 @@ export function editorTransform({ x = 0, y = 0, scale = 1 } = {}) {
 }
 
 export function textStroke(weight = 0, colour = LED_YELLOW) {
-  const px = clampNumber(weight, 0, 8, 0);
+  const px = clampNumber(weight, 0, 16, 0);
   return px > 0 ? `${px}px ${colour || LED_YELLOW}` : "0 transparent";
 }
 

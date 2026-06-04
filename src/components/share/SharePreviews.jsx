@@ -502,18 +502,18 @@ export function PosterPreview({
   );
 }
 
-function getShirtFabricTheme(team, fallbackBackground, fallbackText, fallbackNumber) {
+function getShirtFabricTheme(team, fallbackBackground, fallbackText, fallbackNumber, patternOptions = {}) {
   const base = team ? getTeamTheme(team) : null;
-  const whiteBackground = ["#FFFFFF", "#F5F1E8"].includes((base?.primary || base?.bg || fallbackBackground || "").toUpperCase());
   const result = {
-    background: base?.primary || base?.bg || fallbackBackground,
-    textColour: base?.secondary || base?.text || fallbackText,
-    numberColour: base?.secondary || base?.text || fallbackNumber || fallbackText,
+    background: base?.primary || base?.bg || fallbackBackground || "#073B26",
+    textColour: base?.secondary || base?.text || fallbackText || IVORY,
+    numberColour: base?.secondary || base?.text || fallbackNumber || fallbackText || IVORY,
     numberOutlineEnabled: false,
     numberOutlineColour: "transparent",
     numberOutlineWidth: 0,
     pattern: null,
-    brothersAsset: whiteBackground ? ASSETS.branding.brothersDark : ASSETS.branding.myMundialLogo,
+    patternColour: patternOptions.patternColour || "#FFFFFF",
+    brothersAsset: ASSETS.branding.myMundialLogo,
   };
 
   switch (team) {
@@ -522,7 +522,6 @@ function getShirtFabricTheme(team, fallbackBackground, fallbackText, fallbackNum
       result.textColour = base?.tertiary || "#1F2A44";
       result.numberColour = base?.tertiary || "#1F2A44";
       result.pattern = "argentina-stripes";
-      result.brothersAsset = ASSETS.branding.myMundialLogo;
       break;
     case "Brazil":
       result.background = base?.primary || "#F7D117";
@@ -534,14 +533,11 @@ function getShirtFabricTheme(team, fallbackBackground, fallbackText, fallbackNum
       result.textColour = base?.tertiary || "#23408E";
       result.numberColour = base?.tertiary || "#23408E";
       result.pattern = "croatia-checker";
-      result.brothersAsset = ASSETS.branding.brothersDark;
       break;
     case "United States":
       result.background = base?.primary || "#FFFFFF";
       result.textColour = base?.secondary || "#1F2A44";
       result.numberColour = base?.secondary || "#1F2A44";
-      result.pattern = null;
-      result.brothersAsset = ASSETS.branding.brothersDark;
       break;
     case "England":
       result.background = base?.primary || "#FFFFFF";
@@ -550,7 +546,6 @@ function getShirtFabricTheme(team, fallbackBackground, fallbackText, fallbackNum
       result.numberOutlineEnabled = true;
       result.numberOutlineColour = base?.tertiary || "#1F2A44";
       result.numberOutlineWidth = 9;
-      result.brothersAsset = ASSETS.branding.brothersDark;
       break;
     case "Portugal":
       result.background = base?.primary || "#B30B18";
@@ -559,17 +554,32 @@ function getShirtFabricTheme(team, fallbackBackground, fallbackText, fallbackNum
       result.numberOutlineEnabled = true;
       result.numberOutlineColour = base?.secondary || "#006A4E";
       result.numberOutlineWidth = 11;
-      result.brothersAsset = ASSETS.branding.myMundialLogo;
       break;
     default:
       break;
   }
 
+  // Editor inputs are the source of truth. Team presets provide the starting kit,
+  // but colour controls must always update the live preview immediately.
+  result.background = fallbackBackground || result.background;
+  result.textColour = fallbackText || result.textColour;
+  result.numberColour = fallbackNumber || fallbackText || result.numberColour;
+  const manualPattern = patternOptions.patternMode || "team";
+  if (manualPattern === "plain") {
+    result.pattern = null;
+  } else if (manualPattern && manualPattern !== "team") {
+    result.pattern = manualPattern;
+  }
+  result.patternColour = patternOptions.patternColour || result.patternColour || "#FFFFFF";
+
+  const whiteBackground = ["#FFFFFF", "#F5F1E8"].includes(String(result.background || "").toUpperCase());
+  result.brothersAsset = whiteBackground ? ASSETS.branding.brothersDark : ASSETS.branding.myMundialLogo;
   return result;
 }
 
-function ShirtFabricPattern({ pattern }) {
+function ShirtFabricPattern({ pattern, colour = "#FFFFFF" }) {
   if (!pattern) return null;
+  const safeColour = colour || "#FFFFFF";
   if (pattern === "argentina-stripes") {
     return <div className="absolute inset-0 opacity-[0.98]" style={{ backgroundImage: "linear-gradient(90deg, #75AADB 0 20%, #FFFFFF 20% 40%, #75AADB 40% 60%, #FFFFFF 60% 80%, #75AADB 80% 100%)" }} />;
   }
@@ -580,7 +590,25 @@ function ShirtFabricPattern({ pattern }) {
           const row = Math.floor(index / 5);
           const col = index % 5;
           const active = (row + col) % 2 === 1;
-          return <div key={`croatia-square-${index}`} className={active ? "bg-[#C7222A]" : "bg-[#FFFFFF]"} />;
+          return <div key={`croatia-square-${index}`} style={{ backgroundColor: active ? "#C7222A" : "#FFFFFF" }} />;
+        })}
+      </div>
+    );
+  }
+  if (pattern === "stripes") {
+    return <div className="absolute inset-0 opacity-[0.94]" style={{ backgroundImage: `linear-gradient(90deg, transparent 0 20%, ${safeColour} 20% 40%, transparent 40% 60%, ${safeColour} 60% 80%, transparent 80% 100%)` }} />;
+  }
+  if (pattern === "hoops") {
+    return <div className="absolute inset-0 opacity-[0.94]" style={{ backgroundImage: `linear-gradient(180deg, transparent 0 20%, ${safeColour} 20% 40%, transparent 40% 60%, ${safeColour} 60% 80%, transparent 80% 100%)` }} />;
+  }
+  if (pattern === "checkerboard") {
+    return (
+      <div className="absolute inset-0 grid grid-cols-5 grid-rows-5 overflow-hidden opacity-[0.94]">
+        {Array.from({ length: 25 }).map((_, index) => {
+          const row = Math.floor(index / 5);
+          const col = index % 5;
+          const active = (row + col) % 2 === 1;
+          return <div key={`shirt-checker-${index}`} style={{ backgroundColor: active ? safeColour : "transparent" }} />;
         })}
       </div>
     );
@@ -600,7 +628,10 @@ export function ShirtPosterPreview({
   shirtTextColour,
   shirtNumberColour,
   shirtOutlineEnabled,
+  shirtNumberOutlineEnabled = false,
   shirtOutlineColour,
+  shirtPatternMode = "team",
+  shirtPatternColour = "#FFFFFF",
   shirtFontWeight,
   shirtFontStyle,
   shirtFontType = "bold",
@@ -626,7 +657,10 @@ export function ShirtPosterPreview({
 }) {
   const kit = teamToGameTeam(shirtTeam);
   const rawBackground = shirtBgMode === "custom" ? shirtCustomBg : kit.primaryColour;
-  const fabricTheme = getShirtFabricTheme(shirtTeam, rawBackground, shirtTextColour, shirtNumberColour);
+  const fabricTheme = getShirtFabricTheme(shirtTeam, rawBackground, shirtTextColour, shirtNumberColour, {
+    patternMode: shirtPatternMode,
+    patternColour: shirtPatternColour,
+  });
   const background = fabricTheme.background;
   const nameLength = String(shirtName || "").length;
   const nameBase = nameLength > 12 ? 31 : nameLength > 9 ? 39 : 50;
@@ -640,17 +674,18 @@ export function ShirtPosterPreview({
   const mondayHeight = Math.max(24, Math.min(64, 38 * Number(shirtMondayScale || 1)));
   const brothersWidth = Math.max(8, Math.min(26, 14 * Number(shirtBrothersScale || 0.65)));
   const stroke = shirtOutlineEnabled ? textStroke(shirtOutlineWeight, shirtOutlineColour) : "0 transparent";
-  const svgStrokeWidth = shirtOutlineEnabled ? clampNumber(shirtOutlineWeight, 0, 8, 0) : 0;
-  const numberStrokeEnabled = fabricTheme.numberOutlineEnabled || shirtOutlineEnabled;
+  const svgStrokeWidth = (shirtOutlineEnabled || shirtNumberOutlineEnabled) ? clampNumber(shirtOutlineWeight, 0, 16, 0) : 0;
+  const numberStrokeEnabled = fabricTheme.numberOutlineEnabled || shirtNumberOutlineEnabled;
   const numberStrokeColour = fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineColour : shirtOutlineColour;
-  const numberStrokeWidth = fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineWidth : svgStrokeWidth;
+  const numberStrokeWidth = fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineWidth : (shirtNumberOutlineEnabled ? svgStrokeWidth : 0);
   const shirtFontFamily = fontFamilyFor(shirtFontType);
   const numberText = String(shirtNumber || "99").slice(0, 2);
   const doubleNumberSpacing = numberText.length > 1 ? "-0.032em" : "0em";
+  const singleDigitOpticalX = numberText === "4" ? -10 : 0;
   const centred = (x, y, scale = 1) => mergeTransforms("translate(-50%, -50%)", editorTransform({ x, y, scale }));
   return (
     <div className="relative h-full w-full overflow-hidden text-center text-[#F5F1E8]" style={{ background }}>
-      <ShirtFabricPattern pattern={fabricTheme.pattern} />
+      <ShirtFabricPattern pattern={fabricTheme.pattern} colour={fabricTheme.patternColour} />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_14%,rgba(255,255,255,0.14),transparent_31%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(0,0,0,0.065))]" />
       {shirtShowMondayLogo && (
         <div className="absolute left-1/2 top-[10%] z-[2] grid place-items-center" style={{ height: mondayHeight, width: mondayHeight * 1.05, transform: centred(shirtMondayX, shirtMondayY) }}>
@@ -663,7 +698,25 @@ export function ShirtPosterPreview({
         </div>
       )}
       {shirtShowNumber && (
-        <svg className="absolute left-1/2 top-[60%] z-[2] w-[94%] overflow-visible" viewBox="0 0 1000 520" preserveAspectRatio="xMidYMid meet" style={{ height: numberSize * 0.78, transform: centred(shirtNumberX, shirtNumberY), filter: "drop-shadow(0 7px 0 rgba(0,0,0,0.12))" }} aria-label={numberText}>
+        <svg className="absolute left-1/2 top-[60%] z-[2] w-[94%] overflow-visible" viewBox="0 0 1000 520" preserveAspectRatio="xMidYMid meet" style={{ height: numberSize * 0.78, transform: centred(Number(shirtNumberX || 0) + singleDigitOpticalX, shirtNumberY) }} aria-label={numberText}>
+          <text
+            x="500"
+            y="273"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            lengthAdjust="spacing"
+            style={{
+              fill: "rgba(0,0,0,0.12)",
+              fontFamily: shirtFontFamily,
+              fontSize: numberSize,
+              fontWeight: 900,
+              fontStyle: shirtFontStyle,
+              letterSpacing: doubleNumberSpacing,
+              stroke: "none",
+            }}
+          >
+            {numberText}
+          </text>
           <text
             x="500"
             y="266"

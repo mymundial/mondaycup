@@ -2,7 +2,6 @@ import { GROUPS } from "../../data/teams.js";
 
 export const EXPORT_STATES = [
   { id: "match", label: "MATCH" },
-  { id: "bracket", label: "BRACKET" },
   { id: "poster", label: "POSTER" },
   { id: "shirt", label: "SHIRT" },
 ];

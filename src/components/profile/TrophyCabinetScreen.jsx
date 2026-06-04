@@ -75,9 +75,9 @@ const PODIUM_BADGES = [
 const DEMO_SHINY_NATION = "Mexico";
 
 const STICKER_ROLES = [
-  { key: "captain", label: "Captain Fantastic" },
-  { key: "striker", label: "Star Striker" },
-  { key: "stopper", label: "Shot Stopper" },
+  { key: "striker", label: "STRIKER", fallbackName: "TBC", fallbackNumber: "9" },
+  { key: "talisman", label: "TALISMAN", fallbackName: "TBC", fallbackNumber: "10" },
+  { key: "stopper", label: "STOPPER", fallbackName: "TBC", fallbackNumber: "1" },
 ];
 
 function TrophyToggle({ value, onChange }) {
@@ -378,81 +378,115 @@ function ShinyStickerCrest({ team, featured = false }) {
   );
 }
 
-function OpenStickerContent({ label, team, featured = false, shiny = false }) {
+function stickerPlayerFor(team, stickerKey, role = {}) {
+  if (team === "Mexico" && stickerKey === "icon") {
+    return { name: "SANCHEZ", number: "9" };
+  }
+  if (stickerKey === "icon") {
+    return { name: teamCode(team), number: "9" };
+  }
+  return {
+    name: role.fallbackName || "TBC",
+    number: role.fallbackNumber || "0",
+  };
+}
+
+function teamStickerRank(team) {
+  const index = ALL_NATIONS.indexOf(team);
+  return String(Math.max(1, index + 1)).padStart(2, "0");
+}
+
+function StickerShirtBack({ team, name, number, footerLabel }) {
+  const theme = getTeamTheme(team);
+  const bg = theme.bg || "#0B6B3A";
+  const text = theme.text || "#F5F1E8";
+  return (
+    <div
+      className="relative aspect-[5/7] h-full max-h-full w-auto max-w-full overflow-hidden rounded-[0.88rem] border shadow-[0_10px_18px_rgba(0,0,0,0.23),inset_0_1px_0_rgba(255,255,255,0.22)]"
+      style={{
+        borderColor: text,
+        background: `radial-gradient(circle at 50% 7%, rgba(255,255,255,0.17), transparent 32%), linear-gradient(145deg, ${bg}, ${bg} 58%, rgba(0,0,0,0.24))`,
+      }}
+    >
+      <div className="absolute left-1/2 top-[6.5%] z-[2] h-[16%] w-[23%] -translate-x-1/2">
+        <img src="/assets/branding/monday-cup.png" alt="" className="h-full w-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.28)]" draggable={false} />
+      </div>
+      <div
+        className="absolute left-1/2 top-[29%] z-[2] w-[88%] -translate-x-1/2 truncate text-center home-copy-bold text-[9px] uppercase leading-none tracking-[0.08em] drop-shadow-[0_2px_3px_rgba(0,0,0,0.22)]"
+        style={{ color: text }}
+      >
+        {name}
+      </div>
+      <div
+        className="absolute left-1/2 top-[53.5%] z-[2] w-[92%] -translate-x-1/2 -translate-y-1/2 truncate text-center home-copy-bold text-[39px] uppercase leading-none tracking-[-0.04em] drop-shadow-[0_4px_0_rgba(0,0,0,0.13)]"
+        style={{ color: text }}
+      >
+        {number}
+      </div>
+      <div
+        className="absolute bottom-[8%] left-1/2 z-[2] w-[86%] -translate-x-1/2 truncate text-center home-copy-bold text-[5.9px] uppercase leading-none tracking-[0.12em] opacity-88 drop-shadow-[0_2px_3px_rgba(0,0,0,0.20)]"
+        style={{ color: text }}
+      >
+        {footerLabel}
+      </div>
+      <div className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(160deg,rgba(255,255,255,0.12),transparent_31%,rgba(0,0,0,0.10)_100%)]" />
+    </div>
+  );
+}
+
+function OpenStickerContent({ label, team, stickerKey, role = {}, layout = "portrait", shiny = false }) {
   const theme = getTeamTheme(team);
   const textColor = shiny ? "#FFFFFF" : theme.text || "#F5F1E8";
-  const glow = shiny ? "drop-shadow-[0_2px_6px_rgba(0,0,0,0.52)]" : "drop-shadow-[0_2px_4px_rgba(0,0,0,0.34)]";
   const displayName = getTeamDisplayName(team, "sticker");
+  const code = teamCode(team);
 
-  if (featured && shiny) {
-    return (
-      <div className="relative z-[2] grid h-full w-full grid-rows-[1fr_auto] items-center justify-items-center px-3 py-2.5 text-center">
-        <div className="relative flex h-full w-full items-center justify-center">
-          <div className="absolute left-1 top-1 rounded-full border border-white/38 bg-black/18 px-2.5 py-1 home-copy-bold text-[8px] uppercase leading-none tracking-[0.16em] text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
-            Foil
+  if (layout === "landscape") {
+    if (shiny) {
+      return (
+        <div className="relative z-[2] grid h-full w-full grid-cols-[minmax(0,0.68fr)_minmax(0,1fr)_minmax(0,0.68fr)] items-center gap-2 px-3 py-2">
+          <div className="min-w-0 text-center">
+            <div className="home-copy-bold text-[8px] uppercase leading-none tracking-[0.15em] text-white/78">COLOURS</div>
+            <div className="mt-2 home-copy-bold text-[27px] uppercase leading-none tracking-[0.08em] text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.38)]">
+              {code}
+            </div>
           </div>
-          <div className="absolute right-1 top-1 rounded-full border border-[#F7D117]/50 bg-black/18 px-2 py-1 home-copy-bold text-[8px] uppercase leading-none tracking-[0.12em] text-[#F7D117] shadow-[0_0_10px_rgba(247,209,23,0.12)]">
-            ★
+          <div className="flex h-[72px] w-full items-center justify-center overflow-hidden rounded-[0.9rem] border border-white/62 bg-black/16 shadow-[0_8px_18px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(255,255,255,0.38)]">
+            <Flag team={team} className="h-full w-full object-cover" />
           </div>
-          <ShinyStickerCrest team={team} featured />
+          <div className="min-w-0 text-center">
+            <div className="home-copy-bold text-[8px] uppercase leading-none tracking-[0.15em] text-white/78">RANK</div>
+            <div className="mt-2 home-copy-bold text-[26px] uppercase leading-none tracking-[0.04em] text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.38)]">
+              #{teamStickerRank(team)}
+            </div>
+          </div>
         </div>
-        <div className="grid w-full max-w-[255px] grid-cols-[1fr_auto] items-center gap-2 rounded-[0.45rem] border border-white/42 bg-black/24 px-3 py-1.5 shadow-[0_7px_16px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.20)]">
-          <div className="truncate text-left home-copy-bold text-[17px] uppercase leading-none tracking-[0.11em] text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.45)]">
-            {displayName}
-          </div>
-          <div className="home-copy-bold text-[8px] uppercase leading-none tracking-[0.16em] text-[#F7D117] drop-shadow-[0_2px_4px_rgba(0,0,0,0.42)]">
-            {teamCode(team)}
-          </div>
-        </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (featured) {
     return (
       <div className="relative z-[2] grid h-full w-full grid-cols-[minmax(0,1fr)_112px] items-center gap-3 px-3 py-2">
         <div className="min-w-0 text-left">
-          <div className={`truncate home-copy-bold text-[21px] uppercase leading-none tracking-[0.1em] ${glow}`} style={{ color: textColor }}>
+          <div className="home-copy-bold text-[8px] uppercase leading-none tracking-[0.16em] opacity-78" style={{ color: textColor }}>
+            COLOURS
+          </div>
+          <div className="mt-2 truncate home-copy-bold text-[20px] uppercase leading-none tracking-[0.1em] drop-shadow-[0_2px_5px_rgba(0,0,0,0.36)]" style={{ color: textColor }}>
             {displayName}
           </div>
           <div className="mt-1.5 home-copy-bold text-[8px] uppercase leading-none tracking-[0.14em] opacity-78" style={{ color: textColor }}>
-            Nation Flag
+            {code} KIT
           </div>
         </div>
-        <div className="flex h-[72px] w-[112px] items-center justify-center overflow-hidden rounded-[0.85rem] border border-white/38 bg-black/18 shadow-[0_8px_18px_rgba(0,0,0,0.20),inset_0_1px_0_rgba(255,255,255,0.28)]">
+        <div className="flex h-[74px] w-[112px] items-center justify-center overflow-hidden rounded-[0.85rem] border border-white/38 bg-black/18 shadow-[0_8px_18px_rgba(0,0,0,0.20),inset_0_1px_0_rgba(255,255,255,0.28)]">
           <Flag team={team} className="h-full w-full object-cover" />
         </div>
       </div>
     );
   }
 
-  if (shiny) {
-    return (
-      <div className="relative z-[2] flex h-full w-full flex-col items-center justify-between px-2.5 py-3 text-center">
-        <div className="home-copy-bold text-[7px] uppercase leading-tight tracking-[0.13em] text-white/88 drop-shadow-[0_2px_4px_rgba(0,0,0,0.42)]">
-          {label}
-        </div>
-        <ShinyStickerCrest team={team} />
-        <div className="rounded-full border border-white/30 bg-black/20 px-2 py-0.5 home-copy-bold text-[6.5px] uppercase leading-none tracking-[0.14em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]">
-          Foil
-        </div>
-      </div>
-    );
-  }
-
+  const player = stickerPlayerFor(team, stickerKey, role);
   return (
-    <div className="relative z-[2] flex h-full w-full flex-col items-center justify-between px-2.5 py-3 text-center">
-      <div className="home-copy-bold text-[8px] uppercase leading-tight tracking-[0.13em] opacity-82" style={{ color: textColor }}>
-        {label}
-      </div>
-      <div className="flex h-[54px] w-[54px] items-center justify-center rounded-full border border-white/28 bg-black/16 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
-        <span className="home-copy-bold text-[24px] uppercase leading-none tracking-[0.06em]" style={{ color: textColor }}>
-          ★
-        </span>
-      </div>
-      <div className="home-copy-bold text-[7px] uppercase leading-none tracking-[0.12em] opacity-78" style={{ color: textColor }}>
-        Sticker
-      </div>
+    <div className="relative z-[2] flex h-full w-full items-center justify-center text-center">
+      <StickerShirtBack team={team} name={player.name} number={player.number} footerLabel={label} />
     </div>
   );
 }
@@ -461,20 +495,25 @@ function StickerBookSlot({
   label,
   team,
   stickerKey,
-  featured = false,
+  role = {},
+  layout = "portrait",
   nationStickerProgress = {},
   nationCupWins = {},
   onOpenSticker,
 }) {
   const record = getStickerRecord(nationStickerProgress, team);
-  const demoShiny = team === DEMO_SHINY_NATION;
-  const cupWon = Boolean(demoShiny || record?.cupWon || nationCupWins?.[team]?.unlocked);
-  const played = Boolean(cupWon || record?.played || Number(record?.matchesPlayed || 0) > 0);
-  const opened = Boolean(cupWon || stickerHasOpened(record, stickerKey));
-  const claimable = Boolean(!opened && (record?.claimable?.[stickerKey] || (stickerKey === "flag" && played)));
+  const forcedMexicoPreview = team === DEMO_SHINY_NATION;
+  const nationCupWon = Boolean(record?.cupWon || nationCupWins?.[team]?.unlocked);
+  const previewUnlocked = Boolean(forcedMexicoPreview || nationCupWon);
+  const shiny = Boolean(previewUnlocked && stickerKey === "flag");
+  const played = Boolean(previewUnlocked || record?.played || Number(record?.matchesPlayed || 0) > 0);
+  const opened = Boolean(previewUnlocked || stickerHasOpened(record, stickerKey));
+  const claimable = Boolean(!opened && (record?.claimable?.[stickerKey] || (played && ["flag", "icon"].includes(stickerKey))));
   const locked = !opened && !claimable;
-  const style = buildStickerStyle({ team, shiny: cupWon, opened });
-  const innerRadius = featured ? "rounded-[1.05rem]" : "rounded-[0.9rem]";
+  const style = buildStickerStyle({ team, shiny, opened });
+  const isLandscape = layout === "landscape";
+  const slotSizeClass = isLandscape ? "aspect-[2/1] p-2.5" : "aspect-[3/4] p-2.5";
+  const questionFeatured = isLandscape;
 
   return (
     <div
@@ -484,19 +523,19 @@ function StickerBookSlot({
           : claimable
             ? "border-[#F7D117]/82 bg-[#052D1D]/72 ring-[#F7D117]/28 shadow-[0_0_16px_rgba(247,209,23,0.12)]"
             : "border-[#F5F1E8]/16 bg-[#F5F1E8]/[0.055] ring-[#F5F1E8]/10"
-      } ${cupWon && opened ? "monday-sticker-shiny-shell" : ""} ${featured ? "mx-auto aspect-[16/9] w-full max-w-[330px] p-3" : "aspect-[3/4] p-2.5"}`}
+      } ${shiny && opened ? "monday-sticker-shiny-shell" : ""} ${slotSizeClass}`}
       style={style}
     >
-      <StickerShineOverlay shiny={cupWon && opened} />
+      <StickerShineOverlay shiny={shiny && opened} />
       {!opened && (
         <>
-          <div className={`absolute inset-2 ${innerRadius} border border-dashed ${claimable ? "border-[#F7D117]/42" : "border-[#F5F1E8]/14"}`} aria-hidden="true" />
+          <div className={`absolute inset-2 rounded-[0.95rem] border border-dashed ${claimable ? "border-[#F7D117]/42" : "border-[#F5F1E8]/14"}`} aria-hidden="true" />
           <div className="relative z-[2] mt-1 home-copy-bold text-[8px] uppercase leading-tight tracking-[0.13em] text-[#F5F1E8]/72">
             {label}
           </div>
           <StickerQuestionBox
             claimable={claimable}
-            featured={featured}
+            featured={questionFeatured}
             onOpen={() => onOpenSticker?.(team, stickerKey)}
           />
           <div className={`relative z-[2] mb-1 home-copy-bold text-[7px] uppercase leading-none tracking-[0.12em] ${claimable ? "text-[#F7D117]" : "text-[#F5F1E8]/36"}`}>
@@ -504,7 +543,7 @@ function StickerBookSlot({
           </div>
         </>
       )}
-      {opened && <OpenStickerContent label={label} team={team} featured={featured} shiny={cupWon} />}
+      {opened && <OpenStickerContent label={label} team={team} stickerKey={stickerKey} role={role} layout={layout} shiny={shiny} />}
     </div>
   );
 }
@@ -521,21 +560,34 @@ function TeamStickerBook({
 }) {
   return (
     <TrophySection title={<TeamStickerTitle team={team} index={index} total={total} onPrevious={onPrevious} onNext={onNext} />}>
-      <div className="space-y-4 rounded-[1.35rem] border border-[#F5F1E8]/10 bg-[#031B12]/30 px-3 py-4 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
-        <StickerBookSlot
-          label="Nation Flag"
-          team={team}
-          stickerKey="flag"
-          featured
-          nationStickerProgress={nationStickerProgress}
-          nationCupWins={nationCupWins}
-          onOpenSticker={onOpenSticker}
-        />
+      <div className="space-y-3 rounded-[1.35rem] border border-[#F5F1E8]/10 bg-[#031B12]/30 px-3 py-4 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
+        <div className="grid grid-cols-3 gap-2.5">
+          <StickerBookSlot
+            label="ICON"
+            team={team}
+            stickerKey="icon"
+            nationStickerProgress={nationStickerProgress}
+            nationCupWins={nationCupWins}
+            onOpenSticker={onOpenSticker}
+          />
+          <div className="col-span-2">
+            <StickerBookSlot
+              label="COLOURS"
+              team={team}
+              stickerKey="flag"
+              layout="landscape"
+              nationStickerProgress={nationStickerProgress}
+              nationCupWins={nationCupWins}
+              onOpenSticker={onOpenSticker}
+            />
+          </div>
+        </div>
         <div className="grid grid-cols-3 gap-2.5">
           {STICKER_ROLES.map((role) => (
             <StickerBookSlot
               key={role.key}
               label={role.label}
+              role={role}
               team={team}
               stickerKey={role.key}
               nationStickerProgress={nationStickerProgress}

@@ -32,6 +32,7 @@ const FLOATING_HOME_LOGO_SRC = ASSETS.branding.mondayLogo;
 const SCOREBOARD_STAGE_TEXT = "font-led text-[clamp(9px,1.35vh,16px)] font-black uppercase leading-none tracking-[0.14em] text-[#F7D117]";
 const SCOREBOARD_MAIN_TEXT = "font-led text-[clamp(17px,3.05vh,34px)] font-black uppercase leading-none tracking-normal text-[#F7D117]";
 const SCOREBOARD_MARKER_TEXT = "font-led text-[clamp(6px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.12em] text-[#F7D117]";
+const SCOREBOARD_LABEL_BOX_WIDTH = "clamp(272px,68vw,342px)";
 const MENU_TITLE_CLASS = "home-copy-bold text-[28px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]";
 const HOME_MAIN_HEIGHT = `calc(100dvh - (${MATCH_TOP_BAR_HEIGHT_PX}px + ((100dvh - ${MATCH_TOP_BAR_HEIGHT_PX}px) * ${MATCH_SCOREBOARD_RATIO})))`;
 const HOME_LOGO_TOP_RATIO = 0;
@@ -40,7 +41,8 @@ const HOME_LOGO_HEIGHT = "min(132px,17.5vh)";
 const HOME_LOGO_CENTER_Y = "17%";
 const HOME_LOGO_GAP = "clamp(18px,2.6vh,30px)";
 const HOME_AD_BOARD_TOP_PERCENT = GAME.goal.top + GAME.goal.height - SHARED_AD_BOARD_HEIGHT_PERCENT;
-const HOME_MENU_TOP_OFFSET = `${HOME_AD_BOARD_TOP_PERCENT}%`;
+const HOME_GOAL_LINE_PERCENT = GAME.goal.top + GAME.goal.height;
+const HOME_MENU_TOP_OFFSET = `calc(${HOME_GOAL_LINE_PERCENT}% + clamp(10px,1.4vh,16px))`;
 
 function AtIcon({ className = "" }) {
   return (
@@ -329,7 +331,7 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, stati
           <div className="flex h-[86%] w-full items-center justify-center px-[3.5%] py-0">
             <div className="grid h-full w-full grid-cols-1 grid-rows-[25%_50%_25%] items-center">
               <div className="row-start-1 flex h-full items-center justify-center py-0">
-                <div className="led-text-glow font-led inline-flex w-[clamp(264px,78vw,410px)] max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(10px,3vw,18px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+                <div className="led-text-glow font-led inline-flex max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(10px,3vw,18px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]" style={{ width: SCOREBOARD_LABEL_BOX_WIDTH }}>
                   <span className="flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center leading-none">WELCOME TO</span>
                 </div>
               </div>
@@ -337,8 +339,8 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, stati
                 <div className="led-text-glow font-led flex h-full w-full items-center justify-center whitespace-nowrap text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">MONDAY CUP</div>
               </div>
               <div className="row-start-3 flex h-full items-center justify-center py-0">
-                <div className="led-text-glow font-led inline-flex w-[clamp(264px,78vw,410px)] max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(10px,3vw,18px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
-                  <span className="flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center leading-none">GLOBAL SHOOTOUT TOURNAMENT</span>
+                <div className="led-text-glow font-led inline-flex max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(10px,3vw,18px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]" style={{ width: SCOREBOARD_LABEL_BOX_WIDTH }}>
+                  <span className="flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center leading-none">INTERNATIONAL SOCCER SHOOTOUT</span>
                 </div>
               </div>
             </div>

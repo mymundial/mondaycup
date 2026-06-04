@@ -2227,6 +2227,8 @@ export default function App() {
           score={score}
           matchResult={matchResult}
           stageLabel={matchStage}
+          currentUser={currentUser}
+          initialShirt={userShirtProfile}
         />
       </DrawerShell>
     ) : drawer === "fixtures" ? (
