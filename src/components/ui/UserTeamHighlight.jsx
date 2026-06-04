@@ -16,9 +16,9 @@ export function userHighlightFlagClass(active, fallback = 'ring-[#F5F1E8]/35') {
   return active ? USER_HIGHLIGHT.flagRing : fallback;
 }
 
-export function userHighlightCardClass(active, inactiveClass = 'border-[#F5F1E8] bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/30') {
+export function userHighlightCardClass(active, inactiveClass = 'border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10') {
   return active
-    ? `${USER_HIGHLIGHT.border} bg-[#072D1D]/82 text-[#F5F1E8] ${USER_HIGHLIGHT.ring} ${USER_HIGHLIGHT.glow}`
+    ? `${USER_HIGHLIGHT.border} bg-[#052D1D]/84 text-[#F5F1E8] ${USER_HIGHLIGHT.ring} ${USER_HIGHLIGHT.glow}`
     : inactiveClass;
 }
 

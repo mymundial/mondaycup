@@ -1,5 +1,6 @@
 export const ACHIEVEMENTS_KEY = "mondayCup.achievements";
 export const NATION_CUP_WINS_KEY = "mondayCup.nationCupWins";
+export const NATION_STICKER_PROGRESS_KEY = "mondayCup.nationStickerProgress";
 export const ALL_TIME_MATCHES_PLAYED_KEY = "mondayCup.allTimeMatchesPlayed";
 export const ALL_TIME_MATCHES_WON_KEY = "mondayCup.allTimeMatchesWon";
 export const ALL_TIME_MATCHES_DRAWN_KEY = "mondayCup.allTimeMatchesDrawn";

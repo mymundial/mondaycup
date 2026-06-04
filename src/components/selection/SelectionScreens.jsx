@@ -9,7 +9,7 @@ import { GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
 import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
 import SharedCrowdBackdrop from "../crowd/SharedCrowdBackdrop.jsx";
 import { AuthEmailCommsCheckbox, AuthForgotPasswordButton, AuthPrimaryButton, AuthTabs, AuthTextInput, PasswordVisibilityButton } from "../auth/AuthFormParts.jsx";
-import { MC_SELECTION_LAYOUT } from "../../styles/theme.js";
+import { MC_SELECTION_LAYOUT, mcSoftPanelStyle } from "../../styles/theme.js";
 import "./FlashTeamTicker.css";
 
 const GAME = {
@@ -392,21 +392,24 @@ function ActionButton({ children, eyebrow, onClick, variant = "light", disabled 
 
 function SavedCampaignCard({ summary, onContinue }) {
   if (!summary) return null;
-  return <button onClick={onContinue} className="w-full rounded-[1.35rem] border border-[#D4AF37]/55 bg-[#F5F0E6] p-4 text-left text-[#0B5F35] shadow-inner">
-    <div className="text-[8px] font-black uppercase tracking-[0.24em] text-[#0B5F35]/45">CONTINUE CAMPAIGN</div>
+  return <button onClick={onContinue} className="w-full rounded-[1.35rem] border border-[#F7D117]/42 bg-[#052D1D]/68 p-4 text-left text-[#F5F1E8] shadow-[0_6px_14px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.06)]">
+    <div className="text-[8px] font-black uppercase tracking-[0.24em] text-[#F7D117]/82">CONTINUE CAMPAIGN</div>
     <div className="mt-2 flex items-center justify-between gap-3">
       <div className="min-w-0">
-        <div className="truncate text-[21px] font-black uppercase leading-none tracking-[-0.02em]">{summary.team}</div>
-        <div className="mt-1 truncate text-[10px] font-black uppercase tracking-[0.12em] text-[#0B5F35]/50">{summary.matchStage} · v {summary.opponent}</div>
+        <div className="truncate text-[21px] font-black uppercase leading-none tracking-[-0.02em] text-[#F5F1E8]">{summary.team}</div>
+        <div className="mt-1 truncate text-[10px] font-black uppercase tracking-[0.12em] text-[#F5F1E8]/58">{summary.matchStage} · v {summary.opponent}</div>
       </div>
-      <div className="shrink-0 rounded-full bg-[#0B5F35] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-[#F5F0E6]">PLAY</div>
+      <div className="shrink-0 rounded-full bg-[#F7D117] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-[#072D1D]">PLAY</div>
     </div>
   </button>;
 }
 
 function HomeMenuShell({ children, className = "", onBack }) {
   return (
-    <div className={`relative overflow-hidden rounded-[1.65rem] border border-[#F5F1E8]/14 bg-[#0B5F35]/88 text-[#F5F1E8] shadow-[0_8px_18px_rgba(0,0,0,0.16),inset_0_-2px_6px_rgba(0,0,0,0.06)] ${className}`}>
+    <div
+      className={`relative overflow-hidden rounded-[1.65rem] text-[#F5F1E8] ${className}`}
+      style={mcSoftPanelStyle}
+    >
       {onBack && (
         <button
           type="button"

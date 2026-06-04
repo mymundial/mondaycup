@@ -139,10 +139,10 @@ export function FixtureCard({ id = null, home = "TBC", away = "TBC", group, play
   const scoreText = played ? `${homeGoals}-${awayGoals}` : "v";
   const fixtureNo = Number(matchNo || matchNumber || 0);
   const stadium = FIXTURE_VENUES[fixtureNo] || "";
-  const cardClass = `mb-1.5 grid min-h-[62px] grid-rows-[30%_40%_30%] rounded-[1.25rem] border px-2.5 text-center ring-1 last:mb-0 ${isUserFixture ? "border-[#F7D117]/70 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/30 shadow-[0_0_12px_rgba(247,209,23,0.12),inset_0_1px_0_rgba(245,241,232,0.08)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`;
-  const teamText = (isUserTeam) => isUserTeam ? "text-[#F7D117]" : isUserFixture ? "text-[#F5F1E8]" : "text-[#26352E]";
-  const scoreClass = isUserFixture ? "text-[#F5F1E8]" : "text-[#26352E]";
-  const labelClass = isUserFixture ? "text-[#F5F1E8]" : "text-[#0B5F35]";
+  const cardClass = `mb-1.5 grid min-h-[62px] grid-rows-[30%_40%_30%] rounded-[1.25rem] border px-2.5 text-center ring-1 last:mb-0 ${isUserFixture ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-[#F7D117]/30 shadow-[0_0_12px_rgba(247,209,23,0.12),0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(245,241,232,0.08)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10 shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(245,241,232,0.06)]"}`;
+  const teamText = (isUserTeam) => isUserTeam ? "text-[#F7D117]" : "text-[#F5F1E8]";
+  const scoreClass = isUserFixture ? "text-[#F7D117]" : "text-[#F5F1E8]";
+  const labelClass = isUserFixture ? "text-[#F7D117]" : "text-[#F5F1E8]/72";
 
   return (
     <div className={cardClass}>
@@ -157,7 +157,7 @@ export function FixtureCard({ id = null, home = "TBC", away = "TBC", group, play
         <TeamName team={away} context="fixture" className={`text-center home-copy-regular ${teamText(isUserAway)}`} active={false} />
         <div className="flex -translate-x-1.5 items-center justify-center"><FlagSlot value={away} isUserTeam={isUserAway} /></div>
       </div>
-      <div className={`flex items-start justify-center self-stretch pt-[3px] home-copy-regular text-[11px] uppercase leading-none tracking-[0.14em] ${isUserFixture ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>
+      <div className={`flex items-start justify-center self-stretch pt-[3px] home-copy-regular text-[11px] uppercase leading-none tracking-[0.14em] ${isUserFixture ? "text-[#F5F1E8]" : "text-[#F5F1E8]/72"}`}>
         {stadium}
       </div>
     </div>

@@ -90,7 +90,7 @@ function LeaderboardFormGuide({ form = [], isUser = false }) {
               ? "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.7)]"
               : value === "D"
                 ? "bg-[#F7D117] shadow-[0_0_6px_rgba(247,209,23,0.72)]"
-                : isUser ? "bg-[#F7D117]/24" : "bg-[#0B5F35]/12"
+                : isUser ? "bg-[#F7D117]/24" : "bg-[#F5F1E8]/16"
         }`} aria-hidden="true" />
       ))}
     </div>
@@ -118,7 +118,7 @@ function LeaderboardFilterSlider({ cleanOnly, onToggle }) {
 
 function LeaderboardFlag({ team, isUser = false }) {
   if (!team) {
-    return <span className={`grid h-[18px] w-[28px] place-items-center text-center home-copy-bold text-[11px] leading-none ${isUser ? "text-[#F5F1E8]/82" : "text-[#0B5F35]/65"}`}>-</span>;
+    return <span className={`grid h-[18px] w-[28px] place-items-center text-center home-copy-bold text-[11px] leading-none ${isUser ? "text-[#F5F1E8]/82" : "text-[#F5F1E8]/55"}`}>-</span>;
   }
   return <TeamFlag team={team} isUserTeam={isUser} className="h-[18px] w-[28px] rounded-[5px] object-cover" fallbackRing="ring-[#0B5F35]/18" />;
 }
@@ -144,34 +144,34 @@ function leaderboardPodiumRowClass(rank) {
   if (numericRank === 1) return "border-[#D8B62F]/70 bg-[#D8B62F] text-[#072D1D] ring-1 ring-[#F7D117]/25";
   if (numericRank === 2) return "border-[#C8C8C8]/70 bg-[#C8C8C8] text-[#072D1D] ring-1 ring-[#F5F1E8]/25";
   if (numericRank === 3) return "border-[#CD7F32]/70 bg-[#CD7F32] text-[#072D1D] ring-1 ring-[#CD7F32]/25";
-  return "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-1 ring-[#F5F1E8]/18";
+  return "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-1 ring-[#F5F1E8]/10";
 }
 
 function leaderboardPodiumTextClass(row, isUser = false) {
   const numericRank = Number(row?.rank);
   if (isUser) return "text-[#F7D117]";
   if ([1, 2, 3].includes(numericRank)) return "text-[#355243]";
-  return "text-[#0B5F35]/65";
+  return "text-[#F5F1E8]/66";
 }
 
 function leaderboardNameTextClass(row, isUser = false) {
   const numericRank = Number(row?.rank);
   if (isUser) return "text-[#F7D117]";
   if ([1, 2, 3].includes(numericRank)) return "text-[#355243]";
-  return "text-[#26352E]";
+  return "text-[#F5F1E8]";
 }
 
 function leaderboardScoreTextClass(row, isUser = false) {
   const numericRank = Number(row?.rank);
   if (isUser) return "text-[#F5F1E8]";
   if ([1, 2, 3].includes(numericRank)) return "text-[#355243]";
-  return "text-[#0B5F35]";
+  return "text-[#F5F1E8]";
 }
 
 function LeaderboardRow({ row, isUser = false }) {
   const form = leaderboardForm(row);
   const rowClass = isUser
-    ? "border-[#F7D117]/70 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10)]"
+    ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-1 ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10)]"
     : leaderboardPodiumRowClass(row.rank);
 
   return (
@@ -199,8 +199,8 @@ function ScoringTypeBox({ label, points, tone = "ivory" }) {
     bronze: "border-[#CD7F32]/70 bg-[#CD7F32] text-[#072D1D]",
     silver: "border-[#C8C8C8]/80 bg-[#C8C8C8] text-[#072D1D]",
     gold: "border-[#D8B62F]/80 bg-[#D8B62F] text-[#072D1D]",
-    ivory: "border-[#F5F1E8]/70 bg-[#F5F1E8] text-[#072D1D]",
-  }[tone] || "border-[#F5F1E8]/70 bg-[#F5F1E8] text-[#072D1D]";
+    ivory: "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8]",
+  }[tone] || "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8]";
 
   return (
     <div className={`rounded-[0.9rem] border p-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_5px_10px_rgba(0,0,0,0.10)] ${toneClass}`}>

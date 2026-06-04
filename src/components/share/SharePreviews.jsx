@@ -2,8 +2,10 @@ import { MatchPitchPreview } from "../match/FootballGame.jsx";
 import { teamToGameTeam } from "../../logic/matchPresentation.js";
 import { GAME, getDirection, keeperTransform } from "../../logic/penaltyEngine.js";
 import { ASSETS } from "../../data/assets.js";
+import { getTeamTheme } from "../../data/teams.js";
 import {
   DARK_GREEN,
+  IVORY,
   LED_YELLOW,
   PITCH_MOW_BACKGROUND_STYLE,
 } from "./shareConstants.js";

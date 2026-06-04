@@ -1,5 +1,6 @@
 import React from 'react';
 import { ASSETS } from '../../data/assets.js';
+import { MC_COLORS } from '../../styles/theme.js';
 
 export const APP_FOOTER_HEIGHT_PX = 58;
 export const APP_FOOTER_BREATHING_ROOM_PX = 34;
@@ -14,11 +15,8 @@ export function footerAwareStyle(style = {}, mode = 'scroll') {
   };
 }
 
-const pitchMowBackground = {
-  backgroundColor: '#0B5F35',
-  backgroundImage:
-    'linear-gradient(90deg, rgba(255,255,255,0.045) 0 12.5%, rgba(0,0,0,0.075) 12.5% 25%, rgba(255,255,255,0.035) 25% 37.5%, rgba(0,0,0,0.055) 37.5% 50%, rgba(255,255,255,0.04) 50% 62.5%, rgba(0,0,0,0.06) 62.5% 75%, rgba(255,255,255,0.03) 75% 87.5%, rgba(0,0,0,0.075) 87.5% 100%)',
-  backgroundSize: '100% 100%',
+const titleBarFooterBackground = {
+  background: MC_COLORS.greenDark,
 };
 
 export default function AppFooter({ fixed = false, className = '' }) {
@@ -38,8 +36,8 @@ export default function AppFooter({ fixed = false, className = '' }) {
     >
       <div className={innerClass}>
         <div
-          className="relative flex h-full w-full items-start justify-center overflow-visible"
-          style={pitchMowBackground}
+          className="relative flex h-full w-full items-center justify-center overflow-visible"
+          style={titleBarFooterBackground}
         >
           <div
             className="pointer-events-none absolute inset-x-0 top-[-30px] h-[30px]"
@@ -52,7 +50,7 @@ export default function AppFooter({ fixed = false, className = '' }) {
           <img
             src={ASSETS.branding.myMundialLogo}
             alt="Brothers!"
-            className="relative z-[1] mt-[18px] h-[20px] w-auto max-w-[112px] object-contain opacity-95"
+            className="relative z-[1] h-[21px] w-auto max-w-[116px] object-contain opacity-95"
             draggable={false}
           />
         </div>

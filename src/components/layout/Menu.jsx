@@ -27,7 +27,7 @@ const MENU_TOP_OFFSET_PX = MC_SIZES.topBarHeight + 30;
 const MENU_SAFE_HEIGHT_OFFSET_PX = MC_SIZES.topBarHeight + 50;
 
 const MENU_FRAME =
-  "w-[calc(100vw_-_24px)] max-w-[430px] overflow-hidden rounded-[1.7rem]";
+  "w-full max-w-[430px] overflow-hidden rounded-[1.7rem]";
 
 const MENU_HEADER =
   "relative mb-3 grid h-12 grid-cols-[44px_1fr_44px] items-center gap-2 px-0";
@@ -113,24 +113,34 @@ function AuthField({ icon, children }) {
 }
 
 function MenuTile({ title, onClick, variant = "primary" }) {
-  const classes = {
+  const rowClass = {
     primary:
-      "border-[#E4C51C]/50 bg-[#F2D118] text-[#063B25] hover:bg-[#FFE23A]",
+      "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10 hover:bg-[#052D1D]/82",
     auth:
-      "border-[#F2D118]/28 bg-[#063B25] text-[#F2D118] hover:bg-[#07462B]",
+      "border-[#F7D117]/30 bg-[#052D1D]/68 text-[#F7D117] ring-[#F7D117]/16 hover:bg-[#052D1D]/84",
     danger:
-      "border-[#B94135]/28 bg-[#B94135] text-[#F5F1E8] hover:bg-[#C84A3D]",
-  };
+      "border-[#B94135]/34 bg-[#B94135]/20 text-[#F5F1E8] ring-[#B94135]/16 hover:bg-[#B94135]/28",
+  }[variant] || "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10";
+
+  const iconClass = {
+    primary: "border-[#F5F1E8]/20 bg-[#031B12]/54 text-[#F5F1E8]/72",
+    auth: "border-[#F7D117]/42 bg-[#031B12]/54 text-[#F7D117]",
+    danger: "border-[#B94135]/44 bg-[#031B12]/54 text-[#F5F1E8]",
+  }[variant] || "border-[#F5F1E8]/20 bg-[#031B12]/54 text-[#F5F1E8]/72";
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex min-h-[48px] items-center justify-center rounded-[1rem] border px-2 py-2 text-center shadow-[0_9px_18px_rgba(0,0,0,0.14)] transition-transform active:scale-[0.98] ${classes[variant]}`}
+      className={`grid min-h-[52px] w-full grid-cols-[34px_minmax(0,1fr)_22px] items-center gap-3 rounded-[1rem] border px-2 py-2 text-left shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(245,241,232,0.06)] ring-1 transition active:scale-[0.99] ${rowClass}`}
     >
-      <span className="home-copy-bold text-[clamp(10px,2.55vw,13px)] font-black uppercase leading-none tracking-[0.06em]">
+      <span className={`grid h-8 w-8 place-items-center rounded-[0.65rem] border ${iconClass}`} aria-hidden="true">
+        <span className="home-copy-bold text-[13px] leading-none">{variant === "danger" ? "!" : variant === "auth" ? "•" : ""}</span>
+      </span>
+      <span className="min-w-0 truncate home-copy-bold text-[13px] font-black uppercase leading-none tracking-[0.08em]">
         {title}
       </span>
+      <span className="home-copy-bold justify-self-end text-[16px] leading-none text-[#F7D117]/72" aria-hidden="true">›</span>
     </button>
   );
 }
@@ -167,7 +177,7 @@ function MenuHeader({ title = "MENU", onClose, onBack, authView = false, authLog
         type="button"
         onClick={onClose}
         aria-label="Close menu"
-        className="flex h-10 w-10 items-center justify-center rounded-xl bg-transparent text-[#F5F1E8]"
+        className="grid h-11 w-11 place-items-center justify-self-end rounded-[0.9rem] bg-[#031B12]/46 text-[#F5F1E8]"
       >
         <CloseIcon small />
       </button>
@@ -555,10 +565,9 @@ export function MenuDropdown({
 
   const menu = (
     <div
-      className="fixed inset-0 isolate flex items-start justify-center overflow-y-auto bg-[#031B12]/54 px-3 pb-[max(14px,env(safe-area-inset-bottom))] backdrop-blur-[3px]"
+      className="fixed inset-0 isolate flex items-start justify-center overflow-y-auto bg-[#031B12]/54 px-3 pb-5 pt-[max(76px,calc(64px+env(safe-area-inset-top)))] backdrop-blur-[3px]"
       style={{
         zIndex: 2147483647,
-        paddingTop: `calc(${MENU_TOP_OFFSET_PX}px + env(safe-area-inset-top))`,
       }}
     >
       <button aria-label="Close menu" onClick={onClose} className="absolute inset-0 z-[0]" type="button" />
@@ -590,7 +599,7 @@ export function MenuDropdown({
             <>
               <MenuHeader title="MENU" onClose={onClose} />
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-2 rounded-[1.25rem] border border-[#F5F1E8]/12 bg-[#031B12]/24 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                 {MENU_ITEMS.filter((item) => item.action !== "onShare" || (showShare && typeof onShare === "function")).map((item) => (
                   <MenuTile
                     key={item.title}

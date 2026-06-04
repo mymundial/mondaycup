@@ -12,11 +12,11 @@ import { PageTabsSlot } from "../ui/PageTabs.jsx";
 import AppPanel from "../ui/AppPanel.jsx";
 
 const GROUP_TABLE_GRID = "grid-cols-[22px_32px_minmax(0,1.8fr)_18px_repeat(6,24px)]";
-const STANDINGS_SECTION_BG = "bg-[#0B5F35]/44";
+const STANDINGS_SECTION_BG = "bg-[#031B12]/24";
 
 const rowClass = ({ isUserTeam }) => [
   `mb-1 grid ${GROUP_TABLE_GRID} items-center gap-[3px] rounded-xl px-2 py-1.5 text-center text-[11px] leading-none last:mb-0 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)] tabular-nums`,
-  userHighlightCardClass(isUserTeam, "border border-[#F5F1E8] bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/30"),
+  userHighlightCardClass(isUserTeam, "border border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"),
 ].join(" ");
 
 function PlaceholderSlot({ value, compact = false, large = false }) {
@@ -39,12 +39,12 @@ function BracketFixture({ fixture, layout = "vertical", userTeam = null, large =
   const heightClass = !large && layout === "horizontal" ? "h-[34px]" : "";
   const slotDirection = layout === "horizontal" ? "flex-row" : "flex-col";
   const isUserFixture = userTeam && (fixture?.home === userTeam || fixture?.away === userTeam);
-  const cardClass = isUserFixture ? "border-[#F7D117]/72 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/30" : "border-[#F5F1E8] bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/30";
+  const cardClass = isUserFixture ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-[#F7D117]/30" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10";
   const matchNo = Number(fixture?.matchNo);
   const showPlayoffLabel = matchNo === 103;
   return <div data-bracket-match-no={fixture?.matchNo || ""} className={`mx-auto flex ${widthClass} ${heightClass} flex-col items-center justify-center rounded-[0.55rem] border ${cardClass} px-[5px] py-[4px] ring-1 ${large ? "py-[6px]" : ""}`}>
     {showPlayoffLabel && (
-      <div className="mb-[2px] max-w-full whitespace-nowrap text-center text-[4.4px] font-black uppercase leading-none tracking-[0.035em] text-[#0B5F35]">PLAY-OFF</div>
+      <div className="mb-[2px] max-w-full whitespace-nowrap text-center text-[4.4px] font-black uppercase leading-none tracking-[0.035em] text-[#F5F1E8]/72">PLAY-OFF</div>
     )}
     <div className={`flex ${slotDirection} items-center gap-[6px]`}>
       <BracketSlot value={fixture?.home || fixture?.homeSeed || "TBC"} compact={compact} large={large} isUserTeam={fixture?.home === userTeam} />
@@ -63,7 +63,7 @@ function StageLabel({ children, connectorCount = 1 }) {
   return (
     <div className="relative flex h-[10px] items-center justify-center text-center home-copy-bold text-[8px] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]">
       <span aria-hidden="true" className="absolute top-1/2 h-px -translate-y-1/2 bg-[#F5F1E8]" style={{ left: inset, right: inset }} />
-      <span className="relative z-[3] bg-[#0B5F35] px-1 leading-none">{children}</span>
+      <span className="relative z-[3] bg-[#052D1D] px-1 leading-none">{children}</span>
     </div>
   );
 }
@@ -101,7 +101,7 @@ export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam =
         return <div key={row.team} className={rowClass({ isUserTeam })}>
           <span className={userHighlightTextClass(isUserTeam)}>{index + 1}</span>
           <span className="flex justify-center"><TeamFlag team={row.team} isUserTeam={isUserTeam} className="h-4 w-6" /></span><TeamName team={row.team} active={isUserTeam} className="pl-2 text-left tracking-[0.015em]" />
-          <span className={`flex items-center justify-center text-[10px] home-copy-bold font-black ${isUserTeam ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{isQualified ? "Q" : ""}</span>
+          <span className={`flex items-center justify-center text-[10px] home-copy-bold font-black ${isUserTeam ? "text-[#F7D117]" : "text-[#F5F1E8]/72"}`}>{isQualified ? "Q" : ""}</span>
           <span className={`flex items-center justify-center ${userHighlightTextClass(isUserTeam)}`}>{row.played}</span><span className={`flex items-center justify-center ${userHighlightTextClass(isUserTeam)}`}>{row.won}</span><span className={`flex items-center justify-center ${userHighlightTextClass(isUserTeam)}`}>{row.lost}</span><span className={`flex items-center justify-center ${userHighlightTextClass(isUserTeam)}`}>{row.drawn}</span><span className={`flex items-center justify-center ${userHighlightTextClass(isUserTeam)}`}>{row.gd}</span><span className={`flex items-center justify-center font-black ${userHighlightTextClass(isUserTeam)}`}>{row.pts}</span>
         </div>;
       })}
