@@ -154,6 +154,11 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         user: userIsHome ? completedResult.homeGoals : completedResult.awayGoals,
         opponent: userIsHome ? completedResult.awayGoals : completedResult.homeGoals,
       });
+      const completedAttempts = completedResult.attempts || {};
+      setAttempts({
+        user: Array.isArray(completedAttempts.user) ? completedAttempts.user : [],
+        opponent: Array.isArray(completedAttempts.opponent) ? completedAttempts.opponent : [],
+      });
       setShot(null);
       setShootingSide("user");
       setWinnerSide(completedResult.isDraw ? null : completedResult.won ? "user" : "opponent");

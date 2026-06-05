@@ -67,7 +67,7 @@ function StoreRow({
       : item.priceLabel;
 
   return (
-    <div className={`relative grid grid-cols-[32px_44px_minmax(0,1fr)_auto_minmax(48px,auto)] items-center gap-2 rounded-[1rem] border px-2 py-2 transition ${selected ? "border-[#F7D117]/72 bg-[#052D1D]/84" : "border-[#F5F1E8]/14 bg-[#052D1D]/68"} ${selectDisabled && !selected ? "opacity-60" : "opacity-100"}`}>
+    <div className={`relative grid grid-cols-[32px_44px_minmax(0,1fr)_auto_minmax(48px,auto)] items-center gap-2 rounded-[1rem] border px-2 py-2 shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(245,241,232,0.06)] ring-1 transition ${selected ? "border-[#F7D117]/72 bg-[#052D1D]/84 ring-[#F7D117]/26" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 ring-[#F5F1E8]/10"} ${selectDisabled && !selected ? "opacity-60" : "opacity-100"}`}>
       <button
         type="button"
         disabled={selectDisabled}
@@ -86,6 +86,18 @@ function StoreRow({
         {isBundle ? <div className="home-copy-bold mb-1 text-[7px] uppercase leading-none tracking-[0.1em] text-[#F7D117]/86">BEST VALUE</div> : null}
         <div className="home-copy-bold truncate text-[11px] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">{item.title}</div>
         <div className="home-copy-regular mt-1 truncate text-[7.5px] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]/68">{item.subtitle}</div>
+        {isBundle ? (
+          <div className="mt-1.5 flex items-center gap-1">
+            {BUNDLE_TRIGGER_ITEM_IDS.map((bundleItemId) => {
+              const bundleItem = STORE_ITEMS[bundleItemId] || STORE_BUNDLES[bundleItemId];
+              return bundleItem?.assetSrc ? (
+                <span key={bundleItemId} className="grid h-5 w-5 place-items-center rounded-full border border-[#F5F1E8]/14 bg-[#031B12]/54">
+                  <img src={bundleItem.assetSrc} alt="" className="h-4 w-4 object-contain" draggable={false} />
+                </span>
+              ) : null;
+            })}
+          </div>
+        ) : null}
         {inactive ? (
           <div className="home-copy-bold mt-1 text-[7px] uppercase leading-none tracking-[0.1em] text-[#F5F1E8]/58">
             {inactiveReason === "MAX" ? "MAX GOLDEN TICKETS" : "UNAVAILABLE WITH OWNED ITEMS"}
@@ -245,7 +257,7 @@ export default function ShopModal({ open = false, onClose, initialItemId = null,
   };
 
   return (
-    <div className="fixed inset-0 isolate flex items-start justify-center overflow-y-auto bg-[#031B12]/54 px-3 pb-5 pt-[max(76px,calc(64px+env(safe-area-inset-top)))] backdrop-blur-[3px]" style={{ zIndex: 2147483647 }}>
+    <div className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/72 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[6px]" style={{ zIndex: 2147483647 }}>
       <button type="button" aria-label="Close shop" onClick={onClose} className="absolute inset-0 z-[0]" />
       <aside
         className="pointer-events-auto relative z-[1] w-full max-w-[430px] overflow-hidden rounded-[1.7rem] border border-[#F5F1E8]/14 text-[#F5F1E8] shadow-[0_24px_54px_rgba(0,0,0,0.35)]"

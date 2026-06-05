@@ -56,6 +56,16 @@ function MenuIcon({ className = "h-6 w-6" }) {
   );
 }
 
+function TrophyIcon({ className = "h-6 w-6" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M8 4h8v3.5c0 2.7-1.55 4.7-4 5.35-2.45-.65-4-2.65-4-5.35V4Z" stroke="currentColor" strokeWidth="2.35" strokeLinejoin="round" />
+      <path d="M8.15 6H5.5v1.2c0 2.05 1.15 3.55 3.25 4.05M15.85 6h2.65v1.2c0 2.05-1.15 3.55-3.25 4.05" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 13v3.2M8.8 20h6.4M10 16.2h4v2.2h-4z" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 
 
 function getCampaignPointsTotal({ result, groupRows = [], userTeam = null, userForm = [] }) {
@@ -350,7 +360,7 @@ function ChampionConfetti({ count = 92 }) {
   );
 }
 
-function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, groupRows, qualifiedTeams, userTeam, selectedGroup, stageLabel, userForm, shareCaptureRef, podium, username = "" }) {
+function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenTrophies, hasNewTrophy = false, groupRows, qualifiedTeams, userTeam, selectedGroup, stageLabel, userForm, shareCaptureRef, podium, username = "" }) {
   const isKnockout = !result.week;
   const userInKnockout = result.home === userTeam || result.away === userTeam;
   const homeIsUser = result.home === userTeam;
@@ -425,105 +435,115 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, groupRo
 
 
 
+  const headerTitle = sharePreviewOpen ? "SHARE" : normaliseThirdPlaceCopy(modalHeaderTitle({ isKnockout, stageLabel, selectedGroup }));
+  const ResultNavIcon = hasNewTrophy && onOpenTrophies ? TrophyIcon : MenuIcon;
+  const handleResultNav = hasNewTrophy && onOpenTrophies ? onOpenTrophies : onOpenMenu;
+
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#072D1D]/48 px-3 pb-[max(14px,env(safe-area-inset-bottom))] pt-[calc(78px+env(safe-area-inset-top))]">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#031B12]/78 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[7px]">
       {activeBadgeMode === PODIUM_BADGE_MODE.CHAMPION && <ChampionConfetti />}
       <div className="pointer-events-none fixed left-[-10000px] top-0 h-[400px] w-[400px] overflow-hidden" aria-hidden="true">
         <div ref={shareFrameRef} data-share-layout="match" className="h-full w-full overflow-hidden bg-[#0d6c3d]">
           <ShareMatchPreview {...resultShareState} />
         </div>
       </div>
+
       <div className="relative z-[1] flex w-full max-w-sm flex-col items-stretch">
-        {!sharePreviewOpen && <ResultStatusRail form={userForm} points={campaignPointsTotal} />}
-        <div className="relative w-full max-h-[calc(100dvh-150px)] overflow-visible rounded-[2rem] border border-[#F5F1E8]/14 bg-[#0B5F35]/94 text-center text-[#F5F1E8] shadow-[0_10px_26px_rgba(0,0,0,0.22),inset_0_-2px_6px_rgba(0,0,0,0.06)]">
-        <div className="overflow-hidden rounded-t-[2rem] bg-[#0B5F35]/0 px-4 pb-1.5 pt-2 text-[#F5F0E6] sm:px-5">
-          <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-3">
-            {sharePreviewOpen ? (
-              <button
-                type="button"
-                onClick={() => setSharePreviewOpen(false)}
-                aria-label="Back to result options"
-                className="flex h-9 w-9 items-center justify-center justify-self-start text-[#F5F0E6]"
-              >
-                <BackArrowIcon className="h-7 w-7" />
-              </button>
-            ) : (
-              <div className="flex h-9 w-9 items-center justify-center">
-                <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="h-full w-full object-contain" draggable={false} />
-              </div>
-            )}
-            <div className="text-center home-copy-bold text-[clamp(21px,5.8vw,25px)] uppercase leading-[0.95] tracking-[0.06em] text-[#F5F0E6]">{sharePreviewOpen ? "SHARE" : normaliseThirdPlaceCopy(modalHeaderTitle({ isKnockout, stageLabel, selectedGroup }))}</div>
-            <button onClick={onDismiss} aria-label="Close result" className="flex h-9 w-9 items-center justify-center justify-self-end text-[#F5F0E6]">
-              <CloseIcon className="h-6 w-6" />
-            </button>
+        {!sharePreviewOpen && (
+          <div className="mb-2 flex justify-center" style={{ "--result-rail-size": "clamp(12px,3.4vw,18px)" }}>
+            <FormTracker form={userForm} />
           </div>
-        </div>
+        )}
 
-        <div className="max-h-[calc(100dvh-220px)] overflow-y-auto px-4 pb-4 pt-1.5 sm:px-5">
-
-          {!sharePreviewOpen && (isKnockout ? (
-            <>
-              <div className={`mt-1 rounded-[1.25rem] px-2.5 py-3 ${userInKnockout ? "border border-[#F7D117]/70 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10),0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "bg-[#F5F1E8]/90 text-[#26352E] ring-1 ring-[#F5F1E8]/10"}`}>
-                <div className={`grid min-h-[32px] grid-cols-[24px_minmax(0,1fr)_32px_minmax(0,1fr)_24px] items-center gap-1 home-main-font text-[clamp(13px,3.4vw,15px)] uppercase leading-none ${userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`}>
-                  <div className="flex items-center justify-center"><Flag team={result.home} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${homeIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
-                  <span className={`block min-w-0 truncate text-center home-copy-regular ${homeIsUser ? "text-[#F7D117]" : userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(result.home)} title={result.home}>{result.home}</span>
-                  <span className={`flex items-center justify-center home-copy-bold tabular-nums leading-none ${userInKnockout ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{result.homeGoals}-{result.awayGoals}</span>
-                  <span className={`block min-w-0 truncate text-center home-copy-regular ${awayIsUser ? "text-[#F7D117]" : userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(result.away)} title={result.away}>{result.away}</span>
-                  <div className="flex items-center justify-center"><Flag team={result.away} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${awayIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
+        <div
+          className="relative w-full overflow-hidden rounded-[2rem] border border-[#F5F1E8]/14 text-center text-[#F5F1E8] shadow-[0_24px_54px_rgba(0,0,0,0.36),inset_0_-2px_6px_rgba(0,0,0,0.08)]"
+          style={{
+            backgroundColor: "#0B5F35",
+            backgroundImage: "linear-gradient(90deg, rgba(255,255,255,0.045) 0 12.5%, rgba(0,0,0,0.075) 12.5% 25%, rgba(255,255,255,0.035) 25% 37.5%, rgba(0,0,0,0.055) 37.5% 50%, rgba(255,255,255,0.04) 50% 62.5%, rgba(0,0,0,0.06) 62.5% 75%, rgba(255,255,255,0.03) 75% 87.5%, rgba(0,0,0,0.075) 87.5% 100%)",
+            backgroundSize: "100% 100%",
+          }}
+        >
+          <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_18%_8%,rgba(247,209,23,0.10),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.035),rgba(0,0,0,0.09))]" aria-hidden="true" />
+          <div className="relative p-3">
+            <div className="mb-3 grid h-11 grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-2">
+              {sharePreviewOpen ? (
+                <button type="button" onClick={() => setSharePreviewOpen(false)} aria-label="Back to result options" className="grid h-10 w-10 place-items-center justify-self-start rounded-[0.85rem] bg-[#031B12]/46 text-[#F5F1E8]">
+                  <BackArrowIcon className="h-7 w-7" />
+                </button>
+              ) : (
+                <div className="grid h-10 w-10 place-items-center justify-self-start">
+                  <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="h-10 w-10 object-contain drop-shadow-[0_5px_8px_rgba(0,0,0,0.3)]" draggable={false} />
                 </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <StandingsMiniTable rows={groupRows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />
-            </>
-          ))}
+              )}
+              <div className="home-copy-bold self-center text-center text-[clamp(20px,5.4vw,25px)] uppercase leading-none tracking-[0.1em] text-[#F5F1E8]">{headerTitle}</div>
+              <button type="button" onClick={onDismiss} aria-label="Close result" className="grid h-10 w-10 place-items-center justify-self-end rounded-[0.85rem] bg-[#031B12]/46 text-[#F5F1E8]">
+                <CloseIcon className="h-6 w-6" />
+              </button>
+            </div>
 
-          {sharePreviewOpen ? (
-            <div className="mt-1.5 space-y-2.5">
-              <div className="mx-auto aspect-square w-full overflow-hidden bg-[#0d6c3d] shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" data-share-layout="match-preview-modal">
-                {sharePreviewUrl ? (
-                  <img src={sharePreviewUrl} alt="Monday Cup result preview" className="h-full w-full object-cover" draggable={false} />
+            <div className="rounded-[1.35rem] border border-[#F5F1E8]/12 bg-[#031B12]/24 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+              <div className="mb-2 grid min-h-[36px] grid-cols-[34px_minmax(0,1fr)_34px] items-center gap-2 rounded-[1rem] border border-[#F5F1E8]/10 bg-[#052D1D]/58 px-2 py-1.5">
+                <div className="grid h-8 w-8 place-items-center justify-self-start">
+                  <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="h-8 w-8 object-contain" draggable={false} />
+                </div>
+                <div className="home-copy-bold truncate text-center text-[11px] uppercase leading-none tracking-[0.12em] text-[#F7D117]">{headerTitle}</div>
+                <button type="button" onClick={onDismiss} aria-label="Close result" className="grid h-8 w-8 place-items-center justify-self-end rounded-[0.7rem] bg-[#031B12]/44 text-[#F5F1E8]">
+                  <CloseIcon className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="max-h-[calc(100dvh-238px)] overflow-y-auto">
+                {!sharePreviewOpen && (isKnockout ? (
+                  <div className={`rounded-[1.25rem] px-2.5 py-3 ${userInKnockout ? "border border-[#F7D117]/70 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10),0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "bg-[#F5F1E8]/90 text-[#26352E] ring-1 ring-[#F5F1E8]/10"}`}>
+                    <div className={`grid min-h-[32px] grid-cols-[24px_minmax(0,1fr)_32px_minmax(0,1fr)_24px] items-center gap-1 home-main-font text-[clamp(13px,3.4vw,15px)] uppercase leading-none ${userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`}>
+                      <div className="flex items-center justify-center"><Flag team={result.home} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${homeIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
+                      <span className={`block min-w-0 truncate text-center home-copy-regular ${homeIsUser ? "text-[#F7D117]" : userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(result.home)} title={result.home}>{result.home}</span>
+                      <span className={`flex items-center justify-center home-copy-bold tabular-nums leading-none ${userInKnockout ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{result.homeGoals}-{result.awayGoals}</span>
+                      <span className={`block min-w-0 truncate text-center home-copy-regular ${awayIsUser ? "text-[#F7D117]" : userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(result.away)} title={result.away}>{result.away}</span>
+                      <div className="flex items-center justify-center"><Flag team={result.away} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${awayIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center px-6 text-center home-copy-bold text-[13px] uppercase tracking-[0.14em] text-[#F5F1E8]">Preparing preview</div>
+                  <StandingsMiniTable rows={groupRows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />
+                ))}
+
+                {sharePreviewOpen ? (
+                  <div className="space-y-2.5">
+                    <div className="mx-auto aspect-square w-full overflow-hidden rounded-[1.1rem] border border-[#F5F1E8]/10 bg-[#0d6c3d] shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" data-share-layout="match-preview-modal">
+                      {sharePreviewUrl ? (
+                        <img src={sharePreviewUrl} alt="Monday Cup result preview" className="h-full w-full object-cover" draggable={false} />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center px-6 text-center home-copy-bold text-[13px] uppercase tracking-[0.14em] text-[#F5F1E8]">Preparing preview</div>
+                      )}
+                    </div>
+                    <button type="button" onClick={handleShare} disabled={shareBusy} className={resultActionButtonClass}>
+                      {shareBusy ? "PREPARING" : "SAVE AS PHOTO"}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[1rem] border border-[#F7D117]/30 bg-[#031B12]/42 px-3 py-3 text-left">
+                      <div className="home-copy-bold text-[10px] uppercase tracking-[0.12em] text-[#F5F1E8]/72">Game score</div>
+                      <div className="home-copy-bold text-[24px] uppercase leading-none tracking-[0.08em] text-[#F7D117] tabular-nums">{Number(campaignPointsTotal || 0)}</div>
+                    </div>
+                    <div className="mt-2.5 grid grid-cols-[54px_minmax(0,1fr)_54px] items-center gap-2.5">
+                      <button type="button" onClick={openSharePreview} disabled={!canShareResult || shareBusy} className={resultIconButtonClass} aria-label="Share result">
+                        <ShareIcon />
+                      </button>
+                      <button type="button" onClick={onNext} disabled={false} className={resultActionButtonClass}>
+                        {modalButton(result)}
+                      </button>
+                      <button type="button" onClick={handleResultNav || onDismiss} className={resultIconButtonClass} aria-label={hasNewTrophy ? "Open trophies" : "Open menu"}>
+                        <ResultNavIcon />
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
-              <button type="button" onClick={handleShare} disabled={shareBusy} className={resultActionButtonClass}>
-                {shareBusy ? "PREPARING" : "SAVE AS PHOTO"}
-              </button>
             </div>
-          ) : (
-            <div className="mt-2.5 grid grid-cols-[54px_minmax(0,1fr)_54px] items-center gap-2.5">
-              <button
-                type="button"
-                onClick={openSharePreview}
-                disabled={!canShareResult || shareBusy}
-                className={resultIconButtonClass}
-                aria-label="Share result"
-              >
-                <ShareIcon />
-              </button>
-              <button
-                type="button"
-                onClick={onNext}
-                disabled={false}
-                className={resultActionButtonClass}
-              >
-                {modalButton(result)}
-              </button>
-              <button
-                type="button"
-                onClick={onOpenMenu || onDismiss}
-                className={resultIconButtonClass}
-                aria-label="Open menu"
-              >
-                <MenuIcon />
-              </button>
-            </div>
-          )}
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 }

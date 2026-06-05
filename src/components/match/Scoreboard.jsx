@@ -24,11 +24,11 @@ function PenaltyMarkers({ attempts, totalSlots = GAME.regulationPens }) {
 
 function flashTickerFontSize(copy = "") {
   const tickerLength = String(copy || "").length;
-  if (tickerLength > 38) return "clamp(9px,1.25vh,15px)";
-  if (tickerLength > 32) return "clamp(10px,1.4vh,16px)";
-  if (tickerLength > 26) return "clamp(11px,1.55vh,18px)";
-  if (tickerLength > 20) return "clamp(12px,1.7vh,20px)";
-  return "clamp(13px,1.85vh,22px)";
+  if (tickerLength > 38) return "clamp(12px,1.55dvh,18px)";
+  if (tickerLength > 32) return "clamp(13px,1.75dvh,20px)";
+  if (tickerLength > 26) return "clamp(14px,1.95dvh,22px)";
+  if (tickerLength > 20) return "clamp(16px,2.2dvh,25px)";
+  return "clamp(18px,2.45dvh,28px)";
 }
 
 export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerStyle, stageLabel, totalMarkerSlots = GAME.regulationPens, hideStageLabel = false, sharePreview = false, username = "", usernameEnabled = false }) {
@@ -98,9 +98,16 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
         </div>
       </div>
 
-      <div data-share-flash="true" className="relative flex w-full items-center justify-center overflow-hidden px-[3%] text-center home-copy-bold font-black uppercase leading-none tracking-[0.085em] shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)]" style={{ height: `${tickerPercent}%`, minHeight: "42px", ...tickerStyle }}>
-        <span className="absolute inset-0 flex items-center justify-center overflow-hidden px-[2%] text-center leading-none" style={{ fontSize: tickerFontSize, transform: "translateY(-0.20em)" }}>
-          <span className="block max-w-full overflow-hidden truncate whitespace-nowrap text-center leading-none [text-wrap:nowrap]" style={{ textOverflow: "ellipsis" }}>{tickerCopy}</span>
+      <div
+        data-share-flash="true"
+        className="relative flex w-full items-center justify-center overflow-hidden px-[3%] text-center home-copy-bold font-black uppercase leading-none tracking-[0.085em] shadow-[inset_0_1px_5px_rgba(255,255,255,0.06)]"
+        style={{ height: `${tickerPercent}%`, minHeight: "44px", ...tickerStyle }}
+      >
+        <span
+          className="absolute inset-0 flex items-center justify-center overflow-hidden px-[2%] text-center leading-none"
+          style={{ fontSize: tickerFontSize, lineHeight: 1, transform: "translateY(-0.10em)" }}
+        >
+          <span className="block max-w-full overflow-hidden truncate whitespace-nowrap text-center leading-none [text-wrap:nowrap]" style={{ textOverflow: "ellipsis", lineHeight: 1 }}>{tickerCopy}</span>
         </span>
       </div>
     </section>

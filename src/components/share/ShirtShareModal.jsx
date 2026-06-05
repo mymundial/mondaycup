@@ -553,7 +553,7 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
   });
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto bg-[#051A11]/72 px-3 py-[max(14px,env(safe-area-inset-top))] text-[#F5F1E8] sm:items-center">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-[#031B12]/72 px-3 py-[max(14px,env(safe-area-inset-top))] text-[#F5F1E8] backdrop-blur-[6px]">
       <div className="absolute inset-0 bg-[#051A11]/58 backdrop-blur-[3px]" aria-hidden="true" />
       <div className="relative z-[1] w-full max-w-[410px] max-h-[calc(100dvh-28px)] overflow-y-auto rounded-[28px] border border-[#F5F1E8]/16 p-3.5 shadow-[0_20px_48px_rgba(0,0,0,0.36),inset_0_1px_0_rgba(245,241,232,0.08)] sm:p-4" style={{ ...PITCH_MOW_BACKGROUND_STYLE, backgroundColor: "#2C7041", backgroundBlendMode: "multiply" }}>
         <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-2">

@@ -109,8 +109,8 @@ function LeaderboardFilterSlider({ cleanOnly, onToggle }) {
       size="icon"
       className="mb-1.5"
       options={[
-        { value: "all", label: "All", ariaLabel: "All scores", iconSrc: "/assets/game/golden-ball.png" },
         { value: "clean", label: "Clean", ariaLabel: "Clean leaderboard", iconSrc: "/assets/game/ball1.png" },
+        { value: "all", label: "All", ariaLabel: "All scores", iconSrc: "/assets/game/golden-ball.png" },
       ]}
     />
   );
@@ -267,7 +267,7 @@ function LeaderboardSection({ title = null, children, className = "" }) {
 export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore = 0, bestCampaignScore = 0, team = "", bestCampaignSummary = null, activeCosmetics = {}, currentUser = auth.currentUser }) {
   const [leaderboardView, setLeaderboardView] = useState("scores");
   const [leaderboardPage, setLeaderboardPage] = useState(0);
-  const [cleanLeaderboardOnly, setCleanLeaderboardOnly] = useState(false);
+  const [cleanLeaderboardOnly, setCleanLeaderboardOnly] = useState(true);
   const placeholderRows = Array.from({ length: 10 }, (_, index) => ({
     id: `placeholder-${index}`,
     username: "-",

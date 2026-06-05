@@ -36,6 +36,8 @@ export function MatchScreen({
   onNextMatch,
   onViewBracket,
   onPlayAgain,
+  onOpenTrophies,
+  hasNewTrophy = false,
   menuProps,
   stageLabel = "GROUP STAGE",
   fixture,
@@ -94,9 +96,10 @@ export function MatchScreen({
             onNext={onNextMatch}
             onDismiss={onDismissModal}
             onOpenMenu={() => {
-              onDismissModal?.();
               menuProps?.onToggleMenu?.();
             }}
+            onOpenTrophies={onOpenTrophies}
+            hasNewTrophy={hasNewTrophy}
             onViewBracket={onViewBracket}
             onPlayAgain={onPlayAgain}
             groupRows={groupRows}

@@ -19,6 +19,7 @@ import { getTeamDisplayName } from "../ui/TeamName.jsx";
 import { STORE_ITEM_IDS, normaliseTicketQuantity } from "../../data/storeItems.js";
 import { GROUPS } from "../../data/teams.js";
 import { ShirtPosterPreview } from "../share/SharePreviews.jsx";
+import { playerCareerStars, playerCareerTitle } from "../../logic/playerCareer.js";
 
 function DrawerContent({ children }) {
   return <PageScroll className="px-0 pt-0.5">{children}</PageScroll>;
@@ -715,7 +716,7 @@ function NicknameEditor({
 function ClubhouseRegisterAuthOverlay({ onClose, onAuthComplete }) {
   return (
     <div
-      className="fixed inset-0 isolate flex items-start justify-center bg-[#031B12]/36 px-3 pb-4 pt-[70px] backdrop-blur-[2px]"
+      className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/72 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[6px]"
       style={{ zIndex: 2147483647 }}
     >
       <button
@@ -771,22 +772,12 @@ function defaultShirtName(currentUser, displayName) {
   );
 }
 
-function careerStarProgress() {
-  // Star milestones are intentionally unassigned for now. Keep every star
-  // transparent until the final career parameters are confirmed.
-  return [
-    { label: "Star 1", achieved: false },
-    { label: "Star 2", achieved: false },
-    { label: "Star 3", achieved: false },
-    { label: "Star 4", achieved: false },
-    { label: "Star 5", achieved: false },
-  ];
+function careerStarProgress(careerStats = {}) {
+  return playerCareerStars(careerStats);
 }
 
-function careerStarTitle(stars = []) {
-  const achievedCount = stars.filter((star) => star.achieved).length;
-  if (achievedCount <= 0) return "ROOKIE";
-  return `${achievedCount} STAR`;
+function careerStarTitle(careerStats = {}) {
+  return playerCareerTitle(careerStats);
 }
 
 function CareerStars({ stars = [] }) {
@@ -843,7 +834,7 @@ function ClubhouseShirtCard({
       .slice(0, 2) || "11";
   const composition = shirt.composition || {};
   const stars = careerStarProgress(careerStats);
-  const starTitle = careerStarTitle(stars);
+  const starTitle = careerStarTitle(careerStats);
   const caps = Number(careerStats?.matchesPlayed || 0);
   const goals = Number(careerStats?.totalGoals || 0);
   return (
@@ -864,10 +855,11 @@ function ClubhouseShirtCard({
       <button
         type="button"
         onClick={onEdit}
-        className="mt-4 grid h-[106px] w-[106px] place-items-center overflow-hidden rounded-[0.35rem] border border-[#06351f] bg-[#073B26] shadow-[0_8px_16px_rgba(0,0,0,0.22)] transition-transform active:scale-[0.99]"
+        className="mt-4 grid h-[118px] w-[118px] place-items-center rounded-[0.45rem] border-[6px] border-[#F5F1E8] bg-[#F5F1E8] shadow-[0_8px_18px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.42)] transition-transform active:scale-[0.99]"
         aria-label="Edit shirt design"
       >
-        <ShirtThumbnailPreview>
+        <div className="grid h-full w-full place-items-center overflow-hidden rounded-[0.16rem] border-[3px] border-[#031B12] bg-[#073B26]">
+          <ShirtThumbnailPreview>
           <ShirtPosterPreview
             shirtTeam={shirt.team || ""}
             shirtName={name}
@@ -903,7 +895,8 @@ function ClubhouseShirtCard({
             shirtBrothersX={composition.brothersX ?? 0}
             shirtBrothersY={composition.brothersY ?? 0}
           />
-        </ShirtThumbnailPreview>
+          </ShirtThumbnailPreview>
+        </div>
       </button>
 
       <div className="mt-3 home-copy-bold text-[10px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]">
@@ -949,7 +942,7 @@ export function ClubhouseScreen({
   const displayName =
     currentUser?.displayName ||
     currentUser?.email?.split("@")[0] ||
-    "GUEST USER";
+    "GUEST";
   const conversion = conversionPercent(allTimeGoals, allTimeShots);
   const shotsTakenTotal = Number(allTimeShots || 0);
   const conversionDisplay = shotsTakenTotal > 0 ? `${conversion}%` : "--";
@@ -999,21 +992,19 @@ export function ClubhouseScreen({
         {activeClubTab === "clubhouse" ? (
           <MenuPanel style={CLUBHOUSE_PANEL_STYLE}>
             <div className="space-y-2.5 p-4">
-              {!isGuest && (
-                <ClubhouseShirtCard
-                  shirtProfile={shirtProfile}
-                  displayName={displayName}
-                  currentUser={currentUser}
-                  onEdit={onEditShirt}
-                  careerStats={{
-                    matchesPlayed: matchesPlayedTotal,
-                    matchesWon: allTimeMatchesWon,
-                    totalGoals: allTimeGoals,
-                    highScore: highScoreTotal,
-                    mondayCupsWon,
-                  }}
-                />
-              )}
+              <ClubhouseShirtCard
+                shirtProfile={shirtProfile}
+                displayName={displayName}
+                currentUser={currentUser}
+                onEdit={onEditShirt}
+                careerStats={{
+                  matchesPlayed: matchesPlayedTotal,
+                  matchesWon: allTimeMatchesWon,
+                  totalGoals: allTimeGoals,
+                  highScore: highScoreTotal,
+                  mondayCupsWon,
+                }}
+              />
               <ClubhouseStatsTable
                 rank={leaderboardRank || "#--"}
                 matchesPlayed={matchesPlayedTotal}

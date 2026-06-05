@@ -5,11 +5,12 @@ import PageTabs, { PageTabsSlot } from "../ui/PageTabs.jsx";
 import PageScroll from "../ui/PageScroll.jsx";
 import AppPanel from "../ui/AppPanel.jsx";
 import { getTeamDisplayName } from "../ui/TeamName.jsx";
-import { GROUPS, getTeamTheme, teamCode } from "../../data/teams.js";
+import { GROUPS, HOST_TEAMS, TEAM_RANK, getTeamTheme, teamCode } from "../../data/teams.js";
+import { buildPlayerAchievementPages } from "../../logic/playerCareer.js";
 
 const ALL_NATIONS = Object.values(GROUPS).flat();
 const ACHIEVEMENTS_PER_PAGE = 6;
-const ACHIEVEMENT_PAGE_COUNT = 10;
+const ACHIEVEMENT_PAGE_COUNT = 3;
 const ACHIEVEMENT_UNLOCKED_SRC = "/assets/badges/gold_shield.png";
 
 const EXISTING_ACHIEVEMENT_KEYS = [
@@ -72,13 +73,58 @@ const PODIUM_BADGES = [
   },
 ];
 
-const DEMO_SHINY_NATION = "Mexico";
+const FORCE_REVEAL_TEAM_STICKERS = false;
+
+const STICKER_UNLOCK_RULES = {
+  kit: {
+    label: "WEAR THE SHIRT",
+    requirement: "COMPLETE 1 CAMPAIGN",
+    isUnlocked: (record = {}) => Number(record.campaignsCompleted || record.completedCampaigns || 0) >= 1,
+  },
+  flag: {
+    label: "FLY THE FLAG",
+    requirement: "QUALIFY KNOCKOUTS",
+    isUnlocked: (record = {}) => Boolean(record.knockoutQualified || record.qualifiedForKnockouts || record.qualified || record.reachedKnockouts),
+  },
+  champions: {
+    label: "LIFT THE CUP",
+    requirement: "WIN THE CUP",
+    isUnlocked: (record = {}) => Boolean(record.cupWon || record.champions || record.champion),
+  },
+  stopper: {
+    label: "SAFE HANDS",
+    requirement: "10 GK SAVES",
+    isUnlocked: (record = {}) => Number(record.keeperSaves || record.saves || 0) >= 10,
+  },
+  talisman: {
+    label: "TALISMANIC LEADER",
+    requirement: "10 WINS",
+    isUnlocked: (record = {}) => Number(record.wins || record.matchesWon || 0) >= 10,
+  },
+  striker: {
+    label: "SUPER STRIKER",
+    requirement: "25 GOALS",
+    isUnlocked: (record = {}) => Number(record.goals || record.totalGoals || 0) >= 25,
+  },
+};
+
+function stickerUnlockRule(stickerKey) {
+  return STICKER_UNLOCK_RULES[stickerKey] || null;
+}
+
+function stickerIsUnlocked(record = {}, stickerKey) {
+  const rule = stickerUnlockRule(stickerKey);
+  return Boolean(rule?.isUnlocked?.(record) || record?.claimable?.[stickerKey]);
+}
 
 const STICKER_ROLES = [
-  { key: "striker", label: "STRIKER", fallbackName: "TBC", fallbackNumber: "9" },
-  { key: "talisman", label: "TALISMAN", fallbackName: "TBC", fallbackNumber: "10" },
-  { key: "stopper", label: "STOPPER", fallbackName: "TBC", fallbackNumber: "1" },
+  { key: "stopper", label: "SAFE HANDS", iconSrc: "/assets/stickers/stopper2.png" },
+  { key: "talisman", label: "TALISMANIC LEADER", iconSrc: "/assets/stickers/talisman1.png" },
+  { key: "striker", label: "SUPER STRIKER", iconSrc: "/assets/stickers/striker1.png" },
 ];
+
+const TEAM_STICKER_KEYS = ["kit", "flag", "champions", "stopper", "talisman", "striker"];
+const GROUP_KEYS = Object.keys(GROUPS);
 
 function TrophyToggle({ value, onChange }) {
   return (
@@ -86,9 +132,8 @@ function TrophyToggle({ value, onChange }) {
       value={value}
       onChange={onChange}
       options={[
-        { value: "badges", label: "BADGES" },
+        { value: "player", label: "PLAYER" },
         { value: "teams", label: "TEAMS" },
-        { value: "flagWall", label: "FLAGS" },
       ]}
     />
   );
@@ -150,69 +195,125 @@ function ArrowButton({ direction, onClick, ariaLabel }) {
   );
 }
 
-function AchievementSectionTitle({ pageNumber, pageCount, onPrevious, onNext }) {
+function AchievementSectionTitle({ title, onPrevious, onNext }) {
   return (
     <div className="grid grid-cols-[32px_minmax(0,1fr)_32px] items-center gap-2">
-      <ArrowButton direction="left" onClick={onPrevious} ariaLabel="Previous achievements" />
-      <div className="grid gap-1">
-        <span>ACHIEVEMENTS</span>
-        <span className="home-copy-bold text-[8px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]/64">
-          Page {pageNumber}/{pageCount}
-        </span>
+      <ArrowButton direction="left" onClick={onPrevious} ariaLabel="Previous player achievements" />
+      <div className="min-w-0 text-center">
+        <span>{title}</span>
       </div>
-      <ArrowButton direction="right" onClick={onNext} ariaLabel="Next achievements" />
+      <ArrowButton direction="right" onClick={onNext} ariaLabel="Next player achievements" />
     </div>
   );
 }
 
 function AchievementCheck({ unlocked }) {
   return (
-    <div className={`flex h-[34px] w-[34px] items-center justify-center rounded-[0.75rem] border ${unlocked ? "border-[#F7D117] bg-[#F7D117] text-[#062819] shadow-[0_0_12px_rgba(247,209,23,0.28)]" : "border-[#F5F1E8]/18 bg-[#021A11]/24 text-transparent"}`}>
-      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <div
+      className={`flex h-[28px] w-[28px] items-center justify-center rounded-[0.55rem] border transition-all ${
+        unlocked
+          ? "border-[#F7D117] bg-[#F7D117] text-[#06351F] shadow-[0_0_10px_rgba(247,209,23,0.26),inset_0_1px_0_rgba(255,255,255,0.34)]"
+          : "border-[#F5F1E8]/26 bg-[#031B12]/34 text-transparent shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]"
+      }`}
+    >
+      <svg viewBox="0 0 24 24" className="h-[15px] w-[15px]" fill="none" stroke="currentColor" strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M5 12.5L10 17.5L19 6.5" />
       </svg>
     </div>
   );
 }
 
-function LockedAchievementIcon() {
+function achievementTitleText(title = "") {
+  return String(title).replace(/\s*(★+|COMPLETE)\s*$/i, "").trim();
+}
+
+function LockedAchievementIcon({ title }) {
   return (
-    <div className="relative flex h-[54px] w-[54px] items-center justify-center rounded-full border border-[#F5F1E8]/14 bg-[#031B12]/40 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
-      <div className="absolute inset-[7px] rounded-full border border-[#F5F1E8]/14" aria-hidden="true" />
-      <svg viewBox="0 0 24 24" className="h-[24px] w-[24px] text-[#F5F1E8]/34" fill="currentColor" aria-hidden="true">
-        <path d="M12 2.4l2.65 5.65 6.2.78-4.55 4.28 1.16 6.13L12 16.22 6.54 19.24 7.7 13.1 3.15 8.83l6.2-.78L12 2.4z" />
-      </svg>
+    <div className="relative flex h-[42px] w-[42px] items-center justify-center rounded-full border border-[#F5F1E8]/18 bg-[#031B12]/40 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+      <div className="absolute inset-[6px] rounded-full border border-[#F5F1E8]/12" aria-hidden="true" />
+      <span className="relative z-[1] home-copy-bold text-[10px] uppercase leading-none tracking-[0.05em] text-[#F5F1E8]/54">
+        {achievementTitleText(title)}
+      </span>
     </div>
   );
 }
 
-function AchievementRewardIcon({ unlocked }) {
+function AchievementRewardIcon({ item, unlocked }) {
   if (unlocked) {
     return (
-      <div className="flex h-[58px] w-[58px] items-center justify-center rounded-full border border-[#F7D117]/46 bg-[#031B12]/42 ring-1 ring-[#F7D117]/24 shadow-[0_0_12px_rgba(247,209,23,0.18)]">
-        <img src={ACHIEVEMENT_UNLOCKED_SRC} alt="" className="h-[46px] w-[46px] object-contain" draggable={false} />
+      <div className="flex h-[42px] w-[42px] items-center justify-center rounded-full border border-[#F7D117]/46 bg-[#031B12]/42 ring-1 ring-[#F7D117]/24 shadow-[0_0_12px_rgba(247,209,23,0.18)]">
+        <img src={ACHIEVEMENT_UNLOCKED_SRC} alt="" className="h-[36px] w-[36px] object-contain" draggable={false} />
       </div>
     );
   }
 
-  return <LockedAchievementIcon />;
+  return <LockedAchievementIcon title={item?.title} />;
+}
+
+function achievementStarCount(title = "") {
+  const match = String(title).match(/(★+)/);
+  return match ? match[1].length : 0;
+}
+
+function achievementIsComplete(title = "") {
+  return /COMPLETE/i.test(String(title));
+}
+
+function AchievementTierMark({ item, unlocked }) {
+  const starCount = achievementStarCount(item?.title);
+  const isComplete = achievementIsComplete(item?.title);
+  const starTone = unlocked
+    ? "text-[#F7D117] opacity-100 drop-shadow-[0_0_8px_rgba(247,209,23,0.26)]"
+    : "text-[#F7D117] opacity-28";
+
+  if (isComplete) {
+    return (
+      <span className={`home-copy-bold text-[9px] uppercase leading-none tracking-[0.13em] ${starTone}`}>
+        COMPLETE
+      </span>
+    );
+  }
+
+  return (
+    <span className={`flex items-center justify-center gap-1 ${starTone}`} aria-label={`${starCount} star achievement`}>
+      {Array.from({ length: Math.max(1, starCount) }, (_, index) => (
+        <svg key={index} viewBox="0 0 24 24" className="h-[16px] w-[16px]" fill="currentColor" aria-hidden="true">
+          <path d="M12 2.4l2.65 5.65 6.2.78-4.55 4.28 1.16 6.13L12 16.22 6.54 19.24 7.7 13.1 3.15 8.83l6.2-.78L12 2.4z" />
+        </svg>
+      ))}
+    </span>
+  );
 }
 
 function AchievementRow({ item, number }) {
   const unlocked = Boolean(item.unlocked);
+  const cappedValue = Math.min(Number(item.currentValue || 0), Number(item.target || 0));
+  const targetValue = Number(item.target || 0);
+
   return (
-    <div className={`grid min-h-[74px] grid-cols-[48px_minmax(0,1fr)_64px] items-center gap-3 rounded-[1.25rem] border px-3 py-2 ring-1 transition-all ${unlocked ? "border-[#F7D117]/78 bg-[#063B23]/78 text-[#F5F1E8] ring-[#F7D117]/22 shadow-[0_0_14px_rgba(247,209,23,0.12),inset_0_1px_0_rgba(255,255,255,0.12)]" : "border-[#F5F1E8]/14 bg-[#031B12]/46 text-[#F5F1E8] ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"}`}>
-      <AchievementCheck unlocked={unlocked} />
-      <div className="min-w-0 text-left">
-        <div className={`home-copy-bold text-[15px] uppercase leading-none tracking-[0.08em] ${unlocked ? "text-[#F7D117]" : "text-[#F5F1E8]"}`}>
-          {item.title}
-        </div>
-        <div className="mt-1.5 home-copy-regular text-[7px] uppercase leading-none tracking-[0.13em] text-[#F5F1E8]/56">
-          #{String(number).padStart(2, "0")} · {item.description}
-        </div>
+    <div className={`relative grid min-h-[74px] grid-cols-[32px_minmax(0,0.78fr)_minmax(0,1.18fr)_minmax(0,0.78fr)_46px] items-center gap-x-2 rounded-[1.25rem] border px-3 py-2 ring-1 transition-all ${unlocked ? "border-[#F7D117]/78 bg-[#063B23]/78 text-[#F5F1E8] ring-[#F7D117]/22 shadow-[0_0_14px_rgba(247,209,23,0.12),inset_0_1px_0_rgba(255,255,255,0.12)]" : "border-[#F5F1E8]/14 bg-[#031B12]/46 text-[#F5F1E8] ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"}`}>
+      <div className="col-start-1 flex h-full items-center justify-start">
+        <AchievementCheck unlocked={unlocked} />
       </div>
-      <div className="justify-self-end">
-        <AchievementRewardIcon unlocked={unlocked} />
+
+      <div className="col-start-2 flex h-full items-center justify-start">
+        <span className="home-copy-bold text-[16px] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">
+          {achievementTitleText(item.title)}
+        </span>
+      </div>
+
+      <div className="col-start-3 flex h-full items-center justify-center">
+        <AchievementTierMark item={item} unlocked={unlocked} />
+      </div>
+
+      <div className="col-start-4 flex h-full items-center justify-end">
+        <span className="max-w-full truncate text-right home-copy-bold text-[10px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]/70">
+          {cappedValue}/{targetValue}
+        </span>
+      </div>
+
+      <div className="col-start-5 flex h-full items-center justify-end">
+        <AchievementRewardIcon item={item} unlocked={unlocked} />
       </div>
     </div>
   );
@@ -230,29 +331,147 @@ function PodiumBadgeCard({ unlocked, title, assetSrc, placeholderSrc, podiumClas
   );
 }
 
-function NationFlagTile({ team, unlocked }) {
-  const displayName = getTeamDisplayName(team, "flagWall");
+function effectiveStickerRecord(progress = {}, nationCupWins = {}, team) {
+  const record = getStickerRecord(progress, team);
+  const legacyCupWon = Boolean(nationCupWins?.[team]?.unlocked);
+  return {
+    ...record,
+    cupWon: Boolean(record?.cupWon || legacyCupWon),
+  };
+}
+
+function teamHasCompletedAllStickers(progress = {}, nationCupWins = {}, team) {
+  if (FORCE_REVEAL_TEAM_STICKERS) return true;
+  const record = effectiveStickerRecord(progress, nationCupWins, team);
+  return TEAM_STICKER_KEYS.every((key) => stickerIsUnlocked(record, key));
+}
+
+function groupIndexForTeam(team) {
+  const foundIndex = GROUP_KEYS.findIndex((groupKey) => GROUPS[groupKey]?.includes(team));
+  return foundIndex >= 0 ? foundIndex : 0;
+}
+
+function teamIsPurchased(team, allTeamsUnlocked = false) {
+  return Boolean(
+    allTeamsUnlocked ||
+    HOST_TEAMS.some((host) => host?.name === team)
+  );
+}
+
+function shinyFlagButtonStyle() {
+  return {
+    backgroundColor: "#D9E2DE",
+    backgroundImage: [
+      "radial-gradient(circle at 18% 24%, rgba(255,255,255,0.88) 0 1px, transparent 2.4px)",
+      "radial-gradient(circle at 76% 36%, rgba(247,209,23,0.50) 0 1.1px, transparent 2.8px)",
+      "linear-gradient(112deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.62) 28%, rgba(255,255,255,0.05) 42%, rgba(255,255,255,0.36) 62%, rgba(255,255,255,0) 100%)",
+      "conic-gradient(from 158deg at 50% 46%, #F9FFF9, #B8F7FF, #E5CBFF, #FFF4A9, #F7D117, #0B6B3A, #F9FFF9)",
+      "linear-gradient(145deg, #F6FFF9 0%, #B7C2C6 28%, #F8FFFB 48%, #AEB8BD 68%, #E9F2EE 100%)",
+    ].join(", "),
+    backgroundBlendMode: "screen, screen, screen, soft-light, normal",
+    backgroundSize: "34px 30px, 46px 42px, 190% 100%, 150% 150%, cover",
+    backgroundPosition: "0 0, 12px 8px, -25% 0, 50% 50%, 0 0",
+  };
+}
+
+function TeamPadlockIcon({ className = "h-6 w-6" }) {
   return (
-    <div className={`grid min-w-0 place-items-center justify-items-center rounded-[1.05rem] border px-1.5 py-1.5 text-center ring-1 ${unlocked ? "border-[#F7D117]/40 bg-[#052D1D]/84 text-[#F5F1E8] ring-[#F7D117]/20" : "border-[#F5F1E8]/14 bg-[#052D1D]/58 text-[#F5F1E8] ring-[#F5F1E8]/10"}`}>
-      <div className={`mx-auto flex h-[24px] w-[36px] shrink-0 items-center justify-center justify-self-center overflow-hidden rounded-[0.4rem] ${unlocked ? "ring-1 ring-[#F7D117]/55" : "opacity-35 saturate-0 brightness-[0.78]"}`}>
-        <Flag team={team} className="block h-[24px] w-[36px] rounded-[0.4rem] object-cover" />
+    <svg className={className} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+      <path
+        d="M10.25 14.1V10.7C10.25 7.45 12.55 5 16 5s5.75 2.45 5.75 5.7v3.4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <rect x="7.25" y="13.25" width="17.5" height="13.25" rx="3" fill="currentColor" />
+      <circle cx="16" cy="19.15" r="1.75" fill="#06351F" />
+      <path d="M16 20.4v3.15" stroke="#06351F" strokeWidth="2.1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function GroupFlagTile({ team, completed, selected, lockedTeam = false, onClick }) {
+  const flagMuted = lockedTeam;
+  const buttonStyle = completed && !selected && !lockedTeam ? shinyFlagButtonStyle() : undefined;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`relative flex h-[58px] min-w-0 items-center justify-center overflow-hidden rounded-[1rem] border px-2 ring-1 transition-all active:scale-[0.98] ${
+        selected
+          ? "border-[#F7D117]/88 bg-[#F7D117] ring-[#F7D117]/34 shadow-[0_0_14px_rgba(247,209,23,0.20),inset_0_1px_0_rgba(255,255,255,0.26)]"
+          : completed && !lockedTeam
+            ? "border-[#F5F1E8]/68 text-[#062819] ring-[#F7D117]/20 shadow-[0_0_14px_rgba(247,209,23,0.10),inset_0_1px_0_rgba(255,255,255,0.28)]"
+            : "border-[#F5F1E8]/16 bg-[#F5F1E8]/[0.055] ring-[#F5F1E8]/10 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]"
+      }`}
+      style={buttonStyle}
+      aria-label={getTeamDisplayName(team, "title")}
+    >
+      {completed && !selected && !lockedTeam && (
+        <div
+          className="pointer-events-none absolute inset-0 rounded-[inherit] border border-white/44 shadow-[inset_0_1px_0_rgba(255,255,255,0.36)]"
+          aria-hidden="true"
+        />
+      )}
+      <div className="relative z-[2] flex h-[32px] w-[48px] items-center justify-center overflow-hidden rounded-[0.48rem] bg-[#F5F1E8] p-[3px] shadow-[0_4px_10px_rgba(0,0,0,0.22)]">
+        <Flag team={team} className={`block h-full w-full rounded-[0.36rem] object-cover ${flagMuted ? "opacity-42 saturate-0 brightness-[0.72]" : ""}`} />
+        {lockedTeam && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[#F7D117] drop-shadow-[0_2px_4px_rgba(0,0,0,0.58)]">
+            <TeamPadlockIcon className="h-6 w-6" />
+          </div>
+        )}
       </div>
-      <div className={`mt-1 block w-full min-w-0 max-w-full truncate text-center home-copy-bold text-[5.8px] uppercase leading-tight tracking-[0.08em] ${unlocked ? "text-[#F7D117]" : "text-[#F5F1E8]/56"}`}>{displayName}</div>
+    </button>
+  );
+}
+
+function GroupFlagWallTitle({ groupKey, onPrevious, onNext }) {
+  return (
+    <div className="flex items-center justify-center gap-3">
+      <ArrowButton direction="left" onClick={onPrevious} ariaLabel="Previous group" />
+      <div className="min-w-0 text-center">
+        <div className="truncate home-copy-bold text-[22px] uppercase leading-none tracking-[0.1em] text-[#F5F1E8]">
+          GROUP {groupKey}
+        </div>
+      </div>
+      <ArrowButton direction="right" onClick={onNext} ariaLabel="Next group" />
     </div>
+  );
+}
+
+function GroupFlagWall({ groupKey, teams = [], activeTeam, onPrevious, onNext, onSelectTeam, nationStickerProgress = {}, nationCupWins = {}, allTeamsUnlocked = false }) {
+  return (
+    <TrophySection title={<GroupFlagWallTitle groupKey={groupKey} onPrevious={onPrevious} onNext={onNext} />}>
+      <div className="rounded-[1.25rem] border border-[#F5F1E8]/10 bg-[#031B12]/62 p-2.5 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
+        <div className="grid grid-cols-4 mc-panel-grid-gap">
+          {teams.map((team) => (
+            <GroupFlagTile
+              key={team}
+              team={team}
+              selected={team === activeTeam}
+              completed={teamHasCompletedAllStickers(nationStickerProgress, nationCupWins, team)}
+              lockedTeam={!teamIsPurchased(team, allTeamsUnlocked)}
+              onClick={() => onSelectTeam?.(team)}
+            />
+          ))}
+        </div>
+      </div>
+    </TrophySection>
   );
 }
 
 function TeamStickerTitle({ team, index, total, onPrevious, onNext }) {
   return (
-    <div className="grid grid-cols-[36px_minmax(0,1fr)_36px] items-center gap-2">
+    <div className="grid w-full grid-cols-[36px_minmax(0,1fr)_36px] items-center gap-2">
       <ArrowButton direction="left" onClick={onPrevious} ariaLabel="Previous team" />
       <div className="min-w-0 text-center">
         <div className="truncate home-copy-bold text-[22px] uppercase leading-none tracking-[0.1em] text-[#F5F1E8]">
           {getTeamDisplayName(team, "title")}
         </div>
-        <div className="mt-1 home-copy-bold text-[8px] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]/64">
-          Team {index + 1}/{total}
-        </div>
+
       </div>
       <ArrowButton direction="right" onClick={onNext} ariaLabel="Next team" />
     </div>
@@ -264,6 +483,7 @@ function getStickerRecord(progress = {}, team) {
 }
 
 function stickerHasOpened(record = {}, stickerKey) {
+  if (stickerKey === "champions") return Boolean(record?.opened?.champions || record?.opened?.icon);
   return Boolean(record?.opened?.[stickerKey]);
 }
 
@@ -305,7 +525,7 @@ function buildStickerStyle({ team, shiny = false, opened = false }) {
 }
 
 function StickerQuestionBox({ claimable = false, featured = false, onOpen }) {
-  const baseClass = featured ? "h-[76px] w-[132px] rounded-[1.05rem]" : "h-[58px] w-[62px] rounded-[0.95rem]";
+  const baseClass = "h-[62px] w-[62px] rounded-[0.95rem]";
   if (claimable) {
     return (
       <button
@@ -326,18 +546,83 @@ function StickerQuestionBox({ claimable = false, featured = false, onOpen }) {
   );
 }
 
+
+function StickerLockedTeamBox() {
+  return (
+    <div className="relative z-[2] flex h-[62px] w-[62px] items-center justify-center rounded-[0.95rem] border border-[#F7D117]/46 bg-[#0B6B3A]/26 text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+      <TeamPadlockIcon className="h-9 w-9 drop-shadow-[0_2px_5px_rgba(0,0,0,0.50)]" />
+    </div>
+  );
+}
+
+
 function StickerShineOverlay({ shiny }) {
   if (!shiny) return null;
+  const edgeMask = {
+    WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+    WebkitMaskComposite: "xor",
+    maskComposite: "exclude",
+    padding: "10px",
+  };
+
   return (
     <>
-      <div className="pointer-events-none absolute inset-0 z-[1] monday-sticker-sparkle-noise opacity-72 mix-blend-screen" aria-hidden="true" />
-      <div className="pointer-events-none absolute inset-0 z-[1] monday-sticker-rainbow-shine opacity-78 mix-blend-screen" aria-hidden="true" />
+      <div
+        className="pointer-events-none absolute inset-0 z-[1] monday-sticker-sparkle-noise opacity-74 mix-blend-screen"
+        style={edgeMask}
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-0 z-[1] monday-sticker-rainbow-shine opacity-70 mix-blend-screen"
+        style={edgeMask}
+        aria-hidden="true"
+      />
       <div
         className="pointer-events-none absolute inset-[6px] z-[1] rounded-[inherit] border border-white/34 opacity-78 shadow-[inset_0_1px_0_rgba(255,255,255,0.52)]"
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute inset-[12px] z-[1] rounded-[1rem] border border-[#F7D117]/22 opacity-52"
+        className="pointer-events-none absolute inset-[12px] z-[1] rounded-[1rem] border border-[#F7D117]/18 opacity-42"
+        aria-hidden="true"
+      />
+    </>
+  );
+}
+
+function StickerFrameShineOverlay({ active, team }) {
+  if (!active) return null;
+  const theme = getTeamTheme(team);
+  const bg = theme.bg || theme.first || "#0B6B3A";
+  const edgeMask = {
+    WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+    WebkitMaskComposite: "xor",
+    maskComposite: "exclude",
+    padding: "12px",
+  };
+
+  return (
+    <>
+      <div
+        className="pointer-events-none absolute inset-0 z-[1] opacity-48 mix-blend-screen"
+        style={{
+          ...edgeMask,
+          backgroundImage: [
+            "radial-gradient(circle at 16% 22%, rgba(255,255,255,0.82) 0 1px, transparent 2.4px)",
+            "radial-gradient(circle at 84% 64%, rgba(255,255,255,0.58) 0 1px, transparent 2.6px)",
+            "linear-gradient(118deg, transparent 0%, rgba(255,255,255,0.48) 34%, rgba(122,249,255,0.18) 48%, transparent 66%)",
+          ].join(", "),
+          backgroundSize: "28px 26px, 36px 34px, 180% 100%",
+          backgroundPosition: "0 0, 11px 8px, -18% 0",
+        }}
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-[10px] z-[1] rounded-[0.95rem]"
+        style={{ background: `linear-gradient(145deg, ${bg}, ${bg} 66%, rgba(0,0,0,0.16))` }}
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-[2px] z-[1] rounded-[1.1rem] border border-white/82 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]"
         aria-hidden="true"
       />
     </>
@@ -392,6 +677,8 @@ function stickerPlayerFor(team, stickerKey, role = {}) {
 }
 
 function teamStickerRank(team) {
+  const ranked = Number(TEAM_RANK?.[team]);
+  if (Number.isFinite(ranked) && ranked > 0) return String(ranked).padStart(2, "0");
   const index = ALL_NATIONS.indexOf(team);
   return String(Math.max(1, index + 1)).padStart(2, "0");
 }
@@ -434,61 +721,110 @@ function StickerShirtBack({ team, name, number, footerLabel }) {
   );
 }
 
-function OpenStickerContent({ label, team, stickerKey, role = {}, layout = "portrait", shiny = false }) {
-  const theme = getTeamTheme(team);
-  const textColor = shiny ? "#FFFFFF" : theme.text || "#F5F1E8";
-  const displayName = getTeamDisplayName(team, "sticker");
-  const code = teamCode(team);
 
-  if (layout === "landscape") {
-    if (shiny) {
-      return (
-        <div className="relative z-[2] grid h-full w-full grid-cols-[minmax(0,0.68fr)_minmax(0,1fr)_minmax(0,0.68fr)] items-center gap-2 px-3 py-2">
-          <div className="min-w-0 text-center">
-            <div className="home-copy-bold text-[8px] uppercase leading-none tracking-[0.15em] text-white/78">COLOURS</div>
-            <div className="mt-2 home-copy-bold text-[27px] uppercase leading-none tracking-[0.08em] text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.38)]">
-              {code}
-            </div>
-          </div>
-          <div className="flex h-[72px] w-full items-center justify-center overflow-hidden rounded-[0.9rem] border border-white/62 bg-black/16 shadow-[0_8px_18px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(255,255,255,0.38)]">
-            <Flag team={team} className="h-full w-full object-cover" />
-          </div>
-          <div className="min-w-0 text-center">
-            <div className="home-copy-bold text-[8px] uppercase leading-none tracking-[0.15em] text-white/78">RANK</div>
-            <div className="mt-2 home-copy-bold text-[26px] uppercase leading-none tracking-[0.04em] text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.38)]">
-              #{teamStickerRank(team)}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="relative z-[2] grid h-full w-full grid-cols-[minmax(0,1fr)_112px] items-center gap-3 px-3 py-2">
-        <div className="min-w-0 text-left">
-          <div className="home-copy-bold text-[8px] uppercase leading-none tracking-[0.16em] opacity-78" style={{ color: textColor }}>
-            COLOURS
-          </div>
-          <div className="mt-2 truncate home-copy-bold text-[20px] uppercase leading-none tracking-[0.1em] drop-shadow-[0_2px_5px_rgba(0,0,0,0.36)]" style={{ color: textColor }}>
-            {displayName}
-          </div>
-          <div className="mt-1.5 home-copy-bold text-[8px] uppercase leading-none tracking-[0.14em] opacity-78" style={{ color: textColor }}>
-            {code} KIT
-          </div>
-        </div>
-        <div className="flex h-[74px] w-[112px] items-center justify-center overflow-hidden rounded-[0.85rem] border border-white/38 bg-black/18 shadow-[0_8px_18px_rgba(0,0,0,0.20),inset_0_1px_0_rgba(255,255,255,0.28)]">
-          <Flag team={team} className="h-full w-full object-cover" />
-        </div>
-      </div>
-    );
-  }
-
-  const player = stickerPlayerFor(team, stickerKey, role);
+function StickerTopLogo() {
   return (
-    <div className="relative z-[2] flex h-full w-full items-center justify-center text-center">
-      <StickerShirtBack team={team} name={player.name} number={player.number} footerLabel={label} />
+    <div className="pointer-events-none absolute left-1/2 top-[11.8%] z-[5] h-[11.5%] w-[19.5%] -translate-x-1/2">
+      <img src="/assets/branding/monday-cup.png" alt="" className="h-full w-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.30)]" draggable={false} />
     </div>
   );
+}
+
+function StickerTopDescription({ children, colour = "#F5F1E8" }) {
+  return (
+    <div
+      className="pointer-events-none absolute left-1/2 top-[18%] z-[5] w-[86%] -translate-x-1/2 -translate-y-1/2 truncate text-center home-copy-bold text-[6.2px] uppercase leading-none tracking-[0.13em] drop-shadow-[0_2px_3px_rgba(0,0,0,0.32)]"
+      style={{ color: colour }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function StickerBottomLabel({ children, colour = "#F5F1E8" }) {
+  return (
+    <div
+      className="pointer-events-none absolute bottom-[18%] left-1/2 z-[5] w-[86%] -translate-x-1/2 truncate text-center home-copy-bold text-[6px] uppercase leading-none tracking-[0.14em] drop-shadow-[0_2px_3px_rgba(0,0,0,0.32)]"
+      style={{ color: colour }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function StickerIconStage({ children }) {
+  return (
+    <div className="pointer-events-none relative z-[3] flex h-full w-full items-center justify-center text-center">
+      <div className="flex h-[62px] w-[62px] items-center justify-center">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ChampionsSticker() {
+  return (
+    <StickerIconStage>
+      <img
+        src="/assets/stickers/mc-trophy.png"
+        alt=""
+        className="h-full w-full object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.34)]"
+        draggable={false}
+      />
+    </StickerIconStage>
+  );
+}
+
+function RoleBadgeSticker({ iconSrc }) {
+  return (
+    <StickerIconStage>
+      <img
+        src={iconSrc}
+        alt=""
+        className="h-full w-full object-contain drop-shadow-[0_8px_13px_rgba(0,0,0,0.28)]"
+        draggable={false}
+      />
+    </StickerIconStage>
+  );
+}
+
+function KitSticker() {
+  return (
+    <StickerIconStage>
+      <img
+        src="/assets/stickers/kit1.png"
+        alt=""
+        className="h-full w-full object-contain drop-shadow-[0_8px_13px_rgba(0,0,0,0.28)]"
+        draggable={false}
+      />
+    </StickerIconStage>
+  );
+}
+
+function FlagSticker({ team }) {
+  return (
+    <StickerIconStage>
+      <div className="flex h-[34px] w-[50px] items-center justify-center overflow-hidden rounded-[0.58rem] border border-[#F5F1E8] bg-[#F5F1E8] p-[2px] shadow-[0_8px_18px_rgba(0,0,0,0.24),0_0_0_1px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.34)]">
+        <Flag team={team} className="h-full w-full rounded-[0.38rem] object-cover" />
+      </div>
+    </StickerIconStage>
+  );
+}
+
+function OpenStickerContent({ label, team, stickerKey, role = {} }) {
+  if (stickerKey === "kit") {
+    return <KitSticker />;
+  }
+
+  if (stickerKey === "flag") {
+    return <FlagSticker team={team} />;
+  }
+
+  if (stickerKey === "champions") {
+    return <ChampionsSticker />;
+  }
+
+  return <RoleBadgeSticker iconSrc={role.iconSrc} />;
 }
 
 function StickerBookSlot({
@@ -499,21 +835,25 @@ function StickerBookSlot({
   layout = "portrait",
   nationStickerProgress = {},
   nationCupWins = {},
+  lockedTeam = false,
   onOpenSticker,
 }) {
   const record = getStickerRecord(nationStickerProgress, team);
-  const forcedMexicoPreview = team === DEMO_SHINY_NATION;
-  const nationCupWon = Boolean(record?.cupWon || nationCupWins?.[team]?.unlocked);
-  const previewUnlocked = Boolean(forcedMexicoPreview || nationCupWon);
-  const shiny = Boolean(previewUnlocked && stickerKey === "flag");
-  const played = Boolean(previewUnlocked || record?.played || Number(record?.matchesPlayed || 0) > 0);
-  const opened = Boolean(previewUnlocked || stickerHasOpened(record, stickerKey));
-  const claimable = Boolean(!opened && (record?.claimable?.[stickerKey] || (played && ["flag", "icon"].includes(stickerKey))));
+  const legacyCupWon = Boolean(nationCupWins?.[team]?.unlocked);
+  const effectiveRecord = {
+    ...record,
+    cupWon: Boolean(record?.cupWon || legacyCupWon),
+  };
+  const unlocked = !lockedTeam && (FORCE_REVEAL_TEAM_STICKERS || stickerIsUnlocked(effectiveRecord, stickerKey));
+  const opened = !lockedTeam && (FORCE_REVEAL_TEAM_STICKERS || Boolean(stickerHasOpened(effectiveRecord, stickerKey)));
+  const claimable = Boolean(!opened && unlocked);
   const locked = !opened && !claimable;
+  const shinyFrame = Boolean(opened && ["kit", "flag", "champions", "stopper", "talisman", "striker"].includes(stickerKey));
+  const shiny = shinyFrame;
   const style = buildStickerStyle({ team, shiny, opened });
-  const isLandscape = layout === "landscape";
-  const slotSizeClass = isLandscape ? "aspect-[2/1] p-2.5" : "aspect-[3/4] p-2.5";
-  const questionFeatured = isLandscape;
+  const slotSizeClass = "aspect-[3/4] p-2.5";
+  const rule = stickerUnlockRule(stickerKey);
+  const titleColour = opened ? (getTeamTheme(team).text || "#F5F1E8") : "#F5F1E8";
 
   return (
     <div
@@ -523,27 +863,38 @@ function StickerBookSlot({
           : claimable
             ? "border-[#F7D117]/82 bg-[#052D1D]/72 ring-[#F7D117]/28 shadow-[0_0_16px_rgba(247,209,23,0.12)]"
             : "border-[#F5F1E8]/16 bg-[#F5F1E8]/[0.055] ring-[#F5F1E8]/10"
-      } ${shiny && opened ? "monday-sticker-shiny-shell" : ""} ${slotSizeClass}`}
+      } ${shinyFrame && opened ? "monday-sticker-shiny-shell" : ""} ${slotSizeClass}`}
       style={style}
     >
-      <StickerShineOverlay shiny={shiny && opened} />
+      <StickerShineOverlay shiny={shinyFrame && opened} />
+      <StickerFrameShineOverlay active={shinyFrame && opened} team={team} />
       {!opened && (
         <>
           <div className={`absolute inset-2 rounded-[0.95rem] border border-dashed ${claimable ? "border-[#F7D117]/42" : "border-[#F5F1E8]/14"}`} aria-hidden="true" />
-          <div className="relative z-[2] mt-1 home-copy-bold text-[8px] uppercase leading-tight tracking-[0.13em] text-[#F5F1E8]/72">
-            {label}
+          <StickerTopDescription colour={lockedTeam ? "#F7D117" : claimable ? "#F7D117" : "#F5F1E8"}>
+            {lockedTeam ? "LOCKED" : claimable ? "Tap to open" : locked ? (rule?.requirement || "Locked") : "Sticker"}
+          </StickerTopDescription>
+          <div className="absolute left-1/2 top-1/2 z-[2] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+            {lockedTeam ? (
+              <StickerLockedTeamBox />
+            ) : (
+              <StickerQuestionBox
+                claimable={claimable}
+                featured={false}
+                onOpen={() => onOpenSticker?.(team, stickerKey)}
+              />
+            )}
           </div>
-          <StickerQuestionBox
-            claimable={claimable}
-            featured={questionFeatured}
-            onOpen={() => onOpenSticker?.(team, stickerKey)}
-          />
-          <div className={`relative z-[2] mb-1 home-copy-bold text-[7px] uppercase leading-none tracking-[0.12em] ${claimable ? "text-[#F7D117]" : "text-[#F5F1E8]/36"}`}>
-            {claimable ? "Tap to open" : locked ? "Locked" : "Sticker"}
-          </div>
+          <StickerBottomLabel colour="#F5F1E8">{label}</StickerBottomLabel>
         </>
       )}
-      {opened && <OpenStickerContent label={label} team={team} stickerKey={stickerKey} role={role} layout={layout} shiny={shiny} />}
+      {opened && (
+        <>
+          <OpenStickerContent label={label} team={team} stickerKey={stickerKey} role={role} />
+          <StickerTopLogo />
+          <StickerBottomLabel colour={titleColour}>{label}</StickerBottomLabel>
+        </>
+      )}
     </div>
   );
 }
@@ -556,33 +907,42 @@ function TeamStickerBook({
   onNext,
   nationStickerProgress = {},
   nationCupWins = {},
+  lockedTeam = false,
   onOpenSticker,
 }) {
   return (
     <TrophySection title={<TeamStickerTitle team={team} index={index} total={total} onPrevious={onPrevious} onNext={onNext} />}>
-      <div className="space-y-3 rounded-[1.35rem] border border-[#F5F1E8]/10 bg-[#031B12]/30 px-3 py-4 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
-        <div className="grid grid-cols-3 gap-2.5">
+      <div className="mc-panel-stack rounded-[1.35rem] border border-[#F5F1E8]/10 bg-[#031B12]/72 px-3 py-4 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
+        <div className="grid grid-cols-3 items-stretch mc-panel-grid-gap">
           <StickerBookSlot
-            label="ICON"
+            label="WEAR THE SHIRT"
             team={team}
-            stickerKey="icon"
+            stickerKey="kit"
             nationStickerProgress={nationStickerProgress}
             nationCupWins={nationCupWins}
+            lockedTeam={lockedTeam}
             onOpenSticker={onOpenSticker}
           />
-          <div className="col-span-2">
-            <StickerBookSlot
-              label="COLOURS"
-              team={team}
-              stickerKey="flag"
-              layout="landscape"
-              nationStickerProgress={nationStickerProgress}
-              nationCupWins={nationCupWins}
-              onOpenSticker={onOpenSticker}
-            />
-          </div>
+          <StickerBookSlot
+            label="FLY THE FLAG"
+            team={team}
+            stickerKey="flag"
+            nationStickerProgress={nationStickerProgress}
+            nationCupWins={nationCupWins}
+            lockedTeam={lockedTeam}
+            onOpenSticker={onOpenSticker}
+          />
+          <StickerBookSlot
+            label="LIFT THE CUP"
+            team={team}
+            stickerKey="champions"
+            nationStickerProgress={nationStickerProgress}
+            nationCupWins={nationCupWins}
+            lockedTeam={lockedTeam}
+            onOpenSticker={onOpenSticker}
+          />
         </div>
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-3 mc-panel-grid-gap">
           {STICKER_ROLES.map((role) => (
             <StickerBookSlot
               key={role.key}
@@ -592,6 +952,7 @@ function TeamStickerBook({
               stickerKey={role.key}
               nationStickerProgress={nationStickerProgress}
               nationCupWins={nationCupWins}
+              lockedTeam={lockedTeam}
               onOpenSticker={onOpenSticker}
             />
           ))}
@@ -601,95 +962,95 @@ function TeamStickerBook({
   );
 }
 
-export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWins = {}, nationStickerProgress = {}, onOpenNationSticker }) {
-  const [trophyView, setTrophyView] = useState("badges");
+export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWins = {}, nationStickerProgress = {}, careerStats = {}, allTeamsUnlocked = false, onOpenNationSticker }) {
+  const [trophyView, setTrophyView] = useState("player");
   const [achievementPage, setAchievementPage] = useState(0);
   const [teamIndex, setTeamIndex] = useState(0);
+  const [groupIndex, setGroupIndex] = useState(0);
 
-  const completedCount = ALL_NATIONS.filter((team) => nationCupWins?.[team]?.unlocked).length;
-  const achievementRows = ACHIEVEMENT_ROWS.map((item) => ({
-    ...item,
-    unlocked: item.key === "globalIcon"
-      ? completedCount >= ALL_NATIONS.length || Boolean(achievements?.globalIcon)
-      : Boolean(achievements?.[item.key]),
-  }));
-  const visibleAchievements = achievementRows.slice(
-    achievementPage * ACHIEVEMENTS_PER_PAGE,
-    achievementPage * ACHIEVEMENTS_PER_PAGE + ACHIEVEMENTS_PER_PAGE,
-  );
+  const playerAchievementPages = buildPlayerAchievementPages(careerStats, achievements);
+  const safeAchievementPageCount = Math.max(1, playerAchievementPages.length || ACHIEVEMENT_PAGE_COUNT);
+  const activeAchievementPage = playerAchievementPages[achievementPage % safeAchievementPageCount] || playerAchievementPages[0];
+  const visibleAchievements = activeAchievementPage?.rows || [];
+  const achievementRows = playerAchievementPages.flatMap((page) => page.rows || []);
   const achievementUnlockedCount = achievementRows.filter((item) => item.unlocked).length;
-  const podiumUnlockedCount = PODIUM_BADGES.filter((badge) => Boolean(achievements?.[badge.key])).length;
-  const previousAchievementPage = () => setAchievementPage((page) => (page - 1 + ACHIEVEMENT_PAGE_COUNT) % ACHIEVEMENT_PAGE_COUNT);
-  const nextAchievementPage = () => setAchievementPage((page) => (page + 1) % ACHIEVEMENT_PAGE_COUNT);
-  const previousTeam = () => setTeamIndex((index) => (index - 1 + ALL_NATIONS.length) % ALL_NATIONS.length);
-  const nextTeam = () => setTeamIndex((index) => (index + 1) % ALL_NATIONS.length);
+  const previousAchievementPage = () => setAchievementPage((page) => (page - 1 + safeAchievementPageCount) % safeAchievementPageCount);
+  const nextAchievementPage = () => setAchievementPage((page) => (page + 1) % safeAchievementPageCount);
+  const selectTeamByIndex = (nextIndex) => {
+    const safeIndex = (nextIndex + ALL_NATIONS.length) % ALL_NATIONS.length;
+    const nextTeam = ALL_NATIONS[safeIndex] || ALL_NATIONS[0];
+    setTeamIndex(safeIndex);
+    setGroupIndex(groupIndexForTeam(nextTeam));
+  };
+  const selectGroupByIndex = (nextIndex) => {
+    const safeIndex = (nextIndex + GROUP_KEYS.length) % GROUP_KEYS.length;
+    const nextGroupKey = GROUP_KEYS[safeIndex] || GROUP_KEYS[0];
+    const firstTeamInGroup = GROUPS[nextGroupKey]?.[0] || ALL_NATIONS[0];
+    setGroupIndex(safeIndex);
+    setTeamIndex(Math.max(0, ALL_NATIONS.indexOf(firstTeamInGroup)));
+  };
+  const previousTeam = () => selectTeamByIndex(teamIndex - 1);
+  const nextTeam = () => selectTeamByIndex(teamIndex + 1);
+  const previousGroup = () => selectGroupByIndex(groupIndex - 1);
+  const nextGroup = () => selectGroupByIndex(groupIndex + 1);
+  const selectTeam = (team) => {
+    const nextIndex = ALL_NATIONS.indexOf(team);
+    if (nextIndex >= 0) selectTeamByIndex(nextIndex);
+  };
   const activeTeam = ALL_NATIONS[teamIndex] || ALL_NATIONS[0];
+  const activeTeamLocked = !teamIsPurchased(activeTeam, allTeamsUnlocked);
+  const activeGroupKey = GROUP_KEYS[groupIndex] || GROUP_KEYS[0];
+  const activeGroupTeams = GROUPS[activeGroupKey] || [];
 
   return (
-    <main className="relative z-[1] flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden text-[#F5F1E8]">
+    <main className="relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
       <ScreenTopBar {...menuProps}>TROPHIES</ScreenTopBar>
       <PageTabsSlot>
         <TrophyToggle value={trophyView} onChange={setTrophyView} />
       </PageTabsSlot>
-      <PageScroll className="pt-0.5">
-        <div className="space-y-2.5 pb-4">
-          {trophyView === "badges" && (
+      <PageScroll className="pt-1">
+        <div className="mc-panel-stack pb-4">
+          {trophyView === "player" && (
             <>
-              <TrophySection title={<AchievementSectionTitle pageNumber={achievementPage + 1} pageCount={ACHIEVEMENT_PAGE_COUNT} onPrevious={previousAchievementPage} onNext={nextAchievementPage} />}>
+              <TrophySection title={<AchievementSectionTitle title={activeAchievementPage?.title || "PLAYER"} pageNumber={(achievementPage % safeAchievementPageCount) + 1} pageCount={safeAchievementPageCount} onPrevious={previousAchievementPage} onNext={nextAchievementPage} />}>
                 <div className="grid gap-2.5">
                   {visibleAchievements.map((achievement, index) => (
                     <AchievementRow
                       key={achievement.key}
                       item={achievement}
-                      number={(achievementPage * ACHIEVEMENTS_PER_PAGE) + index + 1}
-                    />
-                  ))}
-                </div>
-                <TrophyCount>{achievementUnlockedCount}/{achievementRows.length}</TrophyCount>
-              </TrophySection>
-              <TrophySection title="PODIUM BADGES">
-                <div className="grid grid-cols-3 gap-3">
-                  {PODIUM_BADGES.map((badge) => (
-                    <PodiumBadgeCard
-                      key={badge.key}
-                      unlocked={Boolean(achievements?.[badge.key])}
-                      title={badge.title}
-                      assetSrc={badge.assetSrc}
-                      placeholderSrc={badge.placeholderSrc}
-                      podiumClass={badge.podiumClass}
+                      number={index + 1}
                     />
                   ))}
                 </div>
               </TrophySection>
-              <TrophyProgressMeter
-                unlocked={achievementUnlockedCount + podiumUnlockedCount}
-                total={achievementRows.length + PODIUM_BADGES.length}
-              />
             </>
           )}
 
           {trophyView === "teams" && (
-            <TeamStickerBook
-              team={activeTeam}
-              index={teamIndex}
-              total={ALL_NATIONS.length}
-              onPrevious={previousTeam}
-              onNext={nextTeam}
-              nationStickerProgress={nationStickerProgress}
-              nationCupWins={nationCupWins}
-              onOpenSticker={onOpenNationSticker}
-            />
-          )}
-
-          {trophyView === "flagWall" && (
-            <TrophySection title="FLAG WALL">
-              <div className="grid grid-cols-6 justify-items-stretch gap-2.5">
-                {ALL_NATIONS.map((nation) => (
-                  <NationFlagTile key={nation} team={nation} unlocked={Boolean(nationCupWins?.[nation]?.unlocked)} />
-                ))}
-              </div>
-              <TrophyCount>{completedCount}/{ALL_NATIONS.length}</TrophyCount>
-            </TrophySection>
+            <>
+              <GroupFlagWall
+                groupKey={activeGroupKey}
+                teams={activeGroupTeams}
+                activeTeam={activeTeam}
+                onPrevious={previousGroup}
+                onNext={nextGroup}
+                onSelectTeam={selectTeam}
+                nationStickerProgress={nationStickerProgress}
+                nationCupWins={nationCupWins}
+                allTeamsUnlocked={allTeamsUnlocked}
+              />
+              <TeamStickerBook
+                team={activeTeam}
+                index={teamIndex}
+                total={ALL_NATIONS.length}
+                onPrevious={previousTeam}
+                onNext={nextTeam}
+                nationStickerProgress={nationStickerProgress}
+                nationCupWins={nationCupWins}
+                lockedTeam={activeTeamLocked}
+                onOpenSticker={onOpenNationSticker}
+              />
+            </>
           )}
         </div>
       </PageScroll>

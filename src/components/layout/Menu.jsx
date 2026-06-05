@@ -20,7 +20,6 @@ const MENU_ITEMS = [
   { title: "CLUBHOUSE", action: "onClubhouse" },
   { title: "TROPHIES", action: "onTrophyCabinet" },
   { title: "LEADERBOARD", action: "onLeaderboard" },
-  { title: "SHARE", action: "onShare" },
 ];
 
 const MENU_TOP_OFFSET_PX = MC_SIZES.topBarHeight + 30;
@@ -565,7 +564,7 @@ export function MenuDropdown({
 
   const menu = (
     <div
-      className="fixed inset-0 isolate flex items-start justify-center overflow-y-auto bg-[#031B12]/54 px-3 pb-5 pt-[max(76px,calc(64px+env(safe-area-inset-top)))] backdrop-blur-[3px]"
+      className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/72 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[6px]"
       style={{
         zIndex: 2147483647,
       }}
@@ -584,7 +583,7 @@ export function MenuDropdown({
 
         <div
           className="relative overflow-y-auto p-4"
-          style={{ maxHeight: `calc(100dvh - ${MENU_SAFE_HEIGHT_OFFSET_PX}px)` }}
+          style={{ maxHeight: "calc(100dvh - 28px)" }}
         >
           {authActive ? (
             <AuthMenuPanel

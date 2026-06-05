@@ -15,6 +15,7 @@ import {
   completeKnockoutRound,
   knockoutStageLabel,
   simulateGoldenTicketFinalRun,
+  simulateRemainingKnockoutTournament,
   runSelfTests,
 } from "./logic/tournament.js";
 import { RESULT_STATUS } from "./logic/resultStatus.js";
@@ -34,7 +35,6 @@ import {
 import { FixturesScreen } from "./components/schedule/ScheduleScreens.jsx";
 import { GroupsScreen } from "./components/standings/StandingsScreens.jsx";
 import { MatchScreen } from "./components/match/MatchScreen.jsx";
-import { ShareScreen } from "./components/share/ShareScreen.jsx";
 import ShirtShareModal from "./components/share/ShirtShareModal.jsx";
 import { DrawerShell } from "./components/layout/Layout.jsx";
 import AppFooter from "./components/ui/AppFooter.jsx";
@@ -73,6 +73,8 @@ import {
   safeWriteNumber,
   safeReadJson,
   safeWriteJson,
+  safeReadLeaderboardRows,
+  safeWriteLeaderboardRows,
   isTerminalLeaderboardStatus,
   toGameFixture,
   resultBelongsToFixture,
@@ -137,6 +139,7 @@ export default function App() {
   const [score, setScore] = useState([0, 0]);
   const [matchResult, setMatchResult] = useState(null);
   const [modalDismissed, setModalDismissed] = useState(false);
+  const [awardedTrophyMatchKey, setAwardedTrophyMatchKey] = useState(null);
   const [table, setTable] = useState(blankTable());
   const [schedule, setSchedule] = useState(buildSchedule());
   const [knockoutFixtures, setKnockoutFixtures] = useState([]);
@@ -386,14 +389,25 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
+    const localRows = safeReadLeaderboardRows();
 
     loadLeaderboardRows(50)
       .then((rows) => {
-        if (!cancelled) setLeaderboardRows(rows);
+        if (cancelled) return;
+        const byUser = new Map();
+        [...localRows, ...rows].forEach((row) => {
+          const userId = row.userId || row.uid || row.id || row.username;
+          if (!userId) return;
+          const existing = byUser.get(userId);
+          if (!existing || Number(row.campaignPoints || row.gameScore || 0) > Number(existing.campaignPoints || existing.gameScore || 0)) {
+            byUser.set(userId, row);
+          }
+        });
+        setLeaderboardRows(Array.from(byUser.values()).sort((a, b) => Number(b.campaignPoints || b.gameScore || 0) - Number(a.campaignPoints || a.gameScore || 0)).slice(0, 50));
       })
       .catch((error) => {
         console.warn("Cloud leaderboard load failed", error);
-        if (!cancelled) setLeaderboardRows([]);
+        if (!cancelled) setLeaderboardRows(localRows);
       });
 
     return () => {
@@ -672,17 +686,49 @@ export default function App() {
     });
   };
 
-  const recordNationStickerPlay = (nation) => {
+  const countKeeperSavesForSticker = (opponentShotEvents = []) => {
+    if (!Array.isArray(opponentShotEvents)) return 0;
+    return opponentShotEvents.filter((event) => {
+      const raw = String(event?.shotResult || event?.result || event?.outcome || "").toLowerCase();
+      return event?.goal === false && (raw.includes("save") || raw.includes("saved"));
+    }).length;
+  };
+
+
+  const buildStickerClaimable = (record = {}) => ({
+    ...(record.claimable || {}),
+    kit: Number(record.campaignsCompleted || record.completedCampaigns || 0) >= 1,
+    flag: Boolean(record.knockoutQualified || record.qualifiedForKnockouts || record.qualified || record.reachedKnockouts),
+    champions: Boolean(record.cupWon),
+    stopper: Number(record.keeperSaves || 0) >= 10,
+    talisman: Number(record.wins || 0) >= 10,
+    striker: Number(record.goals || 0) >= 25,
+  });
+
+  const recordNationStickerMatchProgress = (nation, updates = {}) => {
     if (!nation) return;
     updateNationStickerProgress((current) => {
       const existing = current?.[nation] || {};
-      const nextNation = {
+      const opened = existing.opened || {};
+      const nextNationBase = {
         ...existing,
         played: true,
         matchesPlayed: Number(existing.matchesPlayed || 0) + 1,
+        wins: Number(existing.wins || 0) + (updates.userWon ? 1 : 0),
+        goals: Number(existing.goals || 0) + Number(updates.goals || 0),
+        keeperSaves: Number(existing.keeperSaves || 0) + Number(updates.keeperSaves || 0),
+        campaignsCompleted:
+          Number(existing.campaignsCompleted || 0) + (updates.campaignCompleted ? 1 : 0),
+        knockoutQualified: Boolean(existing.knockoutQualified || updates.knockoutQualified || updates.qualifiedForKnockouts || updates.qualified),
+        cupWon: Boolean(existing.cupWon || updates.cupWon),
         firstPlayedAt: existing.firstPlayedAt || Date.now(),
         lastPlayedAt: Date.now(),
-        opened: existing.opened || {},
+        opened,
+      };
+      const nextNation = {
+        ...nextNationBase,
+        claimable: buildStickerClaimable(nextNationBase),
+        lastStickerProgressAt: Date.now(),
       };
       return { ...(current || {}), [nation]: nextNation };
     });
@@ -693,11 +739,15 @@ export default function App() {
     updateNationStickerProgress((current) => {
       const existing = current?.[nation] || {};
       const opened = { ...(existing.opened || {}), [stickerKey]: true };
-      const nextNation = {
+      const nextNationBase = {
         ...existing,
         played: true,
         firstPlayedAt: existing.firstPlayedAt || Date.now(),
         opened,
+      };
+      const nextNation = {
+        ...nextNationBase,
+        claimable: buildStickerClaimable(nextNationBase),
       };
       return { ...(current || {}), [nation]: nextNation };
     });
@@ -707,12 +757,16 @@ export default function App() {
     if (!nation) return;
     updateNationStickerProgress((current) => {
       const existing = current?.[nation] || {};
-      const nextNation = {
+      const nextNationBase = {
         ...existing,
         played: true,
         cupWon: true,
         wonAt: existing.wonAt || Date.now(),
-        opened: { flag: true, ...(existing.opened || {}) },
+        opened: existing.opened || {},
+      };
+      const nextNation = {
+        ...nextNationBase,
+        claimable: buildStickerClaimable(nextNationBase),
       };
       return { ...(current || {}), [nation]: nextNation };
     });
@@ -838,6 +892,11 @@ export default function App() {
     ).every((key) => nextAchievements[key] || keys.includes(key));
     if (coreComplete && podiumComplete && flagWallComplete) keys.push("goat");
 
+    const newTrophyKeys = keys.filter((key) => !achievements?.[key]);
+    if (newTrophyKeys.length) {
+      setAwardedTrophyMatchKey(`${matchNo || baseResult?.week || "match"}-${status || "result"}-${newTrophyKeys.join(".")}`);
+    }
+
     unlockAchievements(keys);
   };
 
@@ -870,6 +929,7 @@ export default function App() {
       achievements,
       nationCupWins,
       nationStickerProgress,
+      awardedTrophyMatchKey,
     });
 
   const restoreGameSnapshot = (snapshot) => {
@@ -900,6 +960,7 @@ export default function App() {
       RESULT_STATUS.THIRD_PLACE,
       RESULT_STATUS.FOURTH_PLACE,
     ]);
+    setAwardedTrophyMatchKey(snapshot.awardedTrophyMatchKey || null);
     setModalDismissed(
       snapshot.matchResult?.status &&
         terminalStatuses.has(snapshot.matchResult.status)
@@ -1132,6 +1193,10 @@ export default function App() {
       campaignPoints: nextScoringState.campaignPoints,
       pointsAwarded: nextScoringState.lastMatchPoints,
       pointsBreakdown: nextScoringState.lastBreakdown,
+      attempts: {
+        user: userShotEvents || [],
+        opponent: baseResult?.opponentShotEvents || [],
+      },
     };
 
     setScoringState(nextScoringState);
@@ -1140,7 +1205,14 @@ export default function App() {
     const nextForm = [...userForm, resultCode].filter(Boolean).slice(-8);
     const shotStats = countShotStats(userShotEvents);
 
-    recordNationStickerPlay(team);
+    recordNationStickerMatchProgress(team, {
+      goals: shotStats.goals,
+      keeperSaves: countKeeperSavesForSticker(baseResult?.opponentShotEvents),
+      userWon: Boolean(baseResult?.userWon || baseResult?.won),
+      campaignCompleted: isTerminalLeaderboardStatus(baseResult?.status),
+      knockoutQualified: baseResult?.status === RESULT_STATUS.QUALIFIED,
+      cupWon: baseResult?.status === RESULT_STATUS.CHAMPION,
+    });
 
     setAllTimeMatchesPlayed((value) => {
       const next = Number(value || 0) + 1;
@@ -1226,53 +1298,68 @@ export default function App() {
       safeWriteJson(BEST_CAMPAIGN_SUMMARY_KEY, latestBestCampaignSummary);
     }
 
-    if (
-      isTerminalLeaderboardStatus(baseResult.status) &&
-      isCurrentUserVerified
-    ) {
+    if (isTerminalLeaderboardStatus(baseResult.status)) {
       const leaderboardBestScore = Number(
         Math.max(nextScoringState.campaignPoints || 0, bestCampaignScore || 0),
       );
       const leaderboardBestTeam = nextIsBestCampaign
         ? team
-        : latestBestCampaignSummary?.team || null;
+        : latestBestCampaignSummary?.team || team || null;
       const leaderboardForm =
         latestBestCampaignSummary?.formGuide ||
         latestBestCampaignSummary?.form ||
         latestBestCampaignSummary?.tournamentProgress ||
+        nextForm ||
         [];
+      const localUserId = currentUser?.uid || "guest-local";
       const entry = {
         ...createLeaderboardEntry({
-          user: currentUser,
+          user: currentUser || { uid: localUserId, displayName: "GUEST" },
           team: leaderboardBestTeam,
           campaignPoints: leaderboardBestScore,
           status: baseResult.status,
           podium,
         }),
+        id: localUserId,
+        uid: localUserId,
+        userId: localUserId,
+        username: currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST",
         formGuide: leaderboardForm,
         form: leaderboardForm,
         tournamentProgress: leaderboardForm,
-        bestCampaign: latestBestCampaignSummary,
-        cosmeticsApplied: latestBestCampaignSummary?.cosmeticsApplied || {},
-        emailVerified: true,
-        accountStatus: { emailVerified: true, verificationRequired: false },
+        bestCampaign: latestBestCampaignSummary || {
+          team: leaderboardBestTeam,
+          formGuide: leaderboardForm,
+          form: leaderboardForm,
+          tournamentProgress: leaderboardForm,
+          campaignPoints: leaderboardBestScore,
+          points: leaderboardBestScore,
+          roundLabel: roundLabelForResult(baseResult, matchStage),
+        },
+        cosmeticsApplied: latestBestCampaignSummary?.cosmeticsApplied || campaignCosmeticsApplied(),
+        emailVerified: Boolean(isCurrentUserVerified),
+        accountStatus: { emailVerified: Boolean(isCurrentUserVerified), verificationRequired: !isCurrentUserVerified },
+        localOnly: !isCurrentUserVerified,
       };
       setLeaderboardRows((rows) => {
-        const withoutUser = rows.filter(
-          (row) => row.userId !== currentUser.uid,
-        );
-        return [entry, ...withoutUser]
-          .sort(
-            (a, b) =>
-              Number(b.campaignPoints || 0) - Number(a.campaignPoints || 0),
-          )
-          .slice(0, 50);
+        const withoutUser = rows.filter((row) => (row.userId || row.uid) !== localUserId);
+        const nextRows = [entry, ...withoutUser]
+          .sort((a, b) => Number(b.campaignPoints || b.gameScore || 0) - Number(a.campaignPoints || a.gameScore || 0))
+          .slice(0, 50)
+          .map((row, index) => ({ ...row, rank: index + 1 }));
+        safeWriteLeaderboardRows(nextRows.filter((row) => row.localOnly || row.userId === "guest-local"));
+        return nextRows;
       });
-      saveLeaderboardHighScore(currentUser.uid, entry)
-        .then(() => loadLeaderboardRows(50).then(setLeaderboardRows))
-        .catch((error) =>
-          console.warn("Leaderboard high-score save failed", error),
-        );
+      if (isCurrentUserVerified) {
+        saveLeaderboardHighScore(currentUser.uid, entry)
+          .then(() => loadLeaderboardRows(50).then((rows) => {
+            const localRows = safeReadLeaderboardRows();
+            setLeaderboardRows([...localRows, ...rows].sort((a, b) => Number(b.campaignPoints || b.gameScore || 0) - Number(a.campaignPoints || a.gameScore || 0)).slice(0, 50));
+          }))
+          .catch((error) =>
+            console.warn("Leaderboard high-score save failed", error),
+          );
+      }
     }
 
     return enrichedResult;
@@ -1314,6 +1401,7 @@ export default function App() {
     setScore([0, 0]);
     setMatchResult(null);
     setModalDismissed(false);
+    setAwardedTrophyMatchKey(null);
     setTable(blankTable());
     setSchedule(buildSchedule());
     setKnockoutFixtures([]);
@@ -1387,40 +1475,27 @@ export default function App() {
   };
   const openFixtures = () => {
     closeMenu();
-    setFixtureView(groupStageComplete ? "knockout" : "group");
+    if (resultIsEliminated(matchResult)) finishTournamentForEliminatedUser();
+    setFixtureView(groupStageComplete || resultIsEliminated(matchResult) ? "knockout" : "group");
     setDrawer("fixtures");
   };
   const openGroups = () => {
     closeMenu();
-    setStandingsView(groupStageComplete ? "knockout" : standingsView);
+    if (resultIsEliminated(matchResult)) finishTournamentForEliminatedUser();
+    setStandingsView(groupStageComplete || resultIsEliminated(matchResult) ? "knockout" : standingsView);
     setDrawer("groups");
   };
   const openClubhouse = () => {
-    if (!requireVerifiedAccess("signin")) return;
     closeMenu();
     setDrawer("clubhouse");
   };
   const openTrophyCabinet = () => {
-    if (!requireVerifiedAccess("signin")) return;
     closeMenu();
     setDrawer("trophyCabinet");
   };
   const openLeaderboard = () => {
-    if (!requireVerifiedAccess("signin")) return;
     closeMenu();
     setDrawer("leaderboard");
-  };
-  const canAccessShare =
-    isCurrentUserVerified &&
-    String(currentUser?.email || "").toLowerCase() === SHARE_EDITOR_EMAIL;
-  const openShare = () => {
-    if (!requireVerifiedAccess("signin")) return;
-    closeMenu();
-    if (!canAccessShare) {
-      if (drawer === "share") setDrawer(null);
-      return;
-    }
-    setDrawer("share");
   };
   const openShop = (itemId = null) => {
     setShopInitialItemId(itemId);
@@ -1452,6 +1527,23 @@ export default function App() {
     upgradesPurchased: firebaseProfile?.upgradesPurchased || {},
     consumables: firebaseProfile?.consumables || {},
   });
+
+
+  const finishTournamentForEliminatedUser = (fixtures = knockoutFixtures, tableState = table) => {
+    const simulated = simulateRemainingKnockoutTournament(fixtures?.length ? fixtures : buildRound32Fixtures(tableState), tableState);
+    if (simulated?.updatedFixtures?.length) {
+      setKnockoutFixtures(simulated.updatedFixtures);
+      setFixtureView("knockout");
+      setStandingsView("knockout");
+    }
+    if (simulated?.podium) setPodium(simulated.podium);
+    return simulated;
+  };
+
+  const resultIsEliminated = (result) =>
+    [RESULT_STATUS.ELIMINATED, RESULT_STATUS.FOURTH_PLACE].includes(result?.status);
+
+  const clearAwardedTrophyPrompt = () => setAwardedTrophyMatchKey(null);
 
   const startStripeCheckout = async (selection = {}) => {
     if (!isCurrentUserVerified)
@@ -1643,6 +1735,7 @@ export default function App() {
     setMatchStage("GROUP STAGE");
     setMatchResult(null);
     setModalDismissed(false);
+    setAwardedTrophyMatchKey(null);
     setUserForm([]);
     setScoringState(createScoringState());
     setCampaignCosmeticsUsed(cosmeticUsageFromActive(activeCosmetics));
@@ -1685,8 +1778,11 @@ export default function App() {
     setScore([1, 0]);
     setSchedule(updatedSchedule);
     setTable(updatedTable);
-    if (completedGroupStage)
-      setKnockoutFixtures(buildRound32Fixtures(updatedTable));
+    if (completedGroupStage) {
+      const round32Fixtures = buildRound32Fixtures(updatedTable);
+      if (qualified) setKnockoutFixtures(round32Fixtures);
+      else finishTournamentForEliminatedUser(round32Fixtures, updatedTable);
+    }
     setModalDismissed(false);
     setUserForm((form) => [...form, "W"].slice(-8));
     const displayResult = applyLeaderboardScore(
@@ -1704,6 +1800,7 @@ export default function App() {
             : RESULT_STATUS.ELIMINATED
           : RESULT_STATUS.GROUP_WIN,
         isDraw: false,
+        opponentShotEvents: [],
       },
       [],
     );
@@ -1773,9 +1870,11 @@ export default function App() {
           status,
           nextFixture: nextUserFixture,
           isDraw: false,
+          opponentShotEvents: result?.attempts?.opponent || [],
         },
         result.userShotEvents || [],
       );
+      if (resultIsEliminated(displayResult)) finishTournamentForEliminatedUser(updatedFixtures, table);
       setMatchResult(displayResult);
       return;
     }
@@ -1817,8 +1916,11 @@ export default function App() {
     setScore(userScore);
     setSchedule(updatedSchedule);
     setTable(updatedTable);
-    if (completedGroupStage)
-      setKnockoutFixtures(buildRound32Fixtures(updatedTable));
+    if (completedGroupStage) {
+      const round32Fixtures = buildRound32Fixtures(updatedTable);
+      if (qualified) setKnockoutFixtures(round32Fixtures);
+      else finishTournamentForEliminatedUser(round32Fixtures, updatedTable);
+    }
     setModalDismissed(false);
     setUserForm((form) =>
       [...form, resultFormCode(result, team)].filter(Boolean).slice(-8),
@@ -1842,6 +1944,7 @@ export default function App() {
               ? RESULT_STATUS.GROUP_WIN
               : RESULT_STATUS.GROUP_LOSS,
         isDraw: result.isDraw || result.homeGoals === result.awayGoals,
+        opponentShotEvents: result?.attempts?.opponent || [],
       },
       result.userShotEvents || [],
     );
@@ -1866,6 +1969,7 @@ export default function App() {
         setMatchStage(knockoutStageLabel(nextFixture.matchNo));
         setMatchResult(null);
         setModalDismissed(false);
+        clearAwardedTrophyPrompt();
         setDrawer(null);
         setScreen("match");
         return;
@@ -1890,6 +1994,7 @@ export default function App() {
       setDrawer("groups");
       setMatchResult(null);
       setModalDismissed(false);
+      clearAwardedTrophyPrompt();
       return;
     }
 
@@ -1906,6 +2011,7 @@ export default function App() {
         setMatchStage(knockoutStageLabel(userFixture.matchNo));
         setMatchResult(null);
         setModalDismissed(false);
+        clearAwardedTrophyPrompt();
         setDrawer(null);
         setScreen("match");
         return;
@@ -1926,6 +2032,7 @@ export default function App() {
         setMatchStage(knockoutStageLabel(nextFixture.matchNo));
         setMatchResult(null);
         setModalDismissed(false);
+        clearAwardedTrophyPrompt();
         setDrawer(null);
         setScreen("match");
         return;
@@ -1941,6 +2048,7 @@ export default function App() {
 
     setMatchResult(null);
     setModalDismissed(false);
+    clearAwardedTrophyPrompt();
     if (upcoming) {
       setOpponent(upcoming.home === team ? upcoming.away : upcoming.home);
       setScore([0, 0]);
@@ -2060,6 +2168,7 @@ export default function App() {
     setScore([0, 0]);
     setMatchResult(null);
     setModalDismissed(false);
+    setAwardedTrophyMatchKey(null);
     setTable(blankTable());
     setSchedule(buildSchedule());
     setKnockoutFixtures([]);
@@ -2138,8 +2247,6 @@ export default function App() {
     onClubhouse: openClubhouse,
     onTrophyCabinet: openTrophyCabinet,
     onLeaderboard: openLeaderboard,
-    onShare: canAccessShare ? openShare : undefined,
-    showShare: canAccessShare,
     onRestart: resetTournament,
     onSignOut: handleSignOut,
     canSignOut: Boolean(currentUser),
@@ -2202,6 +2309,12 @@ export default function App() {
           achievements={achievements}
           nationCupWins={nationCupWins}
           nationStickerProgress={nationStickerProgress}
+          careerStats={{
+            matchesPlayed: allTimeMatchesPlayed,
+            matchesWon: allTimeMatchesWon,
+            goalsScored: allTimeGoals,
+          }}
+          allTeamsUnlocked={allTeamsUnlocked}
           onOpenNationSticker={markNationStickerOpened}
         />
       </DrawerShell>
@@ -2216,19 +2329,6 @@ export default function App() {
           bestCampaignSummary={bestCampaignSummary}
           activeCosmetics={activeCosmetics}
           currentUser={currentUser}
-        />
-      </DrawerShell>
-    ) : drawer === "share" && canAccessShare ? (
-      <DrawerShell>
-        <ShareScreen
-          menuProps={menuProps}
-          team={team}
-          opponent={opponent}
-          score={score}
-          matchResult={matchResult}
-          stageLabel={matchStage}
-          currentUser={currentUser}
-          initialShirt={userShirtProfile}
         />
       </DrawerShell>
     ) : drawer === "fixtures" ? (
@@ -2338,9 +2438,10 @@ export default function App() {
       onViewBracket={() => {
         setStandingsView("knockout");
         setDrawer("groups");
-        setModalDismissed(true);
       }}
       onPlayAgain={resetTournament}
+      onOpenTrophies={openTrophyCabinet}
+      hasNewTrophy={Boolean(awardedTrophyMatchKey)}
       menuProps={menuProps}
       stageLabel={matchStage}
       fixture={currentFixture}
