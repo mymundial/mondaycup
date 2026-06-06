@@ -23,19 +23,6 @@ import {
   padArray,
 } from "./shareUtils.jsx";
 
-function ExportPitchMowStripes() {
-  const stripes = ["#0f7444", "#0b5f35", "#0f7444", "#0b5f35", "#0f7444", "#0b5f35", "#0f7444", "#0b5f35", "#0f7444"];
-  return (
-    <div className="pointer-events-none absolute inset-0 z-0 grid grid-cols-9" aria-hidden="true">
-      {stripes.map((colour, index) => (
-        <div key={`export-mow-${index}`} style={{ backgroundColor: colour }} />
-      ))}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(247,209,23,0.045),transparent_34%),linear-gradient(180deg,rgba(245,241,232,0.018)_0%,rgba(5,26,17,0.10)_100%)]" />
-    </div>
-  );
-}
-
-
 const EXPORT_PITCH_CROP_RATIO = 100 / 38;
 
 function ExportCroppedPitch({ userTeam, opponentTeam, crowdStage, badgeMode, matchDesign = {}, showGoalkeeper, goalkeeperPosition, showBall, ballPosition }) {
@@ -147,8 +134,8 @@ function ShareScoreboard({
   };
   const codeTextStyle = (side) => ({
     ...boardTextStyle,
-    fontSize: `clamp(15px, ${5.15 * Number(d.teamScale || 1)}cqw, ${31 * Number(d.teamScale || 1)}px)`,
-    letterSpacing: "-0.045em",
+    fontSize: `clamp(15px, ${4.95 * Number(d.teamScale || 1)}cqw, ${30 * Number(d.teamScale || 1)}px)`,
+    letterSpacing: "-0.055em",
     transform: editorTransform({ x: side === "A" ? d.teamAX : d.teamBX, y: side === "A" ? d.teamAY : d.teamBY, scale: d.teamScale }),
   });
   const markerShell = "inline-flex max-w-full items-center justify-center px-1 py-0";
@@ -174,11 +161,11 @@ function ShareScoreboard({
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
 
-        <div className="relative z-[1] flex h-full items-center px-[10px] py-0">
+        <div className="relative z-[1] flex h-full items-center px-0 py-0">
           <div
-            className="grid h-[88%] w-full items-center"
+            className="grid h-[88%] w-full items-center justify-items-center"
             style={{
-              gridTemplateColumns: "10.5% minmax(0,21.5%) 7.25% 4.5% 7.25% minmax(0,21.5%) 10.5%",
+              gridTemplateColumns: "10% minmax(0,27%) 10.5% 5% 10.5% minmax(0,27%) 10%",
               gridTemplateRows: "26% 48% 26%",
             }}
           >
@@ -192,8 +179,8 @@ function ShareScoreboard({
               </div>
             )}
 
-            <div className="col-start-1 row-start-2 flex h-full items-center justify-center">
-              {d.showFlags && <TeamFlag team={userTeam} className="h-[16px] w-[23px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: editorTransform({ x: d.flagAX, y: d.flagAY, scale: d.flagScale }) }} />}
+            <div className="col-start-1 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
+              {d.showFlags && <TeamFlag team={userTeam} className="h-[17px] w-[25px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: editorTransform({ x: d.flagAX, y: d.flagAY, scale: d.flagScale }) }} />}
             </div>
             <div className="col-start-2 row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible px-0">
               {d.showTeamCodes && <div className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-normal leading-none" style={codeTextStyle("A")}>{userTeam.code}</div>}
@@ -218,8 +205,8 @@ function ShareScoreboard({
             <div className="col-start-6 row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible px-0">
               {d.showTeamCodes && <div className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-normal leading-none" style={codeTextStyle("B")}>{opponentTeam.code}</div>}
             </div>
-            <div className="col-start-7 row-start-2 flex h-full items-center justify-center">
-              {d.showFlags && <TeamFlag team={opponentTeam} className="h-[16px] w-[23px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: editorTransform({ x: d.flagBX, y: d.flagBY, scale: d.flagScale }) }} />}
+            <div className="col-start-7 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
+              {d.showFlags && <TeamFlag team={opponentTeam} className="h-[17px] w-[25px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: editorTransform({ x: d.flagBX, y: d.flagBY, scale: d.flagScale }) }} />}
             </div>
 
             {showMarkers ? (
@@ -251,8 +238,8 @@ function ShareScoreboard({
         </div>
       </div>
 
-      <div data-share-flash="true" className="relative grid h-[24%] min-h-[38px] w-full place-items-center overflow-hidden px-[3%] text-center home-copy-bold font-black uppercase tracking-[0.085em]" style={{ ...flashStyle, background: d.flashBox ? flashStyle.background : "transparent", boxShadow: d.flashBox ? "0 0 8px rgba(245,241,232,0.05), inset 0 2px 8px rgba(255,255,255,0.08)" : "none", lineHeight: 1 }}>
-        <span className="grid h-full w-full place-items-center overflow-hidden text-center" style={{ fontFamily: fontFamilyFor(d.flashFontType), fontSize: flashFontSize, lineHeight: 1, transform: mergeTransforms("translateY(-0.02em)", editorTransform({ x: d.flashX, y: d.flashY, scale: d.flashScale })), WebkitTextStroke: textStroke(d.flashOutlineWeight, d.flashOutlineColour) }}>
+      <div data-share-flash="true" className="relative flex h-[24%] min-h-[38px] w-full items-center justify-center overflow-hidden px-[3%] text-center home-copy-bold font-black uppercase tracking-[0.085em]" style={{ ...flashStyle, background: d.flashBox ? flashStyle.background : "transparent", boxShadow: d.flashBox ? "0 0 8px rgba(245,241,232,0.05), inset 0 2px 8px rgba(255,255,255,0.08)" : "none", lineHeight: 1 }}>
+        <span className="flex h-full w-full items-center justify-center overflow-hidden text-center" style={{ fontFamily: fontFamilyFor(d.flashFontType), fontSize: flashFontSize, lineHeight: 1, transform: mergeTransforms("translateY(-0.10em)", editorTransform({ x: d.flashX, y: d.flashY, scale: d.flashScale })), WebkitTextStroke: textStroke(d.flashOutlineWeight, d.flashOutlineColour) }}>
           <span className="block max-w-full overflow-hidden truncate whitespace-nowrap text-center leading-none [text-wrap:nowrap]" style={{ textOverflow: "ellipsis" }}>{flashCopy}</span>
         </span>
       </div>
@@ -277,8 +264,8 @@ function ShareBadgeOverlay({ mode, scale = 1, x = 0, y = 0 }) {
     monday: {
       src: ASSETS.branding.mondayLogo,
       alt: "Monday Cup",
-      width: "43.6%",
-      height: "32.7%",
+      width: "55%",
+      height: "41%",
       glow: null,
       shadow: "drop-shadow(0 14px 22px rgba(0,0,0,0.34))",
     },
@@ -290,7 +277,7 @@ function ShareBadgeOverlay({ mode, scale = 1, x = 0, y = 0 }) {
   const hasGlow = Boolean(badge.glow);
   return (
     <div
-      className="pointer-events-none absolute left-1/2 top-[45%] z-[30] flex items-center justify-center"
+      className="pointer-events-none absolute left-1/2 top-[43%] z-[30] flex items-center justify-center"
       style={{ width: badge.width, height: badge.height, transform: mergeTransforms("translate(-50%, -50%)", editorTransform({ x, y, scale })) }}
       aria-hidden="true"
     >
