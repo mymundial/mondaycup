@@ -134,8 +134,9 @@ function ShareScoreboard({
   };
   const codeTextStyle = (side) => ({
     ...boardTextStyle,
-    fontSize: `clamp(15px, ${4.95 * Number(d.teamScale || 1)}cqw, ${30 * Number(d.teamScale || 1)}px)`,
-    letterSpacing: "-0.055em",
+    fontSize: `clamp(17px, ${6.15 * Number(d.teamScale || 1)}cqw, ${34 * Number(d.teamScale || 1)}px)`,
+    fontWeight: 900,
+    letterSpacing: "0em",
     transform: editorTransform({ x: side === "A" ? d.teamAX : d.teamBX, y: side === "A" ? d.teamAY : d.teamBY, scale: d.teamScale }),
   });
   const markerShell = "inline-flex max-w-full items-center justify-center px-1 py-0";
@@ -180,33 +181,33 @@ function ShareScoreboard({
             )}
 
             <div className="col-start-1 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
-              {d.showFlags && <TeamFlag team={userTeam} className="h-[17px] w-[25px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: editorTransform({ x: d.flagAX, y: d.flagAY, scale: d.flagScale }) }} />}
+              {d.showFlags && <TeamFlag team={userTeam} className="h-[17px] w-[25px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: editorTransform({ x: Number(d.flagAX || 0) + 7, y: d.flagAY, scale: d.flagScale }) }} />}
             </div>
             <div className="col-start-2 row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible px-0">
-              {d.showTeamCodes && <div className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-normal leading-none" style={codeTextStyle("A")}>{userTeam.code}</div>}
+              {d.showTeamCodes && <div data-share-team-code="A" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-black leading-none" style={codeTextStyle("A")}>{userTeam.code}</div>}
             </div>
             {d.showScore && d.scoreDisplayMode === "vs" ? (
               <div className="col-start-3 col-end-6 row-start-2 flex h-full items-center justify-center">
-                <div className="led-text-glow font-led" style={scoreTextStyle}>VS</div>
+                <div data-share-score-text="true" className="led-text-glow font-led" style={scoreTextStyle}>VS</div>
               </div>
             ) : (
               <>
                 <div className="col-start-3 row-start-2 flex h-full items-center justify-center">
-                  {d.showScore && <div className="led-text-glow font-led tabular-nums" style={scoreTextStyle}>{score.user}</div>}
+                  {d.showScore && <div data-share-score-text="true" className="led-text-glow font-led tabular-nums" style={scoreTextStyle}>{score.user}</div>}
                 </div>
                 <div className="col-start-4 row-start-2 flex h-full items-center justify-center">
-                  {d.showScore && <div className="led-text-glow font-led" style={scoreTextStyle}>-</div>}
+                  {d.showScore && <div data-share-score-text="true" className="led-text-glow font-led" style={scoreTextStyle}>-</div>}
                 </div>
                 <div className="col-start-5 row-start-2 flex h-full items-center justify-center">
-                  {d.showScore && <div className="led-text-glow font-led tabular-nums" style={scoreTextStyle}>{score.opponent}</div>}
+                  {d.showScore && <div data-share-score-text="true" className="led-text-glow font-led tabular-nums" style={scoreTextStyle}>{score.opponent}</div>}
                 </div>
               </>
             )}
             <div className="col-start-6 row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible px-0">
-              {d.showTeamCodes && <div className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-normal leading-none" style={codeTextStyle("B")}>{opponentTeam.code}</div>}
+              {d.showTeamCodes && <div data-share-team-code="B" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-black leading-none" style={codeTextStyle("B")}>{opponentTeam.code}</div>}
             </div>
             <div className="col-start-7 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
-              {d.showFlags && <TeamFlag team={opponentTeam} className="h-[17px] w-[25px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: editorTransform({ x: d.flagBX, y: d.flagBY, scale: d.flagScale }) }} />}
+              {d.showFlags && <TeamFlag team={opponentTeam} className="h-[17px] w-[25px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: editorTransform({ x: Number(d.flagBX || 0) - 7, y: d.flagBY, scale: d.flagScale }) }} />}
             </div>
 
             {showMarkers ? (
@@ -238,9 +239,33 @@ function ShareScoreboard({
         </div>
       </div>
 
-      <div data-share-flash="true" className="relative flex h-[24%] min-h-[38px] w-full items-center justify-center overflow-hidden px-[3%] text-center home-copy-bold font-black uppercase tracking-[0.085em]" style={{ ...flashStyle, background: d.flashBox ? flashStyle.background : "transparent", boxShadow: d.flashBox ? "0 0 8px rgba(245,241,232,0.05), inset 0 2px 8px rgba(255,255,255,0.08)" : "none", lineHeight: 1 }}>
-        <span className="flex h-full w-full items-center justify-center overflow-hidden text-center" style={{ fontFamily: fontFamilyFor(d.flashFontType), fontSize: flashFontSize, lineHeight: 1, transform: mergeTransforms("translateY(-0.10em)", editorTransform({ x: d.flashX, y: d.flashY, scale: d.flashScale })), WebkitTextStroke: textStroke(d.flashOutlineWeight, d.flashOutlineColour) }}>
-          <span className="block max-w-full overflow-hidden truncate whitespace-nowrap text-center leading-none [text-wrap:nowrap]" style={{ textOverflow: "ellipsis" }}>{flashCopy}</span>
+      <div
+        data-share-flash="true"
+        className="relative h-[24%] w-full overflow-hidden px-[3%] text-center"
+        style={{
+          ...flashStyle,
+          background: d.flashBox ? flashStyle.background : "transparent",
+          boxShadow: d.flashBox ? "0 0 8px rgba(245,241,232,0.05), inset 0 2px 8px rgba(255,255,255,0.08)" : "none",
+          lineHeight: 1,
+        }}
+      >
+        <span
+          data-share-flash-text="true"
+          className="home-copy-bold absolute left-1/2 top-1/2 block w-[94%] overflow-hidden truncate whitespace-nowrap text-center font-black uppercase leading-none tracking-[0.085em] [text-wrap:nowrap]"
+          style={{
+            fontFamily: fontFamilyFor(d.flashFontType),
+            fontSize: flashFontSize,
+            lineHeight: 1,
+            textOverflow: "ellipsis",
+            WebkitTextStroke: textStroke(d.flashOutlineWeight, d.flashOutlineColour),
+            transform: mergeTransforms(
+              "translate(-50%, -50%)",
+              "translateY(-1px)",
+              editorTransform({ x: d.flashX, y: d.flashY, scale: d.flashScale })
+            ),
+          }}
+        >
+          {flashCopy}
         </span>
       </div>
     </section>
@@ -264,10 +289,10 @@ function ShareBadgeOverlay({ mode, scale = 1, x = 0, y = 0 }) {
     monday: {
       src: ASSETS.branding.mondayLogo,
       alt: "Monday Cup",
-      width: "55%",
-      height: "41%",
+      width: "99.825%",
+      height: "74.415%",
       glow: null,
-      shadow: "drop-shadow(0 14px 22px rgba(0,0,0,0.34))",
+      shadow: "drop-shadow(0 10px 24px rgba(0,0,0,0.44))",
     },
     champion: { src: ASSETS.badges.champion, alt: "Champion", width: "36%", height: "27%", glow: LED_YELLOW },
     runnerUp: { src: ASSETS.badges.runnerUp, alt: "Runner-up", width: "36%", height: "27%", glow: IVORY },
@@ -277,10 +302,12 @@ function ShareBadgeOverlay({ mode, scale = 1, x = 0, y = 0 }) {
   const hasGlow = Boolean(badge.glow);
   return (
     <div
-      className="pointer-events-none absolute left-1/2 top-[43%] z-[30] flex items-center justify-center"
-      style={{ width: badge.width, height: badge.height, transform: mergeTransforms("translate(-50%, -50%)", editorTransform({ x, y, scale })) }}
+      className="pointer-events-none absolute left-1/2 z-[30] flex items-center justify-center"
+      style={{ top: mode === "monday" ? "39%" : "43%", width: badge.width, height: badge.height, transform: mergeTransforms("translate(-50%, -50%)", editorTransform({ x, y, scale })) }}
       aria-hidden="true"
     >
+      {mode === "monday" && <div className="absolute inset-x-[10%] bottom-[2%] h-[42%] rounded-full bg-[#F7D117]/28 blur-3xl" />}
+      {mode === "monday" && <div className="absolute inset-x-[14%] bottom-[3%] h-[36%] rounded-full bg-[#F5F1E8]/24 blur-2xl" />}
       {hasGlow && <div className="absolute left-1/2 top-1/2 h-[86%] w-[96%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl" style={{ background: `${badge.glow}${badge.glowOuter || "44"}` }} />}
       {hasGlow && <div className="absolute left-1/2 top-1/2 h-[58%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-xl" style={{ background: `${badge.glow}${badge.glowInner || "55"}` }} />}
       <img src={badge.src} alt={badge.alt} className="relative z-[1] h-full w-full object-contain" style={{ filter: badge.shadow || "drop-shadow(0 16px 22px rgba(0,0,0,0.26))" }} draggable={false} crossOrigin="anonymous" />

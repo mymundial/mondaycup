@@ -94,10 +94,10 @@ async function buildEmbeddedFontCss() {
     @font-face { font-family: "SportsDINRegular"; src: url("${regular}") format("woff2"); font-weight: 400; font-style: normal; }
     @font-face { font-family: "SportsDINBold"; src: url("${bold}") format("woff2"); font-weight: 700; font-style: normal; }
     @font-face { font-family: "SportsDINLight"; src: url("${light}") format("woff2"); font-weight: 300; font-style: normal; }
-    .font-led { font-family: "IntoDotMatrix", monospace !important; }
-    .home-copy-bold, .font-main-bold { font-family: "SportsDINBold", "SportsDINRegular", sans-serif !important; }
-    .home-copy-regular, .home-main-font, .font-main { font-family: "SportsDINRegular", sans-serif !important; }
-    .home-copy-light, .font-main-light { font-family: "SportsDINLight", "SportsDINRegular", sans-serif !important; }
+    .font-led { font-family: "IntoDotMatrix", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important; }
+    .home-copy-bold, .font-main-bold { font-family: "SportsDINBold", "SportsDINRegular", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important; }
+    .home-copy-regular, .home-main-font, .font-main { font-family: "SportsDINRegular", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important; }
+    .home-copy-light, .font-main-light { font-family: "SportsDINLight", "SportsDINRegular", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important; }
   `;
 }
 
@@ -113,6 +113,87 @@ async function inlineCloneImages(clone) {
   );
 }
 
+function readExportStyle(element, property, fallback = "") {
+  if (!element) return fallback;
+  const inlineValue = element.style?.getPropertyValue?.(property);
+  if (inlineValue) return inlineValue;
+  try {
+    const view = element.ownerDocument?.defaultView || window;
+    const computed = view.getComputedStyle(element);
+    return computed?.getPropertyValue(property) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function applyShareExportNormalisation(root) {
+  if (!root?.querySelectorAll) return;
+
+  const scoreText = root.querySelector('[data-share-score-text="true"]');
+  const teamCodes = root.querySelectorAll('[data-share-team-code]');
+  teamCodes.forEach((node) => {
+    if (!node?.style) return;
+    node.style.setProperty(
+      "font-family",
+      readExportStyle(scoreText, "font-family", '"IntoDotMatrix", ui-monospace, monospace'),
+      "important",
+    );
+    node.style.setProperty(
+      "font-size",
+      readExportStyle(scoreText, "font-size", "34px"),
+      "important",
+    );
+    node.style.setProperty(
+      "font-weight",
+      readExportStyle(scoreText, "font-weight", "900"),
+      "important",
+    );
+    node.style.setProperty(
+      "letter-spacing",
+      readExportStyle(scoreText, "letter-spacing", "0px"),
+      "important",
+    );
+    node.style.setProperty(
+      "line-height",
+      readExportStyle(scoreText, "line-height", "1"),
+      "important",
+    );
+    node.style.setProperty(
+      "text-shadow",
+      readExportStyle(scoreText, "text-shadow", "0 0 0.65px rgba(247,209,23,0.32)"),
+      "important",
+    );
+    node.style.setProperty(
+      "-webkit-text-stroke",
+      readExportStyle(scoreText, "-webkit-text-stroke", "0 transparent"),
+      "important",
+    );
+    node.style.setProperty("text-transform", "uppercase", "important");
+  });
+
+  root.querySelectorAll('[data-share-flash="true"]').forEach((node) => {
+    if (!node?.style) return;
+    node.style.setProperty("min-height", "0", "important");
+    node.style.setProperty("height", readExportStyle(node, "height", "32.64px"), "important");
+    node.style.setProperty("position", "relative", "important");
+    node.style.setProperty("overflow", "hidden", "important");
+    node.style.setProperty("line-height", "1", "important");
+  });
+
+  root.querySelectorAll('[data-share-flash-text="true"]').forEach((node) => {
+    if (!node?.style) return;
+    node.style.setProperty("position", "absolute", "important");
+    node.style.setProperty("left", "50%", "important");
+    node.style.setProperty("top", "50%", "important");
+    node.style.setProperty("display", "block", "important");
+    node.style.setProperty("width", "94%", "important");
+    node.style.setProperty("overflow", "hidden", "important");
+    node.style.setProperty("white-space", "nowrap", "important");
+    node.style.setProperty("text-overflow", "ellipsis", "important");
+    node.style.setProperty("line-height", "1", "important");
+  });
+}
+
 function sanitiseShareCaptureClone(root) {
   if (!root?.querySelectorAll) return;
 
@@ -125,6 +206,7 @@ function sanitiseShareCaptureClone(root) {
     node.style.transition = "none";
     node.style.caretColor = "transparent";
   });
+  applyShareExportNormalisation(root);
 }
 
 async function composeShareExportCanvas(sourceCanvas) {
@@ -318,9 +400,10 @@ export async function captureShareElementBlob(
 
   const errors = [];
   const attempts = [
-    // Capture the popup preview DOM as the single source of truth. The SVG path
-    // runs first because it embeds same-origin images/fonts as data URLs, keeping
-    // logos, badges and ad-board assets intact in the saved PNG on mobile.
+    // Capture the live 400x400 preview first so the 2000x2000 export is a
+    // scaled render of the same DOM, not a rebuilt layout with different font
+    // metrics or clipped flash-bar sizing.
+    ["html2canvas", () => renderElementToCanvasWithHtml2Canvas(shareElement)],
     [
       "svg",
       () => renderElementToCanvasWithSvg(shareElement, userTeam, badgeMode),
@@ -332,7 +415,6 @@ export async function captureShareElementBlob(
         return { blobOnly: blob };
       },
     ],
-    ["html2canvas", () => renderElementToCanvasWithHtml2Canvas(shareElement)],
   ];
 
   for (const [name, attempt] of attempts) {
