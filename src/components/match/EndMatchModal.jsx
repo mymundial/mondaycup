@@ -98,6 +98,21 @@ function ShareIcon({ className = "h-6 w-6" }) {
   );
 }
 
+function ExportButton({ icon, label, onClick, disabled, primary = false, busy = false }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      className={`flex h-14 items-center justify-center gap-2 rounded-[18px] border px-3 text-center home-copy-bold text-[11px] font-black uppercase leading-none tracking-[0.12em] shadow-[0_8px_18px_rgba(0,0,0,0.18)] disabled:cursor-default disabled:opacity-60 ${primary ? "border-[#F5F1E8]/45 bg-[#F7D117] text-[#072D1D]" : "border-[#F5F1E8]/18 bg-[#051A11]/82 text-[#F5F1E8]"}`}
+    >
+      {icon}
+      <span>{busy ? "WAIT" : label}</span>
+    </button>
+  );
+}
+
 function MenuIcon({ className = "h-6 w-6" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
@@ -630,9 +645,14 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
                       <ShareMatchPreview {...resultShareState} />
                     </div>
                   </div>
-                  <button type="button" onClick={handleShare} disabled={shareBusy} className={resultActionButtonClass}>
-                    {shareBusy ? "PREPARING" : "SHARE RESULT"}
-                  </button>
+                  <ExportButton
+                    onClick={handleShare}
+                    disabled={shareBusy}
+                    primary
+                    icon={<ShareIcon className="h-5 w-5" />}
+                    label="Share"
+                    busy={shareBusy}
+                  />
                 </div>
               </div>
             ) : (
