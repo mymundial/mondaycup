@@ -69,9 +69,9 @@ function stageLineInset(connectorCount = 1) {
   // bracket fixture columns. The fixture grids use small CSS gaps, so pure
   // 50/count percentages leave tiny broken line endings at R16/QF.
   const insetByCount = {
-    2: "23.5%",
-    4: "11.75%",
-    8: "6.1%",
+    2: "25%",
+    4: "12.5%",
+    8: "6.25%",
   };
 
   return insetByCount[count] || `${50 / count}%`;
@@ -245,7 +245,8 @@ function KnockoutCentreBand({ finalFixture, thirdFixture, winner, runnerUp, thir
     <div className="relative mx-auto flex h-[112px] w-full items-center justify-center">
       <div
         data-align-ref="R16-M89"
-        className="pointer-events-none absolute left-[29%] top-1/2 z-[5] flex w-[68px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-3"
+        className="pointer-events-none absolute left-1/2 top-1/2 z-[5] flex w-[68px] flex-col items-center justify-center gap-3"
+        style={{ transform: "translate(calc(-50% - 109.5px), -50%)" }}
       >
         <PodiumBox title="THIRD PLACE" team={thirdPlace} userTeam={userTeam} className="mc-metallic-bronze" />
         <BracketFixture fixture={thirdFixture} layout="horizontal" userTeam={userTeam} featuredFlags className="!h-[34px] !w-[58px]" />
@@ -255,7 +256,8 @@ function KnockoutCentreBand({ finalFixture, thirdFixture, winner, runnerUp, thir
 
       <div
         data-align-ref="R16-M94"
-        className="pointer-events-none absolute left-[71%] top-1/2 z-[5] flex w-[68px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-3"
+        className="pointer-events-none absolute left-1/2 top-1/2 z-[5] flex w-[68px] flex-col items-center justify-center gap-3"
+        style={{ transform: "translate(calc(-50% + 109.5px), -50%)" }}
       >
         <PodiumBox title="CHAMPIONS" team={winner} userTeam={userTeam} className="mc-metallic-gold" />
         <PodiumBox title="RUNNER-UP" team={runnerUp} userTeam={userTeam} className="mc-metallic-silver" />
