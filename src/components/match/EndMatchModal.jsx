@@ -15,6 +15,7 @@ import {
 import {
   captureShareElementBlob,
   normaliseThirdPlaceCopy,
+  shareNativeImage,
   shareOrDownloadResult,
   warmShareExportRenderer,
 } from "../../utils/shareExport.js";
@@ -473,14 +474,11 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   const awayIsUser = result.away === userTeam;
   const tightTeamStyle = (team) => (/bosnia/i.test(team || "") ? { letterSpacing: "-0.02em" } : undefined);
   const shareFrameRef = useRef(null);
-  const hiddenShareFrameRef = useRef(null);
   const shareBlobPromiseRef = useRef(null);
   const [shareBlob, setShareBlob] = useState(null);
   const [shareBusy, setShareBusy] = useState(false);
   const [sharePreparing, setSharePreparing] = useState(false);
-  const [sharePreRenderFailed, setSharePreRenderFailed] = useState(false);
   const [sharePreviewOpen, setSharePreviewOpen] = useState(false);
-  const [sharePreviewUrl, setSharePreviewUrl] = useState("");
   const canShareResult = Boolean(result);
   const campaignPointsTotal = getCampaignPointsTotal({ result, groupRows, userTeam, userForm });
   const activeBadgeMode = getPodiumBadgeMode({ result, fixture, stageLabel, podium, team: userTeam });
@@ -495,7 +493,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   const resultHeaderScoreClass = `${resultMetricBoxClass} shrink-0 font-led text-[clamp(18px,5.3vw,24px)] font-black uppercase leading-none tracking-[0.08em] text-[#F7D117] led-text-glow tabular-nums`;
 
   const buildShareBlob = () => {
-    const exportNode = hiddenShareFrameRef.current || shareFrameRef.current;
+    const exportNode = shareFrameRef.current;
     if (!exportNode) throw new Error("Match share exporter was not ready");
     if (!shareBlobPromiseRef.current) {
       shareBlobPromiseRef.current = captureShareElementBlob(exportNode, userTeam, resultShareState?.badgeMode || null)
@@ -510,19 +508,8 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
     shareBlobPromiseRef.current = null;
     setShareBlob(null);
     setSharePreparing(false);
-    setSharePreRenderFailed(false);
     setSharePreviewOpen(false);
   }, [result, resultShareState]);
-
-  useEffect(() => {
-    if (!shareBlob) {
-      setSharePreviewUrl("");
-      return undefined;
-    }
-    const url = URL.createObjectURL(shareBlob);
-    setSharePreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [shareBlob]);
 
   const ensureShareBlob = async () => {
     if (shareBlob) return shareBlob;
@@ -534,19 +521,16 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   useEffect(() => {
     if (!sharePreviewOpen || shareBlob) return undefined;
     let cancelled = false;
+    let secondFrame = 0;
     setSharePreparing(true);
-    setSharePreRenderFailed(false);
     warmShareExportRenderer();
-    const frame = window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(async () => {
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(async () => {
         try {
-          if (cancelled) return;
-          const exportNode = hiddenShareFrameRef.current || shareFrameRef.current;
-          if (!exportNode) return;
+          if (cancelled || !shareFrameRef.current) return;
           const blob = await buildShareBlob();
           if (!cancelled) setShareBlob(blob);
         } catch (error) {
-          if (!cancelled) setSharePreRenderFailed(true);
           console.warn("Share preview pre-render failed", error);
         } finally {
           if (!cancelled) setSharePreparing(false);
@@ -555,7 +539,8 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
     });
     return () => {
       cancelled = true;
-      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
     };
   }, [sharePreviewOpen, shareBlob, resultShareState]);
 
@@ -565,10 +550,20 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   };
 
   const handleShare = async () => {
+    if (shareBusy || sharePreparing) return;
     setShareBusy(true);
     try {
       const blob = shareBlob || await ensureShareBlob();
-      await shareOrDownloadResult({ blob, filename: "monday-cup-result.png" });
+      try {
+        await shareNativeImage(blob, "monday-cup-result.png", {
+          title: "Monday Cup Result",
+          text: "My Monday Cup result",
+        });
+      } catch (nativeError) {
+        if (nativeError?.name === "AbortError") return;
+        console.warn("Native result share unavailable, falling back", nativeError);
+        await shareOrDownloadResult({ blob, filename: "monday-cup-result.png" });
+      }
     } catch (error) {
       console.error("Share result failed", error);
       window.alert("Sorry, the result image could not be shared. Please try again.");
@@ -657,7 +652,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
 
             {sharePreviewOpen ? (
               <div className="rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 p-2.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]">
-                <div className="space-y-4">
+                <div className="space-y-5">
                   <div className="mx-auto aspect-square w-full overflow-hidden rounded-[1.1rem] border border-[#F5F1E8]/10 bg-[#0d6c3d] shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" data-share-layout="match-preview-modal">
                     <div ref={shareFrameRef} data-share-layout="match" className="h-full w-full overflow-hidden bg-[#0d6c3d]">
                       <ShareMatchPreview {...resultShareState} />
@@ -665,11 +660,12 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
                   </div>
                   <ExportButton
                     onClick={handleShare}
-                    disabled={shareBusy || (sharePreparing && !shareBlob && !sharePreRenderFailed)}
+                    disabled={shareBusy || sharePreparing || !shareBlob}
                     primary
                     icon={<ShareIcon className="h-5 w-5" />}
                     label="Share"
-                    busy={shareBusy || (sharePreparing && !shareBlob)}
+                    busy={shareBusy || sharePreparing || !shareBlob}
+                    className="max-w-[318px]"
                   />
                 </div>
               </div>
@@ -712,17 +708,6 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
         </div>
       </div>
 
-      {sharePreviewOpen && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none fixed left-[-10000px] top-0 h-[400px] w-[400px] overflow-hidden bg-[#0d6c3d]"
-          style={{ width: 400, height: 400 }}
-        >
-          <div ref={hiddenShareFrameRef} data-share-layout="match" className="h-[400px] w-[400px] overflow-hidden bg-[#0d6c3d]">
-            <ShareMatchPreview {...resultShareState} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

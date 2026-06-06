@@ -495,18 +495,40 @@ export async function shareNativeImage(
   { title = "Monday Cup", text = "My Monday Cup shirt" } = {},
 ) {
   if (!blob) throw new Error("No image blob was provided");
-  const file = new File([blob], filename, { type: "image/png" });
   if (!navigator.share)
     throw new Error("Native sharing is not available in this browser");
+
+  const file = new File([blob], filename, {
+    type: blob.type || "image/png",
+    lastModified: Date.now(),
+  });
+  const fileOnlyShare = { files: [file] };
+  const fullShare = { files: [file], title, text };
+
   if (navigator.canShare) {
+    let canShareFile = false;
+    let canShareFull = false;
     try {
-      if (!navigator.canShare({ files: [file] }))
-        throw new Error("This browser cannot share image files");
-    } catch (error) {
-      throw error;
+      canShareFile = navigator.canShare(fileOnlyShare);
+      canShareFull = navigator.canShare(fullShare);
+    } catch {
+      canShareFile = false;
+      canShareFull = false;
     }
+    if (!canShareFile && !canShareFull)
+      throw new Error("This browser cannot share image files");
+    await navigator.share(canShareFull ? fullShare : fileOnlyShare);
+    return;
   }
-  await navigator.share({ files: [file], title, text });
+
+  // Some browsers support navigator.share() without navigator.canShare(). Use
+  // the file-only payload as the most compatible Web Share API request.
+  try {
+    await navigator.share(fullShare);
+  } catch (error) {
+    if (error?.name === "AbortError") throw error;
+    await navigator.share(fileOnlyShare);
+  }
 }
 
 export function printBlobImage(blob, filename = SHARE_CANVAS_NAME) {
@@ -581,41 +603,22 @@ export async function shareOrDownloadResult({
 }) {
   const finalBlob = blob || (await buildBlob?.());
   if (!finalBlob) throw new Error("No share image could be created");
-  const file = new File([finalBlob], filename, { type: "image/png" });
   const shareTitle = "Monday Cup Result";
   const shareText = "My Monday Cup result";
 
-  const canNativeFileShare = Boolean(
-    navigator.share &&
-    (!navigator.canShare ||
-      (() => {
-        try {
-          return navigator.canShare({ files: [file] });
-        } catch {
-          return false;
-        }
-      })()),
-  );
-
-  if (canNativeFileShare) {
-    try {
-      await navigator.share({
-        files: [file],
-        title: shareTitle,
-        text: shareText,
-      });
+  try {
+    await shareNativeImage(finalBlob, filename, { title: shareTitle, text: shareText });
+    if (previewWindow && !previewWindow.closed) previewWindow.close();
+    return;
+  } catch (error) {
+    if (error?.name === "AbortError") {
       if (previewWindow && !previewWindow.closed) previewWindow.close();
       return;
-    } catch (error) {
-      if (error?.name === "AbortError") {
-        if (previewWindow && !previewWindow.closed) previewWindow.close();
-        return;
-      }
-      console.warn(
-        "Native file share failed, falling back to image save",
-        error,
-      );
     }
+    console.warn(
+      "Native file share failed, falling back to image save",
+      error,
+    );
   }
 
   if (isIOSLikeDevice() && openBlobPreview(finalBlob, filename, previewWindow))
