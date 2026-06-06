@@ -13,42 +13,45 @@ import AppPanel from "../ui/AppPanel.jsx";
 
 const GROUP_TABLE_GRID = "grid-cols-[22px_32px_minmax(0,1.8fr)_18px_repeat(6,24px)]";
 const STANDINGS_SECTION_BG = "bg-[#031B12]/24";
+const PITCH_LINE_CLASS = "border-[#F5F1E8]/74";
+const PITCH_LINE_BG_CLASS = "bg-[#F5F1E8]/74";
 
 const rowClass = ({ isUserTeam }) => [
   `mb-1 grid ${GROUP_TABLE_GRID} items-center gap-[3px] rounded-xl px-2 py-1.5 text-center text-[11px] leading-none last:mb-0 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)] tabular-nums`,
   userHighlightCardClass(isUserTeam, "border border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"),
 ].join(" ");
 
-function PlaceholderSlot({ value, compact = false, large = false }) {
-  const sizeClass = large ? "h-[34px] w-[48px]" : compact ? "h-[13px] w-[19px]" : "h-[13px] w-[19px]";
-  const textClass = large ? "text-[7px]" : "text-[5px]";
+function PlaceholderSlot({ value, compact = false, large = false, medium = false, small = false }) {
+  const sizeClass = large ? "h-[34px] w-[48px]" : medium ? "h-[18px] w-[27px]" : small ? "h-[11px] w-[16px]" : compact ? "h-[11px] w-[16px]" : "h-[13px] w-[19px]";
+  const textClass = large ? "text-[7px]" : medium ? "text-[5px]" : small || compact ? "text-[4.5px]" : "text-[5px]";
   return <span className={`relative flex ${sizeClass} ${textClass} shrink-0 items-center justify-center overflow-hidden rounded bg-[#0B5F35] home-copy-bold tracking-[0.035em] text-[#F5F1E8] ring-1 ring-[#F5F1E8]/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]`}>TBC</span>;
 }
 
-function BracketSlot({ value, compact = false, large = false, isUserTeam = false }) {
-  if (!isRealBracketTeam(value)) return <PlaceholderSlot value={value || "TBC"} compact={compact} large={large} />;
-  const sizeClass = large ? "h-[34px] w-[48px]" : compact ? "h-[13px] w-[19px]" : "h-[13px] w-[19px]";
-  return <span className={`relative inline-flex ${sizeClass} shrink-0 overflow-visible rounded ${isUserTeam ? "outline outline-[1.5px] outline-offset-[2px] outline-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]" : ""}`}>
+function BracketSlot({ value, compact = false, large = false, medium = false, small = false, isUserTeam = false }) {
+  if (!isRealBracketTeam(value)) return <PlaceholderSlot value={value || "TBC"} compact={compact} large={large} medium={medium} small={small} />;
+  const sizeClass = large ? "h-[34px] w-[48px]" : medium ? "h-[18px] w-[27px]" : small ? "h-[11px] w-[16px]" : compact ? "h-[11px] w-[16px]" : "h-[13px] w-[19px]";
+  return <span className={`relative inline-flex ${sizeClass} shrink-0 overflow-visible rounded`}>
     <Flag team={value} className={`${sizeClass} rounded ring-1 ${isUserTeam ? "ring-[#F7D117]" : "ring-[#F5F1E8]/35"}`} />
   </span>;
 }
 
-function BracketFixture({ fixture, layout = "vertical", userTeam = null, large = false }) {
+function BracketFixture({ fixture, layout = "vertical", userTeam = null, large = false, featuredFlags = false, finalFlags = false, className = "" }) {
   const compact = layout === "r32";
-  const widthClass = large ? "w-[72px]" : layout === "horizontal" ? "w-[58px]" : compact ? "w-[34px]" : "w-[38px]";
-  const heightClass = !large && layout === "horizontal" ? "h-[34px]" : "";
+  const widthClass = large ? "w-[72px]" : finalFlags ? "w-[58px]" : layout === "horizontal" ? "w-[48px]" : compact ? "w-[28px]" : "w-[34px]";
+  const heightClass = finalFlags ? "h-[58px]" : !large && layout === "horizontal" ? "h-[30px]" : "";
   const slotDirection = layout === "horizontal" ? "flex-row" : "flex-col";
+  const smallFlags = !large && !featuredFlags && !finalFlags;
   const isUserFixture = userTeam && (fixture?.home === userTeam || fixture?.away === userTeam);
   const cardClass = isUserFixture ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-[#F7D117]/30" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10";
   const matchNo = Number(fixture?.matchNo);
   const showPlayoffLabel = matchNo === 103;
-  return <div data-bracket-match-no={fixture?.matchNo || ""} className={`mx-auto flex ${widthClass} ${heightClass} flex-col items-center justify-center rounded-[0.55rem] border ${cardClass} px-[5px] py-[4px] ring-1 ${large ? "py-[6px]" : ""}`}>
+  return <div data-bracket-match-no={fixture?.matchNo || ""} className={`mx-auto flex ${widthClass} ${heightClass} ${className} flex-col items-center justify-center ${finalFlags ? "rounded-full" : "rounded-[0.55rem]"} border ${cardClass} px-[5px] py-[4px] ring-1 ${large ? "py-[6px]" : ""}`}>
     {showPlayoffLabel && (
-      <div className="mb-[2px] max-w-full whitespace-nowrap text-center text-[4.4px] font-black uppercase leading-none tracking-[0.035em] text-[#F5F1E8]/72">PLAY-OFF</div>
+      <div className="mb-[2px] max-w-full whitespace-nowrap text-center home-copy-bold text-[8px] font-black uppercase leading-none tracking-[0.035em] text-[#F5F1E8]/72">PLAY-OFF</div>
     )}
     <div className={`flex ${slotDirection} items-center gap-[6px]`}>
-      <BracketSlot value={fixture?.home || fixture?.homeSeed || "TBC"} compact={compact} large={large} isUserTeam={fixture?.home === userTeam} />
-      <BracketSlot value={fixture?.away || fixture?.awaySeed || "TBC"} compact={compact} large={large} isUserTeam={fixture?.away === userTeam} />
+      <BracketSlot value={fixture?.home || fixture?.homeSeed || "TBC"} compact={compact} large={large} medium={finalFlags} small={smallFlags} isUserTeam={fixture?.home === userTeam} />
+      <BracketSlot value={fixture?.away || fixture?.awaySeed || "TBC"} compact={compact} large={large} medium={finalFlags} small={smallFlags} isUserTeam={fixture?.away === userTeam} />
     </div>
   </div>;
 }
@@ -58,22 +61,42 @@ function BracketRow({ count, fixtures = [], gap = "gap-[2px]", layout = "vertica
   return <div className={`grid w-full ${cols} ${gap} items-start`}>{Array.from({ length: count }).map((_, index) => <BracketFixture key={index} fixture={fixtures[index]} layout={layout} userTeam={userTeam} />)}</div>;
 }
 
+function stageLineInset(connectorCount = 1) {
+  const count = Math.max(1, Number(connectorCount || 1));
+  if (count <= 1) return "50%";
+
+  // Match the horizontal title rail to the actual centre-points of the
+  // bracket fixture columns. The fixture grids use small CSS gaps, so pure
+  // 50/count percentages leave tiny broken line endings at R16/QF.
+  const insetByCount = {
+    2: "23.5%",
+    4: "11.75%",
+    8: "6.1%",
+  };
+
+  return insetByCount[count] || `${50 / count}%`;
+}
+
 function StageLabel({ children, connectorCount = 1 }) {
-  const inset = `${50 / Math.max(1, Number(connectorCount || 1))}%`;
+  const inset = stageLineInset(connectorCount);
   return (
     <div className="relative flex h-[10px] items-center justify-center text-center home-copy-bold text-[8px] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]">
-      <span aria-hidden="true" className="absolute top-1/2 h-px -translate-y-1/2 bg-[#F5F1E8]" style={{ left: inset, right: inset }} />
+      <span aria-hidden="true" className={`absolute top-1/2 h-px -translate-y-1/2 ${PITCH_LINE_BG_CLASS}`} style={{ left: inset, right: inset }} />
       <span className="relative z-[3] bg-[#052D1D] px-1 leading-none">{children}</span>
     </div>
   );
 }
 
-function RoundFixtureConnectors({ count = 1, className = "" }) {
+function RoundFixtureConnectors({ count = 1, gap = "gap-0", className = "" }) {
   const safeCount = Math.max(1, Number(count || 1));
   return (
-    <div className={`grid h-[13px] w-full items-stretch ${className}`} style={{ gridTemplateColumns: `repeat(${safeCount}, minmax(0, 1fr))` }}>
+    <div
+      className={`grid h-[8px] w-full items-stretch ${gap} ${className}`}
+      style={{ gridTemplateColumns: `repeat(${safeCount}, minmax(0, 1fr))` }}
+      aria-hidden="true"
+    >
       {Array.from({ length: safeCount }).map((_, index) => (
-        <span key={index} className="mx-auto block h-full w-px bg-[#F5F1E8]" />
+        <span key={index} className={`mx-auto block h-full w-px ${PITCH_LINE_BG_CLASS}`} />
       ))}
     </div>
   );
@@ -81,7 +104,7 @@ function RoundFixtureConnectors({ count = 1, className = "" }) {
 
 function PodiumBox({ title, team, className, userTeam = null }) {
   return <div className={`mx-auto flex h-[34px] w-[58px] flex-col items-center justify-center rounded-[0.55rem] border border-[#F5F1E8] px-[5px] py-[4px] ring-1 ring-[#F5F1E8]/30 ${className}`}>
-    <div className="mb-[2px] max-w-[48px] whitespace-nowrap text-center text-[4.4px] font-black uppercase leading-none tracking-[0.035em] text-[#072D1D]/72">{title}</div>
+    <div className="mb-[2px] max-w-[54px] whitespace-nowrap text-center home-copy-bold text-[8px] font-black uppercase leading-none tracking-[0.01em] text-[#072D1D]/72">{title}</div>
     <div className="flex h-[13px] items-center justify-center">
       <BracketSlot value={team || "TBC"} isUserTeam={team === userTeam} />
     </div>
@@ -109,20 +132,20 @@ export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam =
   </AppPanel>;
 }
 
-function BracketStageBox({ title, children, className = "", titlePosition = "above", connectorCount = 1 }) {
+function BracketStageBox({ title, children, className = "", titlePosition = "above", connectorCount = 1, connectorGap = "gap-0" }) {
   const titleNode = <StageLabel connectorCount={connectorCount}>{title}</StageLabel>;
   return (
     <section className={`p-0 text-[#F5F1E8] ${className}`}>
       {titlePosition === "above" ? (
         <>
           {titleNode}
-          <RoundFixtureConnectors count={connectorCount} className="-mt-[5px]" />
+          <RoundFixtureConnectors count={connectorCount} gap={connectorGap} className="-mb-px -mt-[5px]" />
           <div>{children}</div>
         </>
       ) : (
         <>
           <div>{children}</div>
-          <RoundFixtureConnectors count={connectorCount} className="-mb-[5px]" />
+          <RoundFixtureConnectors count={connectorCount} gap={connectorGap} className="-mt-px -mb-[5px]" />
           {titleNode}
         </>
       )}
@@ -144,7 +167,7 @@ function BracketHalfBox({ title, fixtures = [], count, gap = "gap-1.5", layout =
   return (
     <section className="p-0 text-[#F5F1E8]">
       <StageLabel connectorCount={count}>{title}</StageLabel>
-      <RoundFixtureConnectors count={count} className="-mt-[5px]" />
+      <RoundFixtureConnectors count={count} gap={gap} className="-mb-px -mt-[5px]" />
       <div>
         <BracketRow count={count} fixtures={fixtures} gap={gap} layout={layout} userTeam={userTeam} />
       </div>
@@ -163,7 +186,7 @@ function BracketStageColumn({ title, topFixtures = [], bottomFixtures = [], coun
 
 function KnockoutRoundBand({ title, fixtures = [], count, gap = "gap-1.5", layout = "horizontal", userTeam = null, className = "", titlePosition = "above" }) {
   return (
-    <BracketStageBox title={title} titlePosition={titlePosition} connectorCount={count} className={`mx-auto w-full overflow-visible ${className}`}>
+    <BracketStageBox title={title} titlePosition={titlePosition} connectorCount={count} connectorGap={gap} className={`mx-auto w-full overflow-visible ${className}`}>
       <BracketRow count={count} fixtures={fixtures} gap={gap} layout={layout} userTeam={userTeam} />
     </BracketStageBox>
   );
@@ -179,9 +202,9 @@ function CentreFixtureStageBox({ title, fixture, userTeam = null, splitThirdPlac
             <span className="block">PLAY-OFF</span>
           </span>
         </div>
-        <span aria-hidden="true" className="block h-[13px] w-px bg-[#F5F1E8]" />
+        <span aria-hidden="true" className={`block h-[13px] w-px ${PITCH_LINE_BG_CLASS}`} />
         <div className="flex h-[62px] w-[68px] items-center justify-center">
-          <BracketFixture fixture={fixture} layout="vertical" userTeam={userTeam} />
+          <BracketFixture fixture={fixture} layout="vertical" userTeam={userTeam} featuredFlags />
         </div>
       </section>
     );
@@ -190,9 +213,9 @@ function CentreFixtureStageBox({ title, fixture, userTeam = null, splitThirdPlac
   return (
     <section className="mx-auto flex w-[68px] flex-col items-center justify-start text-[#F5F1E8]">
       <StageLabel connectorCount={1}>{title}</StageLabel>
-      <RoundFixtureConnectors count={1} className="-mt-[5px]" />
+      <RoundFixtureConnectors count={1} className="-mb-px -mt-[5px]" />
       <div className="flex h-[62px] w-[68px] items-center justify-center">
-        <BracketFixture fixture={fixture} layout="vertical" userTeam={userTeam} />
+        <BracketFixture fixture={fixture} layout="vertical" userTeam={userTeam} featuredFlags />
       </div>
     </section>
   );
@@ -200,17 +223,17 @@ function CentreFixtureStageBox({ title, fixture, userTeam = null, splitThirdPlac
 
 function FinalCentreStageBox({ fixture, userTeam = null }) {
   return (
-    <section className="relative mx-auto w-[68px] overflow-visible text-[#F5F1E8]">
-      <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[68px] w-[68px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#F5F1E8]" />
-      <div className="relative z-[3]">
+    <section className="relative mx-auto flex h-[112px] w-[92px] flex-col items-center justify-center overflow-visible text-[#F5F1E8]">
+      <span aria-hidden="true" className={`pointer-events-none absolute left-1/2 top-1/2 z-[8] h-[80px] w-[80px] -translate-x-1/2 -translate-y-1/2 rounded-full border ${PITCH_LINE_CLASS}`} />
+      <div className="absolute left-1/2 top-0 z-[9] w-full -translate-x-1/2">
         <StageLabel connectorCount={1}>FINAL</StageLabel>
       </div>
-      <RoundFixtureConnectors count={1} className="relative z-0 -mt-[5px]" />
-      <div className="relative z-[2] flex justify-center">
-        <BracketFixture fixture={fixture} layout="vertical" userTeam={userTeam} />
+      <span aria-hidden="true" className={`pointer-events-none absolute left-1/2 top-[10px] z-[7] h-[6px] w-px -translate-x-1/2 ${PITCH_LINE_BG_CLASS}`} />
+      <div className="relative z-[4] flex h-[80px] w-[80px] items-center justify-center rounded-full bg-[#052D1D]/72">
+        <BracketFixture fixture={fixture} layout="vertical" userTeam={userTeam} featuredFlags finalFlags className="!h-[80px] !w-[80px] !border-transparent !bg-transparent !ring-0" />
       </div>
-      <RoundFixtureConnectors count={1} className="relative z-0 -mb-[5px]" />
-      <div className="relative z-[3]">
+      <span aria-hidden="true" className={`pointer-events-none absolute bottom-[10px] left-1/2 z-[7] h-[6px] w-px -translate-x-1/2 ${PITCH_LINE_BG_CLASS}`} />
+      <div className="absolute bottom-0 left-1/2 z-[9] w-full -translate-x-1/2">
         <StageLabel connectorCount={1}>FINAL</StageLabel>
       </div>
     </section>
@@ -219,20 +242,20 @@ function FinalCentreStageBox({ fixture, userTeam = null }) {
 
 function KnockoutCentreBand({ finalFixture, thirdFixture, winner, runnerUp, thirdPlace, userTeam = null }) {
   return (
-    <div className="relative mx-auto flex w-full justify-center">
+    <div className="relative mx-auto flex h-[112px] w-full items-center justify-center">
       <div
         data-align-ref="R16-M89"
-        className="pointer-events-none absolute left-[20%] top-[0px] z-[2] flex -translate-x-1/2 flex-col items-center justify-start gap-1.5"
+        className="pointer-events-none absolute left-[29%] top-1/2 z-[5] flex w-[68px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-3"
       >
         <PodiumBox title="THIRD PLACE" team={thirdPlace} userTeam={userTeam} className="mc-metallic-bronze" />
-        <BracketFixture fixture={thirdFixture} layout="horizontal" userTeam={userTeam} />
+        <BracketFixture fixture={thirdFixture} layout="horizontal" userTeam={userTeam} featuredFlags className="!h-[34px] !w-[58px]" />
       </div>
 
       <FinalCentreStageBox fixture={finalFixture} userTeam={userTeam} />
 
       <div
         data-align-ref="R16-M94"
-        className="pointer-events-none absolute left-[80%] top-[0px] z-[2] flex -translate-x-1/2 flex-col items-center justify-start gap-1.5"
+        className="pointer-events-none absolute left-[71%] top-1/2 z-[5] flex w-[68px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-3"
       >
         <PodiumBox title="CHAMPIONS" team={winner} userTeam={userTeam} className="mc-metallic-gold" />
         <PodiumBox title="RUNNER-UP" team={runnerUp} userTeam={userTeam} className="mc-metallic-silver" />
@@ -247,16 +270,17 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
   return (
     <div className="mx-auto w-full max-w-full overflow-hidden px-2 text-[#F5F1E8]">
       <div
-        className={`relative mx-auto flex w-[94%] flex-col overflow-hidden rounded-none border-2 border-[#F5F1E8]/88 ${STANDINGS_SECTION_BG} px-2 py-3 shadow-[inset_0_0_0_1px_rgba(245,241,232,0.22),inset_0_1px_0_rgba(245,241,232,0.12)]`}
+        className={`relative mx-auto flex w-[94%] flex-col overflow-hidden rounded-none border ${PITCH_LINE_CLASS} ${STANDINGS_SECTION_BG} px-2 py-3 shadow-[inset_0_0_0_1px_rgba(245,241,232,0.22),inset_0_1px_0_rgba(245,241,232,0.12)]`}
       >
-        <span aria-hidden="true" className="pointer-events-none absolute left-0 right-0 top-1/2 z-0 h-px -translate-y-1/2 bg-[#F5F1E8]/88" />
-        <span aria-hidden="true" className="pointer-events-none absolute -left-[15px] -top-[15px] z-0 h-[30px] w-[30px] rounded-full border border-[#F5F1E8]/88" />
-        <span aria-hidden="true" className="pointer-events-none absolute -right-[15px] -top-[15px] z-0 h-[30px] w-[30px] rounded-full border border-[#F5F1E8]/88" />
-        <span aria-hidden="true" className="pointer-events-none absolute -bottom-[15px] -left-[15px] z-0 h-[30px] w-[30px] rounded-full border border-[#F5F1E8]/88" />
-        <span aria-hidden="true" className="pointer-events-none absolute -bottom-[15px] -right-[15px] z-0 h-[30px] w-[30px] rounded-full border border-[#F5F1E8]/88" />
+        <span aria-hidden="true" className={`pointer-events-none absolute left-0 right-0 top-1/2 z-0 h-px -translate-y-1/2 ${PITCH_LINE_BG_CLASS}`} />
+        <span aria-hidden="true" className={`pointer-events-none absolute -left-[15px] -top-[15px] z-0 h-[30px] w-[30px] rounded-full border ${PITCH_LINE_CLASS}`} />
+        <span aria-hidden="true" className={`pointer-events-none absolute -right-[15px] -top-[15px] z-0 h-[30px] w-[30px] rounded-full border ${PITCH_LINE_CLASS}`} />
+        <span aria-hidden="true" className={`pointer-events-none absolute -bottom-[15px] -left-[15px] z-0 h-[30px] w-[30px] rounded-full border ${PITCH_LINE_CLASS}`} />
+        <span aria-hidden="true" className={`pointer-events-none absolute -bottom-[15px] -right-[15px] z-0 h-[30px] w-[30px] rounded-full border ${PITCH_LINE_CLASS}`} />
         <div className="relative z-[2] flex flex-col gap-2">
         <KnockoutRoundBand
           title="ROUND OF 32"
+          className="mx-auto max-w-[348px]"
           fixtures={r32.slice(0, 8)}
           count={8}
           gap="gap-[1px]"
@@ -266,7 +290,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
 
         <KnockoutRoundBand
           title="ROUND OF 16"
-          className="mx-auto max-w-[320px]"
+          className="mx-auto max-w-[292px]"
           fixtures={r16.slice(0, 4)}
           count={4}
           gap="gap-1.5"
@@ -276,7 +300,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
 
         <KnockoutRoundBand
           title="QUARTER-FINALS"
-          className="mx-auto max-w-[150px]"
+          className="mx-auto max-w-[132px]"
           fixtures={qf.slice(0, 2)}
           count={2}
           gap="gap-2"
@@ -286,7 +310,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
 
         <KnockoutRoundBand
           title="SEMI-FINALS"
-          className="mx-auto max-w-[76px]"
+          className="mx-auto max-w-[64px]"
           fixtures={sf.slice(0, 1)}
           count={1}
           gap="gap-1"
@@ -305,7 +329,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
 
         <KnockoutRoundBand
           title="SEMI-FINALS"
-          className="mx-auto max-w-[76px]"
+          className="mx-auto max-w-[64px]"
           fixtures={sf.slice(1, 2)}
           count={1}
           gap="gap-1"
@@ -316,7 +340,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
 
         <KnockoutRoundBand
           title="QUARTER-FINALS"
-          className="mx-auto max-w-[150px]"
+          className="mx-auto max-w-[132px]"
           fixtures={qf.slice(2, 4)}
           count={2}
           gap="gap-2"
@@ -327,7 +351,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
 
         <KnockoutRoundBand
           title="ROUND OF 16"
-          className="mx-auto max-w-[320px]"
+          className="mx-auto max-w-[292px]"
           fixtures={r16.slice(4, 8)}
           count={4}
           gap="gap-1.5"
@@ -338,6 +362,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
 
         <KnockoutRoundBand
           title="ROUND OF 32"
+          className="mx-auto max-w-[348px]"
           fixtures={r32.slice(8, 16)}
           count={8}
           gap="gap-[1px]"
@@ -374,7 +399,7 @@ export function GroupsScreen({ allGroups, menuProps, standingsView, onStandingsV
     return () => cancelAnimationFrame(frame);
   }, [scrollTarget.key, scrollTarget.align, standingsView, knockoutFixtures.length, userTeam, userGroup, allGroups.length]);
 
-  return <main className="relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]"><ScreenTopBar {...menuProps}>STANDINGS</ScreenTopBar><PageTabsSlot><FixturesToggle value={standingsView} onChange={onStandingsViewChange} labels={["GROUPS", "BRACKET"]} /></PageTabsSlot><PageScroll ref={scrollRef} className="pt-1"><div className="space-y-3 pb-4">
+  return <main className="relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]"><ScreenTopBar {...menuProps}>STANDINGS</ScreenTopBar><PageTabsSlot><FixturesToggle value={standingsView} onChange={onStandingsViewChange} labels={["GROUPS", "BRACKET"]} /></PageTabsSlot><PageScroll ref={scrollRef} className="pt-1"><div className="space-y-0 pb-4">
     {standingsView === "group" && allGroups.map(({ group, rows }) => <div key={group} ref={(node) => { if (node) groupRefs.current[group] = node; }}><GroupTable title={`GROUP ${group}`} rows={rows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} /></div>)}
     {standingsView === "knockout" && <KnockoutBracket round32={knockoutFixtures} podium={podium} userTeam={userTeam} />}
   </div></PageScroll></main>;
