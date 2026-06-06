@@ -90,7 +90,7 @@ function LedAdvertisingHoard() {
       <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" />
       <div className="relative mx-auto flex h-full max-w-[61%] items-center justify-center">
-        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[69%] w-full object-contain" draggable={false} crossOrigin="anonymous" />
+        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[69%] w-full object-contain" style={{ opacity: 0.94, filter: "brightness(0.94)" }} draggable={false} crossOrigin="anonymous" />
       </div>
     </div>
   );
