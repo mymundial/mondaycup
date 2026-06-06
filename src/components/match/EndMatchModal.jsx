@@ -15,6 +15,7 @@ import {
 import {
   captureShareElementBlob,
   normaliseThirdPlaceCopy,
+  shareNativeImage,
   shareOrDownloadResult,
 } from "../../utils/shareExport.js";
 import { TEAM_RANK } from "../../data/teams.js";
@@ -529,7 +530,12 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
     setShareBusy(true);
     try {
       const blob = await ensureShareBlob();
-      await shareOrDownloadResult({ blob });
+      try {
+        await shareNativeImage(blob, "monday-cup-result.png", { title: "Monday Cup Result", text: "My Monday Cup result" });
+      } catch (nativeError) {
+        console.warn("Native result share unavailable, falling back", nativeError);
+        await shareOrDownloadResult({ blob, filename: "monday-cup-result.png" });
+      }
     } catch (error) {
       console.error("Share result failed", error);
       window.alert("Sorry, the result image could not be shared. Please try again.");
@@ -625,7 +631,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
                     </div>
                   </div>
                   <button type="button" onClick={handleShare} disabled={shareBusy} className={resultActionButtonClass}>
-                    {shareBusy ? "PREPARING" : "SAVE AS PHOTO"}
+                    {shareBusy ? "PREPARING" : "SHARE RESULT"}
                   </button>
                 </div>
               </div>
