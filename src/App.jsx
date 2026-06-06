@@ -2417,6 +2417,7 @@ export default function App() {
           authReady={authReady}
           currentUser={currentUser}
           onOpenClubhouse={openClubhouse}
+          onOpenAuthPanel={openAuthMenu}
           onResumeCampaign={handleResumeCampaign}
           hasResumeCampaign={Boolean(
             firebaseProfile?.currentProgress?.active ||

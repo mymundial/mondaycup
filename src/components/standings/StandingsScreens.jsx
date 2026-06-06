@@ -133,9 +133,9 @@ function BracketStageBox({ title, children, className = "", titlePosition = "abo
 function PodiumStageBox({ winner, runnerUp, thirdPlace }) {
   return (
     <div className="mx-auto grid h-[62px] w-full max-w-[228px] grid-cols-3 items-center justify-center gap-1.5 text-[#F5F1E8]">
-      <PodiumBox title="THIRD PLACE" team={thirdPlace} className="bg-[#D9822B]" />
-      <PodiumBox title="RUNNER-UP" team={runnerUp} className="bg-[#C8C8C8]" />
-      <PodiumBox title="CHAMPIONS" team={winner} className="bg-[#D8B62F]" />
+      <PodiumBox title="THIRD PLACE" team={thirdPlace} className="mc-metallic-bronze" />
+      <PodiumBox title="RUNNER-UP" team={runnerUp} className="mc-metallic-silver" />
+      <PodiumBox title="CHAMPIONS" team={winner} className="mc-metallic-gold" />
     </div>
   );
 }
@@ -224,7 +224,7 @@ function KnockoutCentreBand({ finalFixture, thirdFixture, winner, runnerUp, thir
         data-align-ref="R16-M89"
         className="pointer-events-none absolute left-[20%] top-[0px] z-[2] flex -translate-x-1/2 flex-col items-center justify-start gap-1.5"
       >
-        <PodiumBox title="THIRD PLACE" team={thirdPlace} userTeam={userTeam} className="bg-[#D9822B]" />
+        <PodiumBox title="THIRD PLACE" team={thirdPlace} userTeam={userTeam} className="mc-metallic-bronze" />
         <BracketFixture fixture={thirdFixture} layout="horizontal" userTeam={userTeam} />
       </div>
 
@@ -234,8 +234,8 @@ function KnockoutCentreBand({ finalFixture, thirdFixture, winner, runnerUp, thir
         data-align-ref="R16-M94"
         className="pointer-events-none absolute left-[80%] top-[0px] z-[2] flex -translate-x-1/2 flex-col items-center justify-start gap-1.5"
       >
-        <PodiumBox title="CHAMPIONS" team={winner} userTeam={userTeam} className="bg-[#D8B62F]" />
-        <PodiumBox title="RUNNER-UP" team={runnerUp} userTeam={userTeam} className="bg-[#C8C8C8]" />
+        <PodiumBox title="CHAMPIONS" team={winner} userTeam={userTeam} className="mc-metallic-gold" />
+        <PodiumBox title="RUNNER-UP" team={runnerUp} userTeam={userTeam} className="mc-metallic-silver" />
       </div>
     </div>
   );

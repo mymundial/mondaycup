@@ -141,9 +141,9 @@ function LeaderboardHeader() {
 
 function leaderboardPodiumRowClass(rank) {
   const numericRank = Number(rank);
-  if (numericRank === 1) return "border-[#D8B62F]/70 bg-[#D8B62F] text-[#072D1D] ring-1 ring-[#F7D117]/25";
-  if (numericRank === 2) return "border-[#C8C8C8]/70 bg-[#C8C8C8] text-[#072D1D] ring-1 ring-[#F5F1E8]/25";
-  if (numericRank === 3) return "border-[#CD7F32]/70 bg-[#CD7F32] text-[#072D1D] ring-1 ring-[#CD7F32]/25";
+  if (numericRank === 1) return "mc-metallic-gold border-[#D8B62F]/70 text-[#072D1D] ring-1 ring-[#F7D117]/25";
+  if (numericRank === 2) return "mc-metallic-silver border-[#C8C8C8]/70 text-[#072D1D] ring-1 ring-[#F5F1E8]/25";
+  if (numericRank === 3) return "mc-metallic-bronze border-[#CD7F32]/70 text-[#072D1D] ring-1 ring-[#CD7F32]/25";
   return "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-1 ring-[#F5F1E8]/10";
 }
 
@@ -196,9 +196,9 @@ function ScoringTypeBox({ label, points, tone = "ivory" }) {
     red: "border-red-500/50 bg-red-500 text-[#F5F1E8]",
     yellow: "border-[#F7D117]/60 bg-[#F7D117] text-[#072D1D]",
     green: "border-green-500/55 bg-green-500 text-[#F5F1E8]",
-    bronze: "border-[#CD7F32]/70 bg-[#CD7F32] text-[#072D1D]",
-    silver: "border-[#C8C8C8]/80 bg-[#C8C8C8] text-[#072D1D]",
-    gold: "border-[#D8B62F]/80 bg-[#D8B62F] text-[#072D1D]",
+    bronze: "mc-metallic-bronze border-[#CD7F32]/70 text-[#072D1D]",
+    silver: "mc-metallic-silver border-[#C8C8C8]/80 text-[#072D1D]",
+    gold: "mc-metallic-gold border-[#D8B62F]/80 text-[#072D1D]",
     ivory: "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8]",
   }[tone] || "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8]";
 

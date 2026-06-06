@@ -759,16 +759,17 @@ function WelcomeBackPanel({ onResume, onNewCampaign, hasResumeCampaign = false, 
   </div>;
 }
 
-function LandingPanel({ onPlayGuest, currentUser, onOpenClubhouse, onAuthComplete, onResumeCampaign, hasResumeCampaign = false }) {
+function LandingPanel({ onPlayGuest, currentUser, onOpenClubhouse, onOpenAuthPanel, onAuthComplete, onResumeCampaign, hasResumeCampaign = false }) {
   const [authMode, setAuthMode] = useState(null);
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
   if (showWelcomeBack) {
-    return <WelcomeBackPanel onResume={onResumeCampaign} onNewCampaign={onPlayGuest} hasResumeCampaign={hasResumeCampaign} onMondayClub={() => { if (currentUser?.uid) onOpenClubhouse?.(); else setAuthMode("signin"); }} />;
+    return <WelcomeBackPanel onResume={onResumeCampaign} onNewCampaign={onPlayGuest} hasResumeCampaign={hasResumeCampaign} onMondayClub={() => { if (currentUser?.uid) onOpenClubhouse?.(); else if (typeof onOpenAuthPanel === "function") onOpenAuthPanel("signin", { showLogoBack: true }); else setAuthMode("signin"); }} />;
   }
   if (authMode) return <AuthPanel mode={authMode} setMode={setAuthMode} onBack={() => setAuthMode(null)} onAuthComplete={onAuthComplete} onSignedIn={(user, meta) => { setAuthMode(null); if (meta?.isSignup) onPlayGuest?.(); else onOpenClubhouse?.(); }} />;
 
   const handleMondayClub = () => {
     if (currentUser?.uid) onOpenClubhouse?.();
+    else if (typeof onOpenAuthPanel === "function") onOpenAuthPanel("signin", { showLogoBack: true });
     else setAuthMode("signin");
   };
 
@@ -859,10 +860,10 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
   </HomeMenuShell>;
 }
 
-export function HomeScreen({ onSelectGroup, onSelectTeam, onUnlockAllTeams, allTeamsUnlocked = false, currentUser = null, onOpenClubhouse, onAuthComplete, onResumeCampaign, hasResumeCampaign = false, menuProps = {} }) {
+export function HomeScreen({ onSelectGroup, onSelectTeam, onUnlockAllTeams, allTeamsUnlocked = false, currentUser = null, onOpenClubhouse, onOpenAuthPanel, onAuthComplete, onResumeCampaign, hasResumeCampaign = false, menuProps = {} }) {
   const [homeMode, setHomeMode] = useState("landing");
   if (homeMode === "hosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} currentUser={currentUser} onAuthComplete={onAuthComplete} allTeamsUnlocked={allTeamsUnlocked} onUnlockAllTeams={onUnlockAllTeams} /></HomeLayout>;
-  return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo><LandingPanel currentUser={currentUser} onOpenClubhouse={onOpenClubhouse} onAuthComplete={onAuthComplete} onResumeCampaign={onResumeCampaign} hasResumeCampaign={hasResumeCampaign} onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
+  return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo><LandingPanel currentUser={currentUser} onOpenClubhouse={onOpenClubhouse} onOpenAuthPanel={onOpenAuthPanel} onAuthComplete={onAuthComplete} onResumeCampaign={onResumeCampaign} hasResumeCampaign={hasResumeCampaign} onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
 }
 export function HostSelectScreen(props) { return <HomeLayout allTeamsUnlocked={props.allTeamsUnlocked} menuProps={props.menuProps || {}}><HostPanel {...props} /></HomeLayout>; }
 export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam, onBack, allTeamsUnlocked = false, menuProps = {} }) { return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><TeamPanel group={selectedGroup} onBack={onBack} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>; }

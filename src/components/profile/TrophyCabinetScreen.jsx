@@ -530,7 +530,7 @@ function buildStickerStyle({ team, shiny = false, opened = false }) {
 }
 
 function StickerQuestionBox({ claimable = false, featured = false, onOpen }) {
-  const baseClass = "h-[62px] w-[62px] rounded-[0.95rem]";
+  const baseClass = "mc-sticker-icon-box h-[clamp(48px,16vw,62px)] w-[clamp(48px,16vw,62px)] rounded-[0.95rem]";
   if (claimable) {
     return (
       <button
@@ -554,7 +554,7 @@ function StickerQuestionBox({ claimable = false, featured = false, onOpen }) {
 
 function StickerLockedTeamBox() {
   return (
-    <div className="relative z-[2] flex h-[62px] w-[62px] items-center justify-center rounded-[0.95rem] border border-[#F7D117]/46 bg-[#0B6B3A]/26 text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+    <div className="mc-sticker-icon-box relative z-[2] flex h-[clamp(48px,16vw,62px)] w-[clamp(48px,16vw,62px)] items-center justify-center rounded-[0.95rem] border border-[#F7D117]/46 bg-[#0B6B3A]/26 text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
       <TeamPadlockIcon className="h-9 w-9 drop-shadow-[0_2px_5px_rgba(0,0,0,0.50)]" />
     </div>
   );
@@ -760,7 +760,7 @@ function StickerBottomLabel({ children, colour = "#F5F1E8" }) {
 function StickerIconStage({ children }) {
   return (
     <div className="pointer-events-none relative z-[3] flex h-full w-full items-center justify-center text-center">
-      <div className="flex h-[62px] w-[62px] items-center justify-center">
+      <div className="mc-sticker-icon-box flex h-[clamp(48px,16vw,62px)] w-[clamp(48px,16vw,62px)] items-center justify-center">
         {children}
       </div>
     </div>
@@ -868,7 +868,7 @@ function StickerBookSlot({
           : claimable
             ? "border-[#F7D117]/82 bg-[#052D1D]/72 ring-[#F7D117]/28 shadow-[0_0_16px_rgba(247,209,23,0.12)]"
             : "border-[#F5F1E8]/16 bg-[#F5F1E8]/[0.055] ring-[#F5F1E8]/10"
-      } ${shinyFrame && opened ? "monday-sticker-shiny-shell" : ""} ${slotSizeClass}`}
+      } ${shinyFrame && opened ? "monday-sticker-shiny-shell" : ""} mc-sticker-book-slot ${slotSizeClass}`}
       style={style}
     >
       <StickerShineOverlay shiny={shinyFrame && opened} />
@@ -917,8 +917,8 @@ function TeamStickerBook({
 }) {
   return (
     <TrophySection title={<TeamStickerTitle team={team} index={index} total={total} onPrevious={onPrevious} onNext={onNext} />}>
-      <div className="mc-panel-stack rounded-[1.35rem] border border-[#F5F1E8]/10 bg-[#031B12]/72 px-[clamp(0.45rem,2.5vw,0.75rem)] py-4 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
-        <div className="grid grid-cols-3 items-stretch gap-[clamp(0.4rem,2.2vw,0.75rem)]">
+      <div className="mc-sticker-book-panel mc-panel-stack rounded-[1.35rem] border border-[#F5F1E8]/10 bg-[#031B12]/72 px-[clamp(0.45rem,2.5vw,0.75rem)] py-4 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
+        <div className="mc-sticker-book-grid grid grid-cols-3 items-stretch gap-[clamp(0.4rem,2.2vw,0.75rem)]">
           <StickerBookSlot
             label="WEAR THE SHIRT"
             team={team}
@@ -947,7 +947,7 @@ function TeamStickerBook({
             onOpenSticker={onOpenSticker}
           />
         </div>
-        <div className="grid grid-cols-3 gap-[clamp(0.4rem,2.2vw,0.75rem)]">
+        <div className="mc-sticker-book-grid grid grid-cols-3 gap-[clamp(0.4rem,2.2vw,0.75rem)]">
           {STICKER_ROLES.map((role) => (
             <StickerBookSlot
               key={role.key}
