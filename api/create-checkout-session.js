@@ -1,4 +1,9 @@
+import crypto from "crypto";
+
 const MAX_GOLDEN_TICKETS = 99;
+const DEFAULT_FIREBASE_PROJECT_ID = "monday-cup";
+const FIREBASE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
+const TOKEN_CLOCK_SKEW_SECONDS = 300;
 
 const STORE_ITEM_IDS = {
   allTeams: "allTeams",
@@ -11,8 +16,20 @@ const STORE_ITEM_IDS = {
 
 const STRIPE_API_VERSION = "2024-06-20";
 
+let cachedFirebaseCerts = null;
+let cachedFirebaseCertsExpiry = 0;
+
 function env(name, fallbackName = "") {
   return process.env[name] || (fallbackName ? process.env[fallbackName] : "") || "";
+}
+
+function getFirebaseProjectId() {
+  return (
+    env("FIREBASE_PROJECT_ID", "VITE_FIREBASE_PROJECT_ID") ||
+    env("GOOGLE_CLOUD_PROJECT") ||
+    env("GCLOUD_PROJECT") ||
+    DEFAULT_FIREBASE_PROJECT_ID
+  );
 }
 
 const PRICE_ENV = {
@@ -54,19 +71,127 @@ function getOrigin(req) {
   return "http://localhost:5173";
 }
 
-function decodeFirebaseUidFromBearer(req) {
+function getBearerToken(req) {
   const header = req.headers.authorization || req.headers.Authorization || "";
-  const token = String(header).startsWith("Bearer ") ? String(header).slice(7) : "";
-  if (!token || token.split(".").length < 2) return "";
+  return String(header).startsWith("Bearer ") ? String(header).slice(7).trim() : "";
+}
+
+function base64UrlToBuffer(value = "") {
+  const normalised = String(value || "").replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalised.padEnd(normalised.length + ((4 - (normalised.length % 4)) % 4), "=");
+  return Buffer.from(padded, "base64");
+}
+
+function decodeJwtPart(value = "") {
+  return JSON.parse(base64UrlToBuffer(value).toString("utf8"));
+}
+
+function getCacheMaxAgeSeconds(cacheControl = "") {
+  const match = String(cacheControl || "").match(/max-age=(\d+)/i);
+  const maxAge = match ? Number(match[1]) : 0;
+  return Number.isFinite(maxAge) && maxAge > 0 ? maxAge : 3600;
+}
+
+async function getFirebasePublicCerts() {
+  const now = Date.now();
+  if (cachedFirebaseCerts && cachedFirebaseCertsExpiry > now + 60000) return cachedFirebaseCerts;
+
+  const response = await fetch(FIREBASE_CERTS_URL);
+  const certs = await response.json().catch(() => ({}));
+
+  if (!response.ok || !certs || typeof certs !== "object") {
+    const error = new Error("Could not fetch Firebase public certificates");
+    error.code = "firebase_auth_unavailable";
+    throw error;
+  }
+
+  cachedFirebaseCerts = certs;
+  cachedFirebaseCertsExpiry = now + getCacheMaxAgeSeconds(response.headers.get("cache-control")) * 1000;
+  return cachedFirebaseCerts;
+}
+
+async function verifyFirebaseUserFromBearer(req) {
+  const token = getBearerToken(req);
+  const segments = token.split(".");
+
+  if (!token || segments.length !== 3) {
+    const error = new Error("Missing Firebase ID token");
+    error.code = "firebase_auth_invalid";
+    throw error;
+  }
+
+  const [headerPart, payloadPart, signaturePart] = segments;
+  let header;
+  let payload;
 
   try {
-    const payloadPart = token.split(".")[1];
-    const json = Buffer.from(payloadPart.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
-    const payload = JSON.parse(json);
-    return String(payload.user_id || payload.sub || "").slice(0, 128);
+    header = decodeJwtPart(headerPart);
+    payload = decodeJwtPart(payloadPart);
   } catch {
-    return "";
+    const error = new Error("Invalid Firebase ID token format");
+    error.code = "firebase_auth_invalid";
+    throw error;
   }
+
+  if (header?.alg !== "RS256" || !header?.kid) {
+    const error = new Error("Invalid Firebase ID token header");
+    error.code = "firebase_auth_invalid";
+    throw error;
+  }
+
+  const projectId = getFirebaseProjectId();
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const expectedIssuer = `https://securetoken.google.com/${projectId}`;
+  const uid = typeof payload?.sub === "string" ? payload.sub : "";
+
+  if (payload?.aud !== projectId || payload?.iss !== expectedIssuer) {
+    const error = new Error("Firebase ID token was issued for a different project");
+    error.code = "firebase_auth_invalid";
+    throw error;
+  }
+
+  if (!uid || uid.length > 128) {
+    const error = new Error("Firebase ID token does not contain a valid user id");
+    error.code = "firebase_auth_invalid";
+    throw error;
+  }
+
+  if (!Number.isFinite(Number(payload?.exp)) || Number(payload.exp) <= nowSeconds) {
+    const error = new Error("Firebase ID token has expired");
+    error.code = "firebase_auth_invalid";
+    throw error;
+  }
+
+  if (Number.isFinite(Number(payload?.iat)) && Number(payload.iat) > nowSeconds + TOKEN_CLOCK_SKEW_SECONDS) {
+    const error = new Error("Firebase ID token issue time is invalid");
+    error.code = "firebase_auth_invalid";
+    throw error;
+  }
+
+  const certs = await getFirebasePublicCerts();
+  const certificate = certs[header.kid];
+  if (!certificate) {
+    const error = new Error("Firebase ID token certificate is unavailable");
+    error.code = "firebase_auth_unavailable";
+    throw error;
+  }
+
+  const verifier = crypto.createVerify("RSA-SHA256");
+  verifier.update(`${headerPart}.${payloadPart}`);
+  verifier.end();
+
+  const verified = verifier.verify(certificate, base64UrlToBuffer(signaturePart));
+  if (!verified) {
+    const error = new Error("Firebase ID token signature verification failed");
+    error.code = "firebase_auth_invalid";
+    throw error;
+  }
+
+  return {
+    uid,
+    email: typeof payload?.email === "string" ? payload.email : "",
+    emailVerified: Boolean(payload?.email_verified),
+  };
 }
 
 function normaliseSelection(selection = {}) {
@@ -151,11 +276,23 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Stripe secret key is not configured" });
   }
 
-  const firebaseUid = decodeFirebaseUidFromBearer(req);
-  if (!firebaseUid) {
-    return res.status(401).json({ error: "Please sign in before buying upgrades" });
+  let firebaseUser;
+  try {
+    firebaseUser = await verifyFirebaseUserFromBearer(req);
+  } catch (error) {
+    const status = error?.code === "firebase_auth_unavailable" ? 503 : 401;
+    const message =
+      status === 503
+        ? "Could not verify Firebase sign-in token. Please try again."
+        : "Please sign in again before buying upgrades";
+    return res.status(status).json({ error: message });
   }
 
+  if (!firebaseUser.emailVerified) {
+    return res.status(403).json({ error: "Please verify your email before buying upgrades" });
+  }
+
+  const firebaseUid = firebaseUser.uid;
   const body = await readJsonBody(req);
   const selection = body.selection || {};
   const source = String(body.source || "monday-shop").slice(0, 80);
