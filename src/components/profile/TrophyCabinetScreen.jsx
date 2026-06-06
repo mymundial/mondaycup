@@ -738,7 +738,7 @@ function StickerTopLogo() {
 function StickerTopDescription({ children, colour = "#F5F1E8" }) {
   return (
     <div
-      className="pointer-events-none absolute left-1/2 top-[18%] z-[5] w-[86%] -translate-x-1/2 -translate-y-1/2 truncate text-center home-copy-bold text-[6.2px] uppercase leading-none tracking-[0.13em] drop-shadow-[0_2px_3px_rgba(0,0,0,0.32)]"
+      className="pointer-events-none absolute left-1/2 top-[7.5%] z-[5] flex h-[14%] w-[86%] -translate-x-1/2 items-center justify-center truncate text-center home-copy-bold text-[6.2px] uppercase leading-none tracking-[0.13em] drop-shadow-[0_2px_3px_rgba(0,0,0,0.32)]"
       style={{ color: colour }}
     >
       {children}

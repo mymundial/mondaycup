@@ -76,7 +76,7 @@ export function hexWithAlpha(hex, alpha = 1) {
 
 export function TeamFlag({ team, className = "h-4 w-6", style = null }) {
   if (!team.flag) return null;
-  return <img src={team.flag} alt={`${team.name} flag`} className={`${className} rounded-sm object-contain bg-[#F5F1E8]`} style={style || undefined} draggable={false} crossOrigin="anonymous" />;
+  return <img src={team.flag} alt={`${team.name} flag`} className={`${className} rounded-sm object-cover bg-[#F5F1E8]`} style={style || undefined} draggable={false} crossOrigin="anonymous" />;
 }
 
 export function clampNumber(value, min, max, fallback = 0) {

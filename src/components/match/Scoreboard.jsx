@@ -39,7 +39,7 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
   const tickerCopy = String(ticker || "").replace(/\s+/g, " ").trim();
   const tickerFontSize = flashTickerFontSize(tickerCopy);
   const cleanUsername = String(username || "").replace(/\s+/g, " ").trim().toUpperCase() || "GUEST";
-  const crispLedStyle = { textShadow: "0 0 0.65px rgba(247,209,23,0.36)", WebkitFontSmoothing: "none", filter: "none" };
+  const crispLedStyle = { textShadow: "0 0 0.25px rgba(247,209,23,0.20)", WebkitFontSmoothing: "antialiased", filter: "none" };
   return (
     <section data-share-scoreboard="true" className={`relative mt-0 ${heightClass} shrink-0 overflow-hidden bg-[#050505]`} style={heightStyle}>
       <div data-share-scoreboard-main="true" className="relative overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[0_2px_8px_rgba(0,0,0,0.20)]" style={{ height: `${100 - tickerPercent}%` }}>
@@ -100,9 +100,10 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
 
       <div
         data-share-flash="true"
-        className="relative grid w-full place-items-center overflow-hidden px-[3%] text-center uppercase tracking-[0.085em] shadow-[inset_0_1px_5px_rgba(255,255,255,0.06)]"
+        className="relative grid w-full place-items-center overflow-hidden px-[3%] text-center uppercase tracking-[0.085em]"
         style={{
-          height: `${tickerPercent}%`,
+          height: `calc(${tickerPercent}% + 1px)`,
+          marginTop: "-1px",
           minHeight: 0,
           fontFamily: '"SportsDINRegular", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
           fontWeight: 700,

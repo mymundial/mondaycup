@@ -300,7 +300,7 @@ function exportFlashCopy({ result, userTeamName, opponentTeamName, userForm = []
   return won ? "YOU ARE OFF TO A FLYER!" : "NOT THE BEST START...";
 }
 
-function getResultShareState({ result, userTeam, stageLabel, userForm = [], groupRows = [], qualifiedTeams = new Set(), username = "" }) {
+function getResultShareState({ result, fixture = null, podium = null, userTeam, stageLabel, userForm = [], groupRows = [], qualifiedTeams = new Set(), username = "" }) {
   const home = result?.home || userTeam || "Team A";
   const away = result?.away || "Team B";
   const userIsHome = userTeam ? home === userTeam : true;
@@ -336,7 +336,7 @@ function getResultShareState({ result, userTeam, stageLabel, userForm = [], grou
     teamAMarkers,
     teamBMarkers,
     totalMarkerSlots,
-    badgeMode: "monday",
+    badgeMode: getPodiumBadgeMode({ result, fixture, stageLabel, podium, team: userTeam }) || "monday",
     showGoalkeeper: false,
     goalkeeperPosition: "CM",
     showBall: false,
@@ -464,7 +464,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   const canShareResult = Boolean(result);
   const campaignPointsTotal = getCampaignPointsTotal({ result, groupRows, userTeam, userForm });
   const activeBadgeMode = getPodiumBadgeMode({ result, fixture, stageLabel, podium, team: userTeam });
-  const resultShareState = useMemo(() => getResultShareState({ result, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username }), [result, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username]);
+  const resultShareState = useMemo(() => getResultShareState({ result, fixture, podium, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username }), [result, fixture, podium, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username]);
   const resultActionButtonClass = "mx-auto grid h-[clamp(48px,5.6dvh,66px)] min-h-[48px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(14px,2dvh,23px)] font-black uppercase leading-none tracking-[0.14em] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
   const resultIconButtonClass = "grid h-[clamp(48px,5.6dvh,66px)] min-h-[48px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.22),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
   const resultSquareButtonClass = "grid h-[40px] min-h-[40px] w-full place-items-center rounded-[0.85rem] border border-[#F5F1E8]/45 bg-[#F7D117] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.22),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
@@ -476,7 +476,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
 
   const buildShareBlob = () => {
     if (!shareFrameRef.current) throw new Error("Match share exporter was not ready");
-    return captureShareElementBlob(shareFrameRef.current, userTeam, null);
+    return captureShareElementBlob(shareFrameRef.current, userTeam, resultShareState?.badgeMode || null);
   };
 
   useEffect(() => {
@@ -501,19 +501,8 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
     return blob;
   };
 
-  const openSharePreview = async () => {
+  const openSharePreview = () => {
     setSharePreviewOpen(true);
-    if (shareBlob) return;
-    setShareBusy(true);
-    try {
-      await ensureShareBlob();
-    } catch (error) {
-      console.error("Share preview failed", error);
-      window.alert("Sorry, the result preview could not be created. Please try again.");
-      setSharePreviewOpen(false);
-    } finally {
-      setShareBusy(false);
-    }
   };
 
   const handleShare = async () => {
@@ -565,12 +554,6 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   return (
     <div className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/45 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[4px]" style={{ zIndex: 2147483647 }}>
       {activeBadgeMode === PODIUM_BADGE_MODE.CHAMPION && <ChampionConfetti />}
-      <div className="pointer-events-none fixed left-0 top-0 h-[400px] w-[400px] overflow-hidden" style={{ zIndex: -1, transform: "translate3d(0,0,0)" }} aria-hidden="true">
-        <div ref={shareFrameRef} data-share-layout="match" className="h-full w-full overflow-hidden bg-[#0d6c3d]">
-          <ShareMatchPreview {...resultShareState} />
-        </div>
-      </div>
-
       <div className="relative z-[1] flex w-full max-w-[408px] flex-col items-stretch">
         {!sharePreviewOpen && (
           <div className="mb-3 flex justify-center px-2" aria-label="Game score">
@@ -617,11 +600,9 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
               <div className="rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 p-2.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]">
                 <div className="space-y-2.5">
                   <div className="mx-auto aspect-square w-full overflow-hidden rounded-[1.1rem] border border-[#F5F1E8]/10 bg-[#0d6c3d] shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" data-share-layout="match-preview-modal">
-                    {sharePreviewUrl ? (
-                      <img src={sharePreviewUrl} alt="Monday Cup result preview" className="h-full w-full object-cover" draggable={false} />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center px-6 text-center home-copy-bold text-[13px] uppercase tracking-[0.14em] text-[#F5F1E8]">Preparing preview</div>
-                    )}
+                    <div ref={shareFrameRef} data-share-layout="match" className="h-full w-full overflow-hidden bg-[#0d6c3d]">
+                      <ShareMatchPreview {...resultShareState} />
+                    </div>
                   </div>
                   <button type="button" onClick={handleShare} disabled={shareBusy} className={resultActionButtonClass}>
                     {shareBusy ? "PREPARING" : "SAVE AS PHOTO"}
