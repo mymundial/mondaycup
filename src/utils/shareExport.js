@@ -1,6 +1,20 @@
 export const SHARE_CANVAS_NAME = "monday-cup-result.png";
 export const SHARE_EXPORT_SIZE = 2000;
 
+let html2canvasLoader = null;
+
+function loadHtml2Canvas() {
+  if (!html2canvasLoader) {
+    html2canvasLoader = import("html2canvas").then((module) => module.default || module);
+  }
+  return html2canvasLoader;
+}
+
+export function warmShareExportRenderer() {
+  const fontReady = document?.fonts?.ready?.catch?.(() => null) || Promise.resolve();
+  return Promise.all([fontReady, loadHtml2Canvas()]).catch(() => null);
+}
+
 export function normaliseThirdPlaceCopy(value) {
   return String(value || "")
     .replace(/3rd\s*place\s*play[-\s]*off/gi, "THIRD PLACE PLAY-OFF")
@@ -262,8 +276,7 @@ function getCanvasBlob(canvas) {
 }
 
 async function renderElementToCanvasWithHtml2Canvas(shareElement) {
-  const html2canvasModule = await import("html2canvas");
-  const html2canvas = html2canvasModule.default || html2canvasModule;
+  const html2canvas = await loadHtml2Canvas();
   const rect = shareElement.getBoundingClientRect();
   const width = Math.max(1, Math.round(rect.width));
   const height = Math.max(1, Math.round(rect.height));
