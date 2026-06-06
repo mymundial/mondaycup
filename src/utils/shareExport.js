@@ -318,9 +318,13 @@ export async function captureShareElementBlob(
 
   const errors = [];
   const attempts = [
-    // Capture the live DOM first. This keeps the exported PNG visually matched to
-    // the on-screen preview instead of rebuilding/repositioning a separate scene.
-    ["html2canvas", () => renderElementToCanvasWithHtml2Canvas(shareElement)],
+    // Capture the popup preview DOM as the single source of truth. The SVG path
+    // runs first because it embeds same-origin images/fonts as data URLs, keeping
+    // logos, badges and ad-board assets intact in the saved PNG on mobile.
+    [
+      "svg",
+      () => renderElementToCanvasWithSvg(shareElement, userTeam, badgeMode),
+    ],
     [
       "html-to-image",
       async () => {
@@ -328,10 +332,7 @@ export async function captureShareElementBlob(
         return { blobOnly: blob };
       },
     ],
-    [
-      "svg",
-      () => renderElementToCanvasWithSvg(shareElement, userTeam, badgeMode),
-    ],
+    ["html2canvas", () => renderElementToCanvasWithHtml2Canvas(shareElement)],
   ];
 
   for (const [name, attempt] of attempts) {

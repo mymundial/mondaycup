@@ -138,11 +138,11 @@ function ShareScoreboard({
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
 
-        <div className="relative z-[1] flex h-full items-center px-[18px] py-0">
+        <div className="relative z-[1] flex h-full items-center px-[8px] py-0">
           <div
             className="grid h-[88%] w-full items-center"
             style={{
-              gridTemplateColumns: "42px minmax(0,1fr) 44px 30px 44px minmax(0,1fr) 42px",
+              gridTemplateColumns: "34px minmax(0,1fr) 44px 30px 44px minmax(0,1fr) 34px",
               gridTemplateRows: "25% 50% 25%",
             }}
           >
@@ -156,11 +156,11 @@ function ShareScoreboard({
               </div>
             )}
 
-            <div className="col-start-1 row-start-2 flex h-full items-center justify-center">
+            <div className="col-start-1 row-start-2 flex h-full items-center justify-start">
               {d.showFlags && <TeamFlag team={userTeam} className="h-[16px] w-[24px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: editorTransform({ x: d.flagAX, y: d.flagAY, scale: d.flagScale }) }} />}
             </div>
-            <div className="col-start-2 row-start-2 flex h-full min-w-0 items-center justify-center px-2">
-              {d.showTeamCodes && <div className="led-text-glow font-led w-full text-center font-normal leading-none tracking-tight" style={codeTextStyle("A")}>{userTeam.code}</div>}
+            <div className="col-start-2 row-start-2 flex h-full min-w-0 items-center justify-center overflow-hidden px-1">
+              {d.showTeamCodes && <div className="led-text-glow font-led block w-full overflow-hidden text-center font-normal leading-none tracking-tight" style={codeTextStyle("A")}>{userTeam.code}</div>}
             </div>
             {d.showScore && d.scoreDisplayMode === "vs" ? (
               <div className="col-start-3 col-end-6 row-start-2 flex h-full items-center justify-center">
@@ -179,10 +179,10 @@ function ShareScoreboard({
                 </div>
               </>
             )}
-            <div className="col-start-6 row-start-2 flex h-full min-w-0 items-center justify-center px-2">
-              {d.showTeamCodes && <div className="led-text-glow font-led w-full text-center font-normal leading-none tracking-tight" style={codeTextStyle("B")}>{opponentTeam.code}</div>}
+            <div className="col-start-6 row-start-2 flex h-full min-w-0 items-center justify-center overflow-hidden px-1">
+              {d.showTeamCodes && <div className="led-text-glow font-led block w-full overflow-hidden text-center font-normal leading-none tracking-tight" style={codeTextStyle("B")}>{opponentTeam.code}</div>}
             </div>
-            <div className="col-start-7 row-start-2 flex h-full items-center justify-center">
+            <div className="col-start-7 row-start-2 flex h-full items-center justify-end">
               {d.showFlags && <TeamFlag team={opponentTeam} className="h-[16px] w-[24px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: editorTransform({ x: d.flagBX, y: d.flagBY, scale: d.flagScale }) }} />}
             </div>
 
@@ -343,17 +343,18 @@ export function ShareMatchPreview({
       <div className="relative min-h-0 flex-1 overflow-hidden bg-[#0d6c3d]">
         <ExportPitchMowStripes />
         <div className="absolute inset-x-0 top-0 z-[1]" style={{ height: `${pitchHeight}px` }}>
-          <MatchPitchPreview userTeam={userTeam} opponentTeam={opponentTeam} stageLabel={crowdStage} showActors={false} pitchMowVariant="none" />
+          <MatchPitchPreview userTeam={userTeam} opponentTeam={opponentTeam} stageLabel={crowdStage} showActors={false} pitchMowVariant="none" showAdBoard={false} showPitchMarkings={false} />
           <ShareBadgeOverlay mode={badgeMode} scale={matchDesign.badgeScale} x={matchDesign.badgeX} y={matchDesign.badgeY} />
           <div
-            className="pointer-events-none absolute inset-x-0 z-[28] flex items-center justify-center overflow-hidden"
-            style={{ bottom: `${100 - goalLine}%`, height: `${boardHeight}%` }}
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-[36] flex items-center justify-center overflow-hidden border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)]"
+            style={{ height: `${Math.max(boardHeight, 10.5)}%` }}
             aria-hidden="true"
           >
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
             <img
               src="/assets/branding/mondaycup_co_uk.png"
               alt=""
-              className="h-[70%] w-[62%] object-contain opacity-95 drop-shadow-[0_5px_7px_rgba(0,0,0,0.32)]"
+              className="relative z-[1] h-[72%] w-[68%] object-contain opacity-95 drop-shadow-[0_5px_7px_rgba(0,0,0,0.32)]"
               draggable={false}
               crossOrigin="anonymous"
             />
@@ -369,19 +370,7 @@ export function ShareMatchPreview({
             ballScale={matchDesign.ballScale}
           />
         </div>
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[20] grid place-items-center"
-          style={{ height: "9.5%" }}
-        >
-          <img
-            src={ASSETS.branding.myMundialLogo}
-            alt="Brothers"
-            className="h-auto max-h-[68%] w-auto max-w-[18%] object-contain opacity-95 drop-shadow-[0_6px_10px_rgba(0,0,0,0.20)]"
-            style={{ transform: "translateY(14%)" }}
-            draggable={false}
-            crossOrigin="anonymous"
-          />
-        </div>
+
       </div>
     </div>
   );
