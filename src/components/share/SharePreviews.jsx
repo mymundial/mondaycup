@@ -112,7 +112,8 @@ function ShareScoreboard({
   };
   const codeTextStyle = (side) => ({
     ...boardTextStyle,
-    fontSize: `clamp(18px, ${7 * Number(d.teamScale || 1)}cqw, ${34 * Number(d.teamScale || 1)}px)`,
+    fontSize: `clamp(16px, ${5.9 * Number(d.teamScale || 1)}cqw, ${29 * Number(d.teamScale || 1)}px)`,
+    letterSpacing: "-0.025em",
     transform: editorTransform({ x: side === "A" ? d.teamAX : d.teamBX, y: side === "A" ? d.teamAY : d.teamBY, scale: d.teamScale }),
   });
   const markerShell = "inline-flex max-w-full items-center justify-center px-1 py-0";
@@ -138,11 +139,11 @@ function ShareScoreboard({
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
 
-        <div className="relative z-[1] flex h-full items-center px-[8px] py-0">
+        <div className="relative z-[1] flex h-full items-center px-[5px] py-0">
           <div
             className="grid h-[88%] w-full items-center"
             style={{
-              gridTemplateColumns: "34px minmax(0,1fr) 44px 30px 44px minmax(0,1fr) 34px",
+              gridTemplateColumns: "28px minmax(72px,1fr) 38px 24px 38px minmax(72px,1fr) 28px",
               gridTemplateRows: "25% 50% 25%",
             }}
           >
@@ -157,10 +158,10 @@ function ShareScoreboard({
             )}
 
             <div className="col-start-1 row-start-2 flex h-full items-center justify-start">
-              {d.showFlags && <TeamFlag team={userTeam} className="h-[16px] w-[24px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: editorTransform({ x: d.flagAX, y: d.flagAY, scale: d.flagScale }) }} />}
+              {d.showFlags && <TeamFlag team={userTeam} className="h-[16px] w-[24px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: mergeTransforms("translateX(-3px)", editorTransform({ x: d.flagAX, y: d.flagAY, scale: d.flagScale })) }} />}
             </div>
-            <div className="col-start-2 row-start-2 flex h-full min-w-0 items-center justify-center overflow-hidden px-1">
-              {d.showTeamCodes && <div className="led-text-glow font-led block w-full overflow-hidden text-center font-normal leading-none tracking-tight" style={codeTextStyle("A")}>{userTeam.code}</div>}
+            <div className="col-start-2 row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible px-1">
+              {d.showTeamCodes && <div className="led-text-glow font-led block w-full overflow-visible whitespace-nowrap text-center font-normal leading-none" style={codeTextStyle("A")}>{userTeam.code}</div>}
             </div>
             {d.showScore && d.scoreDisplayMode === "vs" ? (
               <div className="col-start-3 col-end-6 row-start-2 flex h-full items-center justify-center">
@@ -179,11 +180,11 @@ function ShareScoreboard({
                 </div>
               </>
             )}
-            <div className="col-start-6 row-start-2 flex h-full min-w-0 items-center justify-center overflow-hidden px-1">
-              {d.showTeamCodes && <div className="led-text-glow font-led block w-full overflow-hidden text-center font-normal leading-none tracking-tight" style={codeTextStyle("B")}>{opponentTeam.code}</div>}
+            <div className="col-start-6 row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible px-1">
+              {d.showTeamCodes && <div className="led-text-glow font-led block w-full overflow-visible whitespace-nowrap text-center font-normal leading-none" style={codeTextStyle("B")}>{opponentTeam.code}</div>}
             </div>
             <div className="col-start-7 row-start-2 flex h-full items-center justify-end">
-              {d.showFlags && <TeamFlag team={opponentTeam} className="h-[16px] w-[24px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: editorTransform({ x: d.flagBX, y: d.flagBY, scale: d.flagScale }) }} />}
+              {d.showFlags && <TeamFlag team={opponentTeam} className="h-[16px] w-[24px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: mergeTransforms("translateX(3px)", editorTransform({ x: d.flagBX, y: d.flagBY, scale: d.flagScale })) }} />}
             </div>
 
             {showMarkers ? (
@@ -216,7 +217,7 @@ function ShareScoreboard({
       </div>
 
       <div data-share-flash="true" className="relative flex h-[24%] min-h-[38px] w-full items-center justify-center overflow-hidden px-[3%] text-center home-copy-bold font-black uppercase leading-none tracking-[0.085em]" style={{ ...flashStyle, background: d.flashBox ? flashStyle.background : "transparent", boxShadow: d.flashBox ? "0 0 8px rgba(245,241,232,0.05), inset 0 2px 8px rgba(255,255,255,0.08)" : "none" }}>
-        <span className="absolute inset-0 flex items-center justify-center overflow-hidden px-[2%] text-center leading-none" style={{ fontFamily: fontFamilyFor(d.flashFontType), fontSize: flashFontSize, transform: mergeTransforms("translateY(-0.20em)", editorTransform({ x: d.flashX, y: d.flashY, scale: d.flashScale })), WebkitTextStroke: textStroke(d.flashOutlineWeight, d.flashOutlineColour) }}>
+        <span className="absolute inset-0 flex items-center justify-center overflow-hidden px-[2%] text-center leading-none" style={{ fontFamily: fontFamilyFor(d.flashFontType), fontSize: flashFontSize, transform: editorTransform({ x: d.flashX, y: d.flashY, scale: d.flashScale }), WebkitTextStroke: textStroke(d.flashOutlineWeight, d.flashOutlineColour) }}>
           <span className="block max-w-full overflow-hidden truncate whitespace-nowrap text-center leading-none [text-wrap:nowrap]" style={{ textOverflow: "ellipsis" }}>{flashCopy}</span>
         </span>
       </div>
@@ -345,20 +346,6 @@ export function ShareMatchPreview({
         <div className="absolute inset-x-0 top-0 z-[1]" style={{ height: `${pitchHeight}px` }}>
           <MatchPitchPreview userTeam={userTeam} opponentTeam={opponentTeam} stageLabel={crowdStage} showActors={false} pitchMowVariant="none" showAdBoard={false} showPitchMarkings={false} />
           <ShareBadgeOverlay mode={badgeMode} scale={matchDesign.badgeScale} x={matchDesign.badgeX} y={matchDesign.badgeY} />
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-[36] flex items-center justify-center overflow-hidden border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)]"
-            style={{ height: `${Math.max(boardHeight, 10.5)}%` }}
-            aria-hidden="true"
-          >
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
-            <img
-              src="/assets/branding/mondaycup_co_uk.png"
-              alt=""
-              className="relative z-[1] h-[72%] w-[68%] object-contain opacity-95 drop-shadow-[0_5px_7px_rgba(0,0,0,0.32)]"
-              draggable={false}
-              crossOrigin="anonymous"
-            />
-          </div>
           <MatchActorLayer
             userTeam={userTeam}
             opponentTeam={opponentTeam}
@@ -368,6 +355,20 @@ export function ShareMatchPreview({
             ballPosition={ballPosition}
             goalkeeperScale={matchDesign.goalkeeperScale}
             ballScale={matchDesign.ballScale}
+          />
+        </div>
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-[-1px] z-[42] flex items-center justify-center overflow-hidden border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)]"
+          style={{ height: `${Math.max(boardHeight, 12)}%` }}
+          aria-hidden="true"
+        >
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
+          <img
+            src="/assets/branding/mondaycup_co_uk.png"
+            alt=""
+            className="relative z-[1] h-[78%] w-[92%] object-contain opacity-95 drop-shadow-[0_5px_7px_rgba(0,0,0,0.32)]"
+            draggable={false}
+            crossOrigin="anonymous"
           />
         </div>
 

@@ -491,7 +491,6 @@ export async function shareOrDownloadResult({
   const shareText = "My Monday Cup result";
 
   const canNativeFileShare = Boolean(
-    isMobileLikeDevice() &&
     navigator.share &&
     (!navigator.canShare ||
       (() => {

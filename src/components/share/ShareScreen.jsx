@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { captureShareElementBlob, reserveShareWindow, shareOrDownloadResult } from "../../utils/shareExport.js";
+import { captureShareElementBlob, shareOrDownloadResult } from "../../utils/shareExport.js";
 import { PitchPageBackground } from "../layout/PitchPageBackground.jsx";
 import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
 import { teamToGameTeam } from "../../logic/matchPresentation.js";
@@ -466,7 +466,7 @@ export function ShareScreen({
 
   const handleExport = async () => {
     if (!frameRef.current || shareBusy) return;
-    const previewWindow = reserveShareWindow();
+    const previewWindow = null;
     setShareBusy(true);
     try {
       const blob = activeState.id === "shirt"

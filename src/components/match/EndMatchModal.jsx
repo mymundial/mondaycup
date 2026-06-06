@@ -501,6 +501,26 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
     return blob;
   };
 
+  useEffect(() => {
+    if (!sharePreviewOpen || shareBlob) return undefined;
+    let cancelled = false;
+    const frame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(async () => {
+        try {
+          if (!shareFrameRef.current || cancelled) return;
+          const blob = await buildShareBlob();
+          if (!cancelled) setShareBlob(blob);
+        } catch (error) {
+          console.warn("Share preview pre-render failed", error);
+        }
+      });
+    });
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(frame);
+    };
+  }, [sharePreviewOpen, shareBlob, resultShareState]);
+
   const openSharePreview = () => {
     setSharePreviewOpen(true);
   };
