@@ -39,7 +39,7 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
   const tickerCopy = String(ticker || "").replace(/\s+/g, " ").trim();
   const tickerFontSize = flashTickerFontSize(tickerCopy);
   const cleanUsername = String(username || "").replace(/\s+/g, " ").trim().toUpperCase() || "GUEST";
-  const crispLedStyle = { textShadow: "0 0 2px rgba(247,209,23,0.62), 0 0 5px rgba(247,209,23,0.18)" };
+  const crispLedStyle = { textShadow: "0 0 0.65px rgba(247,209,23,0.36)", WebkitFontSmoothing: "none", filter: "none" };
   return (
     <section data-share-scoreboard="true" className={`relative mt-0 ${heightClass} shrink-0 overflow-hidden bg-[#050505]`} style={heightStyle}>
       <div data-share-scoreboard-main="true" className="relative overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[0_2px_8px_rgba(0,0,0,0.20)]" style={{ height: `${100 - tickerPercent}%` }}>

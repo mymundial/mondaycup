@@ -374,7 +374,7 @@ export function GroupsScreen({ allGroups, menuProps, standingsView, onStandingsV
     return () => cancelAnimationFrame(frame);
   }, [scrollTarget.key, scrollTarget.align, standingsView, knockoutFixtures.length, userTeam, userGroup, allGroups.length]);
 
-  return <main className="relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]"><ScreenTopBar {...menuProps}>STANDINGS</ScreenTopBar><PageTabsSlot><FixturesToggle value={standingsView} onChange={onStandingsViewChange} labels={["GROUPS", "BRACKET"]} /></PageTabsSlot><PageScroll ref={scrollRef} className="pt-1"><div className="space-y-2.5 pb-4">
+  return <main className="relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]"><ScreenTopBar {...menuProps}>STANDINGS</ScreenTopBar><PageTabsSlot><FixturesToggle value={standingsView} onChange={onStandingsViewChange} labels={["GROUPS", "BRACKET"]} /></PageTabsSlot><PageScroll ref={scrollRef} className="pt-1"><div className="space-y-3 pb-4">
     {standingsView === "group" && allGroups.map(({ group, rows }) => <div key={group} ref={(node) => { if (node) groupRefs.current[group] = node; }}><GroupTable title={`GROUP ${group}`} rows={rows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} /></div>)}
     {standingsView === "knockout" && <KnockoutBracket round32={knockoutFixtures} podium={podium} userTeam={userTeam} />}
   </div></PageScroll></main>;

@@ -149,6 +149,7 @@ function leaderboardPodiumRowClass(rank) {
 
 function leaderboardPodiumTextClass(row, isUser = false) {
   const numericRank = Number(row?.rank);
+  if (isUser && [1, 2, 3].includes(numericRank)) return "text-[#355243]";
   if (isUser) return "text-[#F7D117]";
   if ([1, 2, 3].includes(numericRank)) return "text-[#355243]";
   return "text-[#F5F1E8]/66";
@@ -156,6 +157,7 @@ function leaderboardPodiumTextClass(row, isUser = false) {
 
 function leaderboardNameTextClass(row, isUser = false) {
   const numericRank = Number(row?.rank);
+  if (isUser && [1, 2, 3].includes(numericRank)) return "text-[#355243]";
   if (isUser) return "text-[#F7D117]";
   if ([1, 2, 3].includes(numericRank)) return "text-[#355243]";
   return "text-[#F5F1E8]";
@@ -163,6 +165,7 @@ function leaderboardNameTextClass(row, isUser = false) {
 
 function leaderboardScoreTextClass(row, isUser = false) {
   const numericRank = Number(row?.rank);
+  if (isUser && [1, 2, 3].includes(numericRank)) return "text-[#355243]";
   if (isUser) return "text-[#F5F1E8]";
   if ([1, 2, 3].includes(numericRank)) return "text-[#355243]";
   return "text-[#F5F1E8]";
@@ -170,9 +173,13 @@ function leaderboardScoreTextClass(row, isUser = false) {
 
 function LeaderboardRow({ row, isUser = false }) {
   const form = leaderboardForm(row);
-  const rowClass = isUser
-    ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-1 ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10)]"
-    : leaderboardPodiumRowClass(row.rank);
+  const numericRank = Number(row?.rank);
+  const isPodium = [1, 2, 3].includes(numericRank);
+  const rowClass = isUser && isPodium
+    ? `${leaderboardPodiumRowClass(row.rank)} mc-leaderboard-user-podium`
+    : isUser
+      ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-1 ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10)]"
+      : leaderboardPodiumRowClass(row.rank);
 
   return (
     <div
@@ -425,7 +432,7 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
       </PageTabsSlot>
       <DrawerContent>
         <div className="pt-0.5 [scroll-padding-top:0px]">
-          <div className="space-y-2 pb-4">
+          <div className="space-y-3 pb-4">
             {leaderboardView === "model" ? (
               <LeaderboardSection title="BEST CAMPAIGN SCORE">
                 <div className="space-y-3 px-3 pb-3 pt-2">
@@ -444,6 +451,12 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
               </LeaderboardSection>
             ) : (
               <>
+                <LeaderboardSection title="MY RANKING">
+                  <div className="px-2 pb-2 pt-0">
+                    <LeaderboardRow row={myRankRow} isUser />
+                  </div>
+                </LeaderboardSection>
+
                 <LeaderboardSection>
                   <div className="px-2 pb-2 pt-2">
                     <div className="mb-1 grid grid-cols-[36px_minmax(0,1fr)_36px] items-center gap-2 px-1">
@@ -463,12 +476,6 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
                         return <LeaderboardRow key={`${row.userId || row.id || row.username}-${row.completedAt || row.rank}`} row={row} isUser={isUser} />;
                       })}
                     </div>
-                  </div>
-                </LeaderboardSection>
-
-                <LeaderboardSection title="MY RANKING">
-                  <div className="px-2 pb-2 pt-0">
-                    <LeaderboardRow row={myRankRow} isUser />
                   </div>
                 </LeaderboardSection>
               </>

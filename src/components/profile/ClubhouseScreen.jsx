@@ -349,7 +349,16 @@ function CampaignOverviewCard({
         {title}
       </div>
       <div
-        className={`mt-4 max-w-full truncate home-copy-bold text-[16px] uppercase leading-none tracking-[0.08em] ${teamClass}`}
+        className="mx-auto mt-3 flex min-w-0 max-w-[132px] items-center justify-center gap-[clamp(2px,0.7vw,4px)] pb-1"
+        style={{ "--campaign-rail-size": "clamp(6px,1.7vw,8px)" }}
+        aria-label={`${title} form guide`}
+      >
+        {Array.from({ length: 8 }).map((_, index) => (
+          <FormDot key={index} value={form[index]} />
+        ))}
+      </div>
+      <div
+        className={`mt-3 max-w-full truncate home-copy-bold text-[16px] uppercase leading-none tracking-[0.08em] ${teamClass}`}
       >
         {team || "NO TEAM"}
       </div>
@@ -366,15 +375,6 @@ function CampaignOverviewCard({
       </div>
       <div className="mt-3 home-copy-bold text-[16px] uppercase leading-none tracking-[0.08em] text-[#F7D117] tabular-nums">
         {Number(score || 0)}
-      </div>
-      <div
-        className="mx-auto mt-1.5 flex min-w-0 max-w-[132px] items-center justify-center gap-[clamp(2px,0.7vw,4px)] pb-1"
-        style={{ "--campaign-rail-size": "clamp(6px,1.7vw,8px)" }}
-        aria-label={`${title} form guide`}
-      >
-        {Array.from({ length: 8 }).map((_, index) => (
-          <FormDot key={index} value={form[index]} />
-        ))}
       </div>
       {selectable && team && team !== "NO TEAM" ? null : null}
     </section>
@@ -838,19 +838,11 @@ function ClubhouseShirtCard({
   const caps = Number(careerStats?.matchesPlayed || 0);
   const goals = Number(careerStats?.totalGoals || 0);
   return (
-    <section className="relative flex min-h-[198px] w-full flex-col items-center justify-start overflow-visible px-4 pb-3 pt-1 text-center">
-      <div className="max-w-full truncate home-copy-bold text-[clamp(24px,6.8vw,34px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">
-        {displayName}
+    <section className="relative flex min-h-[244px] w-full flex-col items-center justify-start overflow-visible px-4 pb-4 pt-1 text-center">
+      <div className="home-copy-bold text-[10px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]">
+        {starTitle}
       </div>
-      <div className="mt-1.5 flex items-center justify-center gap-3 home-copy-bold text-[10px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]">
-        <span>
-          CAPS <span className="text-[#F7D117]">{caps}</span>
-        </span>
-        <span className="h-3 w-px bg-[#F5F1E8]/18" aria-hidden="true" />
-        <span>
-          GOALS <span className="text-[#F7D117]">{goals}</span>
-        </span>
-      </div>
+      <CareerStars stars={stars} />
 
       <button
         type="button"
@@ -903,10 +895,18 @@ function ClubhouseShirtCard({
         </div>
       </button>
 
-      <div className="mt-3 home-copy-bold text-[10px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]">
-        {starTitle}
+      <div className="mt-4 max-w-full truncate home-copy-bold text-[clamp(24px,6.8vw,34px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">
+        {displayName}
       </div>
-      <CareerStars stars={stars} />
+      <div className="mt-1.5 flex items-center justify-center gap-3 home-copy-bold text-[10px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]">
+        <span>
+          CAPS <span className="text-[#F7D117]">{caps}</span>
+        </span>
+        <span className="h-3 w-px bg-[#F5F1E8]/18" aria-hidden="true" />
+        <span>
+          GOALS <span className="text-[#F7D117]">{goals}</span>
+        </span>
+      </div>
     </section>
   );
 }
@@ -995,7 +995,7 @@ export function ClubhouseScreen({
       <DrawerContent>
         {activeClubTab === "clubhouse" ? (
           <MenuPanel style={CLUBHOUSE_PANEL_STYLE}>
-            <div className="space-y-2.5 p-4">
+            <div className="space-y-3 p-4">
               <ClubhouseShirtCard
                 shirtProfile={shirtProfile}
                 displayName={displayName}

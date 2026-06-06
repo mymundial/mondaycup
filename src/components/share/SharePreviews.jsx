@@ -254,13 +254,13 @@ function ShareBadgeOverlay({ mode, scale = 1, x = 0, y = 0 }) {
   const hasGlow = Boolean(badge.glow);
   return (
     <div
-      className="pointer-events-none absolute left-1/2 top-[15%] z-[8] flex items-center justify-center"
+      className="pointer-events-none absolute left-1/2 top-[15%] z-[30] flex items-center justify-center"
       style={{ width: badge.width, height: badge.height, transform: mergeTransforms("translate(-50%, -50%)", editorTransform({ x, y, scale })) }}
       aria-hidden="true"
     >
       {hasGlow && <div className="absolute left-1/2 top-1/2 h-[86%] w-[96%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl" style={{ background: `${badge.glow}${badge.glowOuter || "44"}` }} />}
       {hasGlow && <div className="absolute left-1/2 top-1/2 h-[58%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-xl" style={{ background: `${badge.glow}${badge.glowInner || "55"}` }} />}
-      <img src={badge.src} alt={badge.alt} className="relative z-[1] h-full w-full object-contain" style={{ filter: badge.shadow || "drop-shadow(0 16px 22px rgba(0,0,0,0.26))" }} draggable={false} />
+      <img src={badge.src} alt={badge.alt} className="relative z-[1] h-full w-full object-contain" style={{ filter: badge.shadow || "drop-shadow(0 16px 22px rgba(0,0,0,0.26))" }} draggable={false} crossOrigin="anonymous" />
     </div>
   );
 }
@@ -320,6 +320,8 @@ export function ShareMatchPreview({
   matchDesign = {},
 }) {
   const pitchHeight = clampNumber(matchDesign.pitchHeight, 500, 760, 620);
+  const goalLine = GAME.goal.top + GAME.goal.height;
+  const boardHeight = 8;
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden bg-[#0d6c3d]">
       <ShareScoreboard
@@ -343,6 +345,19 @@ export function ShareMatchPreview({
         <div className="absolute inset-x-0 top-0 z-[1]" style={{ height: `${pitchHeight}px` }}>
           <MatchPitchPreview userTeam={userTeam} opponentTeam={opponentTeam} stageLabel={crowdStage} showActors={false} pitchMowVariant="none" />
           <ShareBadgeOverlay mode={badgeMode} scale={matchDesign.badgeScale} x={matchDesign.badgeX} y={matchDesign.badgeY} />
+          <div
+            className="pointer-events-none absolute inset-x-0 z-[28] flex items-center justify-center overflow-hidden"
+            style={{ bottom: `${100 - goalLine}%`, height: `${boardHeight}%` }}
+            aria-hidden="true"
+          >
+            <img
+              src="/assets/branding/mondaycup_co_uk.png"
+              alt=""
+              className="h-[70%] w-[62%] object-contain opacity-95 drop-shadow-[0_5px_7px_rgba(0,0,0,0.32)]"
+              draggable={false}
+              crossOrigin="anonymous"
+            />
+          </div>
           <MatchActorLayer
             userTeam={userTeam}
             opponentTeam={opponentTeam}
@@ -361,9 +376,10 @@ export function ShareMatchPreview({
           <img
             src={ASSETS.branding.myMundialLogo}
             alt="Brothers"
-            className="h-auto max-h-[40%] w-auto max-w-[7%] object-contain opacity-95 drop-shadow-[0_6px_10px_rgba(0,0,0,0.20)]"
+            className="h-auto max-h-[68%] w-auto max-w-[18%] object-contain opacity-95 drop-shadow-[0_6px_10px_rgba(0,0,0,0.20)]"
             style={{ transform: "translateY(14%)" }}
             draggable={false}
+            crossOrigin="anonymous"
           />
         </div>
       </div>

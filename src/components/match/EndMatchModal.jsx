@@ -565,7 +565,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   return (
     <div className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/45 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[4px]" style={{ zIndex: 2147483647 }}>
       {activeBadgeMode === PODIUM_BADGE_MODE.CHAMPION && <ChampionConfetti />}
-      <div className="pointer-events-none fixed left-[-10000px] top-0 h-[400px] w-[400px] overflow-hidden" aria-hidden="true">
+      <div className="pointer-events-none fixed left-0 top-0 h-[400px] w-[400px] overflow-hidden" style={{ zIndex: -1, transform: "translate3d(0,0,0)" }} aria-hidden="true">
         <div ref={shareFrameRef} data-share-layout="match" className="h-full w-full overflow-hidden bg-[#0d6c3d]">
           <ShareMatchPreview {...resultShareState} />
         </div>

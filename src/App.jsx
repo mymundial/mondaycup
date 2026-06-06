@@ -2403,7 +2403,7 @@ export default function App() {
   );
 
   if (["home", "hosts", "teams"].includes(screen)) {
-    if (drawerElement) return withShop(drawerElement);
+    if (drawerElement) return withNonMatchFooter(withShop(drawerElement));
 
     if (screen === "home") {
       return withShop(

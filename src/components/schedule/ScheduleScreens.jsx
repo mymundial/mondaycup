@@ -251,7 +251,7 @@ export function FixturesScreen({ fixtureView, onFixtureViewChange, schedule, men
         <FixturesToggle value={fixtureView} onChange={onFixtureViewChange} />
       </PageTabsSlot>
       <PageScroll ref={scrollRef} className="pt-0.5 [scroll-padding-top:0px]">
-        <div className="space-y-2.5 pb-4">
+        <div className="space-y-3 pb-4">
           {fixtureView === "group" && [1, 2, 3].map((round) => <FixtureSection key={round} title={`MATCHDAY ${round}`} sectionRef={setSectionRef(`group-${round}`)}>{schedule.map((fixture, index) => ({ fixture, fixtureNo: index + 1 })).filter(({ fixture }) => fixture.week === round).map(({ fixture, fixtureNo }) => <FixtureCard key={fixture.id || fixtureNo} {...fixture} matchNo={fixture.matchNo || fixture.matchNumber || fixtureNo} userTeam={userTeam} />)}</FixtureSection>)}
           {fixtureView === "knockout" && KO_ROUNDS.map(([label, nums]) => {
             const fixtures = label === "Round of 32" ? round32 : mergeByMatchNo(buildPlaceholderFixtures(label, nums), knockoutFixtures);
