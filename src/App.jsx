@@ -107,6 +107,30 @@ import {
 } from "./app/appCore.js";
 
 runSelfTests();
+
+const REWARD_STICKER_KEYS = ["kit", "flag", "champions", "stopper", "talisman", "striker"];
+
+function getUnopenedNationStickerNoticeKey(nationStickerProgress = {}, currentTeam = null) {
+  const entries = [];
+  const records = currentTeam && nationStickerProgress?.[currentTeam]
+    ? [[currentTeam, nationStickerProgress[currentTeam]]]
+    : Object.entries(nationStickerProgress || {});
+
+  records.forEach(([nation, record = {}]) => {
+    const claimable = record?.claimable || {};
+    const opened = record?.opened || {};
+    REWARD_STICKER_KEYS.forEach((key) => {
+      if (claimable?.[key] && !opened?.[key]) entries.push(`${nation}:${key}`);
+    });
+  });
+
+  return entries.length ? entries.sort().join("|") : "";
+}
+
+function hasUnopenedNationSticker(nationStickerProgress = {}, currentTeam = null) {
+  return Boolean(getUnopenedNationStickerNoticeKey(nationStickerProgress, currentTeam));
+}
+
 function NonMatchFooter() {
   return <AppFooter fixed />;
 }
@@ -140,6 +164,7 @@ export default function App() {
   const [matchResult, setMatchResult] = useState(null);
   const [modalDismissed, setModalDismissed] = useState(false);
   const [awardedTrophyMatchKey, setAwardedTrophyMatchKey] = useState(null);
+  const [acknowledgedStickerNoticeKey, setAcknowledgedStickerNoticeKey] = useState("");
   const [table, setTable] = useState(blankTable());
   const [schedule, setSchedule] = useState(buildSchedule());
   const [knockoutFixtures, setKnockoutFixtures] = useState([]);
@@ -1491,6 +1516,9 @@ export default function App() {
   };
   const openTrophyCabinet = () => {
     closeMenu();
+    const stickerNoticeKey = getUnopenedNationStickerNoticeKey(nationStickerProgress, team);
+    if (stickerNoticeKey) setAcknowledgedStickerNoticeKey(stickerNoticeKey);
+    setAwardedTrophyMatchKey(null);
     setDrawer("trophyCabinet");
   };
   const openLeaderboard = () => {
@@ -2132,7 +2160,7 @@ export default function App() {
 
   const handleShirtSave = async (shirtProfile) => {
     const fallbackName =
-      currentUser?.displayName || currentUser?.email?.split("@")[0] || "MONDAY";
+      currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST";
     const nextShirt = {
       ...(shirtProfile || {}),
       name:
@@ -2315,6 +2343,7 @@ export default function App() {
             goalsScored: allTimeGoals,
           }}
           allTeamsUnlocked={allTeamsUnlocked}
+          userTeam={team}
           onOpenNationSticker={markNationStickerOpened}
         />
       </DrawerShell>
@@ -2424,6 +2453,9 @@ export default function App() {
     );
   }
 
+  const currentStickerNoticeKey = getUnopenedNationStickerNoticeKey(nationStickerProgress, team);
+  const hasUncollectedReward = Boolean(awardedTrophyMatchKey) || Boolean(currentStickerNoticeKey && currentStickerNoticeKey !== acknowledgedStickerNoticeKey);
+
   const matchScreen = (
     <MatchScreen
       team={team}
@@ -2441,7 +2473,7 @@ export default function App() {
       }}
       onPlayAgain={resetTournament}
       onOpenTrophies={openTrophyCabinet}
-      hasNewTrophy={Boolean(awardedTrophyMatchKey)}
+      hasNewTrophy={hasUncollectedReward}
       menuProps={menuProps}
       stageLabel={matchStage}
       fixture={currentFixture}

@@ -141,8 +141,8 @@ export function FixtureCard({ id = null, home = "TBC", away = "TBC", group, play
   const stadium = FIXTURE_VENUES[fixtureNo] || "";
   const cardClass = `mb-1.5 grid min-h-[62px] grid-rows-[30%_40%_30%] rounded-[1.25rem] border px-2.5 text-center ring-1 last:mb-0 ${isUserFixture ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-[#F7D117]/30 shadow-[0_0_12px_rgba(247,209,23,0.12),0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(245,241,232,0.08)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10 shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(245,241,232,0.06)]"}`;
   const teamText = (isUserTeam) => isUserTeam ? "text-[#F7D117]" : "text-[#F5F1E8]";
-  const scoreClass = isUserFixture ? "text-[#F7D117]" : "text-[#F5F1E8]";
-  const labelClass = isUserFixture ? "text-[#F7D117]" : "text-[#F5F1E8]/72";
+  const scoreClass = "text-[#F5F1E8]";
+  const labelClass = "text-[#F5F1E8]/72";
 
   return (
     <div className={cardClass}>

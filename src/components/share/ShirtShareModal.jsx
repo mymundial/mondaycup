@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { GROUPS, getTeamTheme } from "../../data/teams.js";
 import { ASSETS } from "../../data/assets.js";
 import {
   captureShareElementBlob,
@@ -8,7 +7,6 @@ import {
 } from "../../utils/shareExport.js";
 import { ShirtPosterPreview } from "./SharePreviews.jsx";
 
-const TEAM_OPTIONS = Object.values(GROUPS).flat().sort((a, b) => a.localeCompare(b));
 const IVORY = "#FFFFFF";
 const SHIRT_BG = "#073B26";
 const LED_YELLOW = "#F7D117";
@@ -34,7 +32,7 @@ const DEFAULT_COMPOSITION = {
   brothersY: 0,
 };
 
-export function cleanName(value, fallback = "MONDAY") {
+export function cleanName(value, fallback = "GUEST") {
   const clean = String(value || "")
     .normalize("NFC")
     .replace(/[^\p{L}\p{N} ]/gu, "")
@@ -49,8 +47,14 @@ export function cleanNumber(value, fallback = "11") {
   return clean || fallback;
 }
 
+function clampOutlineWeight(value) {
+  const numeric = Number(value || 0);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.max(0, Math.min(2, numeric));
+}
+
 export function usernameFromUser(currentUser) {
-  return cleanName(currentUser?.displayName || currentUser?.email?.split("@")[0] || "MONDAY");
+  return cleanName(currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST", "GUEST");
 }
 
 
@@ -75,72 +79,20 @@ function drawImageContain(ctx, image, centerX, centerY, boxW, boxH) {
 }
 
 function canvasShirtFabricTheme(team, fallbackBackground, fallbackText, fallbackNumber, patternOptions = {}) {
-  const base = team ? getTeamTheme(team) : null;
   const result = {
-    background: base?.primary || base?.bg || fallbackBackground || SHIRT_BG,
-    textColour: base?.secondary || base?.text || fallbackText || IVORY,
-    numberColour: base?.secondary || base?.text || fallbackNumber || fallbackText || IVORY,
+    background: fallbackBackground || SHIRT_BG,
+    textColour: fallbackText || IVORY,
+    numberColour: fallbackNumber || fallbackText || IVORY,
     numberOutlineEnabled: false,
-    numberOutlineColour: "transparent",
+    numberOutlineColour: patternOptions.outlineColour || IVORY,
     numberOutlineWidth: 0,
     pattern: null,
     patternColour: patternOptions.patternColour || "#FFFFFF",
     brothersAsset: ASSETS.branding.myMundialLogo,
   };
 
-  switch (team) {
-    case "Argentina":
-      result.background = base?.primary || "#75AADB";
-      result.textColour = base?.tertiary || "#1F2A44";
-      result.numberColour = base?.tertiary || "#1F2A44";
-      result.pattern = "argentina-stripes";
-      break;
-    case "Brazil":
-      result.background = base?.primary || "#F7D117";
-      result.textColour = base?.secondary || "#009C3B";
-      result.numberColour = base?.secondary || "#009C3B";
-      break;
-    case "Croatia":
-      result.background = base?.primary || "#FFFFFF";
-      result.textColour = base?.tertiary || "#23408E";
-      result.numberColour = base?.tertiary || "#23408E";
-      result.pattern = "croatia-checker";
-      break;
-    case "United States":
-      result.background = base?.primary || "#FFFFFF";
-      result.textColour = base?.secondary || "#1F2A44";
-      result.numberColour = base?.secondary || "#1F2A44";
-      break;
-    case "England":
-      result.background = base?.primary || "#FFFFFF";
-      result.textColour = base?.secondary || "#C8102E";
-      result.numberColour = base?.secondary || "#C8102E";
-      result.numberOutlineEnabled = true;
-      result.numberOutlineColour = base?.tertiary || "#1F2A44";
-      result.numberOutlineWidth = 9;
-      break;
-    case "Portugal":
-      result.background = base?.primary || "#B30B18";
-      result.textColour = base?.tertiary || "#FFFFFF";
-      result.numberColour = base?.tertiary || "#FFFFFF";
-      result.numberOutlineEnabled = true;
-      result.numberOutlineColour = base?.secondary || "#006A4E";
-      result.numberOutlineWidth = 11;
-      break;
-    default:
-      break;
-  }
-
-  // Keep canvas export in sync with the live editor preview.
-  result.background = fallbackBackground || result.background;
-  result.textColour = fallbackText || result.textColour;
-  result.numberColour = fallbackNumber || fallbackText || result.numberColour;
-  const manualPattern = patternOptions.patternMode || "team";
-  if (manualPattern === "plain") {
-    result.pattern = null;
-  } else if (manualPattern && manualPattern !== "team") {
-    result.pattern = manualPattern;
-  }
+  const manualPattern = patternOptions.patternMode || "plain";
+  if (manualPattern && manualPattern !== "plain") result.pattern = manualPattern;
   result.patternColour = patternOptions.patternColour || result.patternColour || "#FFFFFF";
 
   const whiteBackground = ["#FFFFFF", "#F5F1E8"].includes(String(result.background || "").toUpperCase());
@@ -274,6 +226,7 @@ export async function createShirtPosterBlob({
   numberOutlineEnabled = false,
   outlineColour = IVORY,
   outlineWeight = 0,
+  numberOutlineWeight = null,
   fontType = "bold",
   patternMode = "team",
   patternColour = "#FFFFFF",
@@ -289,6 +242,7 @@ export async function createShirtPosterBlob({
   const fabricTheme = canvasShirtFabricTheme(team, background, textColour, numberColour, {
     patternMode,
     patternColour,
+    outlineColour,
   });
   drawShirtFabric(ctx, { size, fabricTheme });
 
@@ -314,7 +268,7 @@ export async function createShirtPosterBlob({
     );
   }
 
-  const displayName = cleanName(name, "MONDAY");
+  const displayName = cleanName(name, "GUEST");
   const nameLength = displayName.length;
   const nameBase = nameLength > 12 ? 31 : nameLength > 9 ? 39 : 50;
   const lockedNameScale = DEFAULT_COMPOSITION.nameScale;
@@ -355,7 +309,7 @@ export async function createShirtPosterBlob({
         strokeColour: fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineColour : (numberOutlineEnabled ? outlineColour : null),
         // Match the SVG preview: outline width lives in the 1000px number viewBox,
         // not the 318px poster composition scale.
-        strokeWidth: fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineWidth * viewBoxScale : (numberOutlineEnabled ? Math.max(0, Number(outlineWeight || 0)) * viewBoxScale : 0),
+        strokeWidth: fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineWidth * viewBoxScale : (numberOutlineEnabled ? Math.max(0, Number(numberOutlineWeight ?? outlineWeight ?? 0)) * viewBoxScale : 0),
         shadow: true,
         shadowColour: "rgba(0,0,0,0.12)",
         shadowOffsetY: 7 * scale,
@@ -387,13 +341,20 @@ export async function createShirtPosterBlob({
 
 export function normaliseInitialShirt(initialShirt, currentUser) {
   const defaultName = usernameFromUser(currentUser);
+  const savedName = String(initialShirt?.name || "").trim().toUpperCase();
+  const savedLooksLikeOldDefault = savedName === "MONDAY";
   return {
-    team: initialShirt?.team || "",
-    name: cleanName(initialShirt?.name, defaultName),
+    team: "",
+    name: savedLooksLikeOldDefault ? defaultName : cleanName(initialShirt?.name, defaultName),
     number: cleanNumber(initialShirt?.number, "11"),
     bg: initialShirt?.bg || SHIRT_BG,
+    patternMode: initialShirt?.patternMode || "plain",
+    patternColour: initialShirt?.patternColour || "#FFFFFF",
     textColour: initialShirt?.textColour || IVORY,
     numberColour: initialShirt?.numberColour || initialShirt?.textColour || IVORY,
+    outlineColour: initialShirt?.outlineColour || IVORY,
+    nameOutlineWidth: Math.max(0, Number(initialShirt?.nameOutlineWidth ?? initialShirt?.outlineWeight ?? 0) || 0),
+    numberOutlineWidth: Math.max(0, Number(initialShirt?.numberOutlineWidth ?? initialShirt?.outlineWeight ?? 0) || 0),
     composition: {
       ...DEFAULT_COMPOSITION,
       ...(initialShirt?.layoutVersion >= SHIRT_LAYOUT_VERSION ? (initialShirt?.composition || {}) : {}),
@@ -462,44 +423,159 @@ function ExportButton({ icon, label, onClick, disabled, primary = false, busy = 
   );
 }
 
+const editorFieldClass = "h-10 min-w-0 rounded-[13px] border border-[#F5F1E8]/18 bg-[#051A11]/62 px-2.5 home-copy-bold text-[12px] font-black uppercase tracking-[0.06em] text-[#F5F1E8] outline-none focus:border-[#F7D117]/70";
+
+function EditorLabel({ label, children }) {
+  return (
+    <label className="grid gap-1 text-left">
+      <span className="home-copy-bold text-[10px] font-black uppercase tracking-[0.16em] text-[#F5F1E8]/72">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function ColourField({ label, value, onChange }) {
+  return (
+    <EditorLabel label={label}>
+      <div className="grid h-10 grid-cols-[38px_minmax(0,1fr)] items-center gap-2 rounded-[13px] border border-[#F5F1E8]/18 bg-[#051A11]/62 px-2">
+        <input
+          type="color"
+          value={value}
+          onChange={(event) => onChange?.(event.target.value)}
+          className="h-7 w-8 cursor-pointer rounded-[8px] border-0 bg-transparent p-0"
+          aria-label={label}
+        />
+        <input
+          value={value}
+          onChange={(event) => onChange?.(event.target.value)}
+          className="min-w-0 bg-transparent home-copy-bold text-[11px] uppercase tracking-[0.06em] text-[#F5F1E8] outline-none"
+          spellCheck={false}
+        />
+      </div>
+    </EditorLabel>
+  );
+}
+
+function RangeField({ label, value, onChange, min = 0, max = 12, step = 1, formatValue = null }) {
+  const rawValue = Number(value || 0);
+  const numericValue = Math.max(min, Math.min(max, Number.isFinite(rawValue) ? rawValue : min));
+  const displayValue = formatValue ? formatValue(numericValue) : numericValue;
+  return (
+    <EditorLabel label={label}>
+      <div className="grid h-10 grid-cols-[1fr_44px] items-center gap-2 rounded-[13px] border border-[#F5F1E8]/18 bg-[#051A11]/62 px-2.5">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={numericValue}
+          onChange={(event) => onChange?.(Number(event.target.value))}
+          className="w-full accent-[#F7D117]"
+        />
+        <span className="text-right home-copy-bold text-[11px] text-[#F7D117]">{displayValue}</span>
+      </div>
+    </EditorLabel>
+  );
+}
+
+function ShirtEditorPanelButton({ active, label, number, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`grid min-h-[46px] grid-cols-[22px_minmax(0,1fr)] items-center gap-1 rounded-[15px] border px-2 text-left transition ${
+        active
+          ? "border-[#F7D117]/82 bg-[#F7D117] text-[#072D1D] shadow-[0_7px_18px_rgba(0,0,0,0.22)]"
+          : "border-[#F5F1E8]/16 bg-[#051A11]/58 text-[#F5F1E8]/84"
+      }`}
+    >
+      <span className={`flex h-5 w-5 items-center justify-center rounded-full border home-copy-bold text-[10px] leading-none ${active ? "border-[#072D1D]/28 bg-[#072D1D]/10" : "border-[#F5F1E8]/18 bg-[#031B12]/46"}`}>{number}</span>
+      <span className="home-copy-bold text-[8px] uppercase leading-[0.95] tracking-[0.08em]">{label}</span>
+    </button>
+  );
+}
+
+function PatternSelector({ value, onChange }) {
+  const options = [
+    { value: "plain", label: "PLAIN" },
+    { value: "stripes", label: "STRIPES" },
+    { value: "hoops", label: "HOOPS" },
+    { value: "checkerboard", label: "CHECKS" },
+  ];
+  return (
+    <EditorLabel label="Pattern">
+      <div className="grid grid-cols-4 gap-1.5">
+        {options.map((option) => (
+          <button
+            type="button"
+            key={option.value}
+            onClick={() => onChange?.(option.value)}
+            className={`h-9 rounded-[12px] border home-copy-bold text-[8px] uppercase tracking-[0.08em] ${value === option.value ? "border-[#F7D117]/82 bg-[#F7D117] text-[#072D1D]" : "border-[#F5F1E8]/16 bg-[#051A11]/62 text-[#F5F1E8]/82"}`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </EditorLabel>
+  );
+}
+
 export default function ShirtShareModal({ open, onClose, currentUser = null, initialShirt = null, onSaveShirt = null }) {
   const frameRef = useRef(null);
   const defaultShirt = useMemo(() => normaliseInitialShirt(initialShirt, currentUser), [initialShirt, currentUser]);
-  const [team, setTeam] = useState(defaultShirt.team);
+  const [team] = useState("");
   const [name, setName] = useState(defaultShirt.name);
   const [number, setNumber] = useState(defaultShirt.number);
   const [customBg, setCustomBg] = useState(defaultShirt.bg);
+  const [patternMode, setPatternMode] = useState(defaultShirt.patternMode);
+  const [patternColour, setPatternColour] = useState(defaultShirt.patternColour);
   const [textColour, setTextColour] = useState(defaultShirt.textColour);
   const [numberColour, setNumberColour] = useState(defaultShirt.numberColour);
+  const [outlineColour, setOutlineColour] = useState(defaultShirt.outlineColour);
+  const [nameOutlineWidth, setNameOutlineWidth] = useState(clampOutlineWeight(defaultShirt.nameOutlineWidth));
+  const [numberOutlineWidth, setNumberOutlineWidth] = useState(clampOutlineWeight(defaultShirt.numberOutlineWidth));
   const [composition, setComposition] = useState(defaultShirt.composition);
   const [busy, setBusy] = useState("");
+  const [activePanel, setActivePanel] = useState("personalisation");
 
   useEffect(() => {
     if (!open) return;
     const next = normaliseInitialShirt(initialShirt, currentUser);
-    setTeam(next.team);
     setName(next.name);
     setNumber(next.number);
     setCustomBg(next.bg);
+    setPatternMode(next.patternMode);
+    setPatternColour(next.patternColour);
     setTextColour(next.textColour);
     setNumberColour(next.numberColour);
+    setOutlineColour(next.outlineColour);
+    setNameOutlineWidth(clampOutlineWeight(next.nameOutlineWidth));
+    setNumberOutlineWidth(clampOutlineWeight(next.numberOutlineWidth));
+    setActivePanel("personalisation");
     setComposition(next.composition);
   }, [open, initialShirt, currentUser]);
 
   if (!open) return null;
 
-  const selectedTheme = team ? getTeamTheme(team) : null;
-  const shirtBackground = selectedTheme?.bg || customBg || SHIRT_BG;
-  const shirtTextColour = selectedTheme?.text || textColour || IVORY;
-  const shirtNumberColour = selectedTheme?.text || numberColour || shirtTextColour;
+  const shirtBackground = customBg || SHIRT_BG;
+  const shirtTextColour = textColour || IVORY;
+  const shirtNumberColour = numberColour || shirtTextColour;
+  const safeNameOutlineWidth = clampOutlineWeight(nameOutlineWidth);
+  const safeNumberOutlineWidth = clampOutlineWeight(numberOutlineWidth);
+  const formatOutlineValue = (value) => Number(value).toFixed(value % 1 === 0 ? 0 : 2).replace(/0+$/, "").replace(/\.$/, "");
 
   const buildPayload = () => ({
-    team,
+    team: "",
     name: cleanName(name, usernameFromUser(currentUser)),
     number: cleanNumber(number, "11"),
-    bg: team ? selectedTheme?.bg : shirtBackground,
+    bg: shirtBackground,
+    patternMode,
+    patternColour,
     textColour: shirtTextColour,
     numberColour: shirtNumberColour,
+    outlineColour,
+    nameOutlineWidth: safeNameOutlineWidth,
+    numberOutlineWidth: safeNumberOutlineWidth,
     composition,
     layoutVersion: SHIRT_LAYOUT_VERSION,
     updatedAt: Date.now(),
@@ -517,6 +593,13 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
         textColour: shirtTextColour,
         numberColour: shirtNumberColour,
         composition,
+        textOutlineEnabled: safeNameOutlineWidth > 0,
+        numberOutlineEnabled: safeNumberOutlineWidth > 0,
+        outlineColour,
+        outlineWeight: safeNameOutlineWidth,
+        numberOutlineWeight: safeNumberOutlineWidth,
+        patternMode,
+        patternColour,
       });
     } catch (error) {
       console.warn("Dedicated shirt export failed, falling back to DOM capture", error);
@@ -553,9 +636,9 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
   });
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-[#031B12]/72 px-3 py-[max(14px,env(safe-area-inset-top))] text-[#F5F1E8] backdrop-blur-[6px]">
-      <div className="absolute inset-0 bg-[#051A11]/58 backdrop-blur-[3px]" aria-hidden="true" />
-      <div className="relative z-[1] w-full max-w-[410px] max-h-[calc(100dvh-28px)] overflow-y-auto rounded-[28px] border border-[#F5F1E8]/16 p-3.5 shadow-[0_20px_48px_rgba(0,0,0,0.36),inset_0_1px_0_rgba(245,241,232,0.08)] sm:p-4" style={{ ...PITCH_MOW_BACKGROUND_STYLE, backgroundColor: "#2C7041", backgroundBlendMode: "multiply" }}>
+    <div className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/45 px-3 py-[max(14px,env(safe-area-inset-top))] text-[#F5F1E8] backdrop-blur-[4px]" style={{ zIndex: 2147483647 }}>
+      <div className="absolute inset-0 bg-[#051A11]/16 backdrop-blur-[1px]" aria-hidden="true" />
+      <div className="relative z-[1] w-full max-w-[408px] max-h-[calc(100dvh-28px)] overflow-y-auto rounded-[28px] border border-[#F5F1E8]/16 p-3.5 shadow-[0_20px_48px_rgba(0,0,0,0.36),inset_0_1px_0_rgba(245,241,232,0.08)] sm:p-4" style={{ ...PITCH_MOW_BACKGROUND_STYLE, backgroundColor: "#2C7041", backgroundBlendMode: "multiply" }}>
         <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-2">
           <div />
           <div className="min-w-0 text-center">
@@ -567,7 +650,7 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
         <div className="mx-auto mt-3 aspect-square w-full max-w-[318px] overflow-hidden border border-[#F5F1E8]/20 bg-[#073B26] shadow-[0_12px_28px_rgba(0,0,0,0.24)] ring-1 ring-[#F7D117]/24">
           <div ref={frameRef} className="h-full w-full">
             <ShirtPosterPreview
-              shirtTeam={team}
+              shirtTeam=""
               shirtName={cleanName(name, usernameFromUser(currentUser))}
               shirtNumber={cleanNumber(number, "11")}
               shirtShowMondayLogo={true}
@@ -579,12 +662,16 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
               shirtCustomBg={shirtBackground}
               shirtTextColour={shirtTextColour}
               shirtNumberColour={shirtNumberColour}
-              shirtOutlineEnabled={false}
-              shirtOutlineColour={IVORY}
+              shirtOutlineEnabled={safeNameOutlineWidth > 0}
+              shirtNumberOutlineEnabled={safeNumberOutlineWidth > 0}
+              shirtOutlineColour={outlineColour}
+              shirtPatternMode={patternMode}
+              shirtPatternColour={patternColour}
               shirtFontWeight="900"
               shirtFontStyle="normal"
               shirtFontType="bold"
-              shirtOutlineWeight={0}
+              shirtOutlineWeight={safeNameOutlineWidth}
+              shirtNumberOutlineWeight={safeNumberOutlineWidth}
               shirtMondayScale={composition.mondayScale}
               shirtNameScale={composition.nameScale}
               shirtNumberScale={composition.numberScale}
@@ -602,23 +689,68 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
           </div>
         </div>
 
-        <div className="mt-3 grid gap-2.5">
-          <label className="grid gap-1 text-left">
-            <span className="home-copy-bold text-[10px] font-black uppercase tracking-[0.16em] text-[#F5F1E8]/72">Team fabric</span>
-            <select value={team} onChange={(event) => setTeam(event.target.value)} className="h-10 rounded-[13px] border border-[#F5F1E8]/18 bg-[#051A11]/78 px-3 home-copy-bold text-[12px] font-black uppercase tracking-[0.08em] text-[#F5F1E8] outline-none">
-              <option value="">SELECT TEAM</option>
-              {TEAM_OPTIONS.map((teamName) => <option key={teamName} value={teamName}>{teamName}</option>)}
-            </select>
-          </label>
-          <div className="grid grid-cols-[minmax(0,1fr)_76px] gap-2.5">
-            <label className="grid gap-1 text-left">
-              <span className="home-copy-bold text-[10px] font-black uppercase tracking-[0.16em] text-[#F5F1E8]/72">Name</span>
-              <input value={name} onChange={(event) => setName(cleanName(event.target.value, ""))} className="h-10 min-w-0 rounded-[13px] border border-[#F5F1E8]/18 bg-[#051A11]/78 px-2.5 home-copy-bold text-[12px] font-black uppercase tracking-[0.06em] text-[#F5F1E8] outline-none" />
-            </label>
-            <label className="grid gap-1 text-left">
-              <span className="home-copy-bold text-[10px] font-black uppercase tracking-[0.16em] text-[#F5F1E8]/72">No.</span>
-              <input inputMode="numeric" min="0" max="99" value={number} onChange={(event) => setNumber(cleanNumber(event.target.value, ""))} className="h-10 min-w-0 rounded-[13px] border border-[#F5F1E8]/18 bg-[#051A11]/78 px-2 text-center home-copy-bold text-[12px] font-black uppercase tracking-[0.04em] text-[#F5F1E8] outline-none" />
-            </label>
+        <div className="mt-3 rounded-[1.2rem] border border-[#F5F1E8]/12 bg-[#031B12]/22 p-2.5">
+          <div className="grid grid-cols-3 gap-1.5">
+            <ShirtEditorPanelButton
+              number="1"
+              label="Personalisation"
+              active={activePanel === "personalisation"}
+              onClick={() => setActivePanel("personalisation")}
+            />
+            <ShirtEditorPanelButton
+              number="2"
+              label="Fabric"
+              active={activePanel === "fabric"}
+              onClick={() => setActivePanel("fabric")}
+            />
+            <ShirtEditorPanelButton
+              number="3"
+              label="Print"
+              active={activePanel === "print"}
+              onClick={() => setActivePanel("print")}
+            />
+          </div>
+
+          <div className="mt-2.5 grid gap-2.5 rounded-[18px] border border-[#F5F1E8]/10 bg-[#031B12]/24 p-2.5">
+            {activePanel === "personalisation" && (
+              <div className="grid grid-cols-[minmax(0,1fr)_76px] gap-2.5">
+                <EditorLabel label="Name">
+                  <input value={name} onChange={(event) => setName(cleanName(event.target.value, ""))} className={editorFieldClass} />
+                </EditorLabel>
+                <EditorLabel label="Number">
+                  <input inputMode="numeric" min="0" max="99" value={number} onChange={(event) => setNumber(cleanNumber(event.target.value, ""))} className={`${editorFieldClass} text-center`} />
+                </EditorLabel>
+              </div>
+            )}
+
+            {activePanel === "fabric" && (
+              <>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <ColourField label="BG colour" value={shirtBackground} onChange={setCustomBg} />
+                  <ColourField label="Pattern colour" value={patternColour} onChange={setPatternColour} />
+                </div>
+                <PatternSelector value={patternMode} onChange={setPatternMode} />
+              </>
+            )}
+
+            {activePanel === "print" && (
+              <>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <ColourField label="Name colour" value={shirtTextColour} onChange={setTextColour} />
+                  <ColourField label="Number colour" value={shirtNumberColour} onChange={setNumberColour} />
+                </div>
+                <ColourField label="Outline colour" value={outlineColour} onChange={setOutlineColour} />
+                <RangeField
+                  label="Name outline"
+                  value={safeNameOutlineWidth}
+                  onChange={(value) => setNameOutlineWidth(clampOutlineWeight(value))}
+                  min={0}
+                  max={2}
+                  step={0.25}
+                  formatValue={formatOutlineValue}
+                />
+              </>
+            )}
           </div>
         </div>
 

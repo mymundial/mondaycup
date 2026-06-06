@@ -21,11 +21,11 @@ const titleBarFooterBackground = {
 
 export default function AppFooter({ fixed = false, className = '' }) {
   const shellClass = fixed
-    ? 'pointer-events-none fixed inset-x-0 bottom-0 z-[1200]'
+    ? 'pointer-events-none fixed bottom-0 left-1/2 z-[2147483000] w-full max-w-md -translate-x-1/2'
     : 'relative mt-auto shrink-0 text-center';
 
   const innerClass = fixed
-    ? 'mx-auto h-full w-full max-w-md'
+    ? 'h-full w-full'
     : 'h-full w-full';
 
   return (

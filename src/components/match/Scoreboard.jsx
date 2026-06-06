@@ -24,14 +24,14 @@ function PenaltyMarkers({ attempts, totalSlots = GAME.regulationPens }) {
 
 function flashTickerFontSize(copy = "") {
   const tickerLength = String(copy || "").length;
-  if (tickerLength > 38) return "clamp(12px,1.55dvh,18px)";
-  if (tickerLength > 32) return "clamp(13px,1.75dvh,20px)";
-  if (tickerLength > 26) return "clamp(14px,1.95dvh,22px)";
-  if (tickerLength > 20) return "clamp(16px,2.2dvh,25px)";
-  return "clamp(18px,2.45dvh,28px)";
+  if (tickerLength > 38) return "clamp(11px,1.5dvh,17px)";
+  if (tickerLength > 32) return "clamp(12px,1.7dvh,19px)";
+  if (tickerLength > 26) return "clamp(13px,1.9dvh,21px)";
+  if (tickerLength > 20) return "clamp(15px,2.12dvh,24px)";
+  return "clamp(17px,2.35dvh,27px)";
 }
 
-export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerStyle, stageLabel, totalMarkerSlots = GAME.regulationPens, hideStageLabel = false, sharePreview = false, username = "", usernameEnabled = false }) {
+export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerStyle, tickerTeam = null, stageLabel, totalMarkerSlots = GAME.regulationPens, hideStageLabel = false, sharePreview = false, username = "", usernameEnabled = false }) {
   const scoreboardHeight = `calc((100dvh - ${MC_SELECTION_LAYOUT.topBarHeight}px) * ${MC_SELECTION_LAYOUT.scoreboardRatio})`;
   const tickerPercent = MC_SELECTION_LAYOUT.tickerRatio * 100;
   const heightClass = sharePreview ? "h-[22%]" : "";
@@ -100,14 +100,21 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
 
       <div
         data-share-flash="true"
-        className="relative flex w-full items-center justify-center overflow-hidden px-[3%] text-center home-copy-bold font-black uppercase leading-none tracking-[0.085em] shadow-[inset_0_1px_5px_rgba(255,255,255,0.06)]"
-        style={{ height: `${tickerPercent}%`, minHeight: "44px", ...tickerStyle }}
+        className="relative grid w-full place-items-center overflow-hidden px-[3%] text-center uppercase tracking-[0.085em] shadow-[inset_0_1px_5px_rgba(255,255,255,0.06)]"
+        style={{
+          height: `${tickerPercent}%`,
+          minHeight: 0,
+          fontFamily: '"SportsDINRegular", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          fontWeight: 700,
+          lineHeight: 1,
+          ...tickerStyle,
+        }}
       >
         <span
-          className="absolute inset-0 flex items-center justify-center overflow-hidden px-[2%] text-center leading-none"
-          style={{ fontSize: tickerFontSize, lineHeight: 1, transform: "translateY(-0.10em)" }}
+          className="absolute inset-x-[3%] top-1/2 block max-w-[94%] -translate-y-1/2 overflow-hidden truncate whitespace-nowrap text-center leading-none [text-wrap:nowrap]"
+          style={{ fontSize: tickerFontSize, lineHeight: 1, textOverflow: "ellipsis" }}
         >
-          <span className="block max-w-full overflow-hidden truncate whitespace-nowrap text-center leading-none [text-wrap:nowrap]" style={{ textOverflow: "ellipsis", lineHeight: 1 }}>{tickerCopy}</span>
+          {tickerCopy}
         </span>
       </div>
     </section>

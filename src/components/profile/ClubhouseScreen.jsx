@@ -716,7 +716,7 @@ function NicknameEditor({
 function ClubhouseRegisterAuthOverlay({ onClose, onAuthComplete }) {
   return (
     <div
-      className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/72 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[6px]"
+      className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/45 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[4px]"
       style={{ zIndex: 2147483647 }}
     >
       <button
@@ -763,12 +763,12 @@ function defaultShirtName(currentUser, displayName) {
       displayName ||
         currentUser?.displayName ||
         currentUser?.email?.split("@")[0] ||
-        "MONDAY",
+        "GUEST",
     )
       .replace(/[^a-z0-9 ]/gi, "")
       .trim()
       .toUpperCase()
-      .slice(0, 14) || "MONDAY"
+      .slice(0, 14) || "GUEST"
   );
 }
 
@@ -855,10 +855,10 @@ function ClubhouseShirtCard({
       <button
         type="button"
         onClick={onEdit}
-        className="mt-4 grid h-[118px] w-[118px] place-items-center rounded-[0.45rem] border-[6px] border-[#F5F1E8] bg-[#F5F1E8] shadow-[0_8px_18px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.42)] transition-transform active:scale-[0.99]"
+        className="mt-4 grid h-[118px] w-[118px] place-items-center rounded-[0.45rem] border-[5px] border-[#031B12] bg-[#031B12] p-[3px] shadow-[0_8px_18px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.42)] transition-transform active:scale-[0.99]"
         aria-label="Edit shirt design"
       >
-        <div className="grid h-full w-full place-items-center overflow-hidden rounded-[0.16rem] border-[3px] border-[#031B12] bg-[#073B26]">
+        <div className="grid h-full w-full place-items-center overflow-hidden rounded-[0.16rem] border-[5px] border-[#F5F1E8] bg-[#073B26]">
           <ShirtThumbnailPreview>
           <ShirtPosterPreview
             shirtTeam={shirt.team || ""}
@@ -875,12 +875,16 @@ function ClubhouseShirtCard({
             shirtNumberColour={
               shirt.numberColour || shirt.textColour || "#F5F1E8"
             }
-            shirtOutlineEnabled={false}
-            shirtOutlineColour="#F5F1E8"
+            shirtOutlineEnabled={Number(shirt.nameOutlineWidth || 0) > 0}
+            shirtNumberOutlineEnabled={Number(shirt.numberOutlineWidth || 0) > 0}
+            shirtOutlineColour={shirt.outlineColour || "#F5F1E8"}
+            shirtPatternMode={shirt.patternMode || "plain"}
+            shirtPatternColour={shirt.patternColour || "#FFFFFF"}
             shirtFontWeight="900"
             shirtFontStyle="normal"
             shirtFontType="bold"
-            shirtOutlineWeight={0}
+            shirtOutlineWeight={Math.max(0, Number(shirt.nameOutlineWidth || 0))}
+            shirtNumberOutlineWeight={Math.max(0, Number(shirt.numberOutlineWidth || 0))}
             shirtMondayScale={composition.mondayScale ?? 1.18}
             shirtNameScale={composition.nameScale ?? 1.18}
             shirtNumberScale={composition.numberScale ?? 1.58}

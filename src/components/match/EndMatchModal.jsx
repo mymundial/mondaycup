@@ -19,6 +19,55 @@ import {
 } from "../../utils/shareExport.js";
 import { TEAM_RANK } from "../../data/teams.js";
 
+const FIXTURE_VENUES = {
+  73: "Los Angeles Stadium",
+  74: "Houston Stadium",
+  75: "Boston Stadium",
+  76: "Estadio Monterrey",
+  77: "Dallas Stadium",
+  78: "New York New Jersey Stadium",
+  79: "Mexico City Stadium",
+  80: "Atlanta Stadium",
+  81: "Seattle Stadium",
+  82: "San Francisco Bay Area Stadium",
+  83: "Los Angeles Stadium",
+  84: "Toronto Stadium",
+  85: "BC Place Vancouver",
+  86: "Dallas Stadium",
+  87: "Miami Stadium",
+  88: "Kansas City Stadium",
+  89: "Houston Stadium",
+  90: "Philadelphia Stadium",
+  91: "New York New Jersey Stadium",
+  92: "Mexico City Stadium",
+  93: "Dallas Stadium",
+  94: "Seattle Stadium",
+  95: "Atlanta Stadium",
+  96: "BC Place Vancouver",
+  97: "Boston Stadium",
+  98: "Los Angeles Stadium",
+  99: "Miami Stadium",
+  100: "Kansas City Stadium",
+  101: "Dallas Stadium",
+  102: "Atlanta Stadium",
+  103: "Miami Stadium",
+  104: "New York New Jersey Stadium",
+};
+
+function fixtureVenueName(matchNo, fixture = {}, result = {}) {
+  const fixtureMeta = result?.fixture || {};
+  return String(
+    result?.stadium ||
+    result?.venue ||
+    fixture?.stadium ||
+    fixture?.venue ||
+    fixtureMeta?.stadium ||
+    fixtureMeta?.venue ||
+    FIXTURE_VENUES[Number(matchNo)] ||
+    ""
+  ).trim();
+}
+
 function CloseIcon({ className = "h-7 w-7" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
@@ -66,7 +115,43 @@ function TrophyIcon({ className = "h-6 w-6" }) {
   );
 }
 
+function RewardNoticeDot() {
+  return (
+    <span
+      className="absolute right-[clamp(7px,1.8vw,10px)] top-[clamp(7px,1.8vw,10px)] h-[clamp(9px,2.5vw,12px)] w-[clamp(9px,2.5vw,12px)] rounded-full border-2 border-[#072D1D] bg-[#F7D117] shadow-[0_0_9px_rgba(247,209,23,0.9)]"
+      aria-hidden="true"
+    />
+  );
+}
 
+
+function AdvanceIcon({ className = "h-6 w-6" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M5 12h12.5" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" />
+      <path d="M13 6.75L18.25 12 13 17.25" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+
+
+function getEndModalResultTitle(result) {
+  const status = normalizeResultStatus(result?.status);
+  const matchNo = Number(result?.matchNo || result?.fixture?.matchNo || 0);
+  const won = Boolean(result?.won || result?.userWon);
+  const draw = Boolean(result?.isDraw || Number(result?.homeGoals) === Number(result?.awayGoals));
+
+  if (matchNo === 104) return won || status === RESULT_STATUS.CHAMPION ? "CHAMPIONS" : "RUNNER-UP";
+  if (matchNo === 103) return won || status === RESULT_STATUS.THIRD_PLACE ? "THIRD-PLACE" : "DEFEAT";
+  if (status === RESULT_STATUS.CHAMPION) return "CHAMPIONS";
+  if (status === RESULT_STATUS.RUNNER_UP) return "RUNNER-UP";
+  if (status === RESULT_STATUS.THIRD_PLACE) return "THIRD-PLACE";
+  if (status === RESULT_STATUS.QUALIFIED || status === RESULT_STATUS.KNOCKOUT_WIN) return "QUALIFIED";
+  if (status === RESULT_STATUS.ELIMINATED || status === RESULT_STATUS.THIRD_PLACE_PENDING || status === RESULT_STATUS.FOURTH_PLACE) return "ELIMINATED";
+  if (draw) return "DRAW";
+  return won ? "VICTORY" : "DEFEAT";
+}
 
 function getCampaignPointsTotal({ result, groupRows = [], userTeam = null, userForm = [] }) {
   const directValue = result?.campaignPoints ?? result?.pointsTotal ?? result?.leaderboardPoints ?? result?.totalPoints;
@@ -93,7 +178,7 @@ function FormTracker({ form = [], className = "" }) {
   };
 
   return (
-    <div className={`flex min-w-0 items-center justify-center gap-[clamp(2px,0.65vw,4px)] ${className}`}>
+    <div className={`flex min-w-0 items-center justify-center gap-[clamp(7px,2.1vw,11px)] ${className}`}>
       {Array.from({ length: 8 }).map((_, index) => (
         <span key={index} className={`block shrink-0 rounded-full ${ledClass(form[index])}`} style={{ height: "var(--result-rail-size)", width: "var(--result-rail-size)" }} />
       ))}
@@ -280,38 +365,43 @@ function getResultShareState({ result, userTeam, stageLabel, userForm = [], grou
 }
 
 
-function StandingsMiniTable({ rows = [], qualifiedTeams = new Set(), userTeam = null }) {
+function StandingsMiniTable({ title = "GROUP", rows = [], qualifiedTeams = new Set(), userTeam = null, actions = null }) {
   if (!rows.length) return null;
 
   const tableColumns = "20px 30px minmax(0, 1fr) 14px 18px 18px 18px 18px 20px 24px";
   const tightTeamStyle = (team) => (/bosnia/i.test(team || "") ? { letterSpacing: "-0.02em" } : undefined);
 
   return (
-    <div className="mt-0 overflow-visible">
-      <div className="grid gap-[3px] px-2 pb-[2px] text-center text-[9px] home-copy-regular uppercase tracking-[0.08em] text-[#F5F1E8]" style={{ gridTemplateColumns: tableColumns }}>
-        <span>#</span><span className="text-center">TEAM</span><span aria-hidden="true" /><span aria-hidden="true" /><span>P</span><span>W</span><span>D</span><span>L</span><span>GD</span><span>Pts</span>
+    <div className="mt-0 overflow-visible rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2 pb-1.5 pt-2 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]">
+      <div className="mb-2 text-center home-copy-bold text-[clamp(15px,4.1vw,19px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">
+        {title}
+      </div>
+      <div className="grid gap-[3px] px-2 pb-[4px] pt-1 text-center text-[9px] home-copy-bold uppercase leading-none tracking-[0.1em] text-[#F5F1E8]/72 tabular-nums" style={{ gridTemplateColumns: tableColumns }}>
+        <span>#</span><span className="text-center">TEAM</span><span aria-hidden="true" /><span aria-hidden="true" /><span>P</span><span>W</span><span>D</span><span>L</span><span>GD</span><span>PTS</span>
       </div>
       {rows.map((row, index) => {
         const isUser = row.team === userTeam;
         const isQualified = qualifiedTeams.has(row.team);
         return (
-          <div key={row.team} className={`mb-1 grid items-center gap-[3px] rounded-xl border px-2 py-[5px] text-center text-[12px] leading-none last:mb-0 ring-1 ${isUser ? "border-[#F7D117]/70 bg-[#072D1D] text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10),0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "border-[#F5F1E8]/65 bg-[#F5F1E8] text-[#26352E] ring-[#F5F1E8]/18"}`} style={{ gridTemplateColumns: tableColumns }}>
-            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{index + 1}</span>
+          <div key={row.team} className={`mb-1 grid items-center gap-[3px] rounded-xl border px-2 py-[5px] text-center text-[12px] leading-none last:mb-0 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)] tabular-nums ${isUser ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10),0_6px_14px_rgba(0,0,0,0.10)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"}`} style={{ gridTemplateColumns: tableColumns }}>
+            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`}>{index + 1}</span>
             <span className="flex justify-center"><Flag team={row.team} className={`h-4 w-6 rounded-[4px] ring-1 ${isUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></span>
-            <span className={`min-w-0 truncate pl-2 text-left uppercase home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#26352E]"}`} style={tightTeamStyle(row.team)}>{row.team}</span>
-            <span className={`flex h-full items-center justify-center text-[12px] home-copy-bold font-black leading-none ${isUser ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{isQualified ? "Q" : ""}</span>
-            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.played}</span>
-            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.won}</span>
-            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.drawn}</span>
-            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.lost}</span>
-            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : ""}`}>{row.gd}</span>
-            <span className={`home-copy-bold ${isUser ? "text-[#F7D117]" : ""}`}>{row.pts}</span>
+            <span className={`min-w-0 truncate pl-2 text-left uppercase home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`} style={tightTeamStyle(row.team)}>{row.team}</span>
+            <span className={`flex h-full items-center justify-center text-[10px] home-copy-bold font-black leading-none ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]/72"}`}>{isQualified ? "Q" : ""}</span>
+            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`}>{row.played}</span>
+            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`}>{row.won}</span>
+            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`}>{row.drawn}</span>
+            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`}>{row.lost}</span>
+            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`}>{row.gd}</span>
+            <span className={`home-copy-bold ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`}>{row.pts}</span>
           </div>
         );
       })}
+      {actions}
     </div>
   );
 }
+
 
 function ChampionConfetti({ count = 92 }) {
   const pieces = useMemo(() => Array.from({ length: count }, (_, index) => ({
@@ -377,6 +467,12 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   const resultShareState = useMemo(() => getResultShareState({ result, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username }), [result, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username]);
   const resultActionButtonClass = "mx-auto grid h-[clamp(48px,5.6dvh,66px)] min-h-[48px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(14px,2dvh,23px)] font-black uppercase leading-none tracking-[0.14em] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
   const resultIconButtonClass = "grid h-[clamp(48px,5.6dvh,66px)] min-h-[48px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.22),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
+  const resultSquareButtonClass = "grid h-[40px] min-h-[40px] w-full place-items-center rounded-[0.85rem] border border-[#F5F1E8]/45 bg-[#F7D117] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.22),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
+  const resultControlGridClass = "mt-4 grid grid-cols-4 items-center justify-items-stretch gap-2";
+  const resultMetricBoxClass = "inline-flex h-[44px] min-h-[44px] min-w-[70px] items-center justify-center rounded-[0.9rem] border border-[#F7D117]/35 bg-[#031B12]/62 px-3 text-center shadow-[0_8px_18px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/18";
+  const resultFormGuideBoxClass = "inline-flex h-[44px] min-w-0 items-center justify-center rounded-[0.9rem] border border-[#F7D117]/35 bg-[#031B12]/62 px-3 text-center shadow-[0_8px_18px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/18";
+  const resultHeaderStatsClass = "flex min-w-0 max-w-full items-center justify-center gap-2 overflow-hidden";
+  const resultHeaderScoreClass = `${resultMetricBoxClass} shrink-0 font-led text-[clamp(18px,5.3vw,24px)] font-black uppercase leading-none tracking-[0.08em] text-[#F7D117] led-text-glow tabular-nums`;
 
   const buildShareBlob = () => {
     if (!shareFrameRef.current) throw new Error("Match share exporter was not ready");
@@ -435,12 +531,39 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
 
 
 
-  const headerTitle = sharePreviewOpen ? "SHARE" : normaliseThirdPlaceCopy(modalHeaderTitle({ isKnockout, stageLabel, selectedGroup }));
-  const ResultNavIcon = hasNewTrophy && onOpenTrophies ? TrophyIcon : MenuIcon;
-  const handleResultNav = hasNewTrophy && onOpenTrophies ? onOpenTrophies : onOpenMenu;
+  const groupTitleSuffix = String(selectedGroup || result?.group || result?.groupId || "").replace(/^GROUP\s*/i, "").trim();
+  const groupBoxTitle = groupTitleSuffix ? `GROUP ${groupTitleSuffix}` : "GROUP";
+  const knockoutRoundTitle = normaliseThirdPlaceCopy(modalHeaderTitle({ isKnockout: true, stageLabel, selectedGroup }));
+  const knockoutMatchNo = Number(result?.matchNo || fixture?.matchNo || result?.fixture?.matchNo || 0);
+  const rawKnockoutMatchId = String(result?.matchId || fixture?.matchId || fixture?.id || "").trim().toUpperCase();
+  const knockoutMatchLabel = knockoutMatchNo
+    ? `MATCH ${knockoutMatchNo}`
+    : rawKnockoutMatchId.replace(/^M(\d+)$/i, "MATCH $1");
+  const knockoutStadium = fixtureVenueName(knockoutMatchNo, fixture, result);
+  const resultBoxTitle = getEndModalResultTitle(result);
+  const headerTitle = sharePreviewOpen ? "SHARE" : resultBoxTitle;
+  const showRewardDot = Boolean(hasNewTrophy);
+  const handleResultNav = onOpenMenu;
+  const resultControls = (
+    <div className={resultControlGridClass}>
+      <button type="button" onClick={handleResultNav || onDismiss} className={resultSquareButtonClass} aria-label="Open menu">
+        <MenuIcon />
+      </button>
+      <button type="button" onClick={onOpenTrophies || handleResultNav || onDismiss} className={`${resultSquareButtonClass} relative`} aria-label="Open sticker book">
+        <TrophyIcon />
+        {showRewardDot && <RewardNoticeDot />}
+      </button>
+      <button type="button" onClick={openSharePreview} disabled={!canShareResult || shareBusy} className={resultSquareButtonClass} aria-label="Share result">
+        <ShareIcon />
+      </button>
+      <button type="button" onClick={onNext} disabled={false} className={resultSquareButtonClass} aria-label={modalButton(result)}>
+        <AdvanceIcon />
+      </button>
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#031B12]/78 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[7px]">
+    <div className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/45 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[4px]" style={{ zIndex: 2147483647 }}>
       {activeBadgeMode === PODIUM_BADGE_MODE.CHAMPION && <ChampionConfetti />}
       <div className="pointer-events-none fixed left-[-10000px] top-0 h-[400px] w-[400px] overflow-hidden" aria-hidden="true">
         <div ref={shareFrameRef} data-share-layout="match" className="h-full w-full overflow-hidden bg-[#0d6c3d]">
@@ -448,13 +571,14 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
         </div>
       </div>
 
-      <div className="relative z-[1] flex w-full max-w-sm flex-col items-stretch">
+      <div className="relative z-[1] flex w-full max-w-[408px] flex-col items-stretch">
         {!sharePreviewOpen && (
-          <div className="mb-2 flex justify-center" style={{ "--result-rail-size": "clamp(12px,3.4vw,18px)" }}>
-            <FormTracker form={userForm} />
+          <div className="mb-3 flex justify-center px-2" aria-label="Game score">
+            <div className={resultHeaderScoreClass}>
+              {Number(campaignPointsTotal || 0)}
+            </div>
           </div>
         )}
-
         <div
           className="relative w-full overflow-hidden rounded-[2rem] border border-[#F5F1E8]/14 text-center text-[#F5F1E8] shadow-[0_24px_54px_rgba(0,0,0,0.36),inset_0_-2px_6px_rgba(0,0,0,0.08)]"
           style={{
@@ -475,72 +599,70 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
                   <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="h-10 w-10 object-contain drop-shadow-[0_5px_8px_rgba(0,0,0,0.3)]" draggable={false} />
                 </div>
               )}
-              <div className="home-copy-bold self-center text-center text-[clamp(20px,5.4vw,25px)] uppercase leading-none tracking-[0.1em] text-[#F5F1E8]">{headerTitle}</div>
-              <button type="button" onClick={onDismiss} aria-label="Close result" className="grid h-10 w-10 place-items-center justify-self-end rounded-[0.85rem] bg-[#031B12]/46 text-[#F5F1E8]">
+              <div className="flex min-w-0 items-center justify-center self-center overflow-hidden">
+                {sharePreviewOpen ? (
+                  <div className="home-copy-bold text-center text-[clamp(20px,5.4vw,25px)] uppercase leading-none tracking-[0.1em] text-[#F5F1E8]">{headerTitle}</div>
+                ) : (
+                  <div className={resultFormGuideBoxClass} style={{ "--result-rail-size": "clamp(13px,3.4vw,18px)" }} aria-label={`Result: ${resultBoxTitle}. Form guide`}>
+                    <FormTracker form={userForm} className="gap-[clamp(8px,2.4vw,13px)]" />
+                  </div>
+                )}
+              </div>
+              <button type="button" onClick={onDismiss} aria-label="Close result" className="grid h-10 w-10 place-items-center justify-self-end text-[#F5F1E8]">
                 <CloseIcon className="h-6 w-6" />
               </button>
             </div>
 
-            <div className="rounded-[1.35rem] border border-[#F5F1E8]/12 bg-[#031B12]/24 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-              <div className="mb-2 grid min-h-[36px] grid-cols-[34px_minmax(0,1fr)_34px] items-center gap-2 rounded-[1rem] border border-[#F5F1E8]/10 bg-[#052D1D]/58 px-2 py-1.5">
-                <div className="grid h-8 w-8 place-items-center justify-self-start">
-                  <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="h-8 w-8 object-contain" draggable={false} />
+            {sharePreviewOpen ? (
+              <div className="rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 p-2.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]">
+                <div className="space-y-2.5">
+                  <div className="mx-auto aspect-square w-full overflow-hidden rounded-[1.1rem] border border-[#F5F1E8]/10 bg-[#0d6c3d] shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" data-share-layout="match-preview-modal">
+                    {sharePreviewUrl ? (
+                      <img src={sharePreviewUrl} alt="Monday Cup result preview" className="h-full w-full object-cover" draggable={false} />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center px-6 text-center home-copy-bold text-[13px] uppercase tracking-[0.14em] text-[#F5F1E8]">Preparing preview</div>
+                    )}
+                  </div>
+                  <button type="button" onClick={handleShare} disabled={shareBusy} className={resultActionButtonClass}>
+                    {shareBusy ? "PREPARING" : "SAVE AS PHOTO"}
+                  </button>
                 </div>
-                <div className="home-copy-bold truncate text-center text-[11px] uppercase leading-none tracking-[0.12em] text-[#F7D117]">{headerTitle}</div>
-                <button type="button" onClick={onDismiss} aria-label="Close result" className="grid h-8 w-8 place-items-center justify-self-end rounded-[0.7rem] bg-[#031B12]/44 text-[#F5F1E8]">
-                  <CloseIcon className="h-5 w-5" />
-                </button>
               </div>
-
-              <div className="max-h-[calc(100dvh-238px)] overflow-y-auto">
-                {!sharePreviewOpen && (isKnockout ? (
-                  <div className={`rounded-[1.25rem] px-2.5 py-3 ${userInKnockout ? "border border-[#F7D117]/70 bg-[#072D1D] text-[#F5F1E8] ring-1 ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10),0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" : "bg-[#F5F1E8]/90 text-[#26352E] ring-1 ring-[#F5F1E8]/10"}`}>
-                    <div className={`grid min-h-[32px] grid-cols-[24px_minmax(0,1fr)_32px_minmax(0,1fr)_24px] items-center gap-1 home-main-font text-[clamp(13px,3.4vw,15px)] uppercase leading-none ${userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`}>
-                      <div className="flex items-center justify-center"><Flag team={result.home} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${homeIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
-                      <span className={`block min-w-0 truncate text-center home-copy-regular ${homeIsUser ? "text-[#F7D117]" : userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(result.home)} title={result.home}>{result.home}</span>
-                      <span className={`flex items-center justify-center home-copy-bold tabular-nums leading-none ${userInKnockout ? "text-[#F5F1E8]" : "text-[#0B5F35]"}`}>{result.homeGoals}-{result.awayGoals}</span>
-                      <span className={`block min-w-0 truncate text-center home-copy-regular ${awayIsUser ? "text-[#F7D117]" : userInKnockout ? "text-[#F5F1E8]" : "text-[#26352E]"}`} style={tightTeamStyle(result.away)} title={result.away}>{result.away}</span>
-                      <div className="flex items-center justify-center"><Flag team={result.away} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${awayIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
+            ) : (
+              <>
+                <div className="max-h-[calc(100dvh-292px)] overflow-y-auto pb-1">
+                  {isKnockout ? (
+                    <div className="rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2.5 pb-1.5 pt-2.5 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]">
+                      <div className="mb-2 text-center home-copy-bold text-[clamp(15px,4.1vw,19px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">
+                        {knockoutRoundTitle}
+                      </div>
+                      <div className={`grid min-h-[70px] grid-rows-[30%_40%_30%] rounded-[1.1rem] border px-2.5 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)] ${userInKnockout ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10),0_6px_14px_rgba(0,0,0,0.10)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"}`}>
+                        {knockoutMatchLabel && (
+                          <div className={`flex items-end justify-center self-stretch pb-[3px] text-center home-copy-bold text-[clamp(10px,2.8vw,12px)] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]`}>
+                            {knockoutMatchLabel}
+                          </div>
+                        )}
+                        <div className="grid min-h-0 grid-cols-[24px_minmax(0,1fr)_32px_minmax(0,1fr)_24px] items-center gap-1 self-stretch home-main-font text-[clamp(13px,3.4vw,15px)] uppercase leading-none text-[#F5F1E8]">
+                          <div className="flex items-center justify-center"><Flag team={result.home} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${homeIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
+                          <span className={`block min-w-0 truncate text-center home-copy-regular ${homeIsUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`} style={tightTeamStyle(result.home)} title={result.home}>{result.home}</span>
+                          <span className="flex items-center justify-center home-copy-bold tabular-nums leading-none text-[#F5F1E8]">{result.homeGoals}-{result.awayGoals}</span>
+                          <span className={`block min-w-0 truncate text-center home-copy-regular ${awayIsUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`} style={tightTeamStyle(result.away)} title={result.away}>{result.away}</span>
+                          <div className="flex items-center justify-center"><Flag team={result.away} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${awayIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
+                        </div>
+                        {knockoutStadium && (
+                          <div className={`flex items-start justify-center self-stretch pt-[3px] text-center home-copy-regular text-[clamp(10px,2.8vw,12px)] uppercase leading-none tracking-[0.14em] ${userInKnockout ? "text-[#F5F1E8]" : "text-[#F5F1E8]/72"}`}>
+                            {knockoutStadium}
+                          </div>
+                        )}
+                      </div>
+                      {resultControls}
                     </div>
-                  </div>
-                ) : (
-                  <StandingsMiniTable rows={groupRows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />
-                ))}
-
-                {sharePreviewOpen ? (
-                  <div className="space-y-2.5">
-                    <div className="mx-auto aspect-square w-full overflow-hidden rounded-[1.1rem] border border-[#F5F1E8]/10 bg-[#0d6c3d] shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" data-share-layout="match-preview-modal">
-                      {sharePreviewUrl ? (
-                        <img src={sharePreviewUrl} alt="Monday Cup result preview" className="h-full w-full object-cover" draggable={false} />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center px-6 text-center home-copy-bold text-[13px] uppercase tracking-[0.14em] text-[#F5F1E8]">Preparing preview</div>
-                      )}
-                    </div>
-                    <button type="button" onClick={handleShare} disabled={shareBusy} className={resultActionButtonClass}>
-                      {shareBusy ? "PREPARING" : "SAVE AS PHOTO"}
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[1rem] border border-[#F7D117]/30 bg-[#031B12]/42 px-3 py-3 text-left">
-                      <div className="home-copy-bold text-[10px] uppercase tracking-[0.12em] text-[#F5F1E8]/72">Game score</div>
-                      <div className="home-copy-bold text-[24px] uppercase leading-none tracking-[0.08em] text-[#F7D117] tabular-nums">{Number(campaignPointsTotal || 0)}</div>
-                    </div>
-                    <div className="mt-2.5 grid grid-cols-[54px_minmax(0,1fr)_54px] items-center gap-2.5">
-                      <button type="button" onClick={openSharePreview} disabled={!canShareResult || shareBusy} className={resultIconButtonClass} aria-label="Share result">
-                        <ShareIcon />
-                      </button>
-                      <button type="button" onClick={onNext} disabled={false} className={resultActionButtonClass}>
-                        {modalButton(result)}
-                      </button>
-                      <button type="button" onClick={handleResultNav || onDismiss} className={resultIconButtonClass} aria-label={hasNewTrophy ? "Open trophies" : "Open menu"}>
-                        <ResultNavIcon />
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
+                  ) : (
+                    <StandingsMiniTable title={groupBoxTitle} rows={groupRows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} actions={resultControls} />
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

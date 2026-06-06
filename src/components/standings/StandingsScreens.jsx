@@ -246,7 +246,15 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
 
   return (
     <div className="mx-auto w-full max-w-full overflow-hidden px-2 text-[#F5F1E8]">
-      <div className={`mx-auto flex w-[94%] flex-col gap-2 rounded-[1.6rem] border border-[#F5F1E8]/12 ${STANDINGS_SECTION_BG} px-2 py-3 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F5F1E8]/10`}>
+      <div
+        className={`relative mx-auto flex w-[94%] flex-col gap-2 overflow-hidden rounded-none border-2 border-[#F5F1E8]/88 ${STANDINGS_SECTION_BG} px-2 py-3 shadow-[inset_0_0_0_1px_rgba(245,241,232,0.22),inset_0_1px_0_rgba(245,241,232,0.12)]`}
+      >
+        <span aria-hidden="true" className="pointer-events-none absolute left-0 right-0 top-1/2 z-0 h-px -translate-y-1/2 bg-[#F5F1E8]/88" />
+        <span aria-hidden="true" className="pointer-events-none absolute -left-[15px] -top-[15px] z-0 h-[30px] w-[30px] rounded-full border border-[#F5F1E8]/88" />
+        <span aria-hidden="true" className="pointer-events-none absolute -right-[15px] -top-[15px] z-0 h-[30px] w-[30px] rounded-full border border-[#F5F1E8]/88" />
+        <span aria-hidden="true" className="pointer-events-none absolute -bottom-[15px] -left-[15px] z-0 h-[30px] w-[30px] rounded-full border border-[#F5F1E8]/88" />
+        <span aria-hidden="true" className="pointer-events-none absolute -bottom-[15px] -right-[15px] z-0 h-[30px] w-[30px] rounded-full border border-[#F5F1E8]/88" />
+        <div className="relative z-[2] flex flex-col gap-2">
         <KnockoutRoundBand
           title="ROUND OF 32"
           fixtures={r32.slice(0, 8)}
@@ -339,6 +347,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
         />
 
 
+        </div>
       </div>
     </div>
   );

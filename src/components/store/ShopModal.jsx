@@ -257,10 +257,10 @@ export default function ShopModal({ open = false, onClose, initialItemId = null,
   };
 
   return (
-    <div className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/72 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[6px]" style={{ zIndex: 2147483647 }}>
+    <div className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/45 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[4px]" style={{ zIndex: 2147483647 }}>
       <button type="button" aria-label="Close shop" onClick={onClose} className="absolute inset-0 z-[0]" />
       <aside
-        className="pointer-events-auto relative z-[1] w-full max-w-[430px] overflow-hidden rounded-[1.7rem] border border-[#F5F1E8]/14 text-[#F5F1E8] shadow-[0_24px_54px_rgba(0,0,0,0.35)]"
+        className="pointer-events-auto relative z-[1] w-full max-w-[408px] overflow-hidden rounded-[1.7rem] border border-[#F5F1E8]/14 text-[#F5F1E8] shadow-[0_24px_54px_rgba(0,0,0,0.35)]"
         style={{
           backgroundColor: "#0B5F35",
           backgroundImage: "linear-gradient(90deg, rgba(255,255,255,0.045) 0 12.5%, rgba(0,0,0,0.075) 12.5% 25%, rgba(255,255,255,0.035) 25% 37.5%, rgba(0,0,0,0.055) 37.5% 50%, rgba(255,255,255,0.04) 50% 62.5%, rgba(0,0,0,0.06) 62.5% 75%, rgba(255,255,255,0.03) 75% 87.5%, rgba(0,0,0,0.075) 87.5% 100%)",

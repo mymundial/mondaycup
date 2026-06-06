@@ -10,14 +10,17 @@ function AuthAutofillFix() {
       .mc-auth-input-field:-webkit-autofill:hover,
       .mc-auth-input-field:-webkit-autofill:focus,
       .mc-auth-input-field:-webkit-autofill:active {
-        -webkit-box-shadow: 0 0 0 1000px ${MC_COLORS.ivory} inset !important;
-        -webkit-text-fill-color: ${MC_COLORS.greenDark} !important;
-        caret-color: ${MC_COLORS.greenDark} !important;
+        -webkit-box-shadow: 0 0 0 1000px rgba(5,45,29,0.62) inset !important;
+        -webkit-text-fill-color: ${MC_COLORS.ivory} !important;
+        caret-color: ${MC_COLORS.ivory} !important;
         transition: background-color 99999s ease-in-out 0s !important;
+      }
+      .mc-auth-input-field::placeholder {
+        color: rgba(245,241,232,0.54);
       }
       .mc-auth-input-field::selection {
         background: rgba(247, 209, 23, 0.28);
-        color: ${MC_COLORS.greenDark};
+        color: ${MC_COLORS.ivory};
       }
     `}</style>
   );
@@ -27,17 +30,56 @@ export function AuthTabs({ mode, onModeChange, onChange }) {
   const activeMode = String(mode || '').toLowerCase();
   const normalisedMode = activeMode === 'signup' || activeMode === 'sign-up' || activeMode === 'register' ? 'signup' : 'signin';
   const handleChange = (nextMode) => (onModeChange || onChange)?.(nextMode);
+  const items = [
+    { value: 'signin', label: 'SIGN IN' },
+    { value: 'signup', label: 'SIGN UP' },
+  ];
 
   return (
-    <SegmentedTabs
-      value={normalisedMode}
-      onChange={handleChange}
-      options={[
-        { value: 'signin', label: 'SIGN IN' },
-        { value: 'signup', label: 'SIGN UP' },
-      ]}
-      style={{ maxWidth: '100%', background: MC_COLORS.greenPanelSolid }}
-    />
+    <div
+      role="tablist"
+      aria-label="Authentication mode"
+      style={{
+        width: '100%',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+        gap: 4,
+        padding: 4,
+        borderRadius: 16,
+        border: '1px solid rgba(245,241,232,0.14)',
+        background: 'rgba(3,27,18,0.34)',
+        boxShadow: 'inset 0 1px 0 rgba(245,241,232,0.06), 0 8px 20px rgba(0,0,0,0.14)',
+      }}
+    >
+      {items.map((item) => {
+        const active = item.value === normalisedMode;
+        return (
+          <button
+            key={item.value}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => handleChange(item.value)}
+            className="home-copy-bold"
+            style={{
+              height: 34,
+              border: 0,
+              borderRadius: 12,
+              background: active ? MC_COLORS.yellow : 'transparent',
+              color: active ? MC_COLORS.greenDark : MC_COLORS.ivory,
+              fontSize: 13,
+              letterSpacing: '0.08em',
+              lineHeight: 1,
+              textTransform: 'uppercase',
+              boxShadow: active ? '0 0 12px rgba(247,209,23,0.24), inset 0 2px 0 rgba(255,255,255,0.26)' : 'none',
+              cursor: 'pointer',
+            }}
+          >
+            {item.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -48,21 +90,21 @@ export function AuthInput({ icon, right, rightAction, style, inputStyle, classNa
       className={className}
       style={{
         width: '100%',
-        height: '38px',
+        height: '40px',
         borderRadius: MC_SIZES.pillRadius,
-        background: MC_COLORS.ivory,
-        color: MC_COLORS.greenDark,
+        background: 'rgba(5,45,29,0.54)',
+        color: MC_COLORS.ivory,
         display: 'grid',
         gridTemplateColumns: icon ? '34px 1fr auto' : '12px 1fr auto',
         alignItems: 'center',
         padding: '0 12px 0 7px',
-        boxShadow: 'inset 0 0 0 1px rgba(6,53,31,0.10)',
+        boxShadow: 'inset 0 0 0 1px rgba(245,241,232,0.16), inset 0 1px 0 rgba(245,241,232,0.06), 0 6px 14px rgba(0,0,0,0.10)',
         overflow: 'hidden',
         ...style,
       }}
     >
       <AuthAutofillFix />
-      <div style={{ display: 'grid', placeItems: 'center', opacity: 1, color: MC_COLORS.greenDark }}>{icon}</div>
+      <div style={{ display: 'grid', placeItems: 'center', opacity: 0.82, color: MC_COLORS.ivory }}>{icon}</div>
       <input
         {...props}
         className="mc-auth-input-field"
@@ -71,8 +113,8 @@ export function AuthInput({ icon, right, rightAction, style, inputStyle, classNa
           height: '100%',
           border: 0,
           outline: 0,
-          background: MC_COLORS.ivory,
-          color: MC_COLORS.greenDark,
+          background: 'transparent',
+          color: MC_COLORS.ivory,
           fontSize: 11,
           fontWeight: 800,
           letterSpacing: '0.04em',
@@ -80,7 +122,7 @@ export function AuthInput({ icon, right, rightAction, style, inputStyle, classNa
           ...inputStyle,
         }}
       />
-      {suffix ? <div style={{ display: 'grid', placeItems: 'center', color: MC_COLORS.greenDark }}>{suffix}</div> : null}
+      {suffix ? <div style={{ display: 'grid', placeItems: 'center', color: MC_COLORS.ivory }}>{suffix}</div> : null}
     </div>
   );
 }
@@ -156,7 +198,7 @@ export function PasswordVisibilityButton({ visible = false, onToggle }) {
         placeItems: 'center',
         border: 0,
         background: 'transparent',
-        color: MC_COLORS.greenDark,
+        color: MC_COLORS.ivory,
         cursor: 'pointer',
         padding: 0,
       }}

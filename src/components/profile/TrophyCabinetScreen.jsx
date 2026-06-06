@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
 import { Flag } from "../shared.jsx";
 import PageTabs, { PageTabsSlot } from "../ui/PageTabs.jsx";
@@ -348,6 +348,11 @@ function teamHasCompletedAllStickers(progress = {}, nationCupWins = {}, team) {
 
 function groupIndexForTeam(team) {
   const foundIndex = GROUP_KEYS.findIndex((groupKey) => GROUPS[groupKey]?.includes(team));
+  return foundIndex >= 0 ? foundIndex : 0;
+}
+
+function defaultTeamIndexFor(userTeam) {
+  const foundIndex = ALL_NATIONS.indexOf(userTeam);
   return foundIndex >= 0 ? foundIndex : 0;
 }
 
@@ -851,7 +856,7 @@ function StickerBookSlot({
   const shinyFrame = Boolean(opened && ["kit", "flag", "champions", "stopper", "talisman", "striker"].includes(stickerKey));
   const shiny = shinyFrame;
   const style = buildStickerStyle({ team, shiny, opened });
-  const slotSizeClass = "aspect-[3/4] p-2.5";
+  const slotSizeClass = "aspect-[3/4] min-w-0 p-[clamp(0.45rem,2.2vw,0.625rem)]";
   const rule = stickerUnlockRule(stickerKey);
   const titleColour = opened ? (getTeamTheme(team).text || "#F5F1E8") : "#F5F1E8";
 
@@ -912,8 +917,8 @@ function TeamStickerBook({
 }) {
   return (
     <TrophySection title={<TeamStickerTitle team={team} index={index} total={total} onPrevious={onPrevious} onNext={onNext} />}>
-      <div className="mc-panel-stack rounded-[1.35rem] border border-[#F5F1E8]/10 bg-[#031B12]/72 px-3 py-4 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
-        <div className="grid grid-cols-3 items-stretch mc-panel-grid-gap">
+      <div className="mc-panel-stack rounded-[1.35rem] border border-[#F5F1E8]/10 bg-[#031B12]/72 px-[clamp(0.45rem,2.5vw,0.75rem)] py-4 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
+        <div className="grid grid-cols-3 items-stretch gap-[clamp(0.4rem,2.2vw,0.75rem)]">
           <StickerBookSlot
             label="WEAR THE SHIRT"
             team={team}
@@ -942,7 +947,7 @@ function TeamStickerBook({
             onOpenSticker={onOpenSticker}
           />
         </div>
-        <div className="grid grid-cols-3 mc-panel-grid-gap">
+        <div className="grid grid-cols-3 gap-[clamp(0.4rem,2.2vw,0.75rem)]">
           {STICKER_ROLES.map((role) => (
             <StickerBookSlot
               key={role.key}
@@ -962,11 +967,13 @@ function TeamStickerBook({
   );
 }
 
-export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWins = {}, nationStickerProgress = {}, careerStats = {}, allTeamsUnlocked = false, onOpenNationSticker }) {
+export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWins = {}, nationStickerProgress = {}, careerStats = {}, allTeamsUnlocked = false, userTeam = null, onOpenNationSticker }) {
+  const defaultTeamIndex = defaultTeamIndexFor(userTeam);
+  const defaultTeam = ALL_NATIONS[defaultTeamIndex] || ALL_NATIONS[0];
   const [trophyView, setTrophyView] = useState("player");
   const [achievementPage, setAchievementPage] = useState(0);
-  const [teamIndex, setTeamIndex] = useState(0);
-  const [groupIndex, setGroupIndex] = useState(0);
+  const [teamIndex, setTeamIndex] = useState(defaultTeamIndex);
+  const [groupIndex, setGroupIndex] = useState(() => groupIndexForTeam(defaultTeam));
 
   const playerAchievementPages = buildPlayerAchievementPages(careerStats, achievements);
   const safeAchievementPageCount = Math.max(1, playerAchievementPages.length || ACHIEVEMENT_PAGE_COUNT);
@@ -993,10 +1000,21 @@ export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWin
   const nextTeam = () => selectTeamByIndex(teamIndex + 1);
   const previousGroup = () => selectGroupByIndex(groupIndex - 1);
   const nextGroup = () => selectGroupByIndex(groupIndex + 1);
+  const handleTrophyViewChange = (nextView) => {
+    setTrophyView(nextView);
+    if (nextView === "teams") selectTeamByIndex(defaultTeamIndex);
+  };
   const selectTeam = (team) => {
     const nextIndex = ALL_NATIONS.indexOf(team);
     if (nextIndex >= 0) selectTeamByIndex(nextIndex);
   };
+  useEffect(() => {
+    if (trophyView !== "teams") {
+      setTeamIndex(defaultTeamIndex);
+      setGroupIndex(groupIndexForTeam(defaultTeam));
+    }
+  }, [defaultTeam, defaultTeamIndex, trophyView]);
+
   const activeTeam = ALL_NATIONS[teamIndex] || ALL_NATIONS[0];
   const activeTeamLocked = !teamIsPurchased(activeTeam, allTeamsUnlocked);
   const activeGroupKey = GROUP_KEYS[groupIndex] || GROUP_KEYS[0];
@@ -1006,7 +1024,7 @@ export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWin
     <main className="relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
       <ScreenTopBar {...menuProps}>TROPHIES</ScreenTopBar>
       <PageTabsSlot>
-        <TrophyToggle value={trophyView} onChange={setTrophyView} />
+        <TrophyToggle value={trophyView} onChange={handleTrophyViewChange} />
       </PageTabsSlot>
       <PageScroll className="pt-1">
         <div className="mc-panel-stack pb-4">

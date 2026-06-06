@@ -200,8 +200,13 @@ const DEFAULT_USER_SHIRT = {
   name: "",
   number: "11",
   bg: "#073B26",
+  patternMode: "plain",
+  patternColour: "#FFFFFF",
   textColour: "#F5F1E8",
   numberColour: "#F5F1E8",
+  outlineColour: "#F5F1E8",
+  nameOutlineWidth: 0,
+  numberOutlineWidth: 0,
   composition: {
     mondayScale: 1.18,
     mondayX: 0,
@@ -231,7 +236,7 @@ const cleanShirtNumber = (value, fallback = "11") =>
 
 const normaliseUserShirt = (source = {}, username = "") => {
   const shirt = source && typeof source === "object" ? source : {};
-  const name = cleanShirtName(shirt.name, username || "MONDAY");
+  const name = cleanShirtName(shirt.name, username || "GUEST");
   return {
     ...DEFAULT_USER_SHIRT,
     ...shirt,
@@ -239,9 +244,14 @@ const normaliseUserShirt = (source = {}, username = "") => {
     name,
     number: cleanShirtNumber(shirt.number, "11"),
     bg: shirt.bg || DEFAULT_USER_SHIRT.bg,
+    patternMode: shirt.patternMode || DEFAULT_USER_SHIRT.patternMode,
+    patternColour: shirt.patternColour || DEFAULT_USER_SHIRT.patternColour,
     textColour: shirt.textColour || DEFAULT_USER_SHIRT.textColour,
     numberColour:
       shirt.numberColour || shirt.textColour || DEFAULT_USER_SHIRT.numberColour,
+    outlineColour: shirt.outlineColour || DEFAULT_USER_SHIRT.outlineColour,
+    nameOutlineWidth: Math.max(0, Number(shirt.nameOutlineWidth ?? shirt.outlineWeight ?? DEFAULT_USER_SHIRT.nameOutlineWidth) || 0),
+    numberOutlineWidth: Math.max(0, Number(shirt.numberOutlineWidth ?? shirt.outlineWeight ?? DEFAULT_USER_SHIRT.numberOutlineWidth) || 0),
     composition: {
       ...DEFAULT_USER_SHIRT.composition,
       ...(shirt.composition || {}),
@@ -861,7 +871,7 @@ export async function saveUserProfile(uid, data = {}) {
 
 export async function saveUserShirtProfile(uid, shirt = {}) {
   if (!uid || !db) return;
-  const userShirt = normaliseUserShirt(shirt, shirt.name || "MONDAY");
+  const userShirt = normaliseUserShirt(shirt, shirt.name || "GUEST");
   await setDoc(
     doc(db, "users", uid),
     {

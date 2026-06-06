@@ -638,6 +638,7 @@ export function ShirtPosterPreview({
   shirtShowName = true,
   shirtShowNumber = true,
   shirtOutlineWeight = 2,
+  shirtNumberOutlineWeight = null,
   shirtMondayScale,
   shirtNameScale,
   shirtNumberScale,
@@ -673,11 +674,12 @@ export function ShirtPosterPreview({
   const numberSize = Math.max(280, Math.min(760, 430 * numberScaleValue));
   const mondayHeight = Math.max(24, Math.min(64, 38 * Number(shirtMondayScale || 1)));
   const brothersWidth = Math.max(8, Math.min(26, 14 * Number(shirtBrothersScale || 0.65)));
-  const stroke = shirtOutlineEnabled ? textStroke(shirtOutlineWeight, shirtOutlineColour) : "0 transparent";
-  const svgStrokeWidth = (shirtOutlineEnabled || shirtNumberOutlineEnabled) ? clampNumber(shirtOutlineWeight, 0, 16, 0) : 0;
+  const nameStrokeWidth = clampNumber(shirtOutlineWeight, 0, 16, 0);
+  const numberManualStrokeWidth = clampNumber(shirtNumberOutlineWeight ?? shirtOutlineWeight, 0, 16, 0);
+  const stroke = shirtOutlineEnabled ? textStroke(nameStrokeWidth, shirtOutlineColour) : "0 transparent";
   const numberStrokeEnabled = fabricTheme.numberOutlineEnabled || shirtNumberOutlineEnabled;
   const numberStrokeColour = fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineColour : shirtOutlineColour;
-  const numberStrokeWidth = fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineWidth : (shirtNumberOutlineEnabled ? svgStrokeWidth : 0);
+  const numberStrokeWidth = fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineWidth : (shirtNumberOutlineEnabled ? numberManualStrokeWidth : 0);
   const shirtFontFamily = fontFamilyFor(shirtFontType);
   const numberText = String(shirtNumber || "99").slice(0, 2);
   const doubleNumberSpacing = numberText.length > 1 ? "-0.032em" : "0em";
@@ -694,7 +696,7 @@ export function ShirtPosterPreview({
       )}
       {shirtShowName && (
         <div className="home-copy-bold absolute left-1/2 top-[30%] z-[2] w-[88%] truncate uppercase leading-none tracking-[0.06em]" style={{ color: fabricTheme.textColour, fontFamily: shirtFontFamily, fontSize: nameSize, fontWeight: shirtFontWeight, fontStyle: shirtFontStyle, WebkitTextStroke: stroke, textAlign: "center", textShadow: "0 2px 0 rgba(0,0,0,0.12)", transform: centred(shirtNameX, shirtNameY) }}>
-          {shirtName || "MONDAY"}
+          {shirtName || "GUEST"}
         </div>
       )}
       {shirtShowNumber && (

@@ -26,7 +26,7 @@ const MENU_TOP_OFFSET_PX = MC_SIZES.topBarHeight + 30;
 const MENU_SAFE_HEIGHT_OFFSET_PX = MC_SIZES.topBarHeight + 50;
 
 const MENU_FRAME =
-  "w-full max-w-[430px] overflow-hidden rounded-[1.7rem]";
+  "w-full max-w-[408px] overflow-hidden rounded-[1.7rem]";
 
 const MENU_HEADER =
   "relative mb-3 grid h-12 grid-cols-[44px_1fr_44px] items-center gap-2 px-0";
@@ -98,6 +98,42 @@ function StarIcon({ className = "" }) {
   );
 }
 
+function MenuActionIcon({ type = "default", className = "h-6 w-6" }) {
+  const common = {
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2.45,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": "true",
+  };
+  if (type === "onMatch") {
+    return <svg viewBox="0 0 24 24" className={className} {...common}><circle cx="12" cy="12" r="8" /><path d="M12 4l3 5-3 3-3-3 3-5ZM6.4 9.3l5.6 2.7-1.5 6.2M17.6 9.3L12 12l1.5 6.2" /></svg>;
+  }
+  if (type === "onFixtures") {
+    return <svg viewBox="0 0 24 24" className={className} {...common}><rect x="4" y="5" width="16" height="15" rx="2.6" /><path d="M8 3.8v3M16 3.8v3M4.8 9.2h14.4M8 13h3M13.5 13H16M8 16.5h3M13.5 16.5H16" /></svg>;
+  }
+  if (type === "onGroups") {
+    return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M5 6h14M5 12h14M5 18h14" /><path d="M8 4.6v14.8M16 4.6v14.8" /></svg>;
+  }
+  if (type === "onClubhouse") {
+    return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M4.5 20V9.5L12 4l7.5 5.5V20" /><path d="M8.5 20v-6.3h7V20M9 10.5h6" /></svg>;
+  }
+  if (type === "onTrophyCabinet") {
+    return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M8 4h8v3.5c0 2.7-1.55 4.7-4 5.35-2.45-.65-4-2.65-4-5.35V4Z" /><path d="M8.15 6H5.5v1.2c0 2.05 1.15 3.55 3.25 4.05M15.85 6h2.65v1.2c0 2.05-1.15 3.55-3.25 4.05" /><path d="M12 13v3.2M8.8 20h6.4M10 16.2h4v2.2h-4z" /></svg>;
+  }
+  if (type === "onLeaderboard") {
+    return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M6 19v-6h4v6M10 19V8h4v11M14 19v-9h4v9" /><path d="M4 20h16" /></svg>;
+  }
+  if (type === "auth") {
+    return <svg viewBox="0 0 24 24" className={className} {...common}><circle cx="12" cy="8" r="3.7" /><path d="M5.7 19.4c1-3 3.3-4.6 6.3-4.6s5.3 1.6 6.3 4.6" /></svg>;
+  }
+  if (type === "reset") {
+    return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M5.5 7.5A7.7 7.7 0 1 1 4.7 16" /><path d="M5.5 3.8v3.7h3.7" /></svg>;
+  }
+  return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
+}
+
 function AuthField({ icon, children }) {
   return (
     <label className="block text-left">
@@ -111,35 +147,31 @@ function AuthField({ icon, children }) {
   );
 }
 
-function MenuTile({ title, onClick, variant = "primary" }) {
+function MenuTile({ title, onClick, variant = "primary", iconType = "default" }) {
   const rowClass = {
     primary:
-      "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10 hover:bg-[#052D1D]/82",
+      "border-[#F5F1E8]/16 bg-[#052D1D]/72 text-[#F5F1E8] ring-[#F5F1E8]/10 hover:bg-[#052D1D]/86",
     auth:
-      "border-[#F7D117]/30 bg-[#052D1D]/68 text-[#F7D117] ring-[#F7D117]/16 hover:bg-[#052D1D]/84",
+      "border-[#F7D117]/34 bg-[#052D1D]/74 text-[#F7D117] ring-[#F7D117]/18 hover:bg-[#052D1D]/88",
     danger:
-      "border-[#B94135]/34 bg-[#B94135]/20 text-[#F5F1E8] ring-[#B94135]/16 hover:bg-[#B94135]/28",
-  }[variant] || "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10";
+      "border-[#B94135]/36 bg-[#B94135]/22 text-[#F5F1E8] ring-[#B94135]/16 hover:bg-[#B94135]/30",
+  }[variant] || "border-[#F5F1E8]/16 bg-[#052D1D]/72 text-[#F5F1E8] ring-[#F5F1E8]/10";
 
-  const iconClass = {
-    primary: "border-[#F5F1E8]/20 bg-[#031B12]/54 text-[#F5F1E8]/72",
-    auth: "border-[#F7D117]/42 bg-[#031B12]/54 text-[#F7D117]",
-    danger: "border-[#B94135]/44 bg-[#031B12]/54 text-[#F5F1E8]",
-  }[variant] || "border-[#F5F1E8]/20 bg-[#031B12]/54 text-[#F5F1E8]/72";
+  const iconClass = "border-[#F7D117]/70 bg-[#F7D117] text-[#052D1D] shadow-[inset_0_2px_0_rgba(255,255,255,0.34),0_0_12px_rgba(247,209,23,0.18)]";
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`grid min-h-[52px] w-full grid-cols-[34px_minmax(0,1fr)_22px] items-center gap-3 rounded-[1rem] border px-2 py-2 text-left shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(245,241,232,0.06)] ring-1 transition active:scale-[0.99] ${rowClass}`}
+      className={`grid min-h-[64px] w-full grid-cols-[48px_minmax(0,1fr)_34px] items-center gap-3 rounded-[1.12rem] border px-3 py-2.5 text-center shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.07)] ring-1 transition active:scale-[0.99] ${rowClass}`}
     >
-      <span className={`grid h-8 w-8 place-items-center rounded-[0.65rem] border ${iconClass}`} aria-hidden="true">
-        <span className="home-copy-bold text-[13px] leading-none">{variant === "danger" ? "!" : variant === "auth" ? "•" : ""}</span>
+      <span className={`grid h-12 w-12 place-items-center rounded-[0.9rem] border ${iconClass}`} aria-hidden="true">
+        <MenuActionIcon type={iconType} className="h-7 w-7" />
       </span>
-      <span className="min-w-0 truncate home-copy-bold text-[13px] font-black uppercase leading-none tracking-[0.08em]">
+      <span className="min-w-0 justify-self-center truncate text-center home-copy-bold text-[15px] font-black uppercase leading-none tracking-[0.08em]">
         {title}
       </span>
-      <span className="home-copy-bold justify-self-end text-[16px] leading-none text-[#F7D117]/72" aria-hidden="true">›</span>
+      <span className="home-copy-bold justify-self-end text-[34px] leading-none text-[#F7D117] drop-shadow-[0_0_8px_rgba(247,209,23,0.26)]" aria-hidden="true">›</span>
     </button>
   );
 }
@@ -448,7 +480,7 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
     return (
       <>
         <MenuHeader title="RESET PASSWORD" onClose={onClose} onBack={() => { resetMessages(); setForgotPassword(false); }} authView authLogoBack={showLogoBack} />
-        <form className="mt-2 space-y-1.5" onSubmit={handleForgotPassword}>
+        <form className="mt-3 space-y-2 rounded-[1.18rem] border border-[#F5F1E8]/14 bg-[#031B12]/34 p-3 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]" onSubmit={handleForgotPassword}>
           <AuthTextInput
             icon={<AtIcon className="h-5 w-5" />}
             value={email}
@@ -476,7 +508,7 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
         <AuthTabs mode={mode} onChange={switchMode} />
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-2 space-y-1.5">
+      <form onSubmit={handleSubmit} className="mt-3 space-y-2 rounded-[1.18rem] border border-[#F5F1E8]/14 bg-[#031B12]/34 p-3 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
         {isSignup && (
           <AuthTextInput
             icon={<StarIcon className="h-5 w-5" />}
@@ -512,9 +544,6 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
           {error || success || (loading ? "LOADING..." : isSignup ? "REGISTER" : "SIGN IN")}
         </AuthPrimaryButton>
 
-        {isSignup && (
-          <AuthEmailCommsCheckbox checked={emailOptIn} onChange={setEmailOptIn} />
-        )}
 
         {!isSignup && (
           <AuthForgotPasswordButton onClick={() => { resetMessages(); setForgotPassword(true); }}>
@@ -564,7 +593,7 @@ export function MenuDropdown({
 
   const menu = (
     <div
-      className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/72 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[6px]"
+      className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/45 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[4px]"
       style={{
         zIndex: 2147483647,
       }}
@@ -603,6 +632,7 @@ export function MenuDropdown({
                   <MenuTile
                     key={item.title}
                     title={item.title}
+                    iconType={item.action}
                     onClick={() => runAndClose(handlers[item.action], onClose)}
                   />
                 ))}
@@ -610,6 +640,7 @@ export function MenuDropdown({
                 <MenuTile
                   title={authLabel}
                   variant="auth"
+                  iconType="auth"
                   onClick={() => {
                     if (canSignOut) runAndClose(onSignOut, onClose);
                     else openAuthPanel();
@@ -618,6 +649,7 @@ export function MenuDropdown({
                 <MenuTile
                   title="RESET"
                   variant="danger"
+                  iconType="reset"
                   onClick={() => runAndClose(onRestart, onClose)}
                 />
               </div>

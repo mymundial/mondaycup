@@ -537,6 +537,14 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     return { background: activeTeam.primaryColour, color: activeTeam.textColour };
   }
 
+  function tickerTeam() {
+    const finalTeam = winnerSide === "user" ? user : winnerSide === "opponent" ? opponent : null;
+    if (phase === PHASE.FINISHED && finalTeam) return finalTeam;
+    if (phase === PHASE.FINISHED && !finalTeam) return user;
+    if (ticker === COMMENTARY.save) return defenderTeam;
+    return activeTeam;
+  }
+
   return (
     <div className="home-main-font relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#0d6c3d] text-[#f5f1e8]">
       <style>{`
@@ -552,7 +560,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
           80%, 100% { background: var(--goal-bg); color: var(--goal-fg); }
         }
       `}</style>
-      <Scoreboard userTeam={user} opponentTeam={opponent} score={score} attempts={attempts} ticker={ticker} tickerStyle={tickerStyle()} stageLabel={stageLabel} totalMarkerSlots={suddenDeathMarkerSlots} username={username} usernameEnabled={Boolean(username)} />
+      <Scoreboard userTeam={user} opponentTeam={opponent} score={score} attempts={attempts} ticker={ticker} tickerStyle={tickerStyle()} tickerTeam={tickerTeam()} stageLabel={stageLabel} totalMarkerSlots={suddenDeathMarkerSlots} username={username} usernameEnabled={Boolean(username)} />
       {/* Launch build: temporary result/debug buttons hidden. */}
       <Pitch ballPoint={ballPoint} keeperPoint={keeperPoint} shot={shot} shotActive={shotActive} activeTeam={activeTeam} defenderTeam={defenderTeam} showAim={showAim} aimDirection={aimDirection} assets={mergedAssets} stageLabel={stageLabel} showChampionsBadge={showChampionsBadge} podiumBadgeMode={podiumBadgeMode} hideMatchActors={hideMatchActors} />
       <ControlOverlay
