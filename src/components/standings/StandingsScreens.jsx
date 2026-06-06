@@ -247,7 +247,7 @@ function KnockoutBracket({ round32 = [], podium = {}, userTeam = null }) {
   return (
     <div className="mx-auto w-full max-w-full overflow-hidden px-2 text-[#F5F1E8]">
       <div
-        className={`relative mx-auto flex w-[94%] flex-col gap-2 overflow-hidden rounded-none border-2 border-[#F5F1E8]/88 ${STANDINGS_SECTION_BG} px-2 py-3 shadow-[inset_0_0_0_1px_rgba(245,241,232,0.22),inset_0_1px_0_rgba(245,241,232,0.12)]`}
+        className={`relative mx-auto flex w-[94%] flex-col overflow-hidden rounded-none border-2 border-[#F5F1E8]/88 ${STANDINGS_SECTION_BG} px-2 py-3 shadow-[inset_0_0_0_1px_rgba(245,241,232,0.22),inset_0_1px_0_rgba(245,241,232,0.12)]`}
       >
         <span aria-hidden="true" className="pointer-events-none absolute left-0 right-0 top-1/2 z-0 h-px -translate-y-1/2 bg-[#F5F1E8]/88" />
         <span aria-hidden="true" className="pointer-events-none absolute -left-[15px] -top-[15px] z-0 h-[30px] w-[30px] rounded-full border border-[#F5F1E8]/88" />
@@ -374,7 +374,7 @@ export function GroupsScreen({ allGroups, menuProps, standingsView, onStandingsV
     return () => cancelAnimationFrame(frame);
   }, [scrollTarget.key, scrollTarget.align, standingsView, knockoutFixtures.length, userTeam, userGroup, allGroups.length]);
 
-  return <main className="relative z-[1] flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden text-[#F5F1E8]"><ScreenTopBar {...menuProps}>STANDINGS</ScreenTopBar><PageTabsSlot><FixturesToggle value={standingsView} onChange={onStandingsViewChange} labels={["GROUPS", "BRACKET"]} /></PageTabsSlot><PageScroll ref={scrollRef} className="pt-1"><div className="space-y-2.5 pb-4">
+  return <main className="relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]"><ScreenTopBar {...menuProps}>STANDINGS</ScreenTopBar><PageTabsSlot><FixturesToggle value={standingsView} onChange={onStandingsViewChange} labels={["GROUPS", "BRACKET"]} /></PageTabsSlot><PageScroll ref={scrollRef} className="pt-1"><div className="space-y-2.5 pb-4">
     {standingsView === "group" && allGroups.map(({ group, rows }) => <div key={group} ref={(node) => { if (node) groupRefs.current[group] = node; }}><GroupTable title={`GROUP ${group}`} rows={rows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} /></div>)}
     {standingsView === "knockout" && <KnockoutBracket round32={knockoutFixtures} podium={podium} userTeam={userTeam} />}
   </div></PageScroll></main>;

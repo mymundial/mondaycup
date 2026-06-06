@@ -245,7 +245,7 @@ export function FixturesScreen({ fixtureView, onFixtureViewChange, schedule, men
   };
 
   return (
-    <main className="relative z-[1] flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden text-[#F5F1E8]">
+    <main className="relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
       <ScreenTopBar {...menuProps}>SCHEDULE</ScreenTopBar>
       <PageTabsSlot>
         <FixturesToggle value={fixtureView} onChange={onFixtureViewChange} />

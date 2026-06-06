@@ -17,7 +17,7 @@ import { GROUPS } from "../../data/teams.js";
 import { ShirtPosterPreview } from "../share/SharePreviews.jsx";
 
 function DrawerContent({ children }) {
-  return <PageScroll className="px-0 pt-4">{children}</PageScroll>;
+  return <PageScroll className="px-0 pt-0.5">{children}</PageScroll>;
 }
 
 const LEADERBOARD_GRID = "34px minmax(76px,96px) minmax(44px,0.85fr) minmax(92px,1.25fr) minmax(32px,0.55fr) minmax(56px,0.9fr)";
@@ -413,18 +413,17 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
   return (
     <main className="home-main-font relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
       <ScreenTopBar {...menuProps}>LEADERBOARD</ScreenTopBar>
+      <PageTabsSlot>
+        <PageTabs
+          value={leaderboardView}
+          onChange={setLeaderboardView}
+          options={[
+            { value: "scores", label: "SCORES" },
+            { value: "model", label: "SCORING" },
+          ]}
+        />
+      </PageTabsSlot>
       <DrawerContent>
-        <PageTabsSlot className="pb-3">
-          <PageTabs
-            value={leaderboardView}
-            onChange={setLeaderboardView}
-            options={[
-              { value: "scores", label: "SCORES" },
-              { value: "model", label: "SCORING" },
-            ]}
-          />
-        </PageTabsSlot>
-
         <div className="pt-0.5 [scroll-padding-top:0px]">
           <div className="space-y-2 pb-4">
             {leaderboardView === "model" ? (

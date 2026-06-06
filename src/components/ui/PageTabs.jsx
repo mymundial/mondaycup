@@ -1,7 +1,7 @@
 import React from 'react';
 import { MC_COLORS, MC_SIZES, MC_TYPE } from '../../styles/theme.js';
 
-export const PAGE_TABS_SLOT_CLASS = 'px-0 pb-2 pt-3';
+export const PAGE_TABS_SLOT_CLASS = 'mc-page-tabs-slot shrink-0 w-full px-0 pb-2 pt-2.5';
 
 export function PageTabsSlot({ children, className = '' }) {
   return <div className={`${PAGE_TABS_SLOT_CLASS} ${className}`}>{children}</div>;
@@ -9,18 +9,18 @@ export function PageTabsSlot({ children, className = '' }) {
 
 const SIZE_CONFIG = {
   standard: {
-    wrap: 'mx-auto grid w-[94%] rounded-[0.95rem] border border-[#F5F1E8]/14 bg-[#031B12]/30 p-0.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_8px_20px_rgba(0,0,0,0.14)]',
-    button: 'h-8 rounded-[0.75rem] px-3 text-[14px] tracking-[0.08em]',
+    wrap: 'mx-auto grid w-[94%] max-w-[400px] rounded-[1rem] border border-[#F5F1E8]/14 bg-[#031B12]/34 p-[3px] shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_8px_20px_rgba(0,0,0,0.14)]',
+    button: 'h-9 rounded-[0.8rem] px-3 text-[14px] tracking-[0.08em]',
     icon: 'h-[14px] w-[14px]',
   },
   compact: {
-    wrap: 'mx-auto grid w-[94%] rounded-[0.9rem] border border-[#F5F1E8]/14 bg-[#031B12]/30 p-0.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_8px_20px_rgba(0,0,0,0.14)]',
-    button: 'h-7 rounded-[0.7rem] px-2.5 text-[12px] tracking-[0.08em]',
+    wrap: 'mx-auto grid w-[94%] max-w-[400px] rounded-[0.95rem] border border-[#F5F1E8]/14 bg-[#031B12]/34 p-[3px] shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_8px_20px_rgba(0,0,0,0.14)]',
+    button: 'h-8 rounded-[0.75rem] px-2.5 text-[12px] tracking-[0.08em]',
     icon: 'h-[13px] w-[13px]',
   },
   icon: {
-    wrap: 'mx-auto grid w-[76px] rounded-full border border-[#F5F1E8]/14 bg-[#031B12]/36 p-[2px] shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]',
-    button: 'h-[20px] rounded-full px-0 text-[0px] tracking-normal',
+    wrap: 'mx-auto grid w-[84px] rounded-full border border-[#F5F1E8]/14 bg-[#031B12]/36 p-[3px] shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]',
+    button: 'h-[24px] rounded-full px-0 text-[0px] tracking-normal',
     icon: 'h-[14px] w-[14px]',
   },
 };
