@@ -323,7 +323,7 @@ function cupRunConnectorOutcome({ index, currentMatch = 1, result = {}, runForm 
   return "";
 }
 
-function CupRunProgressStrip({ matchNumber = 1, form = [], result = {}, isKnockout = false, qualifiedTeams = new Set(), userTeam = null }) {
+function CupRunProgressStrip({ matchNumber = 1, form = [], result = {}, isKnockout = false, qualifiedTeams = new Set(), userTeam = null, points = 0 }) {
   const currentMatch = Math.max(1, Math.min(8, Number(matchNumber || 1)));
   const steps = Array.from({ length: 8 });
   const matchNo = Number(result?.matchNo || result?.fixture?.matchNo || 0);
@@ -355,6 +355,7 @@ function CupRunProgressStrip({ matchNumber = 1, form = [], result = {}, isKnocko
   };
 
   const outcomeTitle = cupRunResultMeta(result, currentMatch, isKnockout);
+  const displayPoints = Number(points || 0);
 
   return (
     <div className="mt-2 rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2.5 py-2 shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]" aria-label={`Cup run progress. Match ${currentMatch} of 8`}>
@@ -383,6 +384,15 @@ function CupRunProgressStrip({ matchNumber = 1, form = [], result = {}, isKnocko
             );
           })}
         </div>
+      </div>
+      <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-[clamp(11px,3.1vw,15px)]">
+        <div className="text-left home-copy-bold text-[clamp(10px,2.8vw,12px)] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]/88">GAME SCORE</div>
+        <div className="inline-flex h-[36px] min-w-[88px] items-center justify-center rounded-[0.78rem] border border-[#F7D117]/28 bg-[#050505]/72 px-4 text-center shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/12">
+          <span className="font-led text-[clamp(18px,5.2vw,25px)] font-black uppercase leading-none tracking-[0.015em] text-[#F7D117] led-text-glow tabular-nums whitespace-nowrap">
+            {displayPoints}
+          </span>
+        </div>
+        <div className="justify-self-end text-right home-copy-bold text-[clamp(10px,2.7vw,12px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]/88">PTS</div>
       </div>
     </div>
   );
@@ -652,6 +662,8 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   const [sharePreviewOpen, setSharePreviewOpen] = useState(false);
   const canShareResult = Boolean(result);
   const currentCupRunMatch = cupRunMatchNumber(result, fixture);
+  const fixtureMatchNo = Number(result?.matchNo || fixture?.matchNo || result?.fixture?.matchNo || 0);
+  const phaseTitle = isKnockout || currentCupRunMatch >= 4 || fixtureMatchNo >= 73 ? "KNOCKOUT PHASE" : "GROUP STAGE";
   const campaignPointsTotal = getCampaignPointsTotal({ result, groupRows, userTeam, userForm });
   const activeBadgeMode = getPodiumBadgeMode({ result, fixture, stageLabel, podium, team: userTeam });
   const resultShareState = useMemo(() => getResultShareState({ result, fixture, podium, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username }), [result, fixture, podium, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username]);
@@ -664,8 +676,6 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   const resultMetricBoxClass = "inline-flex h-[44px] min-h-[44px] min-w-[70px] items-center justify-center rounded-[0.9rem] border border-[#F7D117]/35 bg-[#031B12]/62 px-3 text-center shadow-[0_8px_18px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/18";
   const resultFormGuideBoxClass = "inline-flex h-[44px] min-w-0 items-center justify-center rounded-[0.9rem] border border-[#F7D117]/35 bg-[#031B12]/62 px-3 text-center shadow-[0_8px_18px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/18";
   const resultHeaderStatsClass = "flex min-w-0 max-w-full items-center justify-center gap-2 overflow-hidden";
-  const resultHeaderScoreClass = "inline-flex min-h-[62px] w-[clamp(132px,36vw,156px)] flex-col items-center justify-center rounded-[0.9rem] border border-[#F7D117]/28 bg-[#050505]/62 px-4 py-1.5 text-center shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/12";
-
   const buildShareBlob = () => {
     const exportNode = shareFrameRef.current;
     if (!exportNode) throw new Error("Match share exporter was not ready");
@@ -751,24 +761,25 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   const groupTitleSuffix = String(selectedGroup || result?.group || result?.groupId || "").replace(/^GROUP\s*/i, "").trim();
   const groupBoxTitle = groupTitleSuffix ? `GROUP ${groupTitleSuffix}` : "GROUP";
   const knockoutRoundTitle = normaliseThirdPlaceCopy(modalHeaderTitle({ isKnockout: true, stageLabel, selectedGroup }));
-  const knockoutMatchNo = Number(result?.matchNo || fixture?.matchNo || result?.fixture?.matchNo || 0);
+  const knockoutMatchNo = fixtureMatchNo;
   const rawKnockoutMatchId = String(result?.matchId || fixture?.matchId || fixture?.id || "").trim().toUpperCase();
   const knockoutMatchLabel = knockoutMatchNo
     ? `MATCH ${knockoutMatchNo}`
     : rawKnockoutMatchId.replace(/^M(\d+)$/i, "MATCH $1");
   const knockoutStadium = fixtureVenueName(knockoutMatchNo, fixture, result);
-  const resultBoxTitle = getEndModalResultTitle(result);
-  const scoreHeaderTitle = Number(campaignPointsTotal || 0);
-  const headerTitle = sharePreviewOpen ? "SHARE" : scoreHeaderTitle;
+  const headerTitle = sharePreviewOpen ? "SHARE" : phaseTitle;
   const headerTitleClass = "home-copy-bold text-center text-[clamp(20px,5.4vw,25px)] uppercase leading-none tracking-[0.1em] text-[#F5F1E8]";
   const showRewardDot = Boolean(hasNewTrophy);
-  const handleResultNav = onOpenMenu;
+  const handleResultNav = (event) => {
+    event?.stopPropagation?.();
+    onOpenMenu?.();
+  };
   const resultControls = (
     <div className={resultControlGridClass}>
-      <button type="button" onClick={handleResultNav || onDismiss} className={resultSquareButtonClass} aria-label="Open menu">
+      <button type="button" onClick={handleResultNav} className={resultSquareButtonClass} aria-label="Open menu">
         <MenuIcon />
       </button>
-      <button type="button" onClick={onOpenTrophies || handleResultNav || onDismiss} className={`${resultSquareButtonClass} relative`} aria-label="Open sticker book">
+      <button type="button" onClick={onOpenTrophies || undefined} className={`${resultSquareButtonClass} relative`} aria-label="Open sticker book">
         <TrophyIcon />
         {showRewardDot && <RewardNoticeDot />}
       </button>
@@ -812,16 +823,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
                 </div>
               )}
               <div className="flex min-w-0 items-center justify-center self-center overflow-hidden">
-                {sharePreviewOpen ? (
-                  <div className={headerTitleClass}>{headerTitle}</div>
-                ) : (
-                  <div className={resultHeaderScoreClass}>
-                    <div className="mb-1 home-copy-bold text-[clamp(9px,2.4vw,11px)] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]/88">GAME SCORE</div>
-                    <div className="font-led text-[clamp(20px,5.8vw,27px)] font-black uppercase leading-none tracking-[0.015em] text-[#F7D117] led-text-glow tabular-nums whitespace-nowrap">
-                      {scoreHeaderTitle}
-                    </div>
-                  </div>
-                )}
+                <div className={headerTitleClass}>{headerTitle}</div>
               </div>
               <button type="button" onClick={onDismiss} aria-label="Close result" className="grid h-10 w-10 place-items-center justify-self-end rounded-[0.85rem] border border-[#F5F1E8]/10 bg-[#031B12]/46 text-[#F5F1E8]">
                 <CloseIcon className="h-6 w-6" />
@@ -882,7 +884,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
                     </>
                   )}
                 </div>
-                <CupRunProgressStrip matchNumber={currentCupRunMatch} form={userForm} result={result} isKnockout={isKnockout} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />
+                <CupRunProgressStrip matchNumber={currentCupRunMatch} form={userForm} result={result} isKnockout={isKnockout} qualifiedTeams={qualifiedTeams} userTeam={userTeam} points={campaignPointsTotal} />
                 {resultButtonsPanel}
               </>
             )}
