@@ -824,6 +824,60 @@ function drawPitchArea(ctx, props, assets, y, width, height) {
   ctx.restore();
 }
 
+async function preloadImagesInElement(element) {
+  if (!element) return;
+  const images = Array.from(element.querySelectorAll?.("img") || []);
+  await Promise.all(images.map((img) => {
+    if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+    return new Promise((resolve) => {
+      const finish = () => resolve();
+      img.addEventListener("load", finish, { once: true });
+      img.addEventListener("error", finish, { once: true });
+      if (img.decode) img.decode().then(finish).catch(() => null);
+      setTimeout(finish, 900);
+    });
+  }));
+}
+
+async function captureScoreboardImageFromDom(sourceElement, exportSize) {
+  const root = sourceElement || null;
+  const scoreboard = root?.querySelector?.('[data-share-scoreboard="true"]');
+  if (!root || !scoreboard) return null;
+  if (document?.fonts?.ready) await document.fonts.ready.catch(() => null);
+  await preloadImagesInElement(scoreboard);
+
+  const rootRect = root.getBoundingClientRect?.();
+  const boardRect = scoreboard.getBoundingClientRect?.();
+  const rootWidth = Math.max(1, rootRect?.width || 0);
+  const rootHeight = Math.max(1, rootRect?.height || 0);
+  const boardWidth = Math.max(1, boardRect?.width || rootWidth);
+  const boardHeight = Math.max(1, boardRect?.height || (rootHeight * 0.34));
+  const scaledHeight = Math.max(1, Math.round((boardHeight / rootHeight) * exportSize));
+
+  try {
+    const { toPng } = await import("html-to-image");
+    const dataUrl = await toPng(scoreboard, {
+      cacheBust: true,
+      width: Math.round(boardWidth),
+      height: Math.round(boardHeight),
+      pixelRatio: Math.max(2, exportSize / boardWidth),
+      backgroundColor: "#050505",
+      filter: (node) => !node?.dataset?.shareExportIgnore,
+      style: {
+        animation: "none",
+        transition: "none",
+        transform: "none",
+      },
+    });
+    const image = await loadCanvasImage(dataUrl);
+    if (!image) return null;
+    return { image, height: scaledHeight };
+  } catch (error) {
+    console.warn("Match scoreboard DOM capture failed; falling back to canvas scoreboard", error);
+    return null;
+  }
+}
+
 async function loadAssets(userTeam, opponentTeam) {
   const [flagA, flagB, adBoard, mondayLogo, champion, runnerUp, third, goalkeeper, ball] = await Promise.all([
     loadCanvasImage(userTeam.flag),
@@ -839,7 +893,7 @@ async function loadAssets(userTeam, opponentTeam) {
   return { flagA, flagB, adBoard, mondayLogo, champion, runnerUp, third, goalkeeper, ball };
 }
 
-export async function createMatchShareBlob(props = {}) {
+export async function createMatchShareBlob(props = {}, options = {}) {
   const size = MATCH_SHARE_EXPORT_SIZE;
   const userTeam = safeTeam(props.userTeam, "TEAM A");
   const opponentTeam = safeTeam(props.opponentTeam, "TEAM B");
@@ -856,7 +910,14 @@ export async function createMatchShareBlob(props = {}) {
   ctx.fillStyle = PITCH_GREEN;
   ctx.fillRect(0, 0, size, size);
   const normalisedProps = { ...props, userTeam, opponentTeam };
-  const boardH = drawScoreboard(ctx, normalisedProps, assets, size);
+  const capturedScoreboard = await captureScoreboardImageFromDom(options.sourceElement, size);
+  let boardH;
+  if (capturedScoreboard?.image) {
+    boardH = capturedScoreboard.height;
+    ctx.drawImage(capturedScoreboard.image, 0, 0, size, boardH);
+  } else {
+    boardH = drawScoreboard(ctx, normalisedProps, assets, size);
+  }
   drawPitchArea(ctx, normalisedProps, assets, boardH, size, size - boardH);
 
   if (props.borderEnabled) {

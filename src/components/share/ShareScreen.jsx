@@ -517,7 +517,7 @@ export function ShareScreen({
           patternColour: shirtPatternColour,
         })
         : activeState.id === "match"
-          ? await createMatchShareBlob(currentMatchExportPayload())
+          ? await createMatchShareBlob(currentMatchExportPayload(), { sourceElement: frameRef.current })
           : await captureShareElementBlob(frameRef.current, teamA);
       await shareOrDownloadResult({ blob, filename: `monday-cup-${activeState.id}-share.png`, previewWindow });
     } catch (error) {

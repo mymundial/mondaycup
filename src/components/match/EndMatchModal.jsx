@@ -700,7 +700,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
     const exportNode = shareFrameRef.current;
     if (!exportNode) throw new Error("Match share exporter was not ready");
     if (!shareBlobPromiseRef.current) {
-      shareBlobPromiseRef.current = createMatchShareBlob(resultShareState || {})
+      shareBlobPromiseRef.current = createMatchShareBlob(resultShareState || {}, { sourceElement: exportNode })
         .finally(() => {
           shareBlobPromiseRef.current = null;
         });
