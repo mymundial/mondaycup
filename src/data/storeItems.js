@@ -35,7 +35,7 @@ export const STORE_ITEMS = {
   goldenBall: {
     id: STORE_ITEM_IDS.goldenBall,
     title: "GOLDEN BALL",
-    subtitle: "10% SHOT ACCURACY BONUS",
+    subtitle: "+10% SHOT ACCURACY BONUS",
     priceLabel: "£1",
     unitAmountPence: 100,
     stripePriceId: envPrice("VITE_STRIPE_PRICE_GOLDEN_BALL"),
@@ -49,7 +49,7 @@ export const STORE_ITEMS = {
   goldenBoot: {
     id: STORE_ITEM_IDS.goldenBoot,
     title: "GOLDEN BOOT",
-    subtitle: "10% SHOT POWER BONUS",
+    subtitle: "+10% SHOT POWER BONUS",
     priceLabel: "£1",
     unitAmountPence: 100,
     stripePriceId: envPrice("VITE_STRIPE_PRICE_GOLDEN_BOOT"),
@@ -94,7 +94,7 @@ export const STORE_BUNDLES = {
   fullBundle: {
     id: STORE_ITEM_IDS.fullBundle,
     title: "GOLDEN KITBAG",
-    subtitle: "ALL UPGRADE ITEMS",
+    subtitle: "INCLUDES ALL UPGRADE ITEMS",
     priceLabel: "£4.99",
     unitAmountPence: 499,
     stripePriceId: envPrice("VITE_STRIPE_PRICE_FULL_BUNDLE"),

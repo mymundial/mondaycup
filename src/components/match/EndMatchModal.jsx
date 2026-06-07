@@ -354,45 +354,65 @@ function CupRunProgressStrip({ matchNumber = 1, form = [], result = {}, isKnocko
     return "bg-[#F5F1E8]/12";
   };
 
-  const outcomeTitle = cupRunResultMeta(result, currentMatch, isKnockout);
+  const rawOutcomeTitle = cupRunResultMeta(result, currentMatch, isKnockout);
+  const fallbackOutcomeLabel = getEndModalResultTitle(result);
+  const outcomeLabel = String(rawOutcomeTitle?.label || fallbackOutcomeLabel || "").trim();
+  const outcomeClassName = rawOutcomeTitle?.label
+    ? rawOutcomeTitle.className
+    : outcomeLabel === "VICTORY" || outcomeLabel === "QUALIFIED" || outcomeLabel === "CHAMPIONS" || outcomeLabel === "CHAMPIONS!"
+      ? "text-[#31E56F]"
+      : outcomeLabel === "DRAW"
+        ? "text-[#F7D117]"
+        : outcomeLabel === "RUNNER-UP"
+          ? "text-[#D9E0DA]"
+          : outcomeLabel === "THIRD-PLACE" || outcomeLabel === "THIRD PLACE"
+            ? "text-[#CD7F32]"
+            : "text-[#E94B43]";
   const displayPoints = Number(points || 0);
 
   return (
     <div className="mt-2 rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2.5 py-2 shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]" aria-label={`Cup run progress. Match ${currentMatch} of 8`}>
-      <div className="mb-1.5 grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-[clamp(11px,3.1vw,15px)]">
-        <div className="text-left home-copy-bold text-[clamp(11px,3vw,13px)] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]/88">CUP RUN</div>
-        <div className={`justify-self-center text-center home-copy-bold text-[clamp(11px,3vw,13px)] uppercase leading-none tracking-[0.16em] ${outcomeTitle.className}`}>{outcomeTitle.label}</div>
-        <div className="justify-self-end text-right home-copy-bold text-[clamp(10px,2.7vw,12px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]/88 tabular-nums">{currentMatch}/8</div>
-      </div>
-      <div className="rounded-[1.05rem] border border-[#F7D117]/14 bg-[#031B12]/24 px-[clamp(11px,3.1vw,15px)] py-[clamp(7px,2.1vw,9px)] shadow-[inset_0_1px_0_rgba(245,241,232,0.04)]">
-        <div className="flex w-full min-w-0 items-center" aria-hidden="true">
-          {steps.map((_, index) => {
-            const stepNumber = index + 1;
-            const outcome = runForm[index];
-            const isCurrent = stepNumber === currentMatch && !outcome;
-            const connectorOutcome = cupRunConnectorOutcome({ index, currentMatch, result, runForm, isKnockout, qualifiedTeams, userTeam });
-            return (
-              <div key={stepNumber} className="flex min-w-0 flex-1 items-center last:flex-none">
-                <span
-                  className={`block shrink-0 rounded-full transition-none ${nodeClass(outcome, isCurrent, stepNumber)}`}
-                  style={{ height: "clamp(8px,2.25vw,10px)", width: "clamp(8px,2.25vw,10px)" }}
-                />
-                {index < steps.length - 1 && (
-                  <span className={`mx-[clamp(3px,1vw,5px)] h-[2px] min-w-0 flex-1 rounded-full ${lineClass(connectorOutcome)}`} />
-                )}
-              </div>
-            );
-          })}
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+        <div className="min-w-0">
+          <div className="mb-1.5 grid grid-cols-[1fr_auto_1fr] items-end px-[clamp(11px,3.1vw,15px)]">
+            <div className="text-left home-copy-bold text-[clamp(11px,3vw,13px)] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]/88">CUP RUN</div>
+            {outcomeLabel ? (
+              <div className={`text-center home-copy-bold text-[clamp(10px,2.65vw,13px)] uppercase leading-none tracking-[0.16em] ${outcomeClassName}`}>{outcomeLabel}</div>
+            ) : (
+              <div aria-hidden="true" />
+            )}
+            <div className="text-right home-copy-bold text-[clamp(10px,2.65vw,12px)] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]/72">{currentMatch}/8</div>
+          </div>
+          <div className="relative min-w-0 rounded-xl border border-[#F5F1E8]/14 bg-[#052D1D]/68 px-[clamp(11px,3.1vw,15px)] py-[clamp(7px,2.1vw,9px)] text-[#F5F1E8] shadow-[0_6px_14px_rgba(0,0,0,0.10)] ring-1 ring-[#F5F1E8]/10">
+            <div className="flex w-full min-w-0 items-center" aria-hidden="true">
+              {steps.map((_, index) => {
+                const stepNumber = index + 1;
+                const outcome = runForm[index];
+                const isCurrent = stepNumber === currentMatch && !outcome;
+                const connectorOutcome = cupRunConnectorOutcome({ index, currentMatch, result, runForm, isKnockout, qualifiedTeams, userTeam });
+                return (
+                  <div key={stepNumber} className="flex min-w-0 flex-1 items-center last:flex-none">
+                    <span
+                      className={`block shrink-0 rounded-full transition-none ${nodeClass(outcome, isCurrent, stepNumber)}`}
+                      style={{ height: "clamp(8px,2.25vw,10px)", width: "clamp(8px,2.25vw,10px)" }}
+                    />
+                    {index < steps.length - 1 && (
+                      <span className={`mx-[clamp(3px,1vw,5px)] block h-[2px] min-w-0 flex-1 rounded-full border-0 outline-none ${lineClass(connectorOutcome)}`} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-[clamp(11px,3.1vw,15px)]">
-        <div className="text-left home-copy-bold text-[clamp(10px,2.8vw,12px)] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]/88">GAME SCORE</div>
-        <div className="inline-flex h-[36px] min-w-[88px] items-center justify-center rounded-[0.78rem] border border-[#F7D117]/28 bg-[#050505]/72 px-4 text-center shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/12">
-          <span className="font-led text-[clamp(18px,5.2vw,25px)] font-black uppercase leading-none tracking-[0.015em] text-[#F7D117] led-text-glow tabular-nums whitespace-nowrap">
-            {displayPoints}
-          </span>
+        <div className="shrink-0 w-[86px]">
+          <div className="mb-1.5 px-1 text-center home-copy-bold text-[clamp(11px,3vw,13px)] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]/88">GAME SCORE</div>
+          <div className="inline-flex h-[clamp(24px,6.45vw,30px)] w-[86px] items-center justify-center rounded-[0.72rem] border border-[#F7D117]/28 bg-[#050505]/72 px-1 text-center shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/12">
+            <span className="font-led text-[13px] font-black uppercase leading-none tracking-[-0.01em] text-[#F7D117] led-text-glow tabular-nums whitespace-nowrap">
+              {displayPoints}
+            </span>
+          </div>
         </div>
-        <div className="justify-self-end text-right home-copy-bold text-[clamp(10px,2.7vw,12px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]/88">PTS</div>
       </div>
     </div>
   );
@@ -582,11 +602,11 @@ function StandingsMiniTable({ title = "GROUP", rows = [], qualifiedTeams = new S
         const isUser = row.team === userTeam;
         const isQualified = qualifiedTeams.has(row.team);
         return (
-          <div key={row.team} className={`mb-1 grid items-center gap-[3px] rounded-xl border px-2 py-[5px] text-center text-[12px] leading-none last:mb-0 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)] tabular-nums ${isUser ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10),0_6px_14px_rgba(0,0,0,0.10)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"}`} style={{ gridTemplateColumns: tableColumns }}>
-            <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`}>{index + 1}</span>
+          <div key={row.team} className={`mb-1 grid items-center gap-[3px] rounded-xl border px-2 py-[5px] text-center text-[12px] leading-none last:mb-0 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)] tabular-nums ${isUser ? "border-[#F7D117]/72 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_6px_14px_rgba(0,0,0,0.10)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"}`} style={{ gridTemplateColumns: tableColumns }}>
+            <span className="home-copy-regular text-[#F5F1E8]">{index + 1}</span>
             <span className="flex justify-center"><Flag team={row.team} className={`h-4 w-6 rounded-[4px] ring-1 ${isUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></span>
             <span className={`min-w-0 truncate pl-2 text-left uppercase home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`} style={tightTeamStyle(row.team)}>{row.team}</span>
-            <span className={`flex h-full items-center justify-center text-[10px] home-copy-bold font-black leading-none ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]/72"}`}>{isQualified ? "Q" : ""}</span>
+            <span className="flex h-[16px] w-full items-center justify-center text-center text-[10px] home-copy-regular font-black leading-[10px] text-[#F7D117]">{isQualified ? "Q" : ""}</span>
             <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`}>{row.played}</span>
             <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`}>{row.won}</span>
             <span className={`home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`}>{row.drawn}</span>
@@ -663,7 +683,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   const canShareResult = Boolean(result);
   const currentCupRunMatch = cupRunMatchNumber(result, fixture);
   const fixtureMatchNo = Number(result?.matchNo || fixture?.matchNo || result?.fixture?.matchNo || 0);
-  const phaseTitle = isKnockout || currentCupRunMatch >= 4 || fixtureMatchNo >= 73 ? "KNOCKOUT PHASE" : "GROUP STAGE";
+  const phaseTitle = "FULL TIME";
   const campaignPointsTotal = getCampaignPointsTotal({ result, groupRows, userTeam, userForm });
   const activeBadgeMode = getPodiumBadgeMode({ result, fixture, stageLabel, podium, team: userTeam });
   const resultShareState = useMemo(() => getResultShareState({ result, fixture, podium, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username }), [result, fixture, podium, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username]);
@@ -852,13 +872,13 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
               </div>
             ) : (
               <>
-                <div className="mt-2 max-h-[calc(100dvh-342px)] overflow-y-auto pb-0">
+                <div className="max-h-[calc(100dvh-342px)] overflow-y-auto pb-0">
                   {isKnockout ? (
                     <div className="rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2.5 pb-1.5 pt-2.5 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]">
                       <div className="mb-2 text-center home-copy-bold text-[clamp(15px,4.1vw,19px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">
                         {knockoutRoundTitle}
                       </div>
-                      <div className={`grid min-h-[70px] grid-rows-[30%_40%_30%] rounded-[1.1rem] border px-2.5 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)] ${userInKnockout ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10),0_6px_14px_rgba(0,0,0,0.10)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"}`}>
+                      <div className={`grid min-h-[70px] grid-rows-[30%_40%_30%] rounded-[1.1rem] border px-2.5 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)] ${userInKnockout ? "border-[#F7D117]/72 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_6px_14px_rgba(0,0,0,0.10)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"}`}>
                         {knockoutMatchLabel && (
                           <div className="flex items-end justify-center self-stretch pb-[3px] text-center home-copy-bold text-[clamp(10px,2.8vw,12px)] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]/72">
                             {knockoutMatchLabel}

@@ -232,12 +232,12 @@ function ClubhouseStatsTable({
 function FormDot({ value }) {
   const dotClass =
     value === "W"
-      ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.75),0_0_14px_rgba(34,197,94,0.24)]"
+      ? "bg-green-500 shadow-[0_0_3px_rgba(34,197,94,0.42)]"
       : value === "L"
-        ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.75),0_0_14px_rgba(239,68,68,0.24)]"
+        ? "bg-red-500 shadow-[0_0_3px_rgba(239,68,68,0.42)]"
         : value === "D"
-          ? "bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.78),0_0_14px_rgba(247,209,23,0.24)]"
-          : "bg-[#F7D117]/28 shadow-[0_0_5px_rgba(247,209,23,0.22)]";
+          ? "bg-[#F7D117] shadow-[0_0_3px_rgba(247,209,23,0.44)]"
+          : "bg-[#F7D117]/28 shadow-[0_0_2px_rgba(247,209,23,0.16)]";
   return (
     <span
       className={`block shrink-0 rounded-full ${dotClass}`}
@@ -276,11 +276,11 @@ function campaignMedalClass(summary = {}) {
     .join(" ")
     .toUpperCase();
   if (/CHAMP|WINNER|MONDAY CUP/.test(joined))
-    return "mc-metallic-gold border-[#D8B62F]/82 text-[#072D1D] ring-1 ring-[#F7D117]/28";
+    return "border-[#D8B62F]/82 bg-[#052D1D]/68 text-[#F5F1E8] ring-1 ring-[#F7D117]/32";
   if (/RUNNER|SECOND|2ND/.test(joined))
-    return "mc-metallic-silver border-[#C8C8C8]/82 text-[#072D1D] ring-1 ring-[#F5F1E8]/28";
+    return "border-[#C8C8C8]/82 bg-[#052D1D]/68 text-[#F5F1E8] ring-1 ring-[#F5F1E8]/32";
   if (/THIRD|3RD/.test(joined))
-    return "mc-metallic-bronze border-[#D9822B]/82 text-[#072D1D] ring-1 ring-[#D9822B]/28";
+    return "border-[#D9822B]/82 bg-[#052D1D]/68 text-[#F5F1E8] ring-1 ring-[#D9822B]/32";
   return null;
 }
 
@@ -309,6 +309,36 @@ function CampaignStatusRail({ form = [], points = 0 }) {
   );
 }
 
+function CampaignCupRunRail({ form = [] }) {
+  return (
+    <div className="mt-2 w-full min-w-0" aria-label="Campaign cup run">
+      <div
+        className="relative min-w-0 rounded-xl border border-[#F5F1E8]/14 bg-[#052D1D]/68 px-[clamp(10px,3vw,14px)] py-[clamp(6px,1.8vw,8px)] text-[#F5F1E8] shadow-[0_6px_14px_rgba(0,0,0,0.10)] ring-1 ring-[#F5F1E8]/10"
+        style={{ "--campaign-rail-size": "clamp(7px,2.05vw,10px)" }}
+      >
+        <div className="flex w-full min-w-0 items-center justify-between overflow-hidden" aria-hidden="true">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <FormDot key={index} value={form[index]} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CampaignGameScoreBox({ score = 0 }) {
+  const displayScore = Number(score || 0);
+  return (
+    <div className="mt-1 flex w-full flex-col items-center justify-end" aria-label="Campaign game score">
+      <div className="inline-flex h-[clamp(24px,6.45vw,30px)] w-[74px] items-center justify-center rounded-[0.72rem] border border-[#F7D117]/28 bg-[#050505]/72 px-1 text-center shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/12">
+        <span className="font-led text-[13px] font-black uppercase leading-none tracking-[-0.01em] text-[#F7D117] led-text-glow tabular-nums whitespace-nowrap">
+          {displayScore}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function CampaignOverviewCard({
   title,
   team,
@@ -332,49 +362,36 @@ function CampaignOverviewCard({
     : "";
   const isMedal = Boolean(medalClass);
   const titleClass = "text-[#F5F1E8]";
-  const teamClass = highlight
-    ? "text-[#F7D117]"
-    : isMedal
-      ? "text-[#072D1D]"
-      : "text-[#F5F1E8]";
+  const teamClass = highlight ? "text-[#F7D117]" : "text-[#F5F1E8]";
   const stageClass = "text-[#F5F1E8]";
   const cardClass = `${baseCardClass} ${colourClass} ${selectableClass}`;
   const content = (
     <section
-      className={`${cardClass} flex min-h-[218px] min-w-0 flex-col items-center justify-start overflow-hidden px-3.5 pb-4 pt-3.5 text-center ${className}`}
+      className={`${cardClass} flex min-w-0 flex-col items-center justify-start overflow-hidden px-3 pb-2.5 pt-3 text-center ${className}`}
     >
       <div
-        className={`home-copy-bold text-[10px] uppercase leading-none tracking-[0.16em] ${titleClass}`}
+        className={`text-center home-copy-bold text-[10px] uppercase leading-none tracking-[0.16em] ${titleClass}`}
       >
         {title}
       </div>
       <div
-        className="mx-auto mt-3 flex min-w-0 max-w-[132px] items-center justify-center gap-[clamp(2px,0.7vw,4px)] pb-1"
-        style={{ "--campaign-rail-size": "clamp(6px,1.7vw,8px)" }}
-        aria-label={`${title} form guide`}
-      >
-        {Array.from({ length: 8 }).map((_, index) => (
-          <FormDot key={index} value={form[index]} />
-        ))}
-      </div>
-      <div
-        className={`mt-3 max-w-full truncate home-copy-bold text-[16px] uppercase leading-none tracking-[0.08em] ${teamClass}`}
+        className={`mt-2 max-w-full truncate home-copy-bold text-[16px] uppercase leading-none tracking-[0.08em] ${teamClass}`}
       >
         {team || "NO TEAM"}
       </div>
       <TeamFlag
         team={team}
         isUserTeam={highlight}
-        className="mt-3 h-12 w-[76px] rounded-[9px] object-cover"
+        className="mt-1.5 h-11 w-[72px] rounded-[9px] object-cover"
         fallbackRing="ring-[#0B5F35]/18"
       />
-      <div
-        className={`mt-3 home-copy-bold text-[10px] uppercase leading-none tracking-[0.16em] ${stageClass}`}
-      >
-        {phaseLabel(roundLabel)}
-      </div>
-      <div className="mt-3 home-copy-bold text-[16px] uppercase leading-none tracking-[0.08em] text-[#F7D117] tabular-nums">
-        {Number(score || 0)}
+      <div className="mt-2 flex w-full flex-col items-center justify-end pt-0">
+        <div
+          className={`home-copy-bold text-[10px] uppercase leading-none tracking-[0.16em] ${stageClass}`}
+        >
+          {phaseLabel(roundLabel)}
+        </div>
+        <CampaignGameScoreBox score={score} />
       </div>
       {selectable && team && team !== "NO TEAM" ? null : null}
     </section>
@@ -420,6 +437,7 @@ function CosmeticUpgradeCard({
   guestLocked = false,
   onToggle,
   onOpenShop,
+  onUseGoldenTicket,
 }) {
   const isTicket = id === "goldenTicket";
   const ticketQty = normaliseTicketQuantity(ticketQuantity);
@@ -441,11 +459,13 @@ function CosmeticUpgradeCard({
   const status = isTicket
     ? isMaxTicket
       ? "MAX"
-      : price
+      : ticketQty > 0
+        ? `${ticketQty}/99`
+        : price
     : isOwned
       ? isActive
         ? "EQUIPPED"
-        : "PURCHASED"
+        : "UNEQUIPPED"
       : price;
 
   return (
@@ -457,13 +477,18 @@ function CosmeticUpgradeCard({
           onOpenShop?.(id);
           return;
         }
-        if (isTicket || !isOwned) {
+        if (isTicket) {
+          if (isOwned) onUseGoldenTicket?.();
+          else onOpenShop?.(id);
+          return;
+        }
+        if (!isOwned) {
           onOpenShop?.(id);
           return;
         }
         onToggle?.(id);
       }}
-      disabled={disabled}
+      disabled={disabled || isMaxTicket}
       className={`group relative min-h-[108px] overflow-hidden rounded-[1.1rem] border p-2 text-center shadow-[0_8px_16px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all disabled:cursor-default disabled:opacity-70 ${cardTone}`}
     >
       <div className="flex h-full min-h-[92px] flex-col items-center justify-center">
@@ -495,16 +520,11 @@ function CosmeticUpgradeCard({
         </div>
         <div className="mt-2 flex items-center justify-center gap-1.5">
           {isTicket ? (
-            <>
-              <span
-                className={`home-copy-bold text-[11px] uppercase leading-none tracking-[0.06em] ${titleTone}`}
-              >
-                {status}
-              </span>
-              <span className="rounded-full bg-[#052D1D]/88 px-1.5 py-1 home-copy-bold text-[7px] uppercase leading-none tracking-[0.08em] text-[#F7D117]">
-                {ticketQty}/99
-              </span>
-            </>
+            <span
+              className={`home-copy-bold text-[11px] uppercase leading-none tracking-[0.06em] ${titleTone}`}
+            >
+              {status}
+            </span>
           ) : isOwned ? (
             <StatusPill active={isActive}>{status}</StatusPill>
           ) : (
@@ -555,24 +575,25 @@ function AllTeamsUnlockButton({
         if (!unlocked) onUnlock?.();
       }}
       disabled={unlocked && !guestLocked}
-      className={`relative flex min-h-[74px] w-full items-center gap-3 rounded-[1.15rem] border px-4 py-3 text-left shadow-[0_10px_22px_rgba(0,0,0,0.16),inset_0_1px_0_rgba(245,241,232,0.06)] ring-1 transition-transform active:scale-[0.99] disabled:cursor-default ${unlocked ? "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10" : "border-[#F7D117]/60 bg-[#062819] text-[#F5F1E8] ring-[#F7D117]/24"} ${guestLocked ? "cursor-pointer" : ""}`}
+      className={`group relative flex min-h-[74px] w-full items-center gap-3 overflow-hidden rounded-[1.1rem] border px-4 py-3 text-left shadow-[0_8px_16px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.18)] ring-1 transition-all active:scale-[0.99] disabled:cursor-default ${unlocked ? "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8]/72 opacity-72 ring-[#F5F1E8]/10" : "border-[#F7D117]/42 bg-[#031B12]/42 text-[#F5F1E8] ring-[#F7D117]/18"} ${guestLocked ? "cursor-pointer" : ""}`}
     >
-      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[0.9rem] border border-[#F5F1E8]/14 bg-[#031B12]/54">
-        {unlocked ? (
-          <OpenPadlockIcon className="h-7 w-7 text-[#F7D117]" />
-        ) : (
-          <PadlockIcon className="h-7 w-7 text-[#F7D117]" />
-        )}
+      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-[#F5F1E8]/12 bg-[#072D1D]/92">
+        <img
+          src="/assets/branding/monday-cup.png"
+          alt=""
+          className="h-10 w-10 object-contain drop-shadow-[0_5px_8px_rgba(0,0,0,0.22)]"
+          draggable={false}
+        />
       </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate home-copy-bold text-[14px] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">
+      <span className="pointer-events-none absolute inset-x-[78px] top-1/2 min-w-0 -translate-y-1/2 text-center">
+        <span className="block truncate home-copy-bold text-[18px] uppercase leading-none tracking-[0.08em] text-[#F7D117]">
           ALL TEAMS
         </span>
         <span className="mt-1 block truncate home-copy-regular text-[7px] uppercase leading-none tracking-[0.10em] text-[#F5F1E8]/68">
-          UNLOCK EVERY NATION
+          UNLOCK EVERY PLAYABLE NATION
         </span>
       </span>
-      <span className="shrink-0 text-right">
+      <span className="ml-auto grid min-w-[56px] shrink-0 place-items-center text-center">
         {unlocked ? (
           <StatusPill active>ACTIVE</StatusPill>
         ) : (
@@ -591,7 +612,7 @@ function GoldenKitbagBundleCard({ onOpenShop, disabled = false }) {
       type="button"
       onClick={() => !disabled && onOpenShop?.(STORE_ITEM_IDS.fullBundle)}
       disabled={disabled}
-      className="relative flex min-h-[118px] w-full items-center gap-4 overflow-hidden rounded-[1.35rem] border border-[#F7D117]/64 bg-[#062819] px-4 py-4 text-left text-[#F5F1E8] shadow-[0_0_16px_rgba(247,209,23,0.12),0_14px_30px_rgba(0,0,0,0.20),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/24 transition-transform active:scale-[0.99] disabled:opacity-60"
+      className="group relative flex min-h-[118px] w-full items-center gap-4 overflow-hidden rounded-[1.1rem] border border-[#F7D117]/42 bg-[#031B12]/42 px-4 py-4 text-left text-[#F5F1E8] shadow-[0_8px_16px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.18)] ring-1 ring-[#F7D117]/18 transition-all active:scale-[0.99] disabled:opacity-60"
     >
       <span className="grid h-[74px] w-[74px] shrink-0 place-items-center rounded-full border border-[#F5F1E8]/12 bg-[#031B12]/54 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
         <img
@@ -601,21 +622,84 @@ function GoldenKitbagBundleCard({ onOpenShop, disabled = false }) {
           draggable={false}
         />
       </span>
-      <span className="min-w-0 flex-1">
-        <span className="home-copy-bold mb-1 block text-[8px] uppercase leading-none tracking-[0.12em] text-[#F7D117]">
+      <span className="pointer-events-none absolute inset-x-[92px] top-1/2 min-w-0 -translate-y-1/2 text-center">
+        <span className="home-copy-bold mb-1 block text-[8px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]/72">
           BEST VALUE
         </span>
-        <span className="block truncate home-copy-bold text-[18px] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">
+        <span className="block truncate home-copy-bold text-[18px] uppercase leading-none tracking-[0.08em] text-[#F7D117]">
           GOLDEN KITBAG
         </span>
-        <span className="mt-2 block truncate home-copy-regular text-[8px] uppercase leading-none tracking-[0.10em] text-[#F5F1E8]/68">
-          ALL UPGRADE ITEMS
+        <span className="mt-2 block home-copy-regular text-[8px] uppercase leading-none tracking-[0.10em] text-[#F5F1E8]/68">
+          INCLUDES ALL UPGRADE ITEMS
+        </span>
+        <span className="mt-1.5 flex items-center justify-center gap-1.5">
+          {[
+            "/assets/branding/monday-cup.png",
+            "/assets/game/golden-boot.png",
+            "/assets/game/golden-ball.png",
+            "/assets/game/golden-glove.png",
+            "/assets/game/golden-ticket.png",
+          ].map((src) => (
+            <span
+              key={src}
+              className="grid h-6 w-6 place-items-center rounded-full border border-[#F5F1E8]/12 bg-[#072D1D]/92"
+            >
+              <img
+                src={src}
+                alt=""
+                className="h-5 w-5 object-contain drop-shadow-[0_3px_5px_rgba(0,0,0,0.22)]"
+                draggable={false}
+              />
+            </span>
+          ))}
         </span>
       </span>
-      <span className="shrink-0 home-copy-bold text-[18px] uppercase leading-none tracking-[0.07em] text-[#F7D117]">
+      <span className="ml-auto grid min-w-[64px] shrink-0 place-items-center home-copy-bold text-[18px] uppercase leading-none tracking-[0.07em] text-[#F7D117]">
         £4.99
       </span>
     </button>
+  );
+}
+
+function TicketOfficeModal({ open, quantity = 0, onUse, onBuyMore, onClose }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/62 px-5">
+      <div className="w-full max-w-[340px] rounded-[1.35rem] border border-[#F7D117]/48 bg-[#031B12] p-4 text-center text-[#F5F1E8] shadow-[0_18px_34px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/20">
+        <div className="home-copy-bold text-[18px] uppercase leading-none tracking-[0.12em] text-[#F7D117]">
+          TICKET OFFICE
+        </div>
+        <div className="home-copy-regular mx-auto mt-3 max-w-[260px] text-[10px] uppercase leading-snug tracking-[0.08em] text-[#F5F1E8]/78">
+          Use a Golden Ticket for the next campaign and start directly at the final after choosing a team?
+        </div>
+        <div className="home-copy-bold mt-3 text-[11px] uppercase leading-none tracking-[0.10em] text-[#F5F1E8]/74">
+          OWNED <span className="text-[#F7D117]">{normaliseTicketQuantity(quantity)}/99</span>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={onBuyMore}
+            className="rounded-full border border-[#F5F1E8]/18 bg-[#052D1D]/72 px-3 py-3 home-copy-bold text-[10px] uppercase tracking-[0.10em] text-[#F5F1E8]"
+          >
+            NO
+          </button>
+          <button
+            type="button"
+            onClick={onUse}
+            className="rounded-full border border-[#F7D117]/78 bg-[#F7D117] px-3 py-3 home-copy-bold text-[10px] uppercase tracking-[0.10em] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.18)]"
+          >
+            YES
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-3 home-copy-bold text-[8px] uppercase tracking-[0.14em] text-[#F5F1E8]/54"
+        >
+          CANCEL
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -780,16 +864,16 @@ function careerStarTitle(careerStats = {}) {
   return playerCareerTitle(careerStats);
 }
 
-function CareerStars({ stars = [] }) {
+function CareerStars({ stars = [], className = "", starClassName = "text-[clamp(20px,5.5vw,30px)]" }) {
   return (
     <div
-      className="mt-2.5 flex items-center justify-center gap-1.5"
+      className={`flex items-center justify-center gap-1.5 ${className}`}
       aria-label="Career progress stars"
     >
       {stars.map((star, index) => (
         <span
           key={star.label || index}
-          className={`home-copy-bold text-[clamp(20px,5.5vw,30px)] leading-none transition-colors ${star.achieved ? "text-[#F7D117] drop-shadow-[0_0_8px_rgba(247,209,23,0.34)]" : "text-[#F7D117]/18"}`}
+          className={`home-copy-bold ${starClassName} leading-none transition-colors ${star.achieved ? "text-[#F7D117] drop-shadow-[0_0_8px_rgba(247,209,23,0.34)]" : "text-[#F7D117]/18"}`}
           title={star.label}
           aria-label={`${star.label}: ${star.achieved ? "achieved" : "locked"}`}
         >
@@ -834,20 +918,15 @@ function ClubhouseShirtCard({
       .slice(0, 2) || "11";
   const composition = shirt.composition || {};
   const stars = careerStarProgress(careerStats);
-  const starTitle = careerStarTitle(careerStats);
   const caps = Number(careerStats?.matchesPlayed || 0);
   const goals = Number(careerStats?.totalGoals || 0);
   return (
-    <section className="relative flex min-h-[244px] w-full flex-col items-center justify-start overflow-visible px-4 pb-4 pt-1 text-center">
-      <div className="home-copy-bold text-[10px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]">
-        {starTitle}
-      </div>
-      <CareerStars stars={stars} />
-
+    <section className="relative flex min-h-[226px] w-full flex-col items-center justify-start overflow-visible px-4 pb-2 pt-1 text-center">
+      <CareerStars stars={stars} className="mt-1" starClassName="text-[clamp(13px,3.8vw,18px)]" />
       <button
         type="button"
         onClick={onEdit}
-        className="mt-4 grid h-[118px] w-[118px] place-items-center rounded-[0.45rem] border-[5px] border-[#031B12] bg-[#031B12] p-[3px] shadow-[0_8px_18px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.42)] transition-transform active:scale-[0.99]"
+        className="mt-3 grid h-[118px] w-[118px] place-items-center rounded-[0.45rem] border-[5px] border-[#031B12] bg-[#031B12] p-[3px] shadow-[0_8px_18px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.42)] transition-transform active:scale-[0.99]"
         aria-label="Edit shirt design"
       >
         <div className="grid h-full w-full place-items-center overflow-hidden rounded-[0.16rem] border-[5px] border-[#F5F1E8] bg-[#073B26]">
@@ -895,7 +974,7 @@ function ClubhouseShirtCard({
         </div>
       </button>
 
-      <div className="mt-4 max-w-full truncate home-copy-bold text-[clamp(24px,6.8vw,34px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">
+      <div className="mt-3 max-w-full truncate home-copy-bold text-[clamp(24px,6.8vw,34px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">
         {displayName}
       </div>
       <div className="mt-1.5 flex items-center justify-center gap-3 home-copy-bold text-[10px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]">
@@ -932,6 +1011,7 @@ export function ClubhouseScreen({
   ownedItems = {},
   onToggleCosmetic,
   onOpenShop,
+  onUseGoldenTicket,
   allTeamsUnlocked = false,
   onUnlockAllTeams,
   onNicknameUpdate,
@@ -941,6 +1021,7 @@ export function ClubhouseScreen({
   currentUser = auth.currentUser,
 }) {
   const [registerAuthOpen, setRegisterAuthOpen] = useState(false);
+  const [ticketOfficeOpen, setTicketOfficeOpen] = useState(false);
   const [activeClubTab, setActiveClubTab] = useState("clubhouse");
   const isGuest = !currentUser?.uid;
   const displayName =
@@ -984,8 +1065,8 @@ export function ClubhouseScreen({
       <PageTabsSlot>
         <PageTabs
           options={[
-            { value: "clubhouse", label: "Clubhouse" },
-            { value: "shop", label: "Club Shop" },
+            { value: "clubhouse", label: "PROFILE" },
+            { value: "shop", label: "KITBAG" },
           ]}
           value={activeClubTab}
           onChange={setActiveClubTab}
@@ -994,70 +1075,80 @@ export function ClubhouseScreen({
       </PageTabsSlot>
       <DrawerContent>
         {activeClubTab === "clubhouse" ? (
-          <MenuPanel style={CLUBHOUSE_PANEL_STYLE}>
-            <div className="space-y-3 p-4">
-              <ClubhouseShirtCard
-                shirtProfile={shirtProfile}
-                displayName={displayName}
-                currentUser={currentUser}
-                onEdit={onEditShirt}
-                careerStats={{
-                  matchesPlayed: matchesPlayedTotal,
-                  matchesWon: allTimeMatchesWon,
-                  totalGoals: allTimeGoals,
-                  highScore: highScoreTotal,
-                  mondayCupsWon,
-                }}
-              />
-              <ClubhouseStatsTable
-                rank={leaderboardRank || "#--"}
-                matchesPlayed={matchesPlayedTotal}
-                matchesWon={allTimeMatchesWon || 0}
-                matchesDrawn={allTimeMatchesDrawn || 0}
-                matchesLost={allTimeMatchesLost || 0}
-                totalGoals={allTimeGoals || 0}
-                conversionRate={conversionDisplay}
-                mondayCupsWon={mondayCupsWon || 0}
-                highScore={highScoreTotal}
-              />
-
-              <div className="grid grid-cols-2 gap-2">
-                <CampaignOverviewCard
-                  title="Current Campaign"
-                  team={currentSummary.team}
-                  roundLabel={currentSummary.roundLabel}
-                  form={currentSummary.form}
-                  score={currentSummary.campaignPoints}
-                  highlight
-                  selectable={Boolean(team)}
-                  onSelect={() => onResumeCampaign?.()}
+          <div className="space-y-3">
+            <MenuPanel style={CLUBHOUSE_PANEL_STYLE}>
+              <div className="px-4 pb-4 pt-3">
+                <ClubhouseShirtCard
+                  shirtProfile={shirtProfile}
+                  displayName={displayName}
+                  currentUser={currentUser}
+                  onEdit={onEditShirt}
+                  careerStats={{
+                    matchesPlayed: matchesPlayedTotal,
+                    matchesWon: allTimeMatchesWon,
+                    totalGoals: allTimeGoals,
+                    highScore: highScoreTotal,
+                    mondayCupsWon,
+                  }}
                 />
-                <CampaignOverviewCard
-                  title="Best Campaign"
-                  team={bestSummary.team}
-                  roundLabel={bestSummary.roundLabel}
-                  form={bestSummaryForm}
-                  score={bestSummary.campaignPoints}
-                  medalClass={campaignMedalClass(bestSummary)}
-                />
+                <div className="mt-1">
+                  <ClubhouseStatsTable
+                    rank={leaderboardRank || "#--"}
+                    matchesPlayed={matchesPlayedTotal}
+                    matchesWon={allTimeMatchesWon || 0}
+                    matchesDrawn={allTimeMatchesDrawn || 0}
+                    matchesLost={allTimeMatchesLost || 0}
+                    totalGoals={allTimeGoals || 0}
+                    conversionRate={conversionDisplay}
+                    mondayCupsWon={mondayCupsWon || 0}
+                    highScore={highScoreTotal}
+                  />
+                </div>
               </div>
-            </div>
-          </MenuPanel>
+            </MenuPanel>
+
+            <MenuPanel title="CAMPAIGN DATA" style={CLUBHOUSE_PANEL_STYLE}>
+              <div className="px-4 pb-4 pt-1">
+                <div className="grid grid-cols-2 gap-2">
+                  <CampaignOverviewCard
+                    title="Current Campaign"
+                    team={currentSummary.team}
+                    roundLabel={currentSummary.roundLabel}
+                    form={currentSummary.form}
+                    score={currentSummary.campaignPoints}
+                    highlight
+                    selectable={Boolean(team)}
+                    onSelect={() => onResumeCampaign?.()}
+                  />
+                  <CampaignOverviewCard
+                    title="Best Campaign"
+                    team={bestSummary.team}
+                    roundLabel={bestSummary.roundLabel}
+                    form={bestSummaryForm}
+                    score={bestSummary.campaignPoints}
+                    medalClass={campaignMedalClass(bestSummary)}
+                  />
+                </div>
+              </div>
+            </MenuPanel>
+          </div>
         ) : (
-          <MenuPanel
-            title="CLUB SHOP"
-            style={CLUBHOUSE_PANEL_STYLE}
-          >
-            <div className="space-y-3 p-4 pt-2">
-              <GoldenKitbagBundleCard
-                onOpenShop={(id) => onOpenShop?.(id)}
-                disabled={false}
-              />
-              <div className="grid grid-cols-4 gap-2">
+          <div className="space-y-3">
+            <MenuPanel
+              title="UPGRADES"
+              style={CLUBHOUSE_PANEL_STYLE}
+            >
+              <div className="space-y-3 p-4 pt-2">
+                <AllTeamsUnlockButton
+                  unlocked={Boolean(allTeamsUnlocked)}
+                  guestLocked={isGuest}
+                  onUnlock={() => onUnlockAllTeams?.()}
+                />
+                <div className="grid grid-cols-4 gap-2">
                 <CosmeticUpgradeCard
                   id="goldenBoot"
                   title="Golden Boot"
-                  subtitle="10% SHOT POWER"
+                  subtitle="+10% SHOT POWER"
                   price="£1"
                   assetSrc="/assets/game/golden-boot.png"
                   active={
@@ -1075,6 +1166,7 @@ export function ClubhouseScreen({
                   )}
                   guestLocked={isGuest}
                   onOpenShop={(id) => onOpenShop?.(id)}
+                  onUseGoldenTicket={() => setTicketOfficeOpen(true)}
                   onToggle={(id) => {
                     if (isGuest) onOpenShop?.(id);
                     else onToggleCosmetic?.(id);
@@ -1083,7 +1175,7 @@ export function ClubhouseScreen({
                 <CosmeticUpgradeCard
                   id="goldenBall"
                   title="Golden Ball"
-                  subtitle="10% SHOT ACCURACY"
+                  subtitle="+10% SHOT ACCURACY"
                   price="£1"
                   assetSrc="/assets/game/golden-ball.png"
                   active={
@@ -1149,21 +1241,43 @@ export function ClubhouseScreen({
                   )}
                   guestLocked={isGuest}
                   onOpenShop={(id) => onOpenShop?.(id)}
+                  onUseGoldenTicket={() => setTicketOfficeOpen(true)}
                   onToggle={(id) => {
                     if (isGuest) onOpenShop?.(id);
                     else onToggleCosmetic?.(id);
                   }}
                 />
+                </div>
               </div>
-              <AllTeamsUnlockButton
-                unlocked={Boolean(allTeamsUnlocked)}
-                guestLocked={isGuest}
-                onUnlock={() => onUnlockAllTeams?.()}
-              />
-            </div>
-          </MenuPanel>
+            </MenuPanel>
+
+            <MenuPanel
+              title="FULL BUNDLE"
+              style={CLUBHOUSE_PANEL_STYLE}
+            >
+              <div className="p-4 pt-2">
+                <GoldenKitbagBundleCard
+                  onOpenShop={(id) => onOpenShop?.(id)}
+                  disabled={false}
+                />
+              </div>
+            </MenuPanel>
+          </div>
         )}
       </DrawerContent>
+      <TicketOfficeModal
+        open={ticketOfficeOpen}
+        quantity={Number(activeCosmetics?.goldenTicketQuantity || ownedItems?.goldenTicketQty || 0)}
+        onClose={() => setTicketOfficeOpen(false)}
+        onUse={() => {
+          setTicketOfficeOpen(false);
+          onUseGoldenTicket?.();
+        }}
+        onBuyMore={() => {
+          setTicketOfficeOpen(false);
+          onOpenShop?.(STORE_ITEM_IDS.goldenTicket);
+        }}
+      />
       {registerAuthOpen && (
         <ClubhouseRegisterAuthOverlay
           onClose={() => setRegisterAuthOpen(false)}

@@ -194,6 +194,7 @@ export default function App() {
   const [shopInitialItemId, setShopInitialItemId] = useState(null);
   const [pendingShopItemId, setPendingShopItemId] = useState(null);
   const [shopOpen, setShopOpen] = useState(false);
+  const [goldenTicketNextCampaign, setGoldenTicketNextCampaign] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -1082,35 +1083,9 @@ export default function App() {
     };
 
     const timeout = window.setTimeout(() => {
-      saveUserProfile(currentUser.uid, payload)
-        .then(() => {
-          const highScore = profileHighScore;
-          if (highScore > 0) {
-            return saveLeaderboardHighScore(currentUser.uid, {
-              username:
-                currentUser.displayName ||
-                currentUser.email?.split("@")[0] ||
-                "YOU",
-              team: bestCampaignSummary?.team || null,
-              campaignPoints: highScore,
-              bestCampaign: bestCampaignSummary || null,
-              rank: myLeaderboardRank || null,
-              matchesPlayed: Number(allTimeMatchesPlayed || 0),
-              matchesWon: Number(allTimeMatchesWon || 0),
-              matchesDrawn: Number(allTimeMatchesDrawn || 0),
-              matchesLost: Number(allTimeMatchesLost || 0),
-              totalGoals: goals,
-              totalShots: attempts,
-              conversionPercentage,
-              mondayCupsWon: Number(mondayCupsWon || 0),
-              highScore,
-            }).then(() => loadLeaderboardRows(50).then(setLeaderboardRows));
-          }
-          return null;
-        })
-        .catch((error) => {
-          console.warn("Cloud profile save failed", error);
-        });
+      saveUserProfile(currentUser.uid, payload).catch((error) => {
+        console.warn("Cloud profile save failed", error);
+      });
     }, 350);
 
     return () => window.clearTimeout(timeout);
@@ -1486,6 +1461,21 @@ export default function App() {
     setShopInitialItemId(null);
   };
 
+  const useGoldenTicketForNextCampaign = () => {
+    const ticketQuantity = Number(
+      activeCosmetics?.goldenTicketQuantity ??
+        (activeCosmetics?.goldenTicket ? 1 : 0),
+    );
+    if (ticketQuantity <= 0) {
+      requestShopItem("goldenTicket");
+      return;
+    }
+    setGoldenTicketNextCampaign(true);
+    setDrawer(null);
+    setMenuOpen(false);
+    setScreen("home");
+  };
+
   const storeEntitlements = buildStoreEntitlements({
     ...(firebaseProfile || {}),
     unlocks: firebaseProfile?.unlocks || {},
@@ -1601,10 +1591,11 @@ export default function App() {
     );
 
     setActiveCosmetics((current) => {
+      const nextQuantity = Math.max(0, Number(currentTicketQuantity || 0) - 1);
       const next = {
         ...(current || {}),
-        goldenTicket: false,
-        goldenTicketQuantity: 0,
+        goldenTicket: nextQuantity > 0,
+        goldenTicketQuantity: nextQuantity,
       };
       safeWriteJson(COSMETICS_KEY, next);
       return next;
@@ -1631,11 +1622,7 @@ export default function App() {
     );
     const canUseGoldenTicket =
       Boolean(activeCosmetics?.goldenTicket) && ticketQuantity > 0;
-    const useGoldenTicket =
-      canUseGoldenTicket &&
-      window.confirm(
-        "Use Golden Ticket and advance straight to the final? This consumes 1 ticket.",
-      );
+    const useGoldenTicket = canUseGoldenTicket && goldenTicketNextCampaign;
 
     if (HOST_TEAMS.has(name)) unlockAchievements(["ourTime"]);
 
@@ -1671,8 +1658,13 @@ export default function App() {
         setFixtureView("knockout");
         setStandingsView("knockout");
         consumeLocalGoldenTicket();
+        setGoldenTicketNextCampaign(false);
         return;
       }
+    }
+
+    if (goldenTicketNextCampaign && !useGoldenTicket) {
+      setGoldenTicketNextCampaign(false);
     }
 
     const fixture =
@@ -2253,6 +2245,7 @@ export default function App() {
         storeEntitlements,
         onToggleCosmetic: toggleCosmetic,
         onOpenShop: requestShopItem,
+        onUseGoldenTicket: useGoldenTicketForNextCampaign,
         allTeamsUnlocked,
         onUnlockAllTeams: () => requestShopItem("allTeams"),
         onResumeCampaign: openMatch,

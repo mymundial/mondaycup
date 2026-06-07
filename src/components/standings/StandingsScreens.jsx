@@ -5,7 +5,7 @@ import { Flag } from "../shared.jsx";
 import TeamFlag from "../ui/TeamFlag.jsx";
 import TeamName from "../ui/TeamName.jsx";
 import PageScroll from "../ui/PageScroll.jsx";
-import { userHighlightCardClass, userHighlightTextClass } from "../ui/UserTeamHighlight.jsx";
+import { userHighlightCardClass } from "../ui/UserTeamHighlight.jsx";
 import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
 import { FixturesToggle } from "../schedule/ScheduleScreens.jsx";
 import { PageTabsSlot } from "../ui/PageTabs.jsx";
@@ -42,7 +42,7 @@ function BracketFixture({ fixture, layout = "vertical", userTeam = null, large =
   const slotDirection = layout === "horizontal" ? "flex-row" : "flex-col";
   const smallFlags = !large && !featuredFlags && !finalFlags;
   const isUserFixture = userTeam && (fixture?.home === userTeam || fixture?.away === userTeam);
-  const cardClass = isUserFixture ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-[#F7D117]/30" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10";
+  const cardClass = isUserFixture ? "border-[#F7D117]/72 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/30" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10";
   const matchNo = Number(fixture?.matchNo);
   const showPlayoffLabel = matchNo === 103;
   return <div data-bracket-match-no={fixture?.matchNo || ""} className={`mx-auto flex ${widthClass} ${heightClass} ${className} flex-col items-center justify-center ${finalFlags ? "rounded-full" : "rounded-[0.55rem]"} border ${cardClass} px-[5px] py-[4px] ring-1 ${large ? "py-[6px]" : ""}`}>
@@ -122,10 +122,10 @@ export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam =
         const isQualified = qualifiedTeams.has(row.team);
         const isUserTeam = userTeam === row.team;
         return <div key={row.team} className={rowClass({ isUserTeam })}>
-          <span className={userHighlightTextClass(isUserTeam)}>{index + 1}</span>
+          <span>{index + 1}</span>
           <span className="flex justify-center"><TeamFlag team={row.team} isUserTeam={isUserTeam} className="h-4 w-6" /></span><TeamName team={row.team} active={isUserTeam} className="pl-2 text-left tracking-[0.015em]" />
-          <span className={`flex items-center justify-center text-[10px] home-copy-bold font-black ${isUserTeam ? "text-[#F7D117]" : "text-[#F5F1E8]/72"}`}>{isQualified ? "Q" : ""}</span>
-          <span className={`flex items-center justify-center ${userHighlightTextClass(isUserTeam)}`}>{row.played}</span><span className={`flex items-center justify-center ${userHighlightTextClass(isUserTeam)}`}>{row.won}</span><span className={`flex items-center justify-center ${userHighlightTextClass(isUserTeam)}`}>{row.lost}</span><span className={`flex items-center justify-center ${userHighlightTextClass(isUserTeam)}`}>{row.drawn}</span><span className={`flex items-center justify-center ${userHighlightTextClass(isUserTeam)}`}>{row.gd}</span><span className={`flex items-center justify-center font-black ${userHighlightTextClass(isUserTeam)}`}>{row.pts}</span>
+          <span className="flex h-[16px] w-full items-center justify-center text-center text-[10px] home-copy-regular font-black leading-[10px] text-[#F7D117]">{isQualified ? "Q" : ""}</span>
+          <span className={`flex items-center justify-center ${isUserTeam ? "text-[#F7D117]" : ""}`}>{row.played}</span><span className={`flex items-center justify-center ${isUserTeam ? "text-[#F7D117]" : ""}`}>{row.won}</span><span className={`flex items-center justify-center ${isUserTeam ? "text-[#F7D117]" : ""}`}>{row.lost}</span><span className={`flex items-center justify-center ${isUserTeam ? "text-[#F7D117]" : ""}`}>{row.drawn}</span><span className={`flex items-center justify-center ${isUserTeam ? "text-[#F7D117]" : ""}`}>{row.gd}</span><span className={`flex items-center justify-center font-black ${isUserTeam ? "text-[#F7D117]" : ""}`}>{row.pts}</span>
         </div>;
       })}
     </div>
@@ -401,7 +401,7 @@ export function GroupsScreen({ allGroups, menuProps, standingsView, onStandingsV
     return () => cancelAnimationFrame(frame);
   }, [scrollTarget.key, scrollTarget.align, standingsView, knockoutFixtures.length, userTeam, userGroup, allGroups.length]);
 
-  return <main className="relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]"><ScreenTopBar {...menuProps}>STANDINGS</ScreenTopBar><PageTabsSlot><FixturesToggle value={standingsView} onChange={onStandingsViewChange} labels={["GROUPS", "BRACKET"]} /></PageTabsSlot><PageScroll ref={scrollRef} className="pt-1"><div className="space-y-0 pb-4">
+  return <main className="relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]"><ScreenTopBar {...menuProps}>STANDINGS</ScreenTopBar><PageTabsSlot><FixturesToggle value={standingsView} onChange={onStandingsViewChange} labels={["GROUPS", "BRACKET"]} /></PageTabsSlot><PageScroll ref={scrollRef} className="pt-1"><div className={standingsView === "group" ? "mc-panel-stack pb-4" : "space-y-0 pb-4"}>
     {standingsView === "group" && allGroups.map(({ group, rows }) => <div key={group} ref={(node) => { if (node) groupRefs.current[group] = node; }}><GroupTable title={`GROUP ${group}`} rows={rows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} /></div>)}
     {standingsView === "knockout" && <KnockoutBracket round32={knockoutFixtures} podium={podium} userTeam={userTeam} />}
   </div></PageScroll></main>;

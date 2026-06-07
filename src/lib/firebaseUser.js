@@ -17,6 +17,7 @@ import {
   normaliseTicketQuantity,
 } from "../data/storeItems.js";
 import { db } from "../firebase.js";
+import { isTerminalResultStatus, normalizeResultStatus } from "../logic/resultStatus.js";
 
 export const FORM_GUIDE_LENGTH = 8;
 export const GROUP_STAGE_MATCH_START = 1;
@@ -34,6 +35,10 @@ const UPGRADE_KEYS = ["allTeams", "goldenBoot", "goldenBall", "goldenGlove"];
 
 const emptyBooleanMap = (keys) =>
   Object.fromEntries(keys.map((key) => [key, false]));
+
+const hasOwn = (object, key) =>
+  Object.prototype.hasOwnProperty.call(object || {}, key);
+
 
 export const normaliseFormGuide = (formGuide = []) => {
   const source = Array.isArray(formGuide) ? formGuide : [];
@@ -696,18 +701,28 @@ export const createDefaultUserProfile = (
 };
 
 const normaliseProfileUpdate = (data = {}) => {
-  const consumables = normaliseConsumables(data.consumables, {});
-  const upgradesPurchased = normaliseUpgradeMap(
-    data.upgradesPurchased,
-    {},
-    data.unlocks,
-  );
-  const cosmeticsEquipped = normaliseCosmeticsActive(
-    data.cosmeticsActive || data.cosmeticsEquipped,
-    {},
-    consumables,
-    upgradesPurchased,
-  );
+  const hasUpgradeInput = hasOwn(data, "upgradesPurchased");
+  const hasConsumableInput = hasOwn(data, "consumables");
+  const hasModernCosmeticStateInput =
+    hasOwn(data, "cosmeticsActive") || hasOwn(data, "cosmeticsEquipped");
+
+  // Profile autosaves are partial writes. Do not manufacture missing purchase
+  // entitlement fields here, otherwise a normal profile save can reset Stripe
+  // purchases/consumable counts back to false/zero.
+  const consumables = hasConsumableInput
+    ? normaliseConsumables(data.consumables, {})
+    : undefined;
+  const upgradesPurchased = hasUpgradeInput
+    ? normaliseUpgradeMap(data.upgradesPurchased, {}, data.unlocks)
+    : undefined;
+  const cosmeticsEquipped = hasModernCosmeticStateInput
+    ? normaliseCosmeticsActive(
+        data.cosmeticsActive || data.cosmeticsEquipped,
+        {},
+        consumables || normaliseConsumables({}, {}),
+        upgradesPurchased || normaliseUpgradeMap({}, {}, {}),
+      )
+    : undefined;
   const currentCampaign = normaliseCurrentCampaign(
     data.currentCampaign,
     data.currentProgress,
@@ -729,6 +744,25 @@ const normaliseProfileUpdate = (data = {}) => {
         )
       : undefined;
 
+  const compatibilityAliases = buildCompatibilityAliases({
+    currentCampaign,
+    bestCampaign,
+    careerStats,
+    upgradesPurchased: upgradesPurchased || emptyBooleanMap(UPGRADE_KEYS),
+    cosmeticsEquipped: cosmeticsEquipped || emptyBooleanMap(COSMETIC_KEYS),
+    consumables: consumables || normaliseConsumables({}, {}),
+    userShirt,
+  });
+
+  if (!hasUpgradeInput) {
+    delete compatibilityAliases.unlocks;
+  }
+  if (!hasModernCosmeticStateInput && !hasConsumableInput && !hasUpgradeInput) {
+    delete compatibilityAliases.cosmeticsActive;
+    delete compatibilityAliases.cosmeticsEquipped;
+    delete compatibilityAliases.cosmetics;
+  }
+
   const update = {
     ...data,
     upgradesPurchased,
@@ -747,17 +781,22 @@ const normaliseProfileUpdate = (data = {}) => {
       ? normaliseNationCupWins(data.nationCupWins)
       : undefined,
     userShirt,
-    ...buildCompatibilityAliases({
-      currentCampaign,
-      bestCampaign,
-      careerStats,
-      upgradesPurchased,
-      cosmeticsEquipped,
-      consumables,
-      userShirt,
-    }),
+    ...compatibilityAliases,
     updatedAt: serverTimestamp(),
   };
+
+  if (!hasUpgradeInput) {
+    delete update.upgradesPurchased;
+    delete update.unlocks;
+  }
+  if (!hasConsumableInput) {
+    delete update.consumables;
+  }
+  if (!hasModernCosmeticStateInput && !hasConsumableInput && !hasUpgradeInput) {
+    delete update.cosmeticsActive;
+    delete update.cosmeticsEquipped;
+    delete update.cosmetics;
+  }
 
   if (data.username || data.nickname) {
     const username = cleanUsername(data.username || data.nickname);
@@ -1093,14 +1132,14 @@ export async function saveLeaderboardHighScore(uid, entry = {}) {
     entry.username || entry.nickname || "PLAYER",
   ).toUpperCase();
 
-  const finish =
+  const finish = normalizeResultStatus(
     entry.status ||
-    entry.finish ||
-    rawBestCampaign.status ||
-    bestCampaign.tournamentPhase ||
-    rawBestCampaign.roundLabel ||
-    rawBestCampaign.stage ||
-    "inProgress";
+      entry.finish ||
+      rawBestCampaign.status ||
+      rawBestCampaign.finish ||
+      "inProgress",
+  );
+  if (!isTerminalResultStatus(finish)) return;
   const podiumAchieved = Boolean(
     entry.podium ||
     entry.podiumAchieved ||

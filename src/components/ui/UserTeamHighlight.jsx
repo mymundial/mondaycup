@@ -5,7 +5,6 @@ export const USER_HIGHLIGHT = {
   border: 'border-[#F7D117]/72',
   ring: 'ring-[#F7D117]/32',
   flagRing: 'ring-[#F7D117]/85',
-  glow: 'shadow-[0_0_12px_rgba(247,209,23,0.10)]',
 };
 
 export function userHighlightTextClass(active) {
@@ -18,7 +17,7 @@ export function userHighlightFlagClass(active, fallback = 'ring-[#F5F1E8]/35') {
 
 export function userHighlightCardClass(active, inactiveClass = 'border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10') {
   return active
-    ? `${USER_HIGHLIGHT.border} bg-[#052D1D]/84 text-[#F5F1E8] ${USER_HIGHLIGHT.ring} ${USER_HIGHLIGHT.glow}`
+    ? `${USER_HIGHLIGHT.border} bg-[#052D1D]/68 text-[#F5F1E8] ${USER_HIGHLIGHT.ring}`
     : inactiveClass;
 }
 

@@ -139,7 +139,7 @@ export function FixtureCard({ id = null, home = "TBC", away = "TBC", group, play
   const scoreText = played ? `${homeGoals}-${awayGoals}` : "v";
   const fixtureNo = Number(matchNo || matchNumber || 0);
   const stadium = FIXTURE_VENUES[fixtureNo] || "";
-  const cardClass = `mb-1.5 grid min-h-[62px] grid-rows-[30%_40%_30%] rounded-[1.25rem] border px-2.5 text-center ring-1 last:mb-0 ${isUserFixture ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-[#F7D117]/30 shadow-[0_0_12px_rgba(247,209,23,0.12),0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(245,241,232,0.08)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10 shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(245,241,232,0.06)]"}`;
+  const cardClass = `mb-1.5 grid min-h-[62px] grid-rows-[30%_40%_30%] rounded-[1.25rem] border px-2.5 text-center ring-1 last:mb-0 ${isUserFixture ? "border-[#F7D117]/72 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/30 shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(245,241,232,0.06)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10 shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(245,241,232,0.06)]"}`;
   const teamText = (isUserTeam) => isUserTeam ? "text-[#F7D117]" : "text-[#F5F1E8]";
   const scoreClass = "text-[#F5F1E8]";
   const labelClass = "text-[#F5F1E8]/72";
@@ -157,7 +157,7 @@ export function FixtureCard({ id = null, home = "TBC", away = "TBC", group, play
         <TeamName team={away} context="fixture" className={`text-center home-copy-regular ${teamText(isUserAway)}`} active={false} />
         <div className="flex -translate-x-1.5 items-center justify-center"><FlagSlot value={away} isUserTeam={isUserAway} /></div>
       </div>
-      <div className={`flex items-start justify-center self-stretch pt-[3px] home-copy-regular text-[11px] uppercase leading-none tracking-[0.14em] ${isUserFixture ? "text-[#F5F1E8]" : "text-[#F5F1E8]/72"}`}>
+      <div className={`flex items-start justify-center self-stretch pt-[3px] home-copy-regular text-[11px] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]/72`}>
         {stadium}
       </div>
     </div>
@@ -251,7 +251,7 @@ export function FixturesScreen({ fixtureView, onFixtureViewChange, schedule, men
         <FixturesToggle value={fixtureView} onChange={onFixtureViewChange} />
       </PageTabsSlot>
       <PageScroll ref={scrollRef} className="pt-0.5 [scroll-padding-top:0px]">
-        <div className="space-y-3 pb-4">
+        <div className="mc-panel-stack pb-4">
           {fixtureView === "group" && [1, 2, 3].map((round) => <FixtureSection key={round} title={`MATCHDAY ${round}`} sectionRef={setSectionRef(`group-${round}`)}>{schedule.map((fixture, index) => ({ fixture, fixtureNo: index + 1 })).filter(({ fixture }) => fixture.week === round).map(({ fixture, fixtureNo }) => <FixtureCard key={fixture.id || fixtureNo} {...fixture} matchNo={fixture.matchNo || fixture.matchNumber || fixtureNo} userTeam={userTeam} />)}</FixtureSection>)}
           {fixtureView === "knockout" && KO_ROUNDS.map(([label, nums]) => {
             const fixtures = label === "Round of 32" ? round32 : mergeByMatchNo(buildPlaceholderFixtures(label, nums), knockoutFixtures);

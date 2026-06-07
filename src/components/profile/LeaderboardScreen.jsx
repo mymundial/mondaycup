@@ -61,7 +61,7 @@ function LeaderboardPodiumBadge({ row, isUser = false }) {
   const baseClass = isUser ? "border-[#F7D117]/28 bg-[#F7D117]/10" : "border-[#0B5F35]/18 bg-[#0B5F35]/8";
 
   if (!status) {
-    return <span className={`block h-[20px] w-[20px] rounded-full border ${baseClass} opacity-45`} aria-hidden="true" />;
+    return <span className="block h-[24px] w-[24px]" aria-hidden="true" />;
   }
 
   const aria = status === "champion" ? "first place" : status === "runnerUp" ? "second place" : "third place";
@@ -132,54 +132,48 @@ function LeaderboardHeader() {
       <span className="justify-self-center text-center">Rank</span>
       <span className="justify-self-start text-left">Username</span>
       <span className="justify-self-center text-center">Team</span>
-      <span className="justify-self-center text-center">Form</span>
-      <span aria-hidden="true" />
-      <span className="justify-self-center text-center">Score</span>
+      <span className="justify-self-center text-center">Cup Run</span>
+      <span className="justify-self-center text-center">Podium</span>
+      <span className="flex w-full min-w-0 items-center justify-center text-center leading-tight">Game Score</span>
     </div>
   );
 }
 
 function leaderboardPodiumRowClass(rank) {
   const numericRank = Number(rank);
-  if (numericRank === 1) return "mc-metallic-gold border-[#D8B62F]/70 text-[#072D1D] ring-1 ring-[#F7D117]/25";
-  if (numericRank === 2) return "mc-metallic-silver border-[#C8C8C8]/70 text-[#072D1D] ring-1 ring-[#F5F1E8]/25";
-  if (numericRank === 3) return "mc-metallic-bronze border-[#CD7F32]/70 text-[#072D1D] ring-1 ring-[#CD7F32]/25";
+  const baseRowClass = "bg-[#052D1D]/68 text-[#F5F1E8]";
+  if (numericRank === 1) return `${baseRowClass} border-[#D8B62F]/80 ring-1 ring-[#F7D117]/32`;
+  if (numericRank === 2) return `${baseRowClass} border-[#C8C8C8]/80 ring-1 ring-[#F5F1E8]/28`;
+  if (numericRank === 3) return `${baseRowClass} border-[#CD7F32]/80 ring-1 ring-[#CD7F32]/30`;
   return "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-1 ring-[#F5F1E8]/10";
 }
 
 function leaderboardPodiumTextClass(row, isUser = false) {
   const numericRank = Number(row?.rank);
-  if (isUser && [1, 2, 3].includes(numericRank)) return "text-[#355243]";
+  if (numericRank === 1) return "text-[#D8B62F]";
+  if (numericRank === 2) return "text-[#C8C8C8]";
+  if (numericRank === 3) return "text-[#CD7F32]";
   if (isUser) return "text-[#F7D117]";
-  if ([1, 2, 3].includes(numericRank)) return "text-[#355243]";
   return "text-[#F5F1E8]/66";
 }
 
 function leaderboardNameTextClass(row, isUser = false) {
-  const numericRank = Number(row?.rank);
-  if (isUser && [1, 2, 3].includes(numericRank)) return "text-[#355243]";
   if (isUser) return "text-[#F7D117]";
-  if ([1, 2, 3].includes(numericRank)) return "text-[#355243]";
   return "text-[#F5F1E8]";
 }
 
 function leaderboardScoreTextClass(row, isUser = false) {
-  const numericRank = Number(row?.rank);
-  if (isUser && [1, 2, 3].includes(numericRank)) return "text-[#355243]";
-  if (isUser) return "text-[#F5F1E8]";
-  if ([1, 2, 3].includes(numericRank)) return "text-[#355243]";
-  return "text-[#F5F1E8]";
+  return "font-led text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]";
 }
 
 function LeaderboardRow({ row, isUser = false }) {
   const form = leaderboardForm(row);
   const numericRank = Number(row?.rank);
   const isPodium = [1, 2, 3].includes(numericRank);
-  const rowClass = isUser && isPodium
-    ? `${leaderboardPodiumRowClass(row.rank)} mc-leaderboard-user-podium`
-    : isUser
-      ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-1 ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10)]"
-      : leaderboardPodiumRowClass(row.rank);
+  const defaultRowClass = leaderboardPodiumRowClass(row.rank);
+  const rowClass = isUser && !isPodium
+    ? "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-1 ring-[#F5F1E8]/10"
+    : defaultRowClass;
 
   return (
     <div
@@ -193,7 +187,7 @@ function LeaderboardRow({ row, isUser = false }) {
       <div className="flex min-w-0 items-center justify-center"><LeaderboardFlag team={row.team} isUser={isUser} /></div>
       <LeaderboardFormGuide form={form} isUser={isUser} />
       <div className="flex min-w-0 items-center justify-center"><LeaderboardPodiumBadge row={row} isUser={isUser} /></div>
-      <div className={`flex min-w-0 items-center justify-center text-center home-copy-bold text-[14px] leading-none ${leaderboardScoreTextClass(row, isUser)}`}>{Number(row.campaignPoints || 0)}</div>
+      <div className={`flex w-full min-w-0 items-center justify-center text-center text-[9px] leading-none tracking-[0.02em] ${leaderboardScoreTextClass(row, isUser)}`}><span className="block w-full text-center tabular-nums">{Number(row.campaignPoints || 0)}</span></div>
     </div>
   );
 }
@@ -432,7 +426,7 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
       </PageTabsSlot>
       <DrawerContent>
         <div className="pt-0.5 [scroll-padding-top:0px]">
-          <div className="space-y-3 pb-4">
+          <div className="mc-panel-stack pb-4">
             {leaderboardView === "model" ? (
               <LeaderboardSection title="BEST CAMPAIGN SCORE">
                 <div className="space-y-3 px-3 pb-3 pt-2">
@@ -453,6 +447,7 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
               <>
                 <LeaderboardSection title="MY RANKING">
                   <div className="px-2 pb-2 pt-0">
+                    <LeaderboardHeader />
                     <LeaderboardRow row={myRankRow} isUser />
                   </div>
                 </LeaderboardSection>
