@@ -391,7 +391,7 @@ export default function App() {
     const sessionId = String(params.get("session_id") || "").trim();
     if (!sessionId) return;
 
-    const confirmationKey = `mondayCup.checkoutConfirmation.${sessionId}`;
+    const confirmationKey = `mondayCup.checkoutConfirmation.v2.${sessionId}`;
     if (window.sessionStorage?.getItem(confirmationKey) === "done") return;
 
     let cancelled = false;
@@ -1066,6 +1066,9 @@ export default function App() {
 
   useEffect(() => {
     if (!authReady || !currentUser?.uid || !currentUser.emailVerified) return;
+    // Wait for the cloud profile to load before autosaving. This prevents stale
+    // localStorage achievement/unlock state from overwriting Firestore during sign-in.
+    if (!firebaseProfile) return;
 
     const attempts = Number(allTimeShots || 0);
     const goals = Number(allTimeGoals || 0);
@@ -1074,6 +1077,27 @@ export default function App() {
     const profileHighScore = Number(
       Math.max(scoringState.campaignPoints || 0, bestCampaignScore || 0),
     );
+    const profileUpgrades = firebaseProfile?.upgradesPurchased || {};
+    const autosaveUpgradesPurchased = [
+      "allTeams",
+      "goldenBoot",
+      "goldenBall",
+      "goldenGlove",
+    ].reduce((next, key) => {
+      if (profileUpgrades?.[key] || (key === "allTeams" && allTeamsUnlocked)) {
+        next[key] = true;
+      }
+      return next;
+    }, {});
+    const profileTicket = firebaseProfile?.consumables?.goldenTicket || {};
+    const shouldAutosaveTicket = Boolean(
+      Number(profileTicket.quantity || 0) > 0 ||
+        Number(profileTicket.totalPurchased || 0) > 0 ||
+        Number(profileTicket.totalUsed || 0) > 0,
+    );
+    const autosaveConsumables = shouldAutosaveTicket
+      ? { goldenTicket: profileTicket }
+      : undefined;
 
     const payload = {
       nickname:
@@ -1159,6 +1183,20 @@ export default function App() {
       achievements: achievements || {},
       nationCupWins: nationCupWins || {},
       nationStickerProgress: nationStickerProgress || {},
+      cosmeticsActive: activeCosmetics || {
+        goldenBoot: false,
+        goldenBall: false,
+        goldenGlove: false,
+        goldenTicket: false,
+        goldenTicketQuantity: 0,
+      },
+      cosmeticsEquipped: activeCosmetics || {
+        goldenBoot: false,
+        goldenBall: false,
+        goldenGlove: false,
+        goldenTicket: false,
+        goldenTicketQuantity: 0,
+      },
       cosmetics: activeCosmetics || {
         goldenBoot: false,
         goldenBall: false,
@@ -1166,18 +1204,24 @@ export default function App() {
         goldenTicket: false,
         goldenTicketQuantity: 0,
       },
+      ...(Object.keys(autosaveUpgradesPurchased).length
+        ? {
+            upgradesPurchased: autosaveUpgradesPurchased,
+            ...(autosaveUpgradesPurchased.allTeams
+              ? {
+                  unlocks: { allTeams: true },
+                  allTeamsEquipped: true,
+                  allTeamsUnlocked: true,
+                }
+              : {}),
+          }
+        : {}),
+      ...(autosaveConsumables ? { consumables: autosaveConsumables } : {}),
       leaderboard: {
         points: profileHighScore,
         highScore: profileHighScore,
         rank: myLeaderboardRank || null,
         team: bestCampaignSummary?.team || null,
-      },
-      unlocks: {
-        allTeams: Boolean(
-          firebaseProfile?.upgradesPurchased?.allTeams ||
-          firebaseProfile?.unlocks?.allTeams ||
-          false,
-        ),
       },
     };
 
@@ -1206,6 +1250,7 @@ export default function App() {
     bestCampaignSummary,
     currentRoundLabel,
     currentUser,
+    firebaseProfile,
     matchResult,
     matchStage,
     mondayCupsWon,

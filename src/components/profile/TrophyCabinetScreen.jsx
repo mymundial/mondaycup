@@ -357,7 +357,7 @@ function AchievementRow({ item, number }) {
 
 function debutGoalAchieved(careerStats = {}, achievements = {}) {
   const goalsScored = trophyNumber(careerStats.goalsScored ?? careerStats.totalGoals ?? careerStats.allTimeGoals);
-  return Boolean(achievements.rememberTheName || achievements.targetMan || goalsScored >= 1);
+  return Boolean(achievements.targetMan || goalsScored >= 1);
 }
 
 function debutGoalFailed(careerStats = {}, achievements = {}) {
@@ -449,7 +449,7 @@ function buildCareerHighlightPage(careerStats = {}, achievements = {}, nationCup
       title: "Remember the name",
       description: "Score on your debut",
       target: 1,
-      currentValue: achievements.rememberTheName || achievements.targetMan || goalsScored >= 1 ? 1 : 0,
+      currentValue: achievements.targetMan || goalsScored >= 1 ? 1 : 0,
       failedPermanently: debutGoalFailed(careerStats, achievements),
     },
     {
@@ -457,7 +457,7 @@ function buildCareerHighlightPage(careerStats = {}, achievements = {}, nationCup
       title: "National pride",
       description: "Win the Monday Cup",
       target: 1,
-      currentValue: achievements.nationalPride || achievements.championFinish || achievements.champions || cupWins >= 1 ? 1 : 0,
+      currentValue: achievements.championFinish || cupWins >= 1 ? 1 : 0,
     },
     {
       key: "careerGrizzledVeteran",
@@ -1174,7 +1174,7 @@ export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWin
         <TrophyToggle value={trophyView} onChange={handleTrophyViewChange} />
       </PageTabsSlot>
       <PageScroll className="pt-1">
-        <div className="mc-panel-stack pb-4">
+        <div className={trophyView === "teams" ? "flex flex-col gap-0 pb-4" : "mc-panel-stack pb-4"}>
           {trophyView === "player" && (
             <>
               <AchievementRatingPanel careerStats={careerStats} />

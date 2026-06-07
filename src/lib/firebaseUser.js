@@ -1,5 +1,6 @@
 import {
   collection,
+  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -144,58 +145,72 @@ export const ACHIEVEMENT_KEYS = [
   "thirdPlaceFinish",
 ];
 
-const normaliseAchievements = (source = {}, legacy = {}) => ({
-  ...emptyBooleanMap(ACHIEVEMENT_KEYS),
-  championFinish: Boolean(
-    source.championFinish ??
-    legacy.championFinish ??
-    source.trophy5 ??
-    legacy.trophy5 ??
-    false,
-  ),
-  runnerUpFinish: Boolean(
-    source.runnerUpFinish ?? legacy.runnerUpFinish ?? false,
-  ),
-  thirdPlaceFinish: Boolean(
-    source.thirdPlaceFinish ?? legacy.thirdPlaceFinish ?? false,
-  ),
-  ourTime: Boolean(
-    source.ourTime ??
-    source.hostHero ??
-    legacy.ourTime ??
-    legacy.hostHero ??
-    false,
-  ),
-  victory: Boolean(
-    source.victory ??
-    source.firstWin ??
-    legacy.victory ??
-    legacy.firstWin ??
-    false,
-  ),
-  quarterFinalist: Boolean(
-    source.quarterFinalist ??
-    source.reachQF ??
-    legacy.quarterFinalist ??
-    legacy.reachQF ??
-    false,
-  ),
-  semiFinalist: Boolean(
-    source.semiFinalist ??
-    source.reachSF ??
-    legacy.semiFinalist ??
-    legacy.reachSF ??
-    false,
-  ),
-  finalist: Boolean(
-    source.finalist ??
-    source.reachFinal ??
-    legacy.finalist ??
-    legacy.reachFinal ??
-    false,
-  ),
-  ...source,
-});
+const LEGACY_ACHIEVEMENT_ALIAS_KEYS = [
+  "hostHero",
+  "firstMatch",
+  "rememberTheName",
+  "pointsOnTheBoard",
+  "firstWin",
+  "knockoutQualified",
+  "round32Win",
+  "reachQF",
+  "reachSF",
+  "reachFinal",
+  "nationalPride",
+  "champions",
+  "champion",
+  "trophy5",
+  "runnerUp",
+  "thirdPlace",
+].filter((key) => !ACHIEVEMENT_KEYS.includes(key));
+
+const buildLegacyAchievementDeleteUpdate = () => {
+  const update = {};
+  LEGACY_ACHIEVEMENT_ALIAS_KEYS.forEach((key) => {
+    update[`achievements.${key}`] = deleteField();
+    update[`trophies.${key}`] = deleteField();
+  });
+  return update;
+};
+
+
+const truthy = (...values) => values.some((value) => value === true || value === 1 || value === "true");
+
+const normaliseAchievements = (source = {}, legacy = {}) => {
+  const src = source && typeof source === "object" ? source : {};
+  const old = legacy && typeof legacy === "object" ? legacy : {};
+
+  return {
+    ...emptyBooleanMap(ACHIEVEMENT_KEYS),
+    ourTime: truthy(src.ourTime, old.ourTime, src.hostHero, old.hostHero),
+    kickOff: truthy(src.kickOff, old.kickOff, src.firstMatch, old.firstMatch),
+    woodwork: truthy(src.woodwork, old.woodwork),
+    targetMan: truthy(src.targetMan, old.targetMan, src.rememberTheName, old.rememberTheName),
+    ptsOnTheBoard: truthy(src.ptsOnTheBoard, old.ptsOnTheBoard, src.pointsOnTheBoard, old.pointsOnTheBoard),
+    victory: truthy(src.victory, old.victory, src.firstWin, old.firstWin),
+    cleanSweep: truthy(src.cleanSweep, old.cleanSweep),
+    qualified: truthy(src.qualified, old.qualified, src.knockoutQualified, old.knockoutQualified),
+    tko: truthy(src.tko, old.tko, src.round32Win, old.round32Win),
+    quarterFinalist: truthy(src.quarterFinalist, old.quarterFinalist, src.reachQF, old.reachQF),
+    semiFinalist: truthy(src.semiFinalist, old.semiFinalist, src.reachSF, old.reachSF),
+    finalist: truthy(src.finalist, old.finalist, src.reachFinal, old.reachFinal),
+    cleanSheet: truthy(src.cleanSheet, old.cleanSheet),
+    perfect: truthy(src.perfect, old.perfect),
+    comebackKing: truthy(src.comebackKing, old.comebackKing),
+    iceCold: truthy(src.iceCold, old.iceCold),
+    goldenTouch: truthy(src.goldenTouch, old.goldenTouch),
+    corruptionScandal: truthy(src.corruptionScandal, old.corruptionScandal),
+    mondayLegend: truthy(src.mondayLegend, old.mondayLegend),
+    invincible: truthy(src.invincible, old.invincible),
+    nationalTreasure: truthy(src.nationalTreasure, old.nationalTreasure),
+    globalIcon: truthy(src.globalIcon, old.globalIcon),
+    siuuu: truthy(src.siuuu, old.siuuu),
+    goat: truthy(src.goat, old.goat),
+    championFinish: truthy(src.championFinish, old.championFinish, src.nationalPride, old.nationalPride, src.champions, old.champions, src.champion, old.champion, src.trophy5, old.trophy5),
+    runnerUpFinish: truthy(src.runnerUpFinish, old.runnerUpFinish, src.runnerUp, old.runnerUp),
+    thirdPlaceFinish: truthy(src.thirdPlaceFinish, old.thirdPlaceFinish, src.thirdPlace, old.thirdPlace),
+  };
+};
 
 const normaliseNationCupWins = (source = {}) =>
   source && typeof source === "object" ? { ...source } : {};
@@ -532,23 +547,49 @@ const normaliseCareerStats = (stats = {}, legacy = {}) => {
       (totalShots > 0 ? Math.round((totalGoals / totalShots) * 100) : 0),
   );
 
+  const mondayCupsWon = Number(
+    stats.mondayCupsWon ??
+      stats.mondayCupWins ??
+      stats.cupWins ??
+      stats.cupsWon ??
+      legacy.mondayCupsWon ??
+      legacy.mondayCupWins ??
+      legacy.cupWins ??
+      legacy.cupsWon ??
+      0,
+  );
+
   return {
     totalShots,
+    totalShotsTaken: totalShots,
+    allTimeShots: totalShots,
     totalGoals,
+    totalGoalsScored: totalGoals,
+    goalsScored: totalGoals,
+    allTimeGoals: totalGoals,
     goalConversionRate,
-    mondayCupsWon: Number(stats.mondayCupsWon ?? legacy.mondayCupsWon ?? 0),
+    conversionPercentage: goalConversionRate,
+    mondayCupsWon,
+    mondayCupWins: mondayCupsWon,
+    cupWins: mondayCupsWon,
+    cupsWon: mondayCupsWon,
     tournamentsStarted: Number(
       stats.tournamentsStarted ?? legacy.tournamentsStarted ?? 0,
     ),
     totalMatchesCompleted: matchesPlayed,
+    matchesCompleted: matchesPlayed,
     matchesPlayed,
     totalMatchesPlayed: matchesPlayed,
+    allTimeMatchesPlayed: matchesPlayed,
     matchesWon,
     totalMatchesWon: matchesWon,
+    allTimeMatchesWon: matchesWon,
     matchesDrawn,
     totalMatchesDrawn: matchesDrawn,
+    allTimeMatchesDrawn: matchesDrawn,
     matchesLost,
     totalMatchesLost: matchesLost,
+    allTimeMatchesLost: matchesLost,
     highScore,
     gameScore: highScore,
   };
@@ -587,25 +628,41 @@ const buildCompatibilityAliases = ({
   },
   stats: {
     mondayCupsWon: careerStats.mondayCupsWon,
+    mondayCupWins: careerStats.mondayCupsWon,
+    cupWins: careerStats.mondayCupsWon,
+    cupsWon: careerStats.mondayCupsWon,
     matchesPlayed: careerStats.matchesPlayed,
     totalMatchesPlayed: careerStats.totalMatchesPlayed,
+    allTimeMatchesPlayed: careerStats.matchesPlayed,
+    totalMatchesCompleted: careerStats.totalMatchesCompleted,
+    matchesCompleted: careerStats.totalMatchesCompleted,
     matchesWon: careerStats.matchesWon,
     totalMatchesWon: careerStats.totalMatchesWon,
+    allTimeMatchesWon: careerStats.matchesWon,
     matchesDrawn: careerStats.matchesDrawn,
     totalMatchesDrawn: careerStats.totalMatchesDrawn,
+    allTimeMatchesDrawn: careerStats.matchesDrawn,
     matchesLost: careerStats.matchesLost,
     totalMatchesLost: careerStats.totalMatchesLost,
+    allTimeMatchesLost: careerStats.matchesLost,
+    totalGoals: careerStats.totalGoals,
     totalGoalsScored: careerStats.totalGoals,
+    goalsScored: careerStats.totalGoals,
+    allTimeGoals: careerStats.totalGoals,
+    totalShots: careerStats.totalShots,
     totalShotsTaken: careerStats.totalShots,
+    allTimeShots: careerStats.totalShots,
+    goalConversionRate: careerStats.goalConversionRate,
     conversionPercentage: careerStats.goalConversionRate,
     tournamentsStarted: careerStats.tournamentsStarted,
-    totalMatchesCompleted: careerStats.totalMatchesCompleted,
     highScore: careerStats.highScore,
     gameScore: careerStats.gameScore,
   },
   unlocks: {
     allTeams: Boolean(upgradesPurchased.allTeams),
   },
+  allTeamsEquipped: Boolean(upgradesPurchased.allTeams),
+  allTeamsUnlocked: Boolean(upgradesPurchased.allTeams),
   userShirt,
   shirt: userShirt,
   shareShirt: userShirt,
@@ -674,6 +731,8 @@ export const createDefaultUserProfile = (
     },
 
     upgradesPurchased,
+    allTeamsEquipped: Boolean(upgradesPurchased.allTeams),
+    allTeamsUnlocked: Boolean(upgradesPurchased.allTeams),
     cosmeticsEquipped,
     consumables,
     currentCampaign,
@@ -681,6 +740,7 @@ export const createDefaultUserProfile = (
     bestCampaign,
     careerStats,
     achievements: normaliseAchievements(extra.achievements, extra.trophies),
+    trophies: normaliseAchievements(extra.achievements, extra.trophies),
     nationCupWins: normaliseNationCupWins(extra.nationCupWins),
     nationStickerProgress: extra.nationStickerProgress || {},
     userShirt,
@@ -701,101 +761,212 @@ export const createDefaultUserProfile = (
 };
 
 const normaliseProfileUpdate = (data = {}) => {
-  const hasUpgradeInput = hasOwn(data, "upgradesPurchased");
-  const hasConsumableInput = hasOwn(data, "consumables");
-  const hasModernCosmeticStateInput =
-    hasOwn(data, "cosmeticsActive") || hasOwn(data, "cosmeticsEquipped");
-
-  // Profile autosaves are partial writes. Do not manufacture missing purchase
-  // entitlement fields here, otherwise a normal profile save can reset Stripe
-  // purchases/consumable counts back to false/zero.
-  const consumables = hasConsumableInput
-    ? normaliseConsumables(data.consumables, {})
-    : undefined;
-  const upgradesPurchased = hasUpgradeInput
-    ? normaliseUpgradeMap(data.upgradesPurchased, {}, data.unlocks)
-    : undefined;
-  const cosmeticsEquipped = hasModernCosmeticStateInput
-    ? normaliseCosmeticsActive(
-        data.cosmeticsActive || data.cosmeticsEquipped,
-        {},
-        consumables || normaliseConsumables({}, {}),
-        upgradesPurchased || normaliseUpgradeMap({}, {}, {}),
-      )
-    : undefined;
-  const currentCampaign = normaliseCurrentCampaign(
-    data.currentCampaign,
-    data.currentProgress,
-  );
-  const bestCampaign = normaliseBestCampaign(data.bestCampaign);
-  const careerStats = normaliseCareerStats(data.careerStats, data.stats);
-  const shirtUsername = cleanUsername(
-    data.username ||
-      data.nickname ||
-      data.userShirt?.name ||
-      data.shirt?.name ||
-      "Player",
-  );
-  const userShirt =
-    data.userShirt || data.shirt || data.shareShirt
-      ? normaliseUserShirt(
-          data.userShirt || data.shirt || data.shareShirt,
-          shirtUsername,
-        )
-      : undefined;
-
-  const compatibilityAliases = buildCompatibilityAliases({
-    currentCampaign,
-    bestCampaign,
-    careerStats,
-    upgradesPurchased: upgradesPurchased || emptyBooleanMap(UPGRADE_KEYS),
-    cosmeticsEquipped: cosmeticsEquipped || emptyBooleanMap(COSMETIC_KEYS),
-    consumables: consumables || normaliseConsumables({}, {}),
-    userShirt,
-  });
-
-  if (!hasUpgradeInput) {
-    delete compatibilityAliases.unlocks;
-  }
-  if (!hasModernCosmeticStateInput && !hasConsumableInput && !hasUpgradeInput) {
-    delete compatibilityAliases.cosmeticsActive;
-    delete compatibilityAliases.cosmeticsEquipped;
-    delete compatibilityAliases.cosmetics;
-  }
-
   const update = {
     ...data,
-    upgradesPurchased,
-    cosmeticsEquipped,
-    consumables,
-    currentCampaign,
-    currentProgress:
-      data.currentProgress ?? data.currentCampaign?.currentProgress ?? null,
-    bestCampaign,
-    careerStats,
-    achievements:
-      data.achievements || data.trophies
-        ? normaliseAchievements(data.achievements, data.trophies)
-        : undefined,
-    nationCupWins: data.nationCupWins
-      ? normaliseNationCupWins(data.nationCupWins)
-      : undefined,
-    userShirt,
-    ...compatibilityAliases,
     updatedAt: serverTimestamp(),
   };
 
-  if (!hasUpgradeInput) {
+  const hasUpgradeInput =
+    hasOwn(data, "upgradesPurchased") ||
+    data.unlocks?.allTeams === true ||
+    data.allTeamsEquipped === true ||
+    data.allTeamsUnlocked === true;
+  const hasConsumableInput = hasOwn(data, "consumables");
+  const hasCosmeticStateInput =
+    hasOwn(data, "cosmeticsActive") ||
+    hasOwn(data, "cosmeticsEquipped") ||
+    hasOwn(data, "cosmetics");
+  const hasCurrentCampaignInput =
+    hasOwn(data, "currentCampaign") || hasOwn(data, "currentProgress");
+  const hasBestCampaignInput = hasOwn(data, "bestCampaign");
+  const hasCareerStatsInput = hasOwn(data, "careerStats") || hasOwn(data, "stats");
+  const hasAchievementInput = hasOwn(data, "achievements") || hasOwn(data, "trophies");
+  const hasNationCupWinsInput = hasOwn(data, "nationCupWins");
+  const hasNationStickerProgressInput = hasOwn(data, "nationStickerProgress");
+  const hasShirtInput =
+    hasOwn(data, "userShirt") || hasOwn(data, "shirt") || hasOwn(data, "shareShirt");
+
+  // Profile saves are partial writes. Only normalise and write a category when
+  // the caller actually supplied that category; otherwise an unrelated autosave
+  // or narrow profile update can reset purchases, stats, campaigns, or trophies.
+  if (hasUpgradeInput) {
+    const normalisedUpgrades = {
+      ...normaliseUpgradeMap(data.upgradesPurchased, {}, data.unlocks),
+      allTeams: Boolean(
+        data.upgradesPurchased?.allTeams ||
+          data.unlocks?.allTeams ||
+          data.allTeamsEquipped ||
+          data.allTeamsUnlocked ||
+          false,
+      ),
+    };
+    const upgradesPurchased = Object.fromEntries(
+      UPGRADE_KEYS.filter((key) => normalisedUpgrades[key]).map((key) => [key, true]),
+    );
+    if (Object.keys(upgradesPurchased).length) update.upgradesPurchased = upgradesPurchased;
+    else delete update.upgradesPurchased;
+    if (upgradesPurchased.allTeams) {
+      update.unlocks = { ...(data.unlocks || {}), allTeams: true };
+      update.allTeamsEquipped = true;
+      update.allTeamsUnlocked = true;
+    } else {
+      delete update.unlocks;
+      delete update.allTeamsEquipped;
+      delete update.allTeamsUnlocked;
+    }
+  } else {
     delete update.upgradesPurchased;
     delete update.unlocks;
+    delete update.allTeamsEquipped;
+    delete update.allTeamsUnlocked;
   }
-  if (!hasConsumableInput) {
+
+  if (hasConsumableInput) {
+    update.consumables = normaliseConsumables(data.consumables, data.cosmetics || {});
+  } else {
     delete update.consumables;
   }
-  if (!hasModernCosmeticStateInput && !hasConsumableInput && !hasUpgradeInput) {
+
+  if (hasCosmeticStateInput) {
+    const cosmeticSource = data.cosmeticsActive || data.cosmeticsEquipped || data.cosmetics || {};
+    const consumables = hasConsumableInput
+      ? normaliseConsumables(data.consumables, cosmeticSource)
+      : normaliseConsumables(
+          { goldenTicket: { quantity: cosmeticSource.goldenTicketQuantity ?? (cosmeticSource.goldenTicket ? 1 : 0) } },
+          cosmeticSource,
+        );
+    const upgradesPurchased = hasUpgradeInput
+      ? update.upgradesPurchased
+      : normaliseUpgradeMap(data.upgradesPurchased, {}, data.unlocks);
+    const cosmeticsActive = hasUpgradeInput || hasConsumableInput
+      ? normaliseCosmeticsActive(cosmeticSource, {}, consumables, upgradesPurchased)
+      : {
+          goldenBoot: Boolean(cosmeticSource.goldenBoot),
+          goldenBall: Boolean(cosmeticSource.goldenBall),
+          goldenGlove: Boolean(cosmeticSource.goldenGlove),
+          goldenTicket: normaliseTicketQuantity(
+            cosmeticSource.goldenTicketQuantity ?? (cosmeticSource.goldenTicket ? 1 : 0),
+          ) > 0,
+        };
+    const ticketQuantity = normaliseTicketQuantity(
+      update.consumables?.goldenTicket?.quantity ??
+        cosmeticSource.goldenTicketQuantity ??
+        (cosmeticSource.goldenTicket ? 1 : 0),
+    );
+    update.cosmeticsActive = {
+      ...cosmeticsActive,
+      goldenTicketQuantity: ticketQuantity,
+    };
+    update.cosmeticsEquipped = {
+      ...cosmeticsActive,
+      goldenTicketQuantity: ticketQuantity,
+    };
+    update.cosmetics = {
+      ...cosmeticsActive,
+      goldenTicketQuantity: ticketQuantity,
+    };
+  } else {
     delete update.cosmeticsActive;
     delete update.cosmeticsEquipped;
     delete update.cosmetics;
+  }
+
+  if (hasCurrentCampaignInput) {
+    const currentCampaign = normaliseCurrentCampaign(
+      data.currentCampaign,
+      data.currentProgress,
+    );
+    update.currentCampaign = {
+      ...currentCampaign,
+      active: currentCampaign.status === "active",
+      team: currentCampaign.selectedTeamName,
+      stage: currentCampaign.tournamentPhase,
+      points: currentCampaign.gameScore,
+      form: currentCampaign.formGuide,
+    };
+    if (hasOwn(data, "currentProgress")) {
+      update.currentProgress = data.currentProgress ?? null;
+    } else {
+      delete update.currentProgress;
+    }
+  } else {
+    delete update.currentCampaign;
+    delete update.currentProgress;
+  }
+
+  if (hasBestCampaignInput) {
+    const bestCampaign = normaliseBestCampaign(data.bestCampaign);
+    update.bestCampaign = {
+      ...bestCampaign,
+      team: bestCampaign.teamName,
+      stage: bestCampaign.tournamentPhase,
+      roundLabel: bestCampaign.tournamentPhase,
+      points: bestCampaign.gameScore,
+      campaignPoints: bestCampaign.gameScore,
+      form: bestCampaign.formGuide,
+      tournamentProgress: bestCampaign.formGuide,
+      cosmeticBallEquipped: Boolean(bestCampaign.cosmeticsApplied.goldenBall),
+      cosmeticGloveEquipped: Boolean(bestCampaign.cosmeticsApplied.goldenGlove),
+    };
+  } else {
+    delete update.bestCampaign;
+  }
+
+  if (hasCareerStatsInput) {
+    const careerStats = normaliseCareerStats(data.careerStats, data.stats);
+    update.careerStats = careerStats;
+    update.stats = buildCompatibilityAliases({
+      currentCampaign: createDefaultCurrentCampaign(),
+      bestCampaign: createDefaultBestCampaign(),
+      careerStats,
+      upgradesPurchased: emptyBooleanMap(UPGRADE_KEYS),
+      cosmeticsEquipped: emptyBooleanMap(COSMETIC_KEYS),
+      consumables: normaliseConsumables({}, {}),
+      userShirt: undefined,
+    }).stats;
+  } else {
+    delete update.careerStats;
+    delete update.stats;
+  }
+
+  if (hasAchievementInput) {
+    const normalisedAchievements = normaliseAchievements(data.achievements, data.trophies);
+    update.achievements = normalisedAchievements;
+    update.trophies = normalisedAchievements;
+  } else {
+    delete update.achievements;
+    delete update.trophies;
+  }
+
+  if (hasNationCupWinsInput) {
+    update.nationCupWins = normaliseNationCupWins(data.nationCupWins);
+  } else {
+    delete update.nationCupWins;
+  }
+
+  if (!hasNationStickerProgressInput) {
+    delete update.nationStickerProgress;
+  }
+
+  if (hasShirtInput) {
+    const shirtUsername = cleanUsername(
+      data.username ||
+        data.nickname ||
+        data.userShirt?.name ||
+        data.shirt?.name ||
+        "Player",
+    );
+    const userShirt = normaliseUserShirt(
+      data.userShirt || data.shirt || data.shareShirt,
+      shirtUsername,
+    );
+    update.userShirt = userShirt;
+    update.shirt = userShirt;
+    update.shareShirt = userShirt;
+  } else {
+    delete update.userShirt;
+    delete update.shirt;
+    delete update.shareShirt;
   }
 
   if (data.username || data.nickname) {
@@ -843,6 +1014,9 @@ export async function ensureUserDocument(
   });
 
   await setDoc(ref, update, { merge: true });
+  if (update.achievements || update.trophies) {
+    await updateDoc(ref, buildLegacyAchievementDeleteUpdate()).catch(() => {});
+  }
   return { id: snap.id, ...existing, ...update };
 }
 
@@ -859,11 +1033,20 @@ export async function loadUserProfile(uid) {
   );
   const bestCampaign = normaliseBestCampaign(data.bestCampaign);
   const consumables = normaliseConsumables(data.consumables, {});
-  const upgradesPurchased = normaliseUpgradeMap(
-    data.upgradesPurchased,
-    {},
-    data.unlocks,
-  );
+  const upgradesPurchased = {
+    ...normaliseUpgradeMap(
+      data.upgradesPurchased,
+      {},
+      data.unlocks,
+    ),
+    allTeams: Boolean(
+      data.upgradesPurchased?.allTeams ||
+        data.unlocks?.allTeams ||
+        data.allTeamsEquipped ||
+        data.allTeamsUnlocked ||
+        false,
+    ),
+  };
   const cosmeticsEquipped = normaliseCosmeticsActive(
     data.cosmeticsActive || data.cosmeticsEquipped,
     {},
@@ -885,6 +1068,7 @@ export async function loadUserProfile(uid) {
     bestCampaign,
     careerStats,
     achievements: normaliseAchievements(data.achievements, data.trophies),
+    trophies: normaliseAchievements(data.achievements, data.trophies),
     nationCupWins: normaliseNationCupWins(data.nationCupWins),
     nationStickerProgress: data.nationStickerProgress || {},
     userShirt,
@@ -903,9 +1087,14 @@ export async function loadUserProfile(uid) {
 
 export async function saveUserProfile(uid, data = {}) {
   if (!uid || !db) return;
-  await setDoc(doc(db, "users", uid), normaliseProfileUpdate(data), {
+  const update = normaliseProfileUpdate(data);
+  const hasAchievementInput = hasOwn(data, "achievements") || hasOwn(data, "trophies");
+  await setDoc(doc(db, "users", uid), update, {
     merge: true,
   });
+  if (hasAchievementInput) {
+    await updateDoc(doc(db, "users", uid), buildLegacyAchievementDeleteUpdate()).catch(() => {});
+  }
 }
 
 export async function saveUserShirtProfile(uid, shirt = {}) {
@@ -925,11 +1114,14 @@ export async function saveUserShirtProfile(uid, shirt = {}) {
 
 export async function unlockTrophy(uid, trophyKey) {
   if (!uid || !trophyKey || !db) return;
-  await updateDoc(doc(db, "users", uid), {
+  const achievementUpdate = {
     [`achievements.${trophyKey}`]: true,
-    // Backwards compatible trophy flags while the trophy cabinet is migrated.
     [`trophies.${trophyKey}`]: true,
     updatedAt: serverTimestamp(),
+  };
+  await updateDoc(doc(db, "users", uid), {
+    ...achievementUpdate,
+    ...buildLegacyAchievementDeleteUpdate(),
   });
 }
 
@@ -1026,6 +1218,7 @@ export async function saveAllTeamsUnlocked(
       "upgradesPurchased.allTeams": Boolean(purchased),
       "unlocks.allTeams": Boolean(purchased),
       allTeamsEquipped: Boolean(purchased ? true : equipped),
+      allTeamsUnlocked: Boolean(purchased ? true : equipped),
       updatedAt: serverTimestamp(),
     },
     { merge: true },
@@ -1055,7 +1248,13 @@ export function buildStoreEntitlements(profile = {}) {
   );
   const consumables = normaliseConsumables(profile.consumables, {});
   return {
-    allTeams: Boolean(upgrades.allTeams),
+    allTeams: Boolean(
+      upgrades.allTeams ||
+        profile.allTeamsEquipped ||
+        profile.allTeamsUnlocked ||
+        profile.unlocks?.allTeams ||
+        false,
+    ),
     goldenBall: Boolean(upgrades.goldenBall),
     goldenBoot: Boolean(upgrades.goldenBoot),
     goldenGlove: Boolean(upgrades.goldenGlove),

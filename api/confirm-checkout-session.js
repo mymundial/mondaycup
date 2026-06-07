@@ -300,11 +300,17 @@ async function firestoreGetDocument(accessToken, projectId, ...segments) {
 function readCurrentEntitlements(userDoc = {}) {
   const fields = userDoc.fields || {};
   const upgrades = firestoreMapFields(fields.upgradesPurchased);
+  const unlocks = firestoreMapFields(fields.unlocks);
   const consumables = firestoreMapFields(fields.consumables);
   const ticket = firestoreMapFields(consumables.goldenTicket);
 
   return {
-    allTeams: firestoreBoolValue(upgrades.allTeams),
+    allTeams: Boolean(
+      firestoreBoolValue(upgrades.allTeams) ||
+        firestoreBoolValue(unlocks.allTeams) ||
+        firestoreBoolValue(fields.allTeamsEquipped) ||
+        firestoreBoolValue(fields.allTeamsUnlocked)
+    ),
     goldenBoot: firestoreBoolValue(upgrades.goldenBoot),
     goldenBall: firestoreBoolValue(upgrades.goldenBall),
     goldenGlove: firestoreBoolValue(upgrades.goldenGlove),
@@ -394,7 +400,8 @@ function buildUserEntitlementUpdate({ current, grants, session, timestamp }) {
     update.upgradesPurchased = { ...(update.upgradesPurchased || {}), allTeams: true };
     update.unlocks = { allTeams: true };
     update.allTeamsEquipped = true;
-    updateMask.push("upgradesPurchased.allTeams", "unlocks.allTeams", "allTeamsEquipped");
+    update.allTeamsUnlocked = true;
+    updateMask.push("upgradesPurchased.allTeams", "unlocks.allTeams", "allTeamsEquipped", "allTeamsUnlocked");
   }
 
   if (grants.goldenBoot || grants.goldenBall || grants.goldenGlove) {
@@ -474,6 +481,50 @@ async function retrieveStripeCheckoutSession(sessionId) {
   return payload;
 }
 
+function buildIdempotentEntitlementRepairUpdate(grants = {}, timestamp) {
+  const update = { updatedAt: timestamp };
+  const updateMask = ["updatedAt"];
+
+  if (grants.allTeams) {
+    update.upgradesPurchased = { ...(update.upgradesPurchased || {}), allTeams: true };
+    update.unlocks = { allTeams: true };
+    update.allTeamsEquipped = true;
+    update.allTeamsUnlocked = true;
+    updateMask.push("upgradesPurchased.allTeams", "unlocks.allTeams", "allTeamsEquipped", "allTeamsUnlocked");
+  }
+
+  if (grants.goldenBoot || grants.goldenBall || grants.goldenGlove) {
+    update.upgradesPurchased = {
+      ...(update.upgradesPurchased || {}),
+      ...(grants.goldenBoot ? { goldenBoot: true } : {}),
+      ...(grants.goldenBall ? { goldenBall: true } : {}),
+      ...(grants.goldenGlove ? { goldenGlove: true } : {}),
+    };
+    if (grants.goldenBoot) updateMask.push("upgradesPurchased.goldenBoot");
+    if (grants.goldenBall) updateMask.push("upgradesPurchased.goldenBall");
+    if (grants.goldenGlove) updateMask.push("upgradesPurchased.goldenGlove");
+  }
+
+  return { update, updateMask };
+}
+
+async function repairNonConsumableEntitlements(accessToken, projectId, firebaseUid, grants, timestamp) {
+  const { update, updateMask } = buildIdempotentEntitlementRepairUpdate(grants, timestamp);
+  if (updateMask.length <= 1) return false;
+
+  await firestoreCommit(accessToken, projectId, [
+    {
+      update: {
+        name: firestoreDocumentName(projectId, "users", firebaseUid),
+        fields: firestoreFields(update),
+      },
+      updateMask: { fieldPaths: updateMask },
+    },
+  ]);
+
+  return true;
+}
+
 async function applyCheckoutSessionToFirebase(session) {
   const projectId = getFirebaseProjectId();
   if (!projectId) throw new Error("FIREBASE_PROJECT_ID is not configured");
@@ -522,7 +573,8 @@ async function applyCheckoutSessionToFirebase(session) {
     ]);
   } catch (error) {
     if (String(error.firestoreCode).includes("ALREADY_EXISTS") || /already exists/i.test(error.message || "")) {
-      return { skipped: true, reason: "already_processed", firebaseUid, grants };
+      const repaired = await repairNonConsumableEntitlements(accessToken, projectId, firebaseUid, grants, timestamp);
+      return { skipped: true, repaired, reason: "already_processed", firebaseUid, grants };
     }
     throw error;
   }
