@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { captureShareElementBlob, shareOrDownloadResult } from "../../utils/shareExport.js";
+import { createMatchShareBlob } from "../../utils/matchShareCanvas.js";
 import { PitchPageBackground } from "../layout/PitchPageBackground.jsx";
 import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
 import { teamToGameTeam } from "../../logic/matchPresentation.js";
@@ -464,6 +465,31 @@ export function ShareScreen({
     brothersY: shirtBrothersY,
   });
 
+  const currentMatchExportPayload = () => ({
+    userTeam,
+    opponentTeam,
+    score: { user: scoreA, opponent: scoreB },
+    stageTitle,
+    flashText,
+    flashStyle,
+    crowdStage,
+    showMarkers,
+    markerText,
+    usernameEnabled,
+    username,
+    teamAMarkers,
+    teamBMarkers,
+    totalMarkerSlots,
+    badgeMode,
+    showGoalkeeper,
+    goalkeeperPosition,
+    showBall,
+    ballPosition,
+    matchDesign,
+    borderEnabled: matchBorderEnabled,
+    borderColour: matchBorderColour,
+  });
+
   const handleExport = async () => {
     if (!frameRef.current || shareBusy) return;
     const previewWindow = null;
@@ -490,7 +516,9 @@ export function ShareScreen({
           patternMode: shirtPatternMode,
           patternColour: shirtPatternColour,
         })
-        : await captureShareElementBlob(frameRef.current, teamA);
+        : activeState.id === "match"
+          ? await createMatchShareBlob(currentMatchExportPayload())
+          : await captureShareElementBlob(frameRef.current, teamA);
       await shareOrDownloadResult({ blob, filename: `monday-cup-${activeState.id}-share.png`, previewWindow });
     } catch (error) {
       if (previewWindow && !previewWindow.closed) previewWindow.close();

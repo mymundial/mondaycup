@@ -13,12 +13,12 @@ import {
   isTerminalShareResult,
 } from "../../logic/podium.js";
 import {
-  captureShareElementBlob,
   normaliseThirdPlaceCopy,
   shareNativeImage,
   shareOrDownloadResult,
   warmShareExportRenderer,
 } from "../../utils/shareExport.js";
+import { createMatchShareBlob } from "../../utils/matchShareCanvas.js";
 import { TEAM_RANK } from "../../data/teams.js";
 
 const FIXTURE_VENUES = {
@@ -700,7 +700,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
     const exportNode = shareFrameRef.current;
     if (!exportNode) throw new Error("Match share exporter was not ready");
     if (!shareBlobPromiseRef.current) {
-      shareBlobPromiseRef.current = captureShareElementBlob(exportNode, userTeam, resultShareState?.badgeMode || null)
+      shareBlobPromiseRef.current = createMatchShareBlob(resultShareState || {})
         .finally(() => {
           shareBlobPromiseRef.current = null;
         });
@@ -749,6 +749,9 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   }, [sharePreviewOpen, shareBlob, resultShareState]);
 
   const openSharePreview = () => {
+    // Keep html2canvas warm for non-match share fallbacks, but the match result
+    // export now uses the dedicated canvas renderer below so iOS is not asked to
+    // screenshot a complex DOM tree.
     warmShareExportRenderer();
     setSharePreviewOpen(true);
   };

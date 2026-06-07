@@ -109,12 +109,42 @@ function loadCanvasImage(src) {
   });
 }
 
+function dataUrlToBlob(dataUrl) {
+  const [header, base64] = String(dataUrl || "").split(",");
+  const match = header.match(/^data:([^;]+);base64$/);
+  if (!match || !base64) return null;
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return new Blob([bytes], { type: match[1] || "image/png" });
+}
+
 function canvasToBlob(canvas) {
   return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
+    const finish = (blob) => {
       if (blob) resolve(blob);
       else reject(new Error("The match share image could not be created"));
-    }, "image/png", 0.95);
+    };
+
+    if (canvas.toBlob) {
+      canvas.toBlob((blob) => {
+        if (blob) return finish(blob);
+        try {
+          finish(dataUrlToBlob(canvas.toDataURL("image/png", 0.95)));
+        } catch {
+          finish(null);
+        }
+      }, "image/png", 0.95);
+      return;
+    }
+
+    try {
+      finish(dataUrlToBlob(canvas.toDataURL("image/png", 0.95)));
+    } catch {
+      finish(null);
+    }
   });
 }
 
