@@ -312,14 +312,14 @@ function drawFlag(ctx, image, x, y, width, height, options = {}) {
   ctx.restore();
 }
 
-function drawCapturedScoreboardFlagOverlays(ctx, props, assets, size) {
+function drawCapturedScoreboardFlagOverlays(ctx, props, assets, size, yOffset = 0) {
   const d = { ...DEFAULT_DESIGN, ...(props.matchDesign || {}) };
   if (d.showFlags === false) return;
   const boardH = size * (clamp(d.scoreboardHeight, 24, 46, 34) / 100);
   const mainH = boardH * 0.76;
   const row1 = mainH * 0.26;
   const row2 = mainH * 0.47;
-  const r2Y = row1 + row2 / 2;
+  const r2Y = row1 + row2 / 2 + yOffset;
   const fractions = [0.72, 1.1, 0.75, 0.3, 0.75, 1.1, 0.72];
   const total = fractions.reduce((sum, value) => sum + value, 0);
   const widths = fractions.map((value) => (value / total) * size);
@@ -327,21 +327,14 @@ function drawCapturedScoreboardFlagOverlays(ctx, props, assets, size) {
   const unit = size / 400;
   const flagW = 25 * unit * (Number(d.flagScale) || 1);
   const flagH = 17 * unit * (Number(d.flagScale) || 1);
-  const coverPad = Math.max(8, flagW * 0.46);
   const leftX = centers[0] - flagW / 2 + ((Number(d.flagAX) || 0) + 7) * unit;
   const rightX = centers[6] - flagW / 2 + ((Number(d.flagBX) || 0) - 7) * unit;
   const y = r2Y - flagH / 2;
 
   ctx.save();
-  // Cover the captured flag/border before redrawing, so the DOM-translated
-  // border cannot show through at the edges. The small black patch is hidden
-  // by the flag card but avoids old yellow halos.
-  ctx.fillStyle = "#050505";
-  fillRoundRect(ctx, leftX - coverPad * 1.55, y - coverPad * 0.82, flagW + coverPad * 2.35, flagH + coverPad * 1.65, Math.max(5, flagW * 0.18), "#050505");
-  fillRoundRect(ctx, rightX - coverPad * 0.80, y - coverPad * 0.82, flagW + coverPad * 2.35, flagH + coverPad * 1.65, Math.max(5, flagW * 0.18), "#050505");
-  // Reapply a faint dot-matrix texture over the cover patch so hidden DOM flags do not leave a flat scar.
-  drawDotMatrix(ctx, leftX - coverPad * 1.55, y - coverPad * 0.82, flagW + coverPad * 2.35, flagH + coverPad * 1.65);
-  drawDotMatrix(ctx, rightX - coverPad * 0.80, y - coverPad * 0.82, flagW + coverPad * 2.35, flagH + coverPad * 1.65);
+  // The captured DOM flags are hidden before capture. Draw only the clean export
+  // flag objects here, directly over the live scoreboard background. No cover
+  // texture panel is used, which keeps the dot-matrix grid continuous.
   drawFlag(ctx, assets.flagA, leftX, y + (Number(d.flagAY) || 0) * unit, flagW, flagH, { outline: LED_YELLOW });
   drawFlag(ctx, assets.flagB, rightX, y + (Number(d.flagBY) || 0) * unit, flagW, flagH, { outline: LED_YELLOW });
   ctx.restore();
@@ -780,23 +773,23 @@ function drawAdvertisingBoard(ctx, image, x, y, width, height) {
 
     // Soft selection-screen style glow. Avoid drop-shadow because Safari/canvas
     // renders it as a hard outline around the lettering rather than a radiating glow.
-    const outerGlow = ctx.createRadialGradient(cx, cy, logoW * 0.05, cx, cy, logoW * 0.78);
-    outerGlow.addColorStop(0, "rgba(245,241,232,0.16)");
-    outerGlow.addColorStop(0.38, "rgba(245,241,232,0.075)");
-    outerGlow.addColorStop(0.72, "rgba(245,241,232,0.028)");
+    const outerGlow = ctx.createRadialGradient(cx, cy, logoW * 0.02, cx, cy, logoW * 1.05);
+    outerGlow.addColorStop(0, "rgba(245,241,232,0.105)");
+    outerGlow.addColorStop(0.34, "rgba(245,241,232,0.052)");
+    outerGlow.addColorStop(0.74, "rgba(245,241,232,0.014)");
     outerGlow.addColorStop(1, "rgba(245,241,232,0)");
     ctx.fillStyle = outerGlow;
     ctx.beginPath();
-    ctx.ellipse(cx, cy, logoW * 0.86, logoH * 0.78, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, logoW * 1.14, logoH * 1.08, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    const yellowGlow = ctx.createRadialGradient(cx + logoW * 0.1, cy, 0, cx + logoW * 0.1, cy, logoW * 0.48);
-    yellowGlow.addColorStop(0, "rgba(247,209,23,0.075)");
-    yellowGlow.addColorStop(0.55, "rgba(247,209,23,0.026)");
+    const yellowGlow = ctx.createRadialGradient(cx + logoW * 0.1, cy, 0, cx + logoW * 0.1, cy, logoW * 0.72);
+    yellowGlow.addColorStop(0, "rgba(247,209,23,0.052)");
+    yellowGlow.addColorStop(0.58, "rgba(247,209,23,0.017)");
     yellowGlow.addColorStop(1, "rgba(247,209,23,0)");
     ctx.fillStyle = yellowGlow;
     ctx.beginPath();
-    ctx.ellipse(cx + logoW * 0.1, cy, logoW * 0.52, logoH * 0.48, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx + logoW * 0.1, cy, logoW * 0.74, logoH * 0.68, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.globalAlpha = 0.79;
@@ -941,6 +934,13 @@ async function captureScoreboardImageFromDom(sourceElement, exportSize) {
   if (document?.fonts?.ready) await document.fonts.ready.catch(() => null);
   await preloadImagesInElement(scoreboard);
 
+  const hiddenFlagNodes = Array.from(scoreboard.querySelectorAll?.('img[alt$=" flag"], img[alt*=" flag"]') || []);
+  const hiddenFlagStyles = hiddenFlagNodes.map((node) => ({ node, opacity: node.style.opacity, visibility: node.style.visibility }));
+  hiddenFlagNodes.forEach((node) => {
+    node.style.opacity = "0";
+    node.style.visibility = "hidden";
+  });
+
   const rootRect = root.getBoundingClientRect?.();
   const boardRect = scoreboard.getBoundingClientRect?.();
   const rootWidth = Math.max(1, rootRect?.width || 0);
@@ -965,9 +965,17 @@ async function captureScoreboardImageFromDom(sourceElement, exportSize) {
       },
     });
     const image = await loadCanvasImage(dataUrl);
+    hiddenFlagStyles.forEach(({ node, opacity, visibility }) => {
+      node.style.opacity = opacity;
+      node.style.visibility = visibility;
+    });
     if (!image) return null;
     return { image, height: scaledHeight };
   } catch (error) {
+    hiddenFlagStyles.forEach(({ node, opacity, visibility }) => {
+      node.style.opacity = opacity;
+      node.style.visibility = visibility;
+    });
     console.warn("Match scoreboard DOM capture failed; falling back to canvas scoreboard", error);
     return null;
   }
@@ -1008,15 +1016,16 @@ export async function createMatchShareBlob(props = {}, options = {}) {
   const capturedScoreboard = await captureScoreboardImageFromDom(options.sourceElement, size);
   let boardH;
   if (capturedScoreboard?.image) {
-    boardH = capturedScoreboard.height;
-    ctx.drawImage(capturedScoreboard.image, 0, 0, size, boardH);
+    const scoreboardUpShift = Math.max(4, Math.round(size * 0.005));
+    boardH = Math.max(1, capturedScoreboard.height - scoreboardUpShift);
+    ctx.drawImage(capturedScoreboard.image, 0, -scoreboardUpShift, size, capturedScoreboard.height);
     ctx.save();
-    ctx.globalAlpha = 0.075;
+    ctx.globalAlpha = 0.06;
     ctx.globalCompositeOperation = "screen";
-    ctx.filter = `blur(${Math.max(0.8, size * 0.0011)}px)`;
-    ctx.drawImage(capturedScoreboard.image, 0, 0, size, boardH);
+    ctx.filter = `blur(${Math.max(1.2, size * 0.0016)}px)`;
+    ctx.drawImage(capturedScoreboard.image, 0, -scoreboardUpShift, size, capturedScoreboard.height);
     ctx.restore();
-    drawCapturedScoreboardFlagOverlays(ctx, normalisedProps, assets, size);
+    drawCapturedScoreboardFlagOverlays(ctx, normalisedProps, assets, size, -scoreboardUpShift);
   } else {
     boardH = drawScoreboard(ctx, normalisedProps, assets, size);
   }
