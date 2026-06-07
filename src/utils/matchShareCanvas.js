@@ -285,21 +285,58 @@ function transformedBox(baseX, baseY, width, height, { x = 0, y = 0, scale = 1 }
   };
 }
 
-function drawFlag(ctx, image, x, y, width, height) {
-  const radius = Math.max(4, width * 0.12);
-  const border = Math.max(2.25, width * 0.055);
+function drawFlag(ctx, image, x, y, width, height, options = {}) {
+  const radius = Math.max(4, width * 0.105);
+  const pad = Math.max(1.25, width * 0.035);
+  const outerStroke = Math.max(1.4, width * 0.026);
+  const innerStroke = Math.max(0.7, width * 0.012);
   ctx.save();
-  // Match the preview: ivory flag backing, rounded clipping, then a crisp yellow outline.
+
+  // Draw the same object every time rather than relying on translated DOM/CSS
+  // flag borders. This keeps Safari/iPhone exports crisp and avoids the thick
+  // yellow halo that the captured CSS layer can produce.
   fillRoundRect(ctx, x, y, width, height, radius, IVORY);
   ctx.save();
-  drawRoundRect(ctx, x + border / 2, y + border / 2, width - border, height - border, Math.max(2, radius - border / 2));
+  drawRoundRect(ctx, x + pad, y + pad, width - pad * 2, height - pad * 2, Math.max(2, radius - pad));
   ctx.clip();
-  if (image) {
-    drawImageCover(ctx, image, x + border / 2, y + border / 2, width - border, height - border);
-  }
+  if (image) drawImageCover(ctx, image, x + pad, y + pad, width - pad * 2, height - pad * 2);
   ctx.restore();
-  strokeRoundRect(ctx, x + border / 2, y + border / 2, width - border, height - border, Math.max(2, radius - border / 2), "rgba(247,209,23,0.92)", border);
-  strokeRoundRect(ctx, x + border, y + border, width - border * 2, height - border * 2, Math.max(2, radius - border), "rgba(245,241,232,0.26)", Math.max(1, border * 0.28));
+
+  const outline = options.outline || "rgba(245,241,232,0.92)";
+  strokeRoundRect(ctx, x + outerStroke / 2, y + outerStroke / 2, width - outerStroke, height - outerStroke, radius, outline, outerStroke);
+  strokeRoundRect(ctx, x + pad, y + pad, width - pad * 2, height - pad * 2, Math.max(2, radius - pad), "rgba(3,27,18,0.34)", innerStroke);
+  ctx.restore();
+}
+
+function drawCapturedScoreboardFlagOverlays(ctx, props, assets, size) {
+  const d = { ...DEFAULT_DESIGN, ...(props.matchDesign || {}) };
+  if (d.showFlags === false) return;
+  const boardH = size * (clamp(d.scoreboardHeight, 24, 46, 34) / 100);
+  const mainH = boardH * 0.76;
+  const row1 = mainH * 0.26;
+  const row2 = mainH * 0.47;
+  const r2Y = row1 + row2 / 2;
+  const fractions = [0.72, 1.1, 0.75, 0.3, 0.75, 1.1, 0.72];
+  const total = fractions.reduce((sum, value) => sum + value, 0);
+  const widths = fractions.map((value) => (value / total) * size);
+  const centers = widths.map((width, index) => widths.slice(0, index).reduce((sum, value) => sum + value, 0) + width / 2);
+  const unit = size / 400;
+  const flagW = 25 * unit * (Number(d.flagScale) || 1);
+  const flagH = 17 * unit * (Number(d.flagScale) || 1);
+  const coverPad = Math.max(3, flagW * 0.12);
+  const leftX = centers[0] - flagW / 2 + ((Number(d.flagAX) || 0) + 7) * unit;
+  const rightX = centers[6] - flagW / 2 + ((Number(d.flagBX) || 0) - 7) * unit;
+  const y = r2Y - flagH / 2;
+
+  ctx.save();
+  // Cover the captured flag/border before redrawing, so the DOM-translated
+  // border cannot show through at the edges. The small black patch is hidden
+  // by the flag card but avoids old yellow halos.
+  ctx.fillStyle = "#050505";
+  fillRoundRect(ctx, leftX - coverPad, y - coverPad, flagW + coverPad * 2, flagH + coverPad * 2, Math.max(5, flagW * 0.16), "#050505");
+  fillRoundRect(ctx, rightX - coverPad, y - coverPad, flagW + coverPad * 2, flagH + coverPad * 2, Math.max(5, flagW * 0.16), "#050505");
+  drawFlag(ctx, assets.flagA, leftX, y + (Number(d.flagAY) || 0) * unit, flagW, flagH);
+  drawFlag(ctx, assets.flagB, rightX, y + (Number(d.flagBY) || 0) * unit, flagW, flagH);
   ctx.restore();
 }
 
@@ -725,17 +762,33 @@ function drawAdvertisingBoard(ctx, image, x, y, width, height) {
   if (image) {
     const logoW = width * 0.61;
     const logoH = height * 0.69;
-    const glow = ctx.createRadialGradient(x + width / 2, y + height / 2, 0, x + width / 2, y + height / 2, logoW * 0.42);
-    glow.addColorStop(0, "rgba(245,241,232,0.20)");
-    glow.addColorStop(0.55, "rgba(245,241,232,0.08)");
-    glow.addColorStop(1, "rgba(245,241,232,0)");
-    ctx.fillStyle = glow;
+    const cx = x + width / 2;
+    const cy = y + height / 2;
+
+    // Soft selection-screen style glow. Avoid drop-shadow because Safari/canvas
+    // renders it as a hard outline around the lettering rather than a radiating glow.
+    const outerGlow = ctx.createRadialGradient(cx, cy, logoW * 0.05, cx, cy, logoW * 0.78);
+    outerGlow.addColorStop(0, "rgba(245,241,232,0.16)");
+    outerGlow.addColorStop(0.38, "rgba(245,241,232,0.075)");
+    outerGlow.addColorStop(0.72, "rgba(245,241,232,0.028)");
+    outerGlow.addColorStop(1, "rgba(245,241,232,0)");
+    ctx.fillStyle = outerGlow;
     ctx.beginPath();
-    ctx.ellipse(x + width / 2, y + height / 2, logoW * 0.48, logoH * 0.55, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, logoW * 0.86, logoH * 0.78, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    const yellowGlow = ctx.createRadialGradient(cx + logoW * 0.1, cy, 0, cx + logoW * 0.1, cy, logoW * 0.48);
+    yellowGlow.addColorStop(0, "rgba(247,209,23,0.075)");
+    yellowGlow.addColorStop(0.55, "rgba(247,209,23,0.026)");
+    yellowGlow.addColorStop(1, "rgba(247,209,23,0)");
+    ctx.fillStyle = yellowGlow;
+    ctx.beginPath();
+    ctx.ellipse(cx + logoW * 0.1, cy, logoW * 0.52, logoH * 0.48, 0, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.globalAlpha = 0.84;
-    ctx.filter = "brightness(0.94) drop-shadow(0 0 9px rgba(245,241,232,0.20))";
-    drawImageContain(ctx, image, x + width / 2, y + height / 2, logoW, logoH);
+    ctx.filter = "brightness(0.94)";
+    drawImageContain(ctx, image, cx, cy, logoW, logoH);
     ctx.filter = "none";
     ctx.globalAlpha = 1;
   }
@@ -944,6 +997,7 @@ export async function createMatchShareBlob(props = {}, options = {}) {
   if (capturedScoreboard?.image) {
     boardH = capturedScoreboard.height;
     ctx.drawImage(capturedScoreboard.image, 0, 0, size, boardH);
+    drawCapturedScoreboardFlagOverlays(ctx, normalisedProps, assets, size);
   } else {
     boardH = drawScoreboard(ctx, normalisedProps, assets, size);
   }
