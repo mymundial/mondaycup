@@ -382,7 +382,7 @@ export default function App() {
 
 
   useEffect(() => {
-    if (!authReady || !currentUser?.uid || !currentUser.emailVerified) return;
+    if (!authReady || !hasCloudUser) return;
     if (typeof window === "undefined") return;
 
     const params = new URLSearchParams(window.location.search || "");
@@ -665,6 +665,7 @@ export default function App() {
   const currentRoundLabel = team
     ? roundLabelForResult(matchResult, matchStage)
     : "NO CAMPAIGN";
+  const hasCloudUser = Boolean(currentUser?.uid);
   const isCurrentUserVerified = Boolean(
     currentUser?.uid && currentUser.emailVerified,
   );
@@ -1065,7 +1066,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (!authReady || !currentUser?.uid || !currentUser.emailVerified) return;
+    if (!authReady || !hasCloudUser) return;
     // Wait for the cloud profile to load before autosaving. This prevents stale
     // localStorage achievement/unlock state from overwriting Firestore during sign-in.
     if (!firebaseProfile) return;
@@ -1103,7 +1104,7 @@ export default function App() {
       nickname:
         currentUser.displayName || currentUser.email?.split("@")[0] || "Player",
       email: currentUser.email || "",
-      accountStatus: { emailVerified: true, verificationRequired: false },
+      accountStatus: { emailVerified: Boolean(currentUser.emailVerified), verificationRequired: !currentUser.emailVerified },
       currentCampaign: {
         active: Boolean(team),
         team: team || null,
@@ -1420,7 +1421,7 @@ export default function App() {
         cosmeticsApplied: latestBestCampaignSummary?.cosmeticsApplied || campaignCosmeticsApplied(),
         emailVerified: Boolean(isCurrentUserVerified),
         accountStatus: { emailVerified: Boolean(isCurrentUserVerified), verificationRequired: !isCurrentUserVerified },
-        localOnly: !isCurrentUserVerified,
+        localOnly: !hasCloudUser,
       };
       setLeaderboardRows((rows) => {
         const withoutUser = rows.filter((row) => (row.userId || row.uid) !== localUserId);
@@ -1431,7 +1432,7 @@ export default function App() {
         safeWriteLeaderboardRows(nextRows.filter((row) => row.localOnly || row.userId === "guest-local"));
         return nextRows;
       });
-      if (isCurrentUserVerified) {
+      if (hasCloudUser) {
         saveLeaderboardHighScore(currentUser.uid, entry)
           .then(() => loadLeaderboardRows(50).then((rows) => {
             const localRows = safeReadLeaderboardRows();
@@ -1502,7 +1503,7 @@ export default function App() {
     });
   };
   const handleResumeCampaign = async () => {
-    const snapshot = isCurrentUserVerified
+    const snapshot = hasCloudUser
       ? await loadCurrentProgress(currentUser.uid).catch(
           () =>
             firebaseProfile?.currentProgress ||
@@ -1533,7 +1534,7 @@ export default function App() {
       return;
     }
 
-    const savedProgress = isCurrentUserVerified
+    const savedProgress = hasCloudUser
       ? await loadCurrentProgress(currentUser.uid).catch(
           () =>
             firebaseProfile?.currentProgress ||
@@ -1712,7 +1713,7 @@ export default function App() {
   const unlockAllTeams = () => {
     setAllTeamsUnlocked(true);
     safeWriteJson(ALL_TEAMS_UNLOCKED_KEY, true);
-    if (isCurrentUserVerified) {
+    if (hasCloudUser) {
       saveAllTeamsUnlocked(currentUser.uid, true).catch((error) =>
         console.warn("Unlock-all-teams save failed", error),
       );
@@ -1745,7 +1746,7 @@ export default function App() {
       return next;
     });
 
-    if (isCurrentUserVerified) {
+    if (hasCloudUser) {
       consumeGoldenTicket(currentUser.uid, currentTicketQuantity).catch(
         (error) => {
           console.warn("Golden Ticket consume failed", error);
@@ -2167,7 +2168,7 @@ export default function App() {
   const toggleCosmetic = (id) => {
     const equippableIds = new Set(["goldenBoot", "goldenBall", "goldenGlove"]);
 
-    if (!isCurrentUserVerified) {
+    if (!hasCloudUser) {
       requestShopItem(id);
       return;
     }
@@ -2249,7 +2250,7 @@ export default function App() {
       updatedAt: Date.now(),
     };
     setUserShirtProfile(nextShirt);
-    if (isCurrentUserVerified) {
+    if (hasCloudUser) {
       await saveUserShirtProfile(currentUser.uid, nextShirt);
       setFirebaseProfile((profile) => ({
         ...(profile || {}),
@@ -2310,7 +2311,7 @@ export default function App() {
   const handleSignOut = async () => {
     closeMenu();
 
-    if (isCurrentUserVerified) {
+    if (hasCloudUser) {
       await saveCurrentProgress(currentUser.uid, buildGameSnapshot()).catch(
         (error) => {
           console.warn(

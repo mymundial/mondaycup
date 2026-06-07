@@ -15,8 +15,8 @@ function PenaltyMarkers({ attempts, totalSlots = GAME.regulationPens }) {
       {Array.from({ length: totalSlots }).map((_, idx) => {
         const value = visible[idx];
         const markerValue = typeof value === "string" ? value : value?.result;
-        const color = markerValue === "G" ? "bg-green-500 pen-marker-goal" : markerValue === "S" ? "bg-red-500 pen-marker-save" : "bg-[#F7D117] pen-marker-empty";
-        return <span key={idx} className={`h-[clamp(4px,1.15vw,6px)] w-[clamp(4px,1.15vw,6px)] shrink-0 rounded-full ${color}`} />;
+        const color = markerValue === "G" ? "bg-green-500" : markerValue === "S" ? "bg-red-500" : "bg-[#F7D117]";
+        return <span key={idx} data-share-marker-dot="true" className={`h-[clamp(4px,1.15vw,6px)] w-[clamp(4px,1.15vw,6px)] shrink-0 rounded-full ${color}`} style={{ boxShadow: "none", filter: "none" }} />;
       })}
     </div>
   );
@@ -68,7 +68,7 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
             )}
 
             <div className="col-start-1 row-start-2 flex h-full items-center justify-center">
-              <TeamFlag team={userTeam} className="h-[clamp(12px,3.6vw,16px)] w-[clamp(18px,5.3vw,24px)] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" />
+              <TeamFlag team={userTeam} className="h-[clamp(12px,3.6vw,16px)] w-[clamp(18px,5.3vw,24px)] border border-[#F7D117]/88 bg-[#F5F1E8] shadow-none drop-shadow-none" />
             </div>
             <div className="col-start-2 row-start-2 flex h-full min-w-0 items-center justify-center px-[clamp(8px,3vw,18px)]">
               <div className="led-text-glow font-led w-full text-center text-[clamp(16px,3.05dvh,32px)] font-normal leading-none tracking-tight text-[#F7D117]" style={crispLedStyle}>{userTeam.code}</div>
@@ -80,7 +80,7 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
               <div className="led-text-glow font-led w-full text-center text-[clamp(16px,3.05dvh,32px)] font-normal leading-none tracking-tight text-[#F7D117]" style={crispLedStyle}>{opponentTeam.code}</div>
             </div>
             <div className="col-start-7 row-start-2 flex h-full items-center justify-center">
-              <TeamFlag team={opponentTeam} className="h-[clamp(12px,3.6vw,16px)] w-[clamp(18px,5.3vw,24px)] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" />
+              <TeamFlag team={opponentTeam} className="h-[clamp(12px,3.6vw,16px)] w-[clamp(18px,5.3vw,24px)] border border-[#F7D117]/88 bg-[#F5F1E8] shadow-none drop-shadow-none" />
             </div>
 
             <div className="col-start-2 row-start-3 flex h-full items-center justify-center">

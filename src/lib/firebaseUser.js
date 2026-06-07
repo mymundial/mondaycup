@@ -173,6 +173,14 @@ const buildLegacyAchievementDeleteUpdate = () => {
   return update;
 };
 
+const hasLegacyAchievementAliases = (source = {}) => {
+  const src = source && typeof source === "object" ? source : {};
+  return LEGACY_ACHIEVEMENT_ALIAS_KEYS.some((key) => hasOwn(src, key));
+};
+
+const achievementsDiffer = (left = {}, right = {}) =>
+  ACHIEVEMENT_KEYS.some((key) => Boolean(left?.[key]) !== Boolean(right?.[key]));
+
 
 const truthy = (...values) => values.some((value) => value === true || value === 1 || value === "true");
 
@@ -1054,10 +1062,43 @@ export async function loadUserProfile(uid) {
     upgradesPurchased,
   );
   const careerStats = normaliseCareerStats(data.careerStats, data.stats);
+  const achievements = normaliseAchievements(data.achievements, data.trophies);
   const userShirt = normaliseUserShirt(
     data.userShirt || data.shirt || data.shareShirt,
     data.username || data.nickname || data.displayName || "",
   );
+
+  const shouldRepairAchievements =
+    hasOwn(data, "achievements") ||
+    hasOwn(data, "trophies") ||
+    hasLegacyAchievementAliases(data.achievements) ||
+    hasLegacyAchievementAliases(data.trophies) ||
+    achievementsDiffer(data.achievements, achievements) ||
+    achievementsDiffer(data.trophies, achievements);
+  const shouldRepairAllTeams = Boolean(upgradesPurchased.allTeams) && (
+    data.unlocks?.allTeams !== true ||
+    data.allTeamsEquipped !== true ||
+    data.allTeamsUnlocked !== true ||
+    data.upgradesPurchased?.allTeams !== true
+  );
+
+  if (shouldRepairAchievements || shouldRepairAllTeams) {
+    const repair = { updatedAt: serverTimestamp() };
+    if (shouldRepairAchievements) {
+      repair.achievements = achievements;
+      repair.trophies = achievements;
+    }
+    if (shouldRepairAllTeams) {
+      repair.upgradesPurchased = { ...(data.upgradesPurchased || {}), allTeams: true };
+      repair.unlocks = { ...(data.unlocks || {}), allTeams: true };
+      repair.allTeamsEquipped = true;
+      repair.allTeamsUnlocked = true;
+    }
+    await setDoc(doc(db, "users", uid), repair, { merge: true }).catch(() => {});
+    if (shouldRepairAchievements) {
+      await updateDoc(doc(db, "users", uid), buildLegacyAchievementDeleteUpdate()).catch(() => {});
+    }
+  }
 
   return {
     ...data,
@@ -1067,8 +1108,8 @@ export async function loadUserProfile(uid) {
     currentCampaign,
     bestCampaign,
     careerStats,
-    achievements: normaliseAchievements(data.achievements, data.trophies),
-    trophies: normaliseAchievements(data.achievements, data.trophies),
+    achievements,
+    trophies: achievements,
     nationCupWins: normaliseNationCupWins(data.nationCupWins),
     nationStickerProgress: data.nationStickerProgress || {},
     userShirt,

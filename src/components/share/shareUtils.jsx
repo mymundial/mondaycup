@@ -103,8 +103,8 @@ export function MarkerDots({ markers = [], totalSlots = GAME.regulationPens }) {
   return (
     <div className="inline-flex min-w-0 justify-center gap-[3px]">
       {visible.map((marker, index) => {
-        const colour = marker === "G" ? "bg-green-500 pen-marker-goal" : marker === "S" ? "bg-red-500 pen-marker-save" : "bg-[#F7D117] pen-marker-empty";
-        return <span key={`${marker}-${index}`} className={`shrink-0 rounded-full ${colour}`} style={{ width: 6, height: 6, flex: "0 0 6px" }} />;
+        const colour = marker === "G" ? "bg-green-500" : marker === "S" ? "bg-red-500" : "bg-[#F7D117]";
+        return <span key={`${marker}-${index}`} data-share-marker-dot="true" className={`shrink-0 rounded-full ${colour}`} style={{ width: 6, height: 6, flex: "0 0 6px", boxShadow: "none", filter: "none" }} />;
       })}
     </div>
   );

@@ -181,7 +181,7 @@ function ShareScoreboard({
             )}
 
             <div className="col-start-1 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
-              {d.showFlags && <TeamFlag team={userTeam} className="h-[17px] w-[25px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: editorTransform({ x: Number(d.flagAX || 0) + 7, y: d.flagAY, scale: d.flagScale }) }} />}
+              {d.showFlags && <TeamFlag team={userTeam} className="h-[17px] w-[25px] border border-[#F7D117]/88 bg-[#F5F1E8] shadow-none drop-shadow-none" style={{ transform: editorTransform({ x: Number(d.flagAX || 0) + 7, y: d.flagAY, scale: d.flagScale }) }} />}
             </div>
             <div className="col-start-2 row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible px-0">
               {d.showTeamCodes && <div data-share-team-code="A" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-black leading-none" style={codeTextStyle("A")}>{userTeam.code}</div>}
@@ -207,7 +207,7 @@ function ShareScoreboard({
               {d.showTeamCodes && <div data-share-team-code="B" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-black leading-none" style={codeTextStyle("B")}>{opponentTeam.code}</div>}
             </div>
             <div className="col-start-7 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
-              {d.showFlags && <TeamFlag team={opponentTeam} className="h-[17px] w-[25px] ring-1 ring-[#F7D117]/88 shadow-[0_0_6px_rgba(247,209,23,0.30)] drop-shadow-[0_0_3px_rgba(247,209,23,0.14)]" style={{ transform: editorTransform({ x: Number(d.flagBX || 0) - 7, y: d.flagBY, scale: d.flagScale }) }} />}
+              {d.showFlags && <TeamFlag team={opponentTeam} className="h-[17px] w-[25px] border border-[#F7D117]/88 bg-[#F5F1E8] shadow-none drop-shadow-none" style={{ transform: editorTransform({ x: Number(d.flagBX || 0) - 7, y: d.flagBY, scale: d.flagScale }) }} />}
             </div>
 
             {showMarkers ? (
