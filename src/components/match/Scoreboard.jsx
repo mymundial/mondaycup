@@ -4,7 +4,7 @@ import { normaliseThirdPlaceCopy } from "../../logic/matchVisuals.js";
 import { MC_SELECTION_LAYOUT } from "../../styles/theme.js";
 
 function TeamFlag({ team, className = "h-4 w-6" }) {
-  if (team.flag) return <img src={team.flag} alt={`${team.name} flag`} className={`${className} rounded-sm object-cover`} draggable={false} />;
+  if (team.flag) return <img src={team.flag} alt={`${team.name} flag`} className={`${className} rounded-sm object-cover outline outline-1 outline-[#F7D117]/90 outline-offset-0`} style={{ boxShadow: "0 0 0 1px rgba(247,209,23,0.92), inset 0 0 0 1px rgba(245,241,232,0.22)" }} draggable={false} />;
   return <Flag team={team.name} className={className} />;
 }
 

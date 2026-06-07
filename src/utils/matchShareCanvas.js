@@ -286,14 +286,20 @@ function transformedBox(baseX, baseY, width, height, { x = 0, y = 0, scale = 1 }
 }
 
 function drawFlag(ctx, image, x, y, width, height) {
+  const radius = Math.max(4, width * 0.12);
+  const border = Math.max(2.25, width * 0.055);
   ctx.save();
-  fillRoundRect(ctx, x, y, width, height, Math.max(3, width * 0.08), IVORY);
+  // Match the preview: ivory flag backing, rounded clipping, then a crisp yellow outline.
+  fillRoundRect(ctx, x, y, width, height, radius, IVORY);
+  ctx.save();
+  drawRoundRect(ctx, x + border / 2, y + border / 2, width - border, height - border, Math.max(2, radius - border / 2));
+  ctx.clip();
   if (image) {
-    drawImageContain(ctx, image, x + width / 2, y + height / 2, width * 0.96, height * 0.9);
+    drawImageCover(ctx, image, x + border / 2, y + border / 2, width - border, height - border);
   }
-  ctx.strokeStyle = "rgba(247,209,23,0.88)";
-  ctx.lineWidth = Math.max(2, width * 0.05);
-  ctx.strokeRect(x, y, width, height);
+  ctx.restore();
+  strokeRoundRect(ctx, x + border / 2, y + border / 2, width - border, height - border, Math.max(2, radius - border / 2), "rgba(247,209,23,0.92)", border);
+  strokeRoundRect(ctx, x + border, y + border, width - border * 2, height - border * 2, Math.max(2, radius - border), "rgba(245,241,232,0.26)", Math.max(1, border * 0.28));
   ctx.restore();
 }
 
@@ -658,30 +664,40 @@ function drawGoal(ctx, x, y, width, height) {
   ctx.beginPath();
   ctx.rect(gx + line / 2, gy + line / 2, gw - line, gh - line / 2);
   ctx.clip();
-  ctx.strokeStyle = "rgba(245,241,232,0.17)";
-  ctx.lineWidth = Math.max(1.2, width * 0.0025);
+  ctx.globalAlpha = 0.55;
+
+  // Net rendering mirrors the match/share preview CSS gradients:
+  // fine vertical/horizontal mesh plus a subtle small-scale diagonal weave.
+  ctx.strokeStyle = "rgba(245,241,232,0.18)";
+  ctx.lineWidth = Math.max(1.1, gw * 0.002);
   const verticalGap = gw * 0.022;
-  const horizontalGap = gh * 0.031;
-  for (let px = gx; px <= gx + gw; px += verticalGap) {
+  for (let px = gx + verticalGap * 0.92; px <= gx + gw; px += verticalGap) {
     ctx.beginPath();
     ctx.moveTo(px, gy);
     ctx.lineTo(px, gy + gh);
     ctx.stroke();
   }
-  for (let py = gy; py <= gy + gh; py += horizontalGap) {
+
+  ctx.strokeStyle = "rgba(245,241,232,0.16)";
+  ctx.lineWidth = Math.max(1.1, gh * 0.003);
+  const horizontalGap = gh * 0.031;
+  for (let py = gy + horizontalGap * 0.9; py <= gy + gh; py += horizontalGap) {
     ctx.beginPath();
     ctx.moveTo(gx, py);
     ctx.lineTo(gx + gw, py);
     ctx.stroke();
   }
+
   ctx.strokeStyle = "rgba(245,241,232,0.08)";
-  ctx.lineWidth = Math.max(1, width * 0.002);
-  for (let px = gx - gh; px < gx + gw; px += width * 0.04) {
+  ctx.lineWidth = Math.max(0.8, width * 0.00125);
+  const diagonalGap = Math.max(22, width * 0.02);
+  for (let start = gx - gh; start < gx + gw; start += diagonalGap) {
     ctx.beginPath();
-    ctx.moveTo(px, gy + gh);
-    ctx.lineTo(px + gh, gy);
+    ctx.moveTo(start, gy + gh);
+    ctx.lineTo(start + gh, gy);
     ctx.stroke();
   }
+  ctx.globalAlpha = 1;
   ctx.restore();
   ctx.restore();
 }
@@ -707,8 +723,21 @@ function drawAdvertisingBoard(ctx, image, x, y, width, height) {
   ctx.lineTo(x + width, y + height - 1);
   ctx.stroke();
   if (image) {
-    ctx.globalAlpha = 0.94;
-    drawImageContain(ctx, image, x + width / 2, y + height / 2, width * 0.61, height * 0.69);
+    const logoW = width * 0.61;
+    const logoH = height * 0.69;
+    const glow = ctx.createRadialGradient(x + width / 2, y + height / 2, 0, x + width / 2, y + height / 2, logoW * 0.42);
+    glow.addColorStop(0, "rgba(245,241,232,0.20)");
+    glow.addColorStop(0.55, "rgba(245,241,232,0.08)");
+    glow.addColorStop(1, "rgba(245,241,232,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.ellipse(x + width / 2, y + height / 2, logoW * 0.48, logoH * 0.55, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.84;
+    ctx.filter = "brightness(0.94) drop-shadow(0 0 9px rgba(245,241,232,0.20))";
+    drawImageContain(ctx, image, x + width / 2, y + height / 2, logoW, logoH);
+    ctx.filter = "none";
+    ctx.globalAlpha = 1;
   }
   ctx.restore();
 }
