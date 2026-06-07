@@ -544,9 +544,6 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
           {error || success || (loading ? "LOADING..." : isSignup ? "REGISTER" : "SIGN IN")}
         </AuthPrimaryButton>
 
-        {isSignup && (
-          <AuthEmailCommsCheckbox checked={emailOptIn} onChange={setEmailOptIn} />
-        )}
 
         {!isSignup && (
           <AuthForgotPasswordButton onClick={() => { resetMessages(); setForgotPassword(true); }}>

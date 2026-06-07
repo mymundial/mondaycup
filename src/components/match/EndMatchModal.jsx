@@ -135,7 +135,7 @@ function TrophyIcon({ className = "h-6 w-6" }) {
 function RewardNoticeDot() {
   return (
     <span
-      className="absolute right-[clamp(7px,1.8vw,10px)] top-[clamp(7px,1.8vw,10px)] h-[clamp(9px,2.5vw,12px)] w-[clamp(9px,2.5vw,12px)] rounded-full bg-[#31E56F] shadow-none"
+      className="absolute right-[clamp(7px,1.8vw,10px)] top-[clamp(7px,1.8vw,10px)] h-[clamp(9px,2.5vw,12px)] w-[clamp(9px,2.5vw,12px)] rounded-full border-2 border-[#072D1D] bg-[#F7D117] shadow-[0_0_9px_rgba(247,209,23,0.9)]"
       aria-hidden="true"
     />
   );
@@ -212,178 +212,6 @@ function ResultStatusRail({ form = [], points = 0 }) {
       <FormTracker form={form} />
       <span className="block h-[58%] w-px shrink-0 bg-[#F5F1E8]/18" aria-hidden="true" />
       <span className="relative z-[1] inline-flex min-w-[42px] items-center justify-center font-led leading-none text-[#F7D117] led-text-glow tabular-nums" style={{ fontSize: "var(--result-rail-size)" }}>{Number(points || 0)}</span>
-    </div>
-  );
-}
-
-function cupRunMatchNumber(result = {}, fixture = {}) {
-  const week = Number(result?.week || 0);
-  if (week >= 1 && week <= 3) return week;
-
-  const matchNo = Number(result?.matchNo || result?.fixture?.matchNo || fixture?.matchNo || 0);
-  if (matchNo >= 73 && matchNo <= 88) return 4;
-  if (matchNo >= 89 && matchNo <= 96) return 5;
-  if (matchNo >= 97 && matchNo <= 100) return 6;
-  if (matchNo >= 101 && matchNo <= 102) return 7;
-  if (matchNo === 103 || matchNo === 104) return 8;
-
-  return Math.max(1, Math.min(8, week || 1));
-}
-
-function cupRunOutcomeForResult(result = {}) {
-  const draw = Boolean(result?.isDraw || Number(result?.homeGoals) === Number(result?.awayGoals));
-  if (draw) return "D";
-
-  const status = normalizeResultStatus(result?.status);
-  if (result?.won || result?.userWon || status === RESULT_STATUS.QUALIFIED || status === RESULT_STATUS.KNOCKOUT_WIN || status === RESULT_STATUS.CHAMPION || status === RESULT_STATUS.THIRD_PLACE) return "W";
-  if (result?.lost || result?.userLost || status === RESULT_STATUS.ELIMINATED || status === RESULT_STATUS.THIRD_PLACE_PENDING || status === RESULT_STATUS.RUNNER_UP || status === RESULT_STATUS.FOURTH_PLACE) return "L";
-
-  return "";
-}
-
-function cupRunResultMeta(result = {}, currentMatch = 1, isKnockout = false) {
-  const status = normalizeResultStatus(result?.status);
-  const matchIndex = Number(currentMatch || 1);
-  const matchNo = Number(result?.matchNo || result?.fixture?.matchNo || 0);
-  const outcome = cupRunOutcomeForResult(result);
-  const won = outcome === "W";
-  const draw = outcome === "D";
-
-  const title = (label = "", className = "text-[#F5F1E8]/72") => ({ label, className });
-
-  if (!isKnockout) {
-    if (matchIndex <= 2) {
-      if (won) return title("VICTORY", "text-[#31E56F]");
-      if (outcome === "L") return title("DEFEAT", "text-[#E94B43]");
-      if (draw) return title("DRAW", "text-[#F7D117]");
-      return title();
-    }
-    if (status === RESULT_STATUS.QUALIFIED || result?.qualified || result?.advanced) return title("QUALIFIED", "text-[#31E56F]");
-    if (status === RESULT_STATUS.ELIMINATED || result?.eliminated || result?.lost || result?.userLost) return title("ELIMINATED", "text-[#E94B43]");
-    return won ? title("QUALIFIED", "text-[#31E56F]") : title("ELIMINATED", "text-[#E94B43]");
-  }
-
-  if (matchNo === 104 || status === RESULT_STATUS.CHAMPION || status === RESULT_STATUS.RUNNER_UP) {
-    if (won || status === RESULT_STATUS.CHAMPION) return title("CHAMPIONS!", "text-[#F7D117]");
-    return title("RUNNER-UP", "text-[#D9E0DA]");
-  }
-
-  if (matchNo === 103 || status === RESULT_STATUS.THIRD_PLACE || status === RESULT_STATUS.FOURTH_PLACE) {
-    if (won || status === RESULT_STATUS.THIRD_PLACE) return title("THIRD PLACE", "text-[#CD7F32]");
-    return title("DEFEAT", "text-[#E94B43]");
-  }
-
-  if (matchNo >= 101 && matchNo <= 102) {
-    if (won) return title("QUALIFIED", "text-[#31E56F]");
-    return title("DEFEAT", "text-[#E94B43]");
-  }
-
-  if (status === RESULT_STATUS.QUALIFIED || status === RESULT_STATUS.KNOCKOUT_WIN || result?.qualified || result?.advanced || won) {
-    return title("QUALIFIED", "text-[#31E56F]");
-  }
-  if (status === RESULT_STATUS.ELIMINATED || result?.eliminated || result?.lost || result?.userLost) {
-    return title("ELIMINATED", "text-[#E94B43]");
-  }
-
-  return title();
-}
-
-function cupRunConnectorOutcome({ index, currentMatch = 1, result = {}, runForm = [], isKnockout = false, qualifiedTeams = new Set(), userTeam = null }) {
-  const stepNumber = index + 1;
-  const matchNo = Number(result?.matchNo || result?.fixture?.matchNo || 0);
-  const status = normalizeResultStatus(result?.status);
-  const currentOutcome = cupRunOutcomeForResult(result);
-  const groupQualified = isTeamQualified(qualifiedTeams, userTeam);
-  const followingMatchCompleted = Boolean(runForm[index + 1]);
-
-  // A connector only represents confirmed progress once the following match node exists.
-  // Example: after match 1, node 1 is coloured but connector 1→2 stays muted until match 2 is completed.
-  if (!followingMatchCompleted) return "";
-
-  // Group-stage matches 1 and 2 connect forward in yellow once the next group match has been completed.
-  if (stepNumber <= 2) return "D";
-
-  // After the 3rd group match, the connector into knockouts is based on group qualification,
-  // not the result of a later knockout match. A user can win/lose the current knockout,
-  // but the group-to-R32 connector should remain green if they reached the knockouts.
-  if (stepNumber === 3) {
-    if (groupQualified || status === RESULT_STATUS.QUALIFIED || result?.qualified || result?.advanced || isKnockout || currentMatch > 3) return "W";
-    if (status === RESULT_STATUS.ELIMINATED || result?.eliminated || result?.lost || result?.userLost) return "L";
-    return runForm[index] ? "L" : "";
-  }
-
-  // Semi-final: a defeat sends the user to the third-place playoff, so the connector is yellow.
-  if (stepNumber === 7 && matchNo >= 101 && matchNo <= 102) return currentOutcome === "W" ? "W" : "D";
-
-  // Earlier knockout wins progress, defeats eliminate.
-  const outcome = stepNumber === currentMatch ? currentOutcome : runForm[index];
-  if (outcome === "W") return "W";
-  if (outcome === "L") return "L";
-  if (outcome === "D") return "D";
-  return "";
-}
-
-function CupRunProgressStrip({ matchNumber = 1, form = [], result = {}, isKnockout = false, qualifiedTeams = new Set(), userTeam = null }) {
-  const currentMatch = Math.max(1, Math.min(8, Number(matchNumber || 1)));
-  const steps = Array.from({ length: 8 });
-  const matchNo = Number(result?.matchNo || result?.fixture?.matchNo || 0);
-  const status = normalizeResultStatus(result?.status);
-  const runForm = Array.isArray(form) ? form.slice(0, 8).map((value) => String(value || "").toUpperCase()) : [];
-  const currentOutcome = cupRunOutcomeForResult(result);
-  if (currentOutcome && !runForm[currentMatch - 1]) runForm[currentMatch - 1] = currentOutcome;
-
-  const nodeClass = (outcome, isCurrent, stepNumber) => {
-    const isFinal = matchNo === 104 && stepNumber === currentMatch;
-    const isThirdPlace = matchNo === 103 && stepNumber === currentMatch;
-
-    if (isFinal && (outcome === "W" || status === RESULT_STATUS.CHAMPION)) return "border border-[#F7D117] bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.58)]";
-    if (isFinal && (outcome === "L" || status === RESULT_STATUS.RUNNER_UP)) return "border border-[#D9E0DA] bg-[#D9E0DA] shadow-[0_0_8px_rgba(217,224,218,0.42)]";
-    if (isThirdPlace && (outcome === "W" || status === RESULT_STATUS.THIRD_PLACE)) return "border border-[#CD7F32] bg-[#CD7F32] shadow-[0_0_8px_rgba(205,127,50,0.50)]";
-
-    if (outcome === "W") return "border border-[#31E56F] bg-[#31E56F] shadow-[0_0_7px_rgba(49,229,111,0.48)]";
-    if (outcome === "D") return "border border-[#F7D117] bg-[#F7D117] shadow-[0_0_7px_rgba(247,209,23,0.48)]";
-    if (outcome === "L") return "border border-[#E94B43] bg-[#E94B43] shadow-[0_0_7px_rgba(233,75,67,0.46)]";
-    if (isCurrent) return "border-2 border-[#F7D117] bg-[#031B12] shadow-[0_0_9px_rgba(247,209,23,0.48),inset_0_0_0_2px_rgba(247,209,23,0.10)]";
-    return "border border-[#F5F1E8]/10 bg-[#2D4A20]/72 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]";
-  };
-
-  const lineClass = (outcome) => {
-    if (outcome === "W") return "bg-[#31E56F]/74 shadow-[0_0_5px_rgba(49,229,111,0.24)]";
-    if (outcome === "D") return "bg-[#F7D117]/78 shadow-[0_0_5px_rgba(247,209,23,0.28)]";
-    if (outcome === "L") return "bg-[#E94B43]/74 shadow-[0_0_5px_rgba(233,75,67,0.24)]";
-    return "bg-[#F5F1E8]/12";
-  };
-
-  const outcomeTitle = cupRunResultMeta(result, currentMatch, isKnockout);
-
-  return (
-    <div className="mt-2 rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2.5 py-2 shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]" aria-label={`Cup run progress. Match ${currentMatch} of 8`}>
-      <div className="mb-1.5 grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-[clamp(11px,3.1vw,15px)]">
-        <div className="text-left home-copy-bold text-[clamp(11px,3vw,13px)] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]/88">CUP RUN</div>
-        <div className={`justify-self-center text-center home-copy-bold text-[clamp(11px,3vw,13px)] uppercase leading-none tracking-[0.16em] ${outcomeTitle.className}`}>{outcomeTitle.label}</div>
-        <div className="justify-self-end text-right home-copy-bold text-[clamp(10px,2.7vw,12px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]/88 tabular-nums">{currentMatch}/8</div>
-      </div>
-      <div className="rounded-[1.05rem] border border-[#F7D117]/14 bg-[#031B12]/24 px-[clamp(11px,3.1vw,15px)] py-[clamp(7px,2.1vw,9px)] shadow-[inset_0_1px_0_rgba(245,241,232,0.04)]">
-        <div className="flex w-full min-w-0 items-center" aria-hidden="true">
-          {steps.map((_, index) => {
-            const stepNumber = index + 1;
-            const outcome = runForm[index];
-            const isCurrent = stepNumber === currentMatch && !outcome;
-            const connectorOutcome = cupRunConnectorOutcome({ index, currentMatch, result, runForm, isKnockout, qualifiedTeams, userTeam });
-            return (
-              <div key={stepNumber} className="flex min-w-0 flex-1 items-center last:flex-none">
-                <span
-                  className={`block shrink-0 rounded-full transition-none ${nodeClass(outcome, isCurrent, stepNumber)}`}
-                  style={{ height: "clamp(8px,2.25vw,10px)", width: "clamp(8px,2.25vw,10px)" }}
-                />
-                {index < steps.length - 1 && (
-                  <span className={`mx-[clamp(3px,1vw,5px)] h-[2px] min-w-0 flex-1 rounded-full ${lineClass(connectorOutcome)}`} />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 }
@@ -554,14 +382,14 @@ function getResultShareState({ result, fixture = null, podium = null, userTeam, 
 }
 
 
-function StandingsMiniTable({ title = "GROUP", rows = [], qualifiedTeams = new Set(), userTeam = null }) {
+function StandingsMiniTable({ title = "GROUP", rows = [], qualifiedTeams = new Set(), userTeam = null, actions = null }) {
   if (!rows.length) return null;
 
   const tableColumns = "20px 30px minmax(0, 1fr) 14px 18px 18px 18px 18px 20px 24px";
   const tightTeamStyle = (team) => (/bosnia/i.test(team || "") ? { letterSpacing: "-0.02em" } : undefined);
 
   return (
-    <div className="mt-0 overflow-visible rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2 pb-1.5 pt-2 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
+    <div className="mt-0 overflow-visible rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2 pb-1.5 pt-2 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]">
       <div className="mb-2 text-center home-copy-bold text-[clamp(15px,4.1vw,19px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">
         {title}
       </div>
@@ -586,6 +414,7 @@ function StandingsMiniTable({ title = "GROUP", rows = [], qualifiedTeams = new S
           </div>
         );
       })}
+      {actions}
     </div>
   );
 }
@@ -651,20 +480,17 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   const [sharePreparing, setSharePreparing] = useState(false);
   const [sharePreviewOpen, setSharePreviewOpen] = useState(false);
   const canShareResult = Boolean(result);
-  const currentCupRunMatch = cupRunMatchNumber(result, fixture);
   const campaignPointsTotal = getCampaignPointsTotal({ result, groupRows, userTeam, userForm });
   const activeBadgeMode = getPodiumBadgeMode({ result, fixture, stageLabel, podium, team: userTeam });
   const resultShareState = useMemo(() => getResultShareState({ result, fixture, podium, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username }), [result, fixture, podium, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username]);
   const resultActionButtonClass = "mx-auto grid h-[clamp(48px,5.6dvh,66px)] min-h-[48px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(14px,2dvh,23px)] font-black uppercase leading-none tracking-[0.14em] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
   const resultIconButtonClass = "grid h-[clamp(48px,5.6dvh,66px)] min-h-[48px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.22),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
-  const resultSquareButtonClass = "grid h-[44px] min-h-[44px] w-[44px] min-w-[44px] place-items-center rounded-[0.85rem] border border-[#F5F1E8]/45 bg-[#F7D117] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.22),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
-  const resultAdvanceButtonClass = "flex h-[44px] min-h-[44px] min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[0.85rem] border border-[#F5F1E8]/45 bg-[#F7D117] px-2.5 text-center home-copy-bold text-[clamp(10px,2.8vw,12px)] font-black uppercase leading-none tracking-[0.09em] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.22),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
-  const resultControlGridClass = "grid grid-cols-[44px_44px_44px_minmax(0,1fr)] items-center justify-items-stretch gap-2";
-  const resultButtonsBoxClass = "mt-2 rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 p-2.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]";
+  const resultSquareButtonClass = "grid h-[40px] min-h-[40px] w-full place-items-center rounded-[0.85rem] border border-[#F5F1E8]/45 bg-[#F7D117] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.22),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
+  const resultControlGridClass = "mt-4 grid grid-cols-4 items-center justify-items-stretch gap-2";
   const resultMetricBoxClass = "inline-flex h-[44px] min-h-[44px] min-w-[70px] items-center justify-center rounded-[0.9rem] border border-[#F7D117]/35 bg-[#031B12]/62 px-3 text-center shadow-[0_8px_18px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/18";
   const resultFormGuideBoxClass = "inline-flex h-[44px] min-w-0 items-center justify-center rounded-[0.9rem] border border-[#F7D117]/35 bg-[#031B12]/62 px-3 text-center shadow-[0_8px_18px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/18";
   const resultHeaderStatsClass = "flex min-w-0 max-w-full items-center justify-center gap-2 overflow-hidden";
-  const resultHeaderScoreClass = "inline-flex min-h-[62px] w-[clamp(132px,36vw,156px)] flex-col items-center justify-center rounded-[0.9rem] border border-[#F7D117]/28 bg-[#050505]/62 px-4 py-1.5 text-center shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/12";
+  const resultHeaderScoreClass = `${resultMetricBoxClass} shrink-0 font-led text-[clamp(18px,5.3vw,24px)] font-black uppercase leading-none tracking-[0.08em] text-[#F7D117] led-text-glow tabular-nums`;
 
   const buildShareBlob = () => {
     const exportNode = shareFrameRef.current;
@@ -758,9 +584,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
     : rawKnockoutMatchId.replace(/^M(\d+)$/i, "MATCH $1");
   const knockoutStadium = fixtureVenueName(knockoutMatchNo, fixture, result);
   const resultBoxTitle = getEndModalResultTitle(result);
-  const scoreHeaderTitle = Number(campaignPointsTotal || 0);
-  const headerTitle = sharePreviewOpen ? "SHARE" : scoreHeaderTitle;
-  const headerTitleClass = "home-copy-bold text-center text-[clamp(20px,5.4vw,25px)] uppercase leading-none tracking-[0.1em] text-[#F5F1E8]";
+  const headerTitle = sharePreviewOpen ? "SHARE" : resultBoxTitle;
   const showRewardDot = Boolean(hasNewTrophy);
   const handleResultNav = onOpenMenu;
   const resultControls = (
@@ -775,15 +599,9 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
       <button type="button" onClick={openSharePreview} disabled={!canShareResult || shareBusy} className={resultSquareButtonClass} aria-label="Share result">
         <ShareIcon />
       </button>
-      <button type="button" onClick={onNext} disabled={false} className={resultAdvanceButtonClass} aria-label={modalButton(result)}>
-        <span className="min-w-0 truncate">{modalButton(result)}</span>
-        <AdvanceIcon className="h-5 w-5 shrink-0" />
+      <button type="button" onClick={onNext} disabled={false} className={resultSquareButtonClass} aria-label={modalButton(result)}>
+        <AdvanceIcon />
       </button>
-    </div>
-  );
-  const resultButtonsPanel = (
-    <div className={resultButtonsBoxClass}>
-      {resultControls}
     </div>
   );
 
@@ -791,6 +609,13 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
     <div className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/45 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[4px]" style={{ zIndex: 2147483647 }}>
       {activeBadgeMode === PODIUM_BADGE_MODE.CHAMPION && <ChampionConfetti />}
       <div className="relative z-[1] flex w-full max-w-[408px] flex-col items-stretch">
+        {!sharePreviewOpen && (
+          <div className="mb-3 flex justify-center px-2" aria-label="Game score">
+            <div className={resultHeaderScoreClass}>
+              {Number(campaignPointsTotal || 0)}
+            </div>
+          </div>
+        )}
         <div
           className="relative w-full overflow-hidden rounded-[2rem] border border-[#F5F1E8]/14 text-center text-[#F5F1E8] shadow-[0_24px_54px_rgba(0,0,0,0.36),inset_0_-2px_6px_rgba(0,0,0,0.08)]"
           style={{
@@ -801,7 +626,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
         >
           <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_18%_8%,rgba(247,209,23,0.10),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.035),rgba(0,0,0,0.09))]" aria-hidden="true" />
           <div className="relative p-3">
-            <div className="mb-0 grid h-[58px] grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-2">
+            <div className="mb-3 grid h-11 grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-2">
               {sharePreviewOpen ? (
                 <button type="button" onClick={() => setSharePreviewOpen(false)} aria-label="Back to result options" className="grid h-10 w-10 place-items-center justify-self-start rounded-[0.85rem] bg-[#031B12]/46 text-[#F5F1E8]">
                   <BackArrowIcon className="h-7 w-7" />
@@ -813,21 +638,17 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
               )}
               <div className="flex min-w-0 items-center justify-center self-center overflow-hidden">
                 {sharePreviewOpen ? (
-                  <div className={headerTitleClass}>{headerTitle}</div>
+                  <div className="home-copy-bold text-center text-[clamp(20px,5.4vw,25px)] uppercase leading-none tracking-[0.1em] text-[#F5F1E8]">{headerTitle}</div>
                 ) : (
-                  <div className={resultHeaderScoreClass}>
-                    <div className="mb-1 home-copy-bold text-[clamp(9px,2.4vw,11px)] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]/88">GAME SCORE</div>
-                    <div className="font-led text-[clamp(20px,5.8vw,27px)] font-black uppercase leading-none tracking-[0.015em] text-[#F7D117] led-text-glow tabular-nums whitespace-nowrap">
-                      {scoreHeaderTitle}
-                    </div>
+                  <div className={resultFormGuideBoxClass} style={{ "--result-rail-size": "clamp(13px,3.4vw,18px)" }} aria-label={`Result: ${resultBoxTitle}. Form guide`}>
+                    <FormTracker form={userForm} className="gap-[clamp(8px,2.4vw,13px)]" />
                   </div>
                 )}
               </div>
-              <button type="button" onClick={onDismiss} aria-label="Close result" className="grid h-10 w-10 place-items-center justify-self-end rounded-[0.85rem] border border-[#F5F1E8]/10 bg-[#031B12]/46 text-[#F5F1E8]">
+              <button type="button" onClick={onDismiss} aria-label="Close result" className="grid h-10 w-10 place-items-center justify-self-end text-[#F5F1E8]">
                 <CloseIcon className="h-6 w-6" />
               </button>
             </div>
-
 
             {sharePreviewOpen ? (
               <div className="rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 p-2.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]">
@@ -850,7 +671,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
               </div>
             ) : (
               <>
-                <div className="mt-2 max-h-[calc(100dvh-342px)] overflow-y-auto pb-0">
+                <div className="max-h-[calc(100dvh-292px)] overflow-y-auto pb-1">
                   {isKnockout ? (
                     <div className="rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2.5 pb-1.5 pt-2.5 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]">
                       <div className="mb-2 text-center home-copy-bold text-[clamp(15px,4.1vw,19px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">
@@ -858,7 +679,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
                       </div>
                       <div className={`grid min-h-[70px] grid-rows-[30%_40%_30%] rounded-[1.1rem] border px-2.5 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)] ${userInKnockout ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10),0_6px_14px_rgba(0,0,0,0.10)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"}`}>
                         {knockoutMatchLabel && (
-                          <div className="flex items-end justify-center self-stretch pb-[3px] text-center home-copy-bold text-[clamp(10px,2.8vw,12px)] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]/72">
+                          <div className={`flex items-end justify-center self-stretch pb-[3px] text-center home-copy-bold text-[clamp(10px,2.8vw,12px)] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]`}>
                             {knockoutMatchLabel}
                           </div>
                         )}
@@ -870,20 +691,17 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
                           <div className="flex items-center justify-center"><Flag team={result.away} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${awayIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
                         </div>
                         {knockoutStadium && (
-                          <div className="flex items-start justify-center self-stretch pt-[3px] text-center home-copy-regular text-[clamp(10px,2.8vw,12px)] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]/72">
+                          <div className={`flex items-start justify-center self-stretch pt-[3px] text-center home-copy-regular text-[clamp(10px,2.8vw,12px)] uppercase leading-none tracking-[0.14em] ${userInKnockout ? "text-[#F5F1E8]" : "text-[#F5F1E8]/72"}`}>
                             {knockoutStadium}
                           </div>
                         )}
                       </div>
+                      {resultControls}
                     </div>
                   ) : (
-                    <>
-                      <StandingsMiniTable title={groupBoxTitle} rows={groupRows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />
-                    </>
+                    <StandingsMiniTable title={groupBoxTitle} rows={groupRows} qualifiedTeams={qualifiedTeams} userTeam={userTeam} actions={resultControls} />
                   )}
                 </div>
-                <CupRunProgressStrip matchNumber={currentCupRunMatch} form={userForm} result={result} isKnockout={isKnockout} qualifiedTeams={qualifiedTeams} userTeam={userTeam} />
-                {resultButtonsPanel}
               </>
             )}
           </div>

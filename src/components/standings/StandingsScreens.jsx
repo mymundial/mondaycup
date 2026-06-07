@@ -69,11 +69,9 @@ function stageLineInset(connectorCount = 1) {
   // bracket fixture columns. The fixture grids use small CSS gaps, so pure
   // 50/count percentages leave tiny broken line endings at R16/QF.
   const insetByCount = {
-    // Match the actual fixture-column centres for the current bracket widths/gaps.
-    // These values keep the horizontal rails visually flush with the connector stems.
-    2: "23.5%",
-    4: "11.75%",
-    8: "6.125%",
+    2: "25%",
+    4: "12.5%",
+    8: "6.25%",
   };
 
   return insetByCount[count] || `${50 / count}%`;

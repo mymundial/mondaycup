@@ -32,12 +32,8 @@ import {
   HostSelectScreen,
   TeamSelectScreen,
 } from "./components/selection/SelectionScreens.jsx";
-import { FixturesScreen } from "./components/schedule/ScheduleScreens.jsx";
-import { GroupsScreen } from "./components/standings/StandingsScreens.jsx";
 import { MatchScreen } from "./components/match/MatchScreen.jsx";
 import ShirtShareModal from "./components/share/ShirtShareModal.jsx";
-import { DrawerShell } from "./components/layout/Layout.jsx";
-import AppFooter from "./components/ui/AppFooter.jsx";
 import {
   ensureUserDocument,
   isNicknameTaken,
@@ -55,11 +51,6 @@ import {
   buildStoreEntitlements,
   saveUserShirtProfile,
 } from "./lib/firebaseUser.js";
-import {
-  ClubhouseScreen,
-  TrophyCabinetScreen,
-  LeaderboardScreen,
-} from "./components/profile/ProfileScreens.jsx";
 import ShopModal from "./components/store/ShopModal.jsx";
 import {
   BEST_CAMPAIGN_SCORE_KEY,
@@ -106,43 +97,16 @@ import {
   userScoreParts,
 } from "./app/appCore.js";
 
+import { AppDrawer } from "./app/components/AppDrawer.jsx";
+import { withNonMatchFooter } from "./app/components/NonMatchFooter.jsx";
+import { useLeaderboardRows } from "./app/hooks/useLeaderboardRows.js";
+import {
+  getUnopenedNationStickerNoticeKey,
+  hasUnopenedNationSticker,
+} from "./app/stickerNotices.js";
+
 runSelfTests();
 
-const REWARD_STICKER_KEYS = ["kit", "flag", "champions", "stopper", "talisman", "striker"];
-
-function getUnopenedNationStickerNoticeKey(nationStickerProgress = {}, currentTeam = null) {
-  const entries = [];
-  const records = currentTeam && nationStickerProgress?.[currentTeam]
-    ? [[currentTeam, nationStickerProgress[currentTeam]]]
-    : Object.entries(nationStickerProgress || {});
-
-  records.forEach(([nation, record = {}]) => {
-    const claimable = record?.claimable || {};
-    const opened = record?.opened || {};
-    REWARD_STICKER_KEYS.forEach((key) => {
-      if (claimable?.[key] && !opened?.[key]) entries.push(`${nation}:${key}`);
-    });
-  });
-
-  return entries.length ? entries.sort().join("|") : "";
-}
-
-function hasUnopenedNationSticker(nationStickerProgress = {}, currentTeam = null) {
-  return Boolean(getUnopenedNationStickerNoticeKey(nationStickerProgress, currentTeam));
-}
-
-function NonMatchFooter() {
-  return <AppFooter fixed />;
-}
-
-function withNonMatchFooter(content) {
-  return (
-    <>
-      {content}
-      <NonMatchFooter />
-    </>
-  );
-}
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [currentUser, setCurrentUser] = useState(() => auth.currentUser);
@@ -176,7 +140,7 @@ export default function App() {
   const [bestCampaignScore, setBestCampaignScore] = useState(() =>
     safeReadNumber(BEST_CAMPAIGN_SCORE_KEY, 0),
   );
-  const [leaderboardRows, setLeaderboardRows] = useState([]);
+  const [leaderboardRows, setLeaderboardRows] = useLeaderboardRows();
   const [bestCampaignSummary, setBestCampaignSummary] = useState(() =>
     safeReadJson(BEST_CAMPAIGN_SUMMARY_KEY, null),
   );
@@ -412,33 +376,6 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    const localRows = safeReadLeaderboardRows();
-
-    loadLeaderboardRows(50)
-      .then((rows) => {
-        if (cancelled) return;
-        const byUser = new Map();
-        [...localRows, ...rows].forEach((row) => {
-          const userId = row.userId || row.uid || row.id || row.username;
-          if (!userId) return;
-          const existing = byUser.get(userId);
-          if (!existing || Number(row.campaignPoints || row.gameScore || 0) > Number(existing.campaignPoints || existing.gameScore || 0)) {
-            byUser.set(userId, row);
-          }
-        });
-        setLeaderboardRows(Array.from(byUser.values()).sort((a, b) => Number(b.campaignPoints || b.gameScore || 0) - Number(a.campaignPoints || a.gameScore || 0)).slice(0, 50));
-      })
-      .catch((error) => {
-        console.warn("Cloud leaderboard load failed", error);
-        if (!cancelled) setLeaderboardRows(localRows);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const handleAuthComplete = async (user, options = {}) => {
     const nextUser = user || auth.currentUser || null;
@@ -2281,97 +2218,71 @@ export default function App() {
     onAuthComplete: handleAuthComplete,
   };
 
-  const drawerElement =
-    drawer === "groups" ? (
-      <DrawerShell>
-        <GroupsScreen
-          allGroups={allGroups}
-          qualifiers={qualifiers}
-          menuProps={menuProps}
-          standingsView={standingsView}
-          onStandingsViewChange={setStandingsView}
-          knockoutFixtures={visibleKnockoutFixtures}
-          qualifiedTeams={qualifiedTeams}
-          userTeam={team}
-          podium={podium}
-        />
-      </DrawerShell>
-    ) : drawer === "clubhouse" ? (
-      <DrawerShell>
-        <ClubhouseScreen
-          menuProps={menuProps}
-          team={team}
-          userForm={userForm}
-          campaignPoints={scoringState.campaignPoints}
-          bestCampaignSummary={bestCampaignSummary}
-          currentRoundLabel={currentRoundLabel}
-          leaderboardRank={myLeaderboardRank}
-          mondayCupsWon={mondayCupsWon}
-          highScore={Math.max(
-            scoringState.campaignPoints || 0,
-            bestCampaignScore || 0,
-          )}
-          allTimeMatchesPlayed={allTimeMatchesPlayed}
-          allTimeMatchesWon={allTimeMatchesWon}
-          allTimeMatchesDrawn={allTimeMatchesDrawn}
-          allTimeMatchesLost={allTimeMatchesLost}
-          allTimeGoals={allTimeGoals}
-          allTimeShots={allTimeShots}
-          activeCosmetics={activeCosmetics}
-          ownedItems={storeEntitlements}
-          onToggleCosmetic={toggleCosmetic}
-          onOpenShop={requestShopItem}
-          allTeamsUnlocked={allTeamsUnlocked}
-          onUnlockAllTeams={() => requestShopItem("allTeams")}
-          onResumeCampaign={openMatch}
-          currentUser={currentUser}
-          shirtProfile={userShirtProfile}
-          onEditShirt={() => setShirtShareOpen(true)}
-          onNicknameUpdate={handleNicknameUpdate}
-        />
-      </DrawerShell>
-    ) : drawer === "trophyCabinet" ? (
-      <DrawerShell>
-        <TrophyCabinetScreen
-          menuProps={menuProps}
-          achievements={achievements}
-          nationCupWins={nationCupWins}
-          nationStickerProgress={nationStickerProgress}
-          careerStats={{
-            matchesPlayed: allTimeMatchesPlayed,
-            matchesWon: allTimeMatchesWon,
-            goalsScored: allTimeGoals,
-          }}
-          allTeamsUnlocked={allTeamsUnlocked}
-          userTeam={team}
-          onOpenNationSticker={markNationStickerOpened}
-        />
-      </DrawerShell>
-    ) : drawer === "leaderboard" ? (
-      <DrawerShell>
-        <LeaderboardScreen
-          menuProps={menuProps}
-          rows={leaderboardRows}
-          currentCampaignScore={scoringState.campaignPoints}
-          bestCampaignScore={bestCampaignScore}
-          team={team}
-          bestCampaignSummary={bestCampaignSummary}
-          activeCosmetics={activeCosmetics}
-          currentUser={currentUser}
-        />
-      </DrawerShell>
-    ) : drawer === "fixtures" ? (
-      <DrawerShell>
-        <FixturesScreen
-          fixtureView={fixtureView}
-          onFixtureViewChange={setFixtureView}
-          schedule={schedule}
-          menuProps={menuProps}
-          knockoutFixtures={visibleKnockoutFixtures}
-          userTeam={team}
-        />
-      </DrawerShell>
-    ) : null;
+  const drawerElement = drawer ? (
+    <AppDrawer
+      drawer={drawer}
+      allGroups={allGroups}
+      qualifiers={qualifiers}
+      menuProps={menuProps}
+      standingsView={standingsView}
+      onStandingsViewChange={setStandingsView}
+      visibleKnockoutFixtures={visibleKnockoutFixtures}
+      qualifiedTeams={qualifiedTeams}
+      userTeam={team}
+      podium={podium}
+      fixtureView={fixtureView}
+      onFixtureViewChange={setFixtureView}
+      schedule={schedule}
+      profile={{
+        userForm,
+        campaignPoints: scoringState.campaignPoints,
+        bestCampaignSummary,
+        currentRoundLabel,
+        leaderboardRank: myLeaderboardRank,
+        mondayCupsWon,
+        highScore: Math.max(scoringState.campaignPoints || 0, bestCampaignScore || 0),
+        allTimeMatchesPlayed,
+        allTimeMatchesWon,
+        allTimeMatchesDrawn,
+        allTimeMatchesLost,
+        allTimeGoals,
+        allTimeShots,
+        activeCosmetics,
+      }}
+      clubhouse={{
+        storeEntitlements,
+        onToggleCosmetic: toggleCosmetic,
+        onOpenShop: requestShopItem,
+        allTeamsUnlocked,
+        onUnlockAllTeams: () => requestShopItem("allTeams"),
+        onResumeCampaign: openMatch,
+        currentUser,
+        shirtProfile: userShirtProfile,
+        onEditShirt: () => setShirtShareOpen(true),
+        onNicknameUpdate: handleNicknameUpdate,
+      }}
+      trophies={{
+        achievements,
+        nationCupWins,
+        nationStickerProgress,
+        careerStats: {
+          matchesPlayed: allTimeMatchesPlayed,
+          matchesWon: allTimeMatchesWon,
+          goalsScored: allTimeGoals,
+        },
+        allTeamsUnlocked,
+        onOpenNationSticker: markNationStickerOpened,
+      }}
+      leaderboard={{
+        rows: leaderboardRows,
+        currentCampaignScore: scoringState.campaignPoints,
+        bestCampaignScore,
+        bestCampaignSummary,
+        activeCosmetics,
+        currentUser,
+      }}
+    />
+  ) : null;
 
   const shopModalElement = (
     <ShopModal

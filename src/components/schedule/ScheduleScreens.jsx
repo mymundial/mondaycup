@@ -17,11 +17,6 @@ const isProgressionLabel = (value) => /^(W|RU)\d+$/.test(String(value || ""));
 const isPlaceholderLabel = (value) => !value || value === "TBC" || isSeedLabel(value) || isProgressionLabel(value);
 const displayTeam = (value) => getTeamDisplayName(value, "fixture");
 const normaliseRoundTitle = (title = "") => String(title).replace(/3rd\s+place\s+play-?off/i, "THIRD PLACE PLAY-OFF").replace(/3RD\s+PLACE\s+PLAY-?OFF/i, "THIRD PLACE PLAY-OFF");
-const displayMatchId = (match = {}) => {
-  const rawValue = match.matchNo || match.matchNumber || match.matchId || match.id || "";
-  const matchNumber = String(rawValue).match(/\d+/)?.[0];
-  return matchNumber ? `Match ${matchNumber}` : rawValue;
-};
 const FIXTURE_VENUES = {
   1: "Mexico City Stadium",
   2: "Estadio Guadalajara",
@@ -152,7 +147,7 @@ export function FixtureCard({ id = null, home = "TBC", away = "TBC", group, play
   return (
     <div className={cardClass}>
       <div className={`flex items-end justify-center gap-2 self-stretch pb-[3px] home-copy-bold text-[11px] uppercase leading-none tracking-[0.14em] ${labelClass}`}>
-        {fixtureNo && !group && <span>{displayMatchId({ id, matchNo, matchNumber, matchId })}</span>}
+        {fixtureNo && !group && <span>M{fixtureNo}</span>}
         {group && <span>GROUP {group}</span>}
       </div>
       <div className="grid min-h-0 grid-cols-[32px_minmax(0,1fr)_34px_minmax(0,1fr)_32px] items-center gap-2 self-stretch home-main-font text-[clamp(12px,3.2vw,14px)] uppercase leading-none">

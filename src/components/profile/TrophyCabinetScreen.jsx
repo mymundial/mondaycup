@@ -6,7 +6,7 @@ import PageScroll from "../ui/PageScroll.jsx";
 import AppPanel from "../ui/AppPanel.jsx";
 import { getTeamDisplayName } from "../ui/TeamName.jsx";
 import { GROUPS, HOST_TEAMS, TEAM_RANK, getTeamTheme, teamCode } from "../../data/teams.js";
-import { buildPlayerAchievementPages, playerCareerStars, playerCareerTitle } from "../../logic/playerCareer.js";
+import { buildPlayerAchievementPages } from "../../logic/playerCareer.js";
 
 const ALL_NATIONS = Object.values(GROUPS).flat();
 const ACHIEVEMENTS_PER_PAGE = 6;
@@ -139,26 +139,15 @@ function TrophyToggle({ value, onChange }) {
   );
 }
 
-function TrophySection({ title, children, compactTitle = false, compactBody = false }) {
-  const titleClass = compactTitle
-    ? "px-4 pb-1.5 pt-3 text-center home-copy-bold text-[22px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]"
-    : "px-4 pb-4 pt-4 text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]";
-  const bodyClass = title
-    ? compactBody
-      ? "px-3.5 pb-3"
-      : "px-3.5 pb-4"
-    : compactBody
-      ? "px-3.5 py-3"
-      : "px-3.5 py-4";
-
+function TrophySection({ title, children }) {
   return (
     <AppPanel variant="table" maxWidth="94%" radius="1.6rem" className="text-[#F5F1E8]">
       {title && (
-        <div className={titleClass}>
+        <div className="px-4 pb-4 pt-4 text-center home-copy-bold text-[23px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]">
           {title}
         </div>
       )}
-      <div className={bodyClass}>{children}</div>
+      <div className={title ? "px-3.5 pb-4" : "px-3.5 py-4"}>{children}</div>
     </AppPanel>
   );
 }
@@ -240,10 +229,10 @@ function achievementTitleText(title = "") {
 
 function LockedAchievementIcon({ title }) {
   return (
-    <div className="relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-[#F5F1E8]/18 bg-[#031B12]/40 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
-      <div className="absolute inset-[5px] rounded-full border border-[#F5F1E8]/12" aria-hidden="true" />
-      <span className="relative z-[1] home-copy-bold text-[17px] uppercase leading-none tracking-[0.02em] text-[#F7D117]/54" aria-label={achievementTitleText(title)}>
-        ★
+    <div className="relative flex h-[42px] w-[42px] items-center justify-center rounded-full border border-[#F5F1E8]/18 bg-[#031B12]/40 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+      <div className="absolute inset-[6px] rounded-full border border-[#F5F1E8]/12" aria-hidden="true" />
+      <span className="relative z-[1] home-copy-bold text-[10px] uppercase leading-none tracking-[0.05em] text-[#F5F1E8]/54">
+        {achievementTitleText(title)}
       </span>
     </div>
   );
@@ -252,8 +241,8 @@ function LockedAchievementIcon({ title }) {
 function AchievementRewardIcon({ item, unlocked }) {
   if (unlocked) {
     return (
-      <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full border border-[#F7D117]/46 bg-[#031B12]/42 ring-1 ring-[#F7D117]/24 shadow-[0_0_12px_rgba(247,209,23,0.18)]">
-        <img src={ACHIEVEMENT_UNLOCKED_SRC} alt="" className="h-[33px] w-[33px] object-contain" draggable={false} />
+      <div className="flex h-[42px] w-[42px] items-center justify-center rounded-full border border-[#F7D117]/46 bg-[#031B12]/42 ring-1 ring-[#F7D117]/24 shadow-[0_0_12px_rgba(247,209,23,0.18)]">
+        <img src={ACHIEVEMENT_UNLOCKED_SRC} alt="" className="h-[36px] w-[36px] object-contain" draggable={false} />
       </div>
     );
   }
@@ -275,20 +264,20 @@ function AchievementTierMark({ item, unlocked }) {
   const isComplete = achievementIsComplete(item?.title);
   const starTone = unlocked
     ? "text-[#F7D117] opacity-100 drop-shadow-[0_0_8px_rgba(247,209,23,0.26)]"
-    : "text-[#F7D117] opacity-42";
+    : "text-[#F7D117] opacity-28";
 
-  if (isComplete || item?.statusMode === "complete") {
+  if (isComplete) {
     return (
-      <span className={`home-copy-bold text-[11px] uppercase leading-none tracking-[0.14em] ${unlocked ? "text-[#18D46B] opacity-100 drop-shadow-[0_0_8px_rgba(24,212,107,0.22)]" : "text-[#F7D117] opacity-28"}`}>
-        {unlocked ? "COMPLETE" : "INCOMPLETE"}
+      <span className={`home-copy-bold text-[9px] uppercase leading-none tracking-[0.13em] ${starTone}`}>
+        COMPLETE
       </span>
     );
   }
 
   return (
-    <span className={`flex items-center justify-center gap-1.5 ${starTone}`} aria-label={`${starCount} star achievement`}>
+    <span className={`flex items-center justify-center gap-1 ${starTone}`} aria-label={`${starCount} star achievement`}>
       {Array.from({ length: Math.max(1, starCount) }, (_, index) => (
-        <svg key={index} viewBox="0 0 24 24" className="h-[20px] w-[20px]" fill="currentColor" aria-hidden="true">
+        <svg key={index} viewBox="0 0 24 24" className="h-[16px] w-[16px]" fill="currentColor" aria-hidden="true">
           <path d="M12 2.4l2.65 5.65 6.2.78-4.55 4.28 1.16 6.13L12 16.22 6.54 19.24 7.7 13.1 3.15 8.83l6.2-.78L12 2.4z" />
         </svg>
       ))}
@@ -300,33 +289,9 @@ function AchievementRow({ item, number }) {
   const unlocked = Boolean(item.unlocked);
   const cappedValue = Math.min(Number(item.currentValue || 0), Number(item.target || 0));
   const targetValue = Number(item.target || 0);
-  const isCareerHighlight = Boolean(item.isCareerHighlight);
-
-  if (isCareerHighlight) {
-    return (
-      <div className={`relative grid min-h-[56px] grid-cols-[30px_minmax(0,1fr)_44px] items-center gap-x-2 rounded-[1.15rem] border px-3 py-1.5 ring-1 transition-all ${item.failedPermanently ? "opacity-42" : "opacity-100"} ${unlocked ? "border-[#F7D117]/78 bg-[#063B23]/78 text-[#F5F1E8] ring-[#F7D117]/22 shadow-[0_0_14px_rgba(247,209,23,0.12),inset_0_1px_0_rgba(255,255,255,0.12)]" : "border-[#F5F1E8]/14 bg-[#031B12]/46 text-[#F5F1E8] ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"}`}>
-        <div className="col-start-1 flex h-full items-center justify-start">
-          <AchievementCheck unlocked={unlocked} />
-        </div>
-
-        <div className="col-start-2 flex min-w-0 flex-col items-start justify-center gap-0.5 text-left">
-          <span className="home-copy-bold max-w-full truncate text-[15px] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">
-            {achievementTitleText(item.title)}
-          </span>
-          <span className="home-copy-bold max-w-full truncate text-[9px] uppercase leading-none tracking-[0.11em] text-[#F5F1E8]/62">
-            {item.description}
-          </span>
-        </div>
-
-        <div className="col-start-3 flex h-full items-center justify-end">
-          <AchievementRewardIcon item={item} unlocked={unlocked} />
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className={`relative grid min-h-[56px] grid-cols-[30px_minmax(0,0.78fr)_minmax(0,1.18fr)_minmax(0,0.78fr)_44px] items-center gap-x-2 rounded-[1.15rem] border px-3 py-1.5 ring-1 transition-all ${unlocked ? "border-[#F7D117]/78 bg-[#063B23]/78 text-[#F5F1E8] ring-[#F7D117]/22 shadow-[0_0_14px_rgba(247,209,23,0.12),inset_0_1px_0_rgba(255,255,255,0.12)]" : "border-[#F5F1E8]/14 bg-[#031B12]/46 text-[#F5F1E8] ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"}`}>
+    <div className={`relative grid min-h-[74px] grid-cols-[32px_minmax(0,0.78fr)_minmax(0,1.18fr)_minmax(0,0.78fr)_46px] items-center gap-x-2 rounded-[1.25rem] border px-3 py-2 ring-1 transition-all ${unlocked ? "border-[#F7D117]/78 bg-[#063B23]/78 text-[#F5F1E8] ring-[#F7D117]/22 shadow-[0_0_14px_rgba(247,209,23,0.12),inset_0_1px_0_rgba(255,255,255,0.12)]" : "border-[#F5F1E8]/14 bg-[#031B12]/46 text-[#F5F1E8] ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"}`}>
       <div className="col-start-1 flex h-full items-center justify-start">
         <AchievementCheck unlocked={unlocked} />
       </div>
@@ -353,42 +318,6 @@ function AchievementRow({ item, number }) {
     </div>
   );
 }
-
-
-function debutGoalAchieved(careerStats = {}, achievements = {}) {
-  const goalsScored = trophyNumber(careerStats.goalsScored ?? careerStats.totalGoals ?? careerStats.allTimeGoals);
-  return Boolean(achievements.rememberTheName || achievements.targetMan || goalsScored >= 1);
-}
-
-function debutGoalFailed(careerStats = {}, achievements = {}) {
-  const matchesPlayed = trophyNumber(careerStats.matchesPlayed ?? careerStats.allTimeMatchesPlayed);
-  return matchesPlayed >= 1 && !debutGoalAchieved(careerStats, achievements);
-}
-
-function AchievementRatingPanel({ careerStats = {} }) {
-  const stars = playerCareerStars(careerStats);
-  const ratingLabel = playerCareerTitle(careerStats);
-
-  return (
-    <div>
-      <TrophySection title="PLAYER RATING" compactTitle compactBody>
-        <div className="flex flex-col items-center justify-center gap-0.5 py-0 text-center">
-        <div className="flex items-center justify-center gap-2 text-[#F7D117] drop-shadow-[0_0_10px_rgba(247,209,23,0.22)]" aria-label={`${ratingLabel} player rating`}>
-          {stars.map((star, index) => (
-            <svg key={star.label || index} viewBox="0 0 24 24" className={`h-[27px] w-[27px] ${star.achieved ? "opacity-100" : "opacity-24"}`} fill="currentColor" aria-hidden="true">
-              <path d="M12 2.4l2.65 5.65 6.2.78-4.55 4.28 1.16 6.13L12 16.22 6.54 19.24 7.7 13.1 3.15 8.83l6.2-.78L12 2.4z" />
-            </svg>
-          ))}
-        </div>
-        <div className="home-copy-bold text-[11px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]/76">
-          {ratingLabel}
-        </div>
-        </div>
-      </TrophySection>
-    </div>
-  );
-}
-
 
 function PodiumBadgeCard({ unlocked, title, assetSrc, placeholderSrc, podiumClass = "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10" }) {
   const toneClass = unlocked ? podiumClass : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10";
@@ -425,81 +354,6 @@ function groupIndexForTeam(team) {
 function defaultTeamIndexFor(userTeam) {
   const foundIndex = ALL_NATIONS.indexOf(userTeam);
   return foundIndex >= 0 ? foundIndex : 0;
-}
-
-function trophyNumber(value = 0) {
-  const number = Number(value || 0);
-  return Number.isFinite(number) ? number : 0;
-}
-
-function unlockedNationCupCount(nationCupWins = {}) {
-  return ALL_NATIONS.reduce((total, team) => total + (nationCupWins?.[team]?.unlocked ? 1 : 0), 0);
-}
-
-function buildCareerHighlightPage(careerStats = {}, achievements = {}, nationCupWins = {}) {
-  const matchesPlayed = trophyNumber(careerStats.matchesPlayed ?? careerStats.allTimeMatchesPlayed);
-  const matchesWon = trophyNumber(careerStats.matchesWon ?? careerStats.allTimeMatchesWon);
-  const goalsScored = trophyNumber(careerStats.goalsScored ?? careerStats.totalGoals ?? careerStats.allTimeGoals);
-  const cupWins = trophyNumber(careerStats.cupWins ?? careerStats.cupsWon ?? careerStats.mondayCupWins);
-  const nationWins = unlockedNationCupCount(nationCupWins);
-
-  const rows = [
-    {
-      key: "careerRememberTheName",
-      title: "Remember the name",
-      description: "Score on your debut",
-      target: 1,
-      currentValue: achievements.rememberTheName || achievements.targetMan || goalsScored >= 1 ? 1 : 0,
-      failedPermanently: debutGoalFailed(careerStats, achievements),
-    },
-    {
-      key: "careerNationalPride",
-      title: "National pride",
-      description: "Win the Monday Cup",
-      target: 1,
-      currentValue: achievements.nationalPride || achievements.championFinish || achievements.champions || cupWins >= 1 ? 1 : 0,
-    },
-    {
-      key: "careerGrizzledVeteran",
-      title: "Grizzled Veteran",
-      description: "Play 500 matches",
-      target: 500,
-      currentValue: matchesPlayed,
-    },
-    {
-      key: "careerSerialWinner",
-      title: "Serial Winner",
-      description: "Win 250 matches",
-      target: 250,
-      currentValue: matchesWon,
-    },
-    {
-      key: "careerSiuuu",
-      title: "SIUUU!",
-      description: "Score 1000 goals",
-      target: 1000,
-      currentValue: achievements.siuuu || goalsScored >= 1000 ? 1000 : goalsScored,
-    },
-    {
-      key: "careerGoat",
-      title: "G.O.A.T.",
-      description: "Win with all 48 teams",
-      target: 48,
-      currentValue: achievements.goat || achievements.globalIcon || nationWins >= 48 ? 48 : nationWins,
-    },
-  ];
-
-  return {
-    key: "careerHighlights",
-    title: "CAREER HIGHLIGHTS",
-    rows: rows.map((row) => ({
-      ...row,
-      currentValue: Math.min(trophyNumber(row.currentValue), trophyNumber(row.target)),
-      unlocked: trophyNumber(row.currentValue) >= trophyNumber(row.target),
-      statusMode: "complete",
-      isCareerHighlight: true,
-    })),
-  };
 }
 
 function teamIsPurchased(team, allTeamsUnlocked = false) {
@@ -556,7 +410,7 @@ function GroupFlagTile({ team, completed, selected, lockedTeam = false, onClick 
           ? "border-[#F7D117]/88 bg-[#F7D117] ring-[#F7D117]/34 shadow-[0_0_14px_rgba(247,209,23,0.20),inset_0_1px_0_rgba(255,255,255,0.26)]"
           : completed && !lockedTeam
             ? "border-[#F5F1E8]/68 text-[#062819] ring-[#F7D117]/20 shadow-[0_0_14px_rgba(247,209,23,0.10),inset_0_1px_0_rgba(255,255,255,0.28)]"
-            : "border-[#F5F1E8]/14 bg-[#031B12]/46 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]"
+            : "border-[#F5F1E8]/16 bg-[#F5F1E8]/[0.055] ring-[#F5F1E8]/10 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]"
       }`}
       style={buttonStyle}
       aria-label={getTeamDisplayName(team, "title")}
@@ -596,7 +450,7 @@ function GroupFlagWallTitle({ groupKey, onPrevious, onNext }) {
 function GroupFlagWall({ groupKey, teams = [], activeTeam, onPrevious, onNext, onSelectTeam, nationStickerProgress = {}, nationCupWins = {}, allTeamsUnlocked = false }) {
   return (
     <TrophySection title={<GroupFlagWallTitle groupKey={groupKey} onPrevious={onPrevious} onNext={onNext} />}>
-      <div className="rounded-[1.25rem] border border-[#F5F1E8]/10 bg-[#031B12]/46 p-2.5 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
+      <div className="rounded-[1.25rem] border border-[#F5F1E8]/10 bg-[#031B12]/62 p-2.5 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
         <div className="grid grid-cols-4 mc-panel-grid-gap">
           {teams.map((team) => (
             <GroupFlagTile
@@ -691,7 +545,7 @@ function StickerQuestionBox({ claimable = false, featured = false, onOpen }) {
   }
 
   return (
-    <div className={`${baseClass} relative z-[2] flex items-center justify-center border border-[#F5F1E8]/14 bg-[#031B12]/46 text-[#F5F1E8]/34 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]`}>
+    <div className={`${baseClass} relative z-[2] flex items-center justify-center border border-[#F5F1E8]/16 bg-[#0B6B3A]/26 text-[#F5F1E8]/34 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]`}>
       <span className="home-copy-bold text-[32px] uppercase leading-none tracking-[0.04em]">?</span>
     </div>
   );
@@ -700,7 +554,7 @@ function StickerQuestionBox({ claimable = false, featured = false, onOpen }) {
 
 function StickerLockedTeamBox() {
   return (
-    <div className="mc-sticker-icon-box relative z-[2] flex h-[clamp(48px,16vw,62px)] w-[clamp(48px,16vw,62px)] items-center justify-center rounded-[0.95rem] border border-[#F7D117]/42 bg-[#031B12]/46 text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+    <div className="mc-sticker-icon-box relative z-[2] flex h-[clamp(48px,16vw,62px)] w-[clamp(48px,16vw,62px)] items-center justify-center rounded-[0.95rem] border border-[#F7D117]/46 bg-[#0B6B3A]/26 text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
       <TeamPadlockIcon className="h-9 w-9 drop-shadow-[0_2px_5px_rgba(0,0,0,0.50)]" />
     </div>
   );
@@ -1013,7 +867,7 @@ function StickerBookSlot({
           ? "border-[#F5F1E8]/42 bg-[#052D1D]/72 ring-[#F7D117]/26"
           : claimable
             ? "border-[#F7D117]/82 bg-[#052D1D]/72 ring-[#F7D117]/28 shadow-[0_0_16px_rgba(247,209,23,0.12)]"
-            : "border-[#F5F1E8]/14 bg-[#031B12]/46 ring-[#F5F1E8]/8"
+            : "border-[#F5F1E8]/16 bg-[#F5F1E8]/[0.055] ring-[#F5F1E8]/10"
       } ${shinyFrame && opened ? "monday-sticker-shiny-shell" : ""} mc-sticker-book-slot ${slotSizeClass}`}
       style={style}
     >
@@ -1063,7 +917,7 @@ function TeamStickerBook({
 }) {
   return (
     <TrophySection title={<TeamStickerTitle team={team} index={index} total={total} onPrevious={onPrevious} onNext={onNext} />}>
-      <div className="mc-sticker-book-panel mc-panel-stack rounded-[1.35rem] border border-[#F5F1E8]/10 bg-[#031B12]/46 px-[clamp(0.45rem,2.5vw,0.75rem)] py-4 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
+      <div className="mc-sticker-book-panel mc-panel-stack rounded-[1.35rem] border border-[#F5F1E8]/10 bg-[#031B12]/72 px-[clamp(0.45rem,2.5vw,0.75rem)] py-4 ring-1 ring-[#F5F1E8]/8 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
         <div className="mc-sticker-book-grid grid grid-cols-3 items-stretch gap-[clamp(0.4rem,2.2vw,0.75rem)]">
           <StickerBookSlot
             label="WEAR THE SHIRT"
@@ -1121,13 +975,12 @@ export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWin
   const [teamIndex, setTeamIndex] = useState(defaultTeamIndex);
   const [groupIndex, setGroupIndex] = useState(() => groupIndexForTeam(defaultTeam));
 
-  const playerAchievementPages = [
-    buildCareerHighlightPage(careerStats, achievements, nationCupWins),
-    ...buildPlayerAchievementPages(careerStats, achievements),
-  ];
+  const playerAchievementPages = buildPlayerAchievementPages(careerStats, achievements);
   const safeAchievementPageCount = Math.max(1, playerAchievementPages.length || ACHIEVEMENT_PAGE_COUNT);
   const activeAchievementPage = playerAchievementPages[achievementPage % safeAchievementPageCount] || playerAchievementPages[0];
   const visibleAchievements = activeAchievementPage?.rows || [];
+  const achievementRows = playerAchievementPages.flatMap((page) => page.rows || []);
+  const achievementUnlockedCount = achievementRows.filter((item) => item.unlocked).length;
   const previousAchievementPage = () => setAchievementPage((page) => (page - 1 + safeAchievementPageCount) % safeAchievementPageCount);
   const nextAchievementPage = () => setAchievementPage((page) => (page + 1) % safeAchievementPageCount);
   const selectTeamByIndex = (nextIndex) => {
@@ -1174,10 +1027,9 @@ export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWin
         <TrophyToggle value={trophyView} onChange={handleTrophyViewChange} />
       </PageTabsSlot>
       <PageScroll className="pt-1">
-        <div className={trophyView === "teams" ? "flex flex-col gap-0 pb-4" : "mc-panel-stack pb-4"}>
+        <div className="mc-panel-stack pb-4">
           {trophyView === "player" && (
             <>
-              <AchievementRatingPanel careerStats={careerStats} />
               <TrophySection title={<AchievementSectionTitle title={activeAchievementPage?.title || "PLAYER"} pageNumber={(achievementPage % safeAchievementPageCount) + 1} pageCount={safeAchievementPageCount} onPrevious={previousAchievementPage} onNext={nextAchievementPage} />}>
                 <div className="grid gap-2.5">
                   {visibleAchievements.map((achievement, index) => (
