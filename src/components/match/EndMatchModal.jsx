@@ -595,7 +595,7 @@ function exportFlashCopy({ result, userTeamName, opponentTeamName, userForm = []
   if (giantKilling) {
     if (round === "qf") return pickShareCopy(["A GIANT HAS BEEN SLAIN", "ANOTHER SCALP FOR THE COLLECTION", "THEY THOUGHT YOU WERE THE BYE"], seed);
     if (round === "sf") return pickShareCopy(["THE GIANTS KEEP FALLING", "WHO WRITES THIS SCRIPT?", "FROM OUTSIDERS TO FINALISTS"], seed);
-    if (round === "final") return pickShareCopy(["FROM NOWHERE TO IMMORTALITY", "THE GREATEST STORY EVER TOLD", "FOOTBALL, BLOODY HELL"], seed);
+    if (round === "final") return pickShareCopy(["FROM NOWHERE TO IMMORTALITY", "THE GREATEST STORY EVER TOLD", "THE IMPOSSIBLE IS REAL"], seed);
     return pickShareCopy(["YOU JUST SLAIN A GIANT", "ANOTHER GIANT FALLS", "THE FAIRYTALE CONTINUES"], seed);
   }
   if (majorUpsetLoss) return pickShareCopy(["THE NATION DEMANDS ANSWERS", "A DISASTER UNFOLDS", "HEADLINES WRITE THEMSELVES"], seed);
@@ -616,7 +616,7 @@ function exportFlashCopy({ result, userTeamName, opponentTeamName, userForm = []
     ? pickShareCopy(["A PLACE ON THE PODIUM", "NOT A BAD CONSOLATION", "SOMETHING TO TAKE HOME"], seed)
     : pickShareCopy(["FOURTH IS THIRD'S UGLY COUSIN", "SO NEAR YET SO FAR", "THE WOODEN SPOON AWAITS"], seed);
   if (round === "final") return won
-    ? (userTier === "underdog" ? pickShareCopy(["FROM NOWHERE TO IMMORTALITY", "THE GREATEST STORY EVER TOLD", "FOOTBALL, BLOODY HELL"], seed) : pickShareCopy(["CHAMPIONS OF THE WORLD", "JUSTICE HAS BEEN SERVED", "THE BEST TEAM WON"], seed))
+    ? (userTier === "underdog" ? pickShareCopy(["FROM NOWHERE TO IMMORTALITY", "THE GREATEST STORY EVER TOLD", "THE IMPOSSIBLE IS REAL"], seed) : pickShareCopy(["CHAMPIONS OF THE WORLD", "JUSTICE HAS BEEN SERVED", "THE BEST TEAM WON"], seed))
     : pickShareCopy(["SO CLOSE YOU COULD TASTE IT", "ONE STEP SHORT OF GREATNESS", "HEARTBREAK"], seed);
 
   if (status === RESULT_STATUS.KNOCKOUT_WIN) return pickShareCopy(["QUALIFIED FOR THE NEXT ROUND", "THE JOURNEY GOES ON", "STILL STANDING"], seed);
