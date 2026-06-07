@@ -530,7 +530,7 @@ export default function App() {
                 guestSnapshot.scoringState?.campaignPoints ||
                 0,
             ),
-            form: userForm || guestSnapshot.userForm || [],
+            cupRun: userForm || guestSnapshot.userForm || [],
             score: Array.isArray(score) ? score : guestSnapshot.score || [0, 0],
             matchResult: matchResult
               ? {
@@ -547,17 +547,16 @@ export default function App() {
           await saveUserProfile(nextUser.uid, {
             currentCampaign: currentCampaignPayload,
             currentProgress: guestSnapshot,
-            cosmetics: activeCosmetics || {
+            cosmeticsEquipped: activeCosmetics || {
               goldenBoot: false,
               goldenBall: false,
               goldenGlove: false,
               goldenTicket: false,
               goldenTicketQuantity: 0,
             },
-            achievements: achievements || {},
+            trophies: achievements || {},
             nationCupWins: nationCupWins || {},
-            nationStickerProgress: nationStickerProgress || {},
-            unlocks: { allTeams: false },
+            stickers: nationStickerProgress || {},
           });
           await saveCurrentProgress(nextUser.uid, guestSnapshot);
         }
@@ -1111,7 +1110,7 @@ export default function App() {
         opponent: opponent || null,
         stage: currentRoundLabel || matchStage || "No Campaign",
         points: Number(scoringState.campaignPoints || 0),
-        form: userForm || [],
+        cupRun: userForm || [],
         score,
         matchResult: matchResult
           ? {
@@ -1129,19 +1128,10 @@ export default function App() {
         ...(bestCampaignSummary || {}),
         points: Number(bestCampaignScore || 0),
         campaignPoints: Number(bestCampaignScore || 0),
-        formGuide:
+        cupRun:
+          bestCampaignSummary?.cupRun ||
           bestCampaignSummary?.formGuide ||
           bestCampaignSummary?.form ||
-          bestCampaignSummary?.tournamentProgress ||
-          [],
-        tournamentProgress:
-          bestCampaignSummary?.tournamentProgress ||
-          bestCampaignSummary?.formGuide ||
-          bestCampaignSummary?.form ||
-          [],
-        form:
-          bestCampaignSummary?.form ||
-          bestCampaignSummary?.formGuide ||
           bestCampaignSummary?.tournamentProgress ||
           [],
         team: bestCampaignSummary?.team || null,
@@ -1164,7 +1154,7 @@ export default function App() {
           activeCosmetics?.goldenGlove,
         ),
       },
-      stats: {
+      careerStats: {
         mondayCupsWon: Number(mondayCupsWon || 0),
         matchesPlayed: Number(allTimeMatchesPlayed || 0),
         totalMatchesPlayed: Number(allTimeMatchesPlayed || 0),
@@ -1181,16 +1171,9 @@ export default function App() {
         gameScore: profileHighScore,
         leaderboardRank: myLeaderboardRank || null,
       },
-      achievements: achievements || {},
+      trophies: achievements || {},
       nationCupWins: nationCupWins || {},
-      nationStickerProgress: nationStickerProgress || {},
-      cosmeticsActive: activeCosmetics || {
-        goldenBoot: false,
-        goldenBall: false,
-        goldenGlove: false,
-        goldenTicket: false,
-        goldenTicketQuantity: 0,
-      },
+      stickers: nationStickerProgress || {},
       cosmeticsEquipped: activeCosmetics || {
         goldenBoot: false,
         goldenBall: false,
@@ -1198,24 +1181,8 @@ export default function App() {
         goldenTicket: false,
         goldenTicketQuantity: 0,
       },
-      cosmetics: activeCosmetics || {
-        goldenBoot: false,
-        goldenBall: false,
-        goldenGlove: false,
-        goldenTicket: false,
-        goldenTicketQuantity: 0,
-      },
       ...(Object.keys(autosaveUpgradesPurchased).length
-        ? {
-            upgradesPurchased: autosaveUpgradesPurchased,
-            ...(autosaveUpgradesPurchased.allTeams
-              ? {
-                  unlocks: { allTeams: true },
-                  allTeamsEquipped: true,
-                  allTeamsUnlocked: true,
-                }
-              : {}),
-          }
+        ? { upgradesPurchased: autosaveUpgradesPurchased }
         : {}),
       ...(autosaveConsumables ? { consumables: autosaveConsumables } : {}),
       leaderboard: {
