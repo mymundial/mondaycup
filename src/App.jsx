@@ -107,6 +107,9 @@ import {
 
 runSelfTests();
 
+const waitForCheckoutConfirmation = (ms) =>
+  new Promise((resolve) => window.setTimeout(resolve, ms));
+
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [currentUser, setCurrentUser] = useState(() => auth.currentUser);
@@ -377,6 +380,102 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+
+  useEffect(() => {
+    if (!authReady || !currentUser?.uid || !currentUser.emailVerified) return;
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search || "");
+    if (params.get("checkout") !== "success") return;
+
+    const sessionId = String(params.get("session_id") || "").trim();
+    if (!sessionId) return;
+
+    const confirmationKey = `mondayCup.checkoutConfirmation.${sessionId}`;
+    if (window.sessionStorage?.getItem(confirmationKey) === "done") return;
+
+    let cancelled = false;
+
+    const cleanCheckoutParams = () => {
+      try {
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.delete("checkout");
+        nextUrl.searchParams.delete("session_id");
+        window.history.replaceState({}, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+      } catch {
+        // Ignore URL cleanup failures; purchase confirmation has already completed.
+      }
+    };
+
+    const refreshProfileFromCloud = async () => {
+      const profile = await loadUserProfile(currentUser.uid);
+      if (cancelled) return null;
+
+      setFirebaseProfile(profile || null);
+      setUserShirtProfile(profile?.userShirt || profile?.shirt || profile?.shareShirt || null);
+
+      const entitlements = buildStoreEntitlements(profile || {});
+      setAllTeamsUnlocked(Boolean(entitlements.allTeams));
+      safeWriteJson(ALL_TEAMS_UNLOCKED_KEY, Boolean(entitlements.allTeams));
+
+      const nextActiveCosmetics = normaliseActiveCosmeticsForEntitlements(
+        profile?.cosmeticsActive || profile?.cosmeticsEquipped || {},
+        entitlements,
+      );
+      setActiveCosmetics(nextActiveCosmetics);
+      safeWriteJson(COSMETICS_KEY, nextActiveCosmetics);
+
+      return { profile, entitlements };
+    };
+
+    const confirmCheckout = async () => {
+      try {
+        window.sessionStorage?.setItem(confirmationKey, "running");
+        const idToken = await currentUser.getIdToken(true);
+        const response = await fetch("/api/confirm-checkout-session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ sessionId }),
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload?.error || `Checkout confirmation failed with status ${response.status}`);
+        }
+
+        for (let attempt = 0; attempt < 6; attempt += 1) {
+          const refreshed = await refreshProfileFromCloud();
+          if (!refreshed || cancelled) return;
+
+          const grants = payload?.grants || {};
+          const hasExpectedEntitlement =
+            (!grants.allTeams || refreshed.entitlements.allTeams) &&
+            (!grants.goldenBoot || refreshed.entitlements.goldenBoot) &&
+            (!grants.goldenBall || refreshed.entitlements.goldenBall) &&
+            (!grants.goldenGlove || refreshed.entitlements.goldenGlove) &&
+            (!Number(grants.goldenTicketQty || 0) || Number(refreshed.entitlements.goldenTicketQty || 0) > 0);
+
+          if (hasExpectedEntitlement) break;
+          await waitForCheckoutConfirmation(400 + attempt * 250);
+        }
+
+        window.sessionStorage?.setItem(confirmationKey, "done");
+        cleanCheckoutParams();
+      } catch (error) {
+        window.sessionStorage?.removeItem(confirmationKey);
+        console.warn("Checkout confirmation failed", error);
+      }
+    };
+
+    confirmCheckout();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, currentUser?.uid, currentUser?.emailVerified]);
 
   const handleAuthComplete = async (user, options = {}) => {
     const nextUser = user || auth.currentUser || null;
