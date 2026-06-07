@@ -38,7 +38,7 @@ function leaderboardUsedUpgrade(row = {}) {
 }
 
 function leaderboardForm(row = {}) {
-  const form = row.formGuide || row.tournamentProgress || row.form || row.bestCampaign?.formGuide || row.bestCampaign?.tournamentProgress || row.bestCampaign?.form || [];
+  const form = row.cupRun || row.bestCampaign?.cupRun || row.formGuide || row.tournamentProgress || row.form || row.bestCampaign?.formGuide || row.bestCampaign?.tournamentProgress || row.bestCampaign?.form || [];
   return Array.isArray(form) ? form.slice(-8) : [];
 }
 
@@ -304,9 +304,7 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
         username: currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST",
         team: leaderboardTeam,
         campaignPoints: activeUserScore,
-        formGuide: bestCampaignSummary?.formGuide || bestCampaignSummary?.form || bestCampaignSummary?.tournamentProgress || [],
-        form: bestCampaignSummary?.form || bestCampaignSummary?.formGuide || bestCampaignSummary?.tournamentProgress || [],
-        tournamentProgress: bestCampaignSummary?.tournamentProgress || bestCampaignSummary?.formGuide || bestCampaignSummary?.form || [],
+        cupRun: bestCampaignSummary?.cupRun || bestCampaignSummary?.formGuide || bestCampaignSummary?.form || bestCampaignSummary?.tournamentProgress || [],
         cosmeticsApplied: previewCosmetics,
         bestCampaign: { ...(bestCampaignSummary || {}), cosmeticsApplied: previewCosmetics },
         status: bestCampaignSummary?.status || bestCampaignSummary?.roundLabel || bestCampaignSummary?.stage || "inProgress",
@@ -314,22 +312,18 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
       }]
     : [];
 
-  const bestSummaryForm = bestCampaignSummary?.formGuide || bestCampaignSummary?.form || bestCampaignSummary?.tournamentProgress || [];
+  const bestSummaryForm = bestCampaignSummary?.cupRun || bestCampaignSummary?.formGuide || bestCampaignSummary?.form || bestCampaignSummary?.tournamentProgress || [];
   const hydrateCurrentUserLeaderboardRow = (row) => {
     if (!currentUser?.uid || row?.userId !== currentUser.uid) return row;
     const rowForm = leaderboardForm(row);
     if (rowForm.some(Boolean) || !Array.isArray(bestSummaryForm) || !bestSummaryForm.some(Boolean)) return row;
     return {
       ...row,
-      formGuide: bestSummaryForm,
-      form: bestSummaryForm,
-      tournamentProgress: bestSummaryForm,
+      cupRun: bestSummaryForm,
       bestCampaign: {
         ...(row.bestCampaign || {}),
         ...(bestCampaignSummary || {}),
-        formGuide: bestSummaryForm,
-        form: bestSummaryForm,
-        tournamentProgress: bestSummaryForm,
+        cupRun: bestSummaryForm,
       },
     };
   };
@@ -358,8 +352,7 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
     username: currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST",
     team: leaderboardTeam,
     campaignPoints: activeUserScore,
-    form: bestCampaignSummary?.form || bestCampaignSummary?.tournamentProgress || [],
-    tournamentProgress: bestCampaignSummary?.tournamentProgress || bestCampaignSummary?.form || [],
+    cupRun: bestCampaignSummary?.cupRun || bestCampaignSummary?.form || bestCampaignSummary?.tournamentProgress || [],
     cosmeticsApplied: previewCosmetics,
     bestCampaign: { ...(bestCampaignSummary || {}), cosmeticsApplied: previewCosmetics },
     status: bestCampaignSummary?.status || bestCampaignSummary?.roundLabel || bestCampaignSummary?.stage || "inProgress",

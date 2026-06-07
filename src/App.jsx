@@ -309,29 +309,30 @@ export default function App() {
             });
           }
           if (
+            profile?.bestCampaign?.gameScore ||
             profile?.bestCampaign?.points ||
             profile?.bestCampaign?.campaignPoints
           ) {
             const profileBestScore = Number(
-              profile.bestCampaign.points ??
+              profile.bestCampaign.gameScore ??
+                profile.bestCampaign.points ??
                 profile.bestCampaign.campaignPoints ??
                 0,
             );
             setBestCampaignScore(profileBestScore);
             const summary = {
               ...(profile.bestCampaign || {}),
-              team: profile.bestCampaign.team || "NO TEAM",
-              form:
+              team: profile.bestCampaign.teamName || profile.bestCampaign.team || "NO TEAM",
+              teamName: profile.bestCampaign.teamName || profile.bestCampaign.team || "NO TEAM",
+              cupRun:
+                profile.bestCampaign.cupRun ||
                 profile.bestCampaign.form ||
                 profile.bestCampaign.tournamentProgress ||
                 [],
-              tournamentProgress:
-                profile.bestCampaign.tournamentProgress ||
-                profile.bestCampaign.form ||
-                [],
-              campaignPoints: profileBestScore,
-              points: profileBestScore,
+              gameScore: profileBestScore,
               roundLabel:
+                profile.bestCampaign.round ||
+                profile.bestCampaign.phase ||
                 profile.bestCampaign.roundLabel ||
                 profile.bestCampaign.stage ||
                 "NO CAMPAIGN",
@@ -341,53 +342,29 @@ export default function App() {
             safeWriteNumber(BEST_CAMPAIGN_SCORE_KEY, profileBestScore);
             safeWriteJson(BEST_CAMPAIGN_SUMMARY_KEY, summary);
           }
-          if (profile?.stats) {
-            setMondayCupsWon(Number(profile.stats.mondayCupsWon || 0));
-            setAllTimeGoals(Number(profile.stats.totalGoalsScored || 0));
-            setAllTimeShots(
-              Number(
-                profile.stats.totalShotsTaken || profile.stats.totalShots || 0,
-              ),
-            );
-            setAllTimeMatchesPlayed(
-              Number(
-                profile.stats.matchesPlayed ||
-                  profile.stats.totalMatchesPlayed ||
-                  profile.stats.totalMatchesCompleted ||
-                  0,
-              ),
-            );
-            setAllTimeMatchesWon(
-              Number(
-                profile.stats.matchesWon || profile.stats.totalMatchesWon || 0,
-              ),
-            );
-            setAllTimeMatchesDrawn(
-              Number(
-                profile.stats.matchesDrawn ||
-                  profile.stats.totalMatchesDrawn ||
-                  0,
-              ),
-            );
-            setAllTimeMatchesLost(
-              Number(
-                profile.stats.matchesLost ||
-                  profile.stats.totalMatchesLost ||
-                  0,
-              ),
-            );
+          if (profile?.careerStats || profile?.stats) {
+            const stats = profile.careerStats || profile.stats || {};
+            setMondayCupsWon(Number(stats.cupsWon ?? stats.mondayCupsWon ?? 0));
+            setAllTimeGoals(Number(stats.goalsScored ?? stats.totalGoalsScored ?? 0));
+            setAllTimeShots(Number(stats.totalShots ?? stats.totalShotsTaken ?? 0));
+            setAllTimeMatchesPlayed(Number(stats.matchesPlayed ?? stats.totalMatchesPlayed ?? 0));
+            setAllTimeMatchesWon(Number(stats.matchesWon ?? stats.totalMatchesWon ?? 0));
+            setAllTimeMatchesDrawn(Number(stats.matchesDrawn ?? stats.totalMatchesDrawn ?? 0));
+            setAllTimeMatchesLost(Number(stats.matchesLost ?? stats.totalMatchesLost ?? 0));
           }
-          if (profile?.achievements) {
-            setAchievements(profile.achievements || {});
-            safeWriteJson(ACHIEVEMENTS_KEY, profile.achievements || {});
+          if (profile?.trophies || profile?.achievements) {
+            const trophyState = profile.trophies || profile.achievements || {};
+            setAchievements(trophyState);
+            safeWriteJson(ACHIEVEMENTS_KEY, trophyState);
           }
           if (profile?.nationCupWins) {
             setNationCupWins(profile.nationCupWins || {});
             safeWriteJson(NATION_CUP_WINS_KEY, profile.nationCupWins || {});
           }
-          if (profile?.nationStickerProgress) {
-            setNationStickerProgress(profile.nationStickerProgress || {});
-            safeWriteJson(NATION_STICKER_PROGRESS_KEY, profile.nationStickerProgress || {});
+          if (profile?.stickers || profile?.nationStickerProgress) {
+            const stickerState = profile.stickers || profile.nationStickerProgress || {};
+            setNationStickerProgress(stickerState);
+            safeWriteJson(NATION_STICKER_PROGRESS_KEY, stickerState);
           }
         } catch (error) {
           console.warn("User profile sync failed", error);
@@ -543,10 +520,10 @@ export default function App() {
         if (hasGuestProgress) {
           const currentCampaignPayload = {
             active: true,
-            team: team || guestSnapshot.team || null,
+            teamName: team || guestSnapshot.team || null,
             opponent: opponent || guestSnapshot.opponent || null,
-            stage: currentRoundLabel || matchStage || "Group Stage",
-            points: Number(
+            phase: currentRoundLabel || matchStage || "Group Stage",
+            gameScore: Number(
               scoringState.campaignPoints ||
                 guestSnapshot.scoringState?.campaignPoints ||
                 0,
@@ -563,11 +540,11 @@ export default function App() {
                   opponentScore: matchResult.opponentScore ?? null,
                 }
               : null,
+            runtimeSnapshot: guestSnapshot,
           };
 
           await saveUserProfile(nextUser.uid, {
             currentCampaign: currentCampaignPayload,
-            currentProgress: guestSnapshot,
             cosmeticsEquipped: activeCosmetics || {
               goldenBoot: false,
               goldenBall: false,
@@ -1132,10 +1109,10 @@ export default function App() {
         ? {
             currentCampaign: {
               active: true,
-              team: team || null,
+              teamName: team || null,
               opponent: opponent || null,
-              stage: currentRoundLabel || matchStage || "No Campaign",
-              points: Number(scoringState.campaignPoints || 0),
+              phase: currentRoundLabel || matchStage || "No Campaign",
+              gameScore: Number(scoringState.campaignPoints || 0),
               cupRun: userForm || [],
               score,
               matchResult: matchResult
@@ -1148,26 +1125,27 @@ export default function App() {
                     opponentScore: matchResult.opponentScore ?? null,
                   }
                 : null,
+              runtimeSnapshot: currentProgressSnapshot,
             },
-            currentProgress: currentProgressSnapshot,
           }
         : {}),
       bestCampaign: {
         ...(bestCampaignSummary || {}),
-        points: Number(bestCampaignScore || 0),
-        campaignPoints: Number(bestCampaignScore || 0),
+        gameScore: Number(bestCampaignScore || 0),
         cupRun:
           bestCampaignSummary?.cupRun ||
           bestCampaignSummary?.formGuide ||
           bestCampaignSummary?.form ||
           bestCampaignSummary?.tournamentProgress ||
           [],
-        team: bestCampaignSummary?.team || null,
-        stage:
+        teamName: bestCampaignSummary?.teamName || bestCampaignSummary?.team || null,
+        phase:
+          bestCampaignSummary?.phase ||
           bestCampaignSummary?.roundLabel ||
           bestCampaignSummary?.stage ||
           "No Campaign",
-        roundLabel:
+        round:
+          bestCampaignSummary?.round ||
           bestCampaignSummary?.roundLabel ||
           bestCampaignSummary?.stage ||
           "No Campaign",
@@ -1183,20 +1161,16 @@ export default function App() {
         ),
       },
       careerStats: {
-        mondayCupsWon: Number(mondayCupsWon || 0),
+        cupsWon: Number(mondayCupsWon || 0),
         matchesPlayed: Number(allTimeMatchesPlayed || 0),
-        totalMatchesPlayed: Number(allTimeMatchesPlayed || 0),
         matchesWon: Number(allTimeMatchesWon || 0),
-        totalMatchesWon: Number(allTimeMatchesWon || 0),
         matchesDrawn: Number(allTimeMatchesDrawn || 0),
-        totalMatchesDrawn: Number(allTimeMatchesDrawn || 0),
         matchesLost: Number(allTimeMatchesLost || 0),
-        totalMatchesLost: Number(allTimeMatchesLost || 0),
-        totalGoalsScored: goals,
-        totalShotsTaken: attempts,
-        conversionPercentage,
+        goalsScored: goals,
+        goalsConceded: Number(firebaseProfile?.careerStats?.goalsConceded || 0),
+        totalShots: attempts,
+        goalConversionRate: conversionPercentage,
         highScore: profileHighScore,
-        gameScore: profileHighScore,
         leaderboardRank: myLeaderboardRank || null,
       },
       trophies: achievements || {},
@@ -1358,10 +1332,8 @@ export default function App() {
             result: enrichedResult,
             fallbackRound: matchStage,
           }),
-          points: Number(nextScoringState.campaignPoints || 0),
-          formGuide: nextForm,
-          tournamentProgress: nextForm,
-          form: nextForm,
+          gameScore: Number(nextScoringState.campaignPoints || 0),
+          cupRun: nextForm,
           cosmeticsApplied: campaignCosmetics,
           cosmeticBallEquipped: Boolean(campaignCosmetics?.goldenBall),
           cosmeticGloveEquipped: Boolean(campaignCosmetics?.goldenGlove),
@@ -1381,8 +1353,9 @@ export default function App() {
       );
       const leaderboardBestTeam = nextIsBestCampaign
         ? team
-        : latestBestCampaignSummary?.team || team || null;
+        : latestBestCampaignSummary?.teamName || latestBestCampaignSummary?.team || team || null;
       const leaderboardForm =
+        latestBestCampaignSummary?.cupRun ||
         latestBestCampaignSummary?.formGuide ||
         latestBestCampaignSummary?.form ||
         latestBestCampaignSummary?.tournamentProgress ||
@@ -1401,17 +1374,14 @@ export default function App() {
         uid: localUserId,
         userId: localUserId,
         username: currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST",
-        formGuide: leaderboardForm,
-        form: leaderboardForm,
-        tournamentProgress: leaderboardForm,
+        cupRun: leaderboardForm,
+        gameScore: leaderboardBestScore,
         bestCampaign: latestBestCampaignSummary || {
-          team: leaderboardBestTeam,
-          formGuide: leaderboardForm,
-          form: leaderboardForm,
-          tournamentProgress: leaderboardForm,
-          campaignPoints: leaderboardBestScore,
-          points: leaderboardBestScore,
-          roundLabel: roundLabelForResult(baseResult, matchStage),
+          teamName: leaderboardBestTeam,
+          cupRun: leaderboardForm,
+          gameScore: leaderboardBestScore,
+          round: roundLabelForResult(baseResult, matchStage),
+          phase: roundLabelForResult(baseResult, matchStage),
         },
         cosmeticsApplied: latestBestCampaignSummary?.cosmeticsApplied || campaignCosmeticsApplied(),
         emailVerified: Boolean(isCurrentUserVerified),
@@ -1501,11 +1471,13 @@ export default function App() {
     const snapshot = hasCloudUser
       ? await loadCurrentProgress(currentUser.uid).catch(
           () =>
+            firebaseProfile?.currentCampaign?.runtimeSnapshot ||
             firebaseProfile?.currentProgress ||
             firebaseProfile?.savedGames?.current ||
             null,
         )
-      : firebaseProfile?.currentProgress ||
+      : firebaseProfile?.currentCampaign?.runtimeSnapshot ||
+        firebaseProfile?.currentProgress ||
         firebaseProfile?.savedGames?.current ||
         null;
     const restored = restoreGameSnapshot(snapshot);
@@ -1532,11 +1504,13 @@ export default function App() {
     const savedProgress = hasCloudUser
       ? await loadCurrentProgress(currentUser.uid).catch(
           () =>
+            firebaseProfile?.currentCampaign?.runtimeSnapshot ||
             firebaseProfile?.currentProgress ||
             firebaseProfile?.savedGames?.current ||
             null,
         )
-      : firebaseProfile?.currentProgress ||
+      : firebaseProfile?.currentCampaign?.runtimeSnapshot ||
+        firebaseProfile?.currentProgress ||
         firebaseProfile?.savedGames?.current ||
         null;
 
@@ -2475,6 +2449,8 @@ export default function App() {
           onOpenAuthPanel={openAuthMenu}
           onResumeCampaign={handleResumeCampaign}
           hasResumeCampaign={Boolean(
+            firebaseProfile?.currentCampaign?.active ||
+            firebaseProfile?.currentCampaign?.runtimeSnapshot?.active ||
             firebaseProfile?.currentProgress?.active ||
             firebaseProfile?.savedGames?.current?.active,
           )}

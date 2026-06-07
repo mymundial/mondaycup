@@ -1056,7 +1056,7 @@ export function ClubhouseScreen({
           roundLabel: "NO CAMPAIGN",
         };
   const bestSummaryForm = formForSummary(
-    bestSummary.formGuide || bestSummary.form || bestSummary.tournamentProgress || [],
+    bestSummary.cupRun || bestSummary.formGuide || bestSummary.form || bestSummary.tournamentProgress || [],
   );
 
   return (
