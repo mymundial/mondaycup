@@ -984,9 +984,11 @@ export async function saveLeaderboardHighScore(uid, entry = {}) {
   const score = number(entry.gameScore ?? entry.campaignPoints ?? entry.points ?? bestCampaign.gameScore, 0);
   const teamName = entry.teamName || entry.team || entry.teamFlag || bestCampaign.teamName || "";
   const finish = normalizeResultStatus(entry.status || entry.finish || rawBestCampaign.status || rawBestCampaign.finish || "inProgress");
-  if (!isTerminalResultStatus(finish)) return;
+  const hasCompletionEvidence = Boolean(entry.completedAt || rawBestCampaign.completedAt || bestCampaign.completedAt);
+  if (!isTerminalResultStatus(finish) && !hasCompletionEvidence) return;
+  const storedFinish = isTerminalResultStatus(finish) ? finish : "completed";
   const username = cleanUsername(entry.username || entry.nickname || "PLAYER").toUpperCase();
-  const podium = entry.podium || (/champion/i.test(finish) ? "champions" : /runner/i.test(finish) ? "runnerUp" : /third/i.test(finish) ? "thirdPlace" : null);
+  const podium = entry.podium || (/champion/i.test(storedFinish) ? "champions" : /runner/i.test(storedFinish) ? "runnerUp" : /third/i.test(storedFinish) ? "thirdPlace" : null);
 
   await setDoc(doc(db, "leaderboard", uid), {
     uid,
@@ -995,7 +997,7 @@ export async function saveLeaderboardHighScore(uid, entry = {}) {
     teamName,
     gameScore: score,
     cupRun,
-    finish,
+    finish: storedFinish,
     podium,
     completedAt: entry.completedAt || bestCampaign.completedAt || serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -1021,59 +1023,113 @@ export async function saveLeaderboardHighScore(uid, entry = {}) {
   }).catch(() => {});
 }
 
-export async function loadLeaderboardRows(limitCount = 50) {
-  if (!db) return [];
-  const leaderboardQuery = query(collection(db, "leaderboard"), orderBy("gameScore", "desc"), limit(limitCount));
-  const snap = await getDocs(leaderboardQuery);
-  const bestByUser = new Map();
+function buildLeaderboardRowFromData(id, data = {}, source = "leaderboard") {
+  const userId = data.uid || data.userId || id;
+  if (!userId || userId === "guest-preview" || data.localOnly) return null;
 
-  for (const item of snap.docs) {
-    const data = item.data() || {};
-    const userId = data.uid || data.userId || item.id;
-    if (!userId || userId === "guest-preview" || data.localOnly) continue;
-    const cupRun = normaliseCupRun(getCupRunSource(data.cupRun, data.formGuide, data.form, data.tournamentProgress, data.bestCampaign?.cupRun, data.bestCampaign?.formGuide));
-    const gameScore = number(data.gameScore ?? data.campaignPoints ?? data.points, 0);
-    const teamName = data.teamName || data.team || data.teamFlag || data.bestCampaign?.teamName || data.bestCampaign?.team || "";
-    const row = {
-      id: item.id,
-      uid: userId,
-      userId,
-      username: data.username || data.nickname || "PLAYER",
-      teamId: data.teamId || null,
+  const bestCampaign = normaliseBestCampaign(data.bestCampaign || {});
+  const finish = normalizeResultStatus(data.finish || data.status || bestCampaign.finish || "inProgress");
+  const completedAt = data.completedAt || bestCampaign.completedAt || null;
+  const hasCompletedBestCampaign = Boolean(completedAt || isTerminalResultStatus(finish));
+  if (source === "users" && !hasCompletedBestCampaign) return null;
+
+  const cupRun = normaliseCupRun(getCupRunSource(
+    data.cupRun,
+    data.formGuide,
+    data.form,
+    data.tournamentProgress,
+    bestCampaign.cupRun,
+    data.bestCampaign?.formGuide,
+    data.bestCampaign?.form,
+    data.bestCampaign?.tournamentProgress,
+  ));
+  const gameScore = number(data.gameScore ?? data.campaignPoints ?? data.points ?? bestCampaign.gameScore, 0);
+  if (source === "users" && gameScore <= 0) return null;
+
+  const profile = data.profile || {};
+  const teamName = data.teamName || data.team || data.teamFlag || bestCampaign.teamName || data.bestCampaign?.team || "";
+  const podium = data.podium || bestCampaign.podium || (/champion/i.test(finish) ? "champions" : /runner/i.test(finish) ? "runnerUp" : /third/i.test(finish) ? "thirdPlace" : null);
+  const username = cleanUsername(data.username || profile.username || data.nickname || "PLAYER").toUpperCase();
+
+  return {
+    id,
+    uid: userId,
+    userId,
+    username,
+    teamId: data.teamId || bestCampaign.teamId || null,
+    teamName,
+    teamFlag: teamName,
+    team: teamName,
+    gameScore,
+    campaignPoints: gameScore,
+    cupRun,
+    formGuide: cupRun,
+    form: cupRun,
+    tournamentProgress: cupRun,
+    finish,
+    status: finish,
+    podium,
+    podiumAchieved: Boolean(podium || /champion|runner|third/i.test(String(finish))),
+    completedAt,
+    updatedAt: data.updatedAt || null,
+    bestCampaign: {
+      ...createDefaultBestCampaign(),
+      ...bestCampaign,
       teamName,
-      teamFlag: teamName,
       team: teamName,
       gameScore,
+      points: gameScore,
       campaignPoints: gameScore,
       cupRun,
       formGuide: cupRun,
       form: cupRun,
       tournamentProgress: cupRun,
-      finish: data.finish || data.status || "inProgress",
-      status: data.finish || data.status || "inProgress",
-      podium: data.podium || null,
-      podiumAchieved: Boolean(data.podium || /champion|runner|third/i.test(String(data.finish || data.status || ""))),
-      completedAt: data.completedAt || null,
-      updatedAt: data.updatedAt || null,
-      bestCampaign: {
-        ...createDefaultBestCampaign(),
-        teamName,
-        team: teamName,
-        gameScore,
-        points: gameScore,
-        campaignPoints: gameScore,
-        cupRun,
-        formGuide: cupRun,
-        form: cupRun,
-        tournamentProgress: cupRun,
-        finish: data.finish || null,
-        podium: data.podium || null,
-        completedAt: data.completedAt || null,
-      },
-      cosmeticsApplied: emptyBooleanMap(COSMETIC_KEYS),
-    };
-    const existing = bestByUser.get(userId);
-    if (!existing || gameScore > number(existing.gameScore, 0)) bestByUser.set(userId, row);
+      finish,
+      podium,
+      completedAt,
+    },
+    cosmeticsApplied: normaliseCosmeticsApplied(data.cosmeticsApplied || bestCampaign.cosmeticsApplied, data),
+  };
+}
+
+export async function loadLeaderboardRows(limitCount = 50) {
+  if (!db) return [];
+  const bestByUser = new Map();
+
+  const addRow = (row) => {
+    if (!row) return;
+    const existing = bestByUser.get(row.userId);
+    if (!existing || number(row.gameScore, 0) > number(existing.gameScore, 0)) bestByUser.set(row.userId, row);
+  };
+
+  const leaderboardQuery = query(collection(db, "leaderboard"), orderBy("gameScore", "desc"), limit(limitCount));
+  const snap = await getDocs(leaderboardQuery);
+  for (const item of snap.docs) {
+    addRow(buildLeaderboardRowFromData(item.id, item.data() || {}, "leaderboard"));
+  }
+
+  // Recovery path for the clean schema rollout: if a registered user's bestCampaign was saved
+  // but leaderboard/{uid} was never written, still surface them on the leaderboard and backfill
+  // the canonical leaderboard doc. This keeps the UI working while old docs migrate.
+  const usersSnap = await getDocs(query(collection(db, "users"), limit(Math.max(limitCount, 50))));
+  for (const item of usersSnap.docs) {
+    const data = item.data() || {};
+    const row = buildLeaderboardRowFromData(item.id, { ...data, uid: item.id }, "users");
+    addRow(row);
+    if (row && !snap.docs.some((docSnap) => docSnap.id === item.id)) {
+      saveLeaderboardHighScore(item.id, {
+        uid: item.id,
+        username: row.username,
+        teamId: row.teamId,
+        teamName: row.teamName,
+        gameScore: row.gameScore,
+        cupRun: row.cupRun,
+        finish: row.finish,
+        podium: row.podium,
+        completedAt: row.completedAt,
+        bestCampaign: row.bestCampaign,
+      }).catch((error) => console.warn("Leaderboard backfill failed", error));
+    }
   }
 
   return Array.from(bestByUser.values()).sort((a, b) => number(b.gameScore) - number(a.gameScore)).slice(0, limitCount);
