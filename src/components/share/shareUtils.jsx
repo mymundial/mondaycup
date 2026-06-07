@@ -76,7 +76,7 @@ export function hexWithAlpha(hex, alpha = 1) {
 
 export function TeamFlag({ team, className = "h-4 w-6", style = null }) {
   if (!team.flag) return null;
-  return <img src={team.flag} alt={`${team.name} flag`} className={`${className} rounded-sm object-contain bg-[#F5F1E8] outline outline-1 outline-[#F7D117]/90 outline-offset-0`} style={{ boxShadow: "0 0 0 1px rgba(247,209,23,0.92), inset 0 0 0 1px rgba(245,241,232,0.22)", ...(style || {}) }} draggable={false} crossOrigin="anonymous" />;
+  return <img src={team.flag} alt={`${team.name} flag`} className={`${className} rounded-[4px] border border-[#F7D117]/90 object-cover bg-[#F5F1E8] outline outline-1 outline-[#F7D117]/85 outline-offset-0`} style={{ boxShadow: "0 0 3px rgba(247,209,23,0.16), inset 0 0 0 1px rgba(3,27,18,0.28)", ...(style || {}) }} draggable={false} crossOrigin="anonymous" />;
 }
 
 export function clampNumber(value, min, max, fallback = 0) {
@@ -104,20 +104,16 @@ export function MarkerDots({ markers = [], totalSlots = GAME.regulationPens }) {
     <div className="inline-flex min-w-0 justify-center gap-[3px]">
       {visible.map((marker, index) => {
         const colour = marker === "G" ? "bg-green-500" : marker === "S" ? "bg-red-500" : "bg-[#F7D117]";
-        return <span key={`${marker}-${index}`} data-share-marker-dot="true" className={`shrink-0 rounded-full ${colour}`} style={{ width: 6, height: 6, flex: "0 0 6px", boxShadow: "none", filter: "none" }} />;
+        return <span key={`${marker}-${index}`} data-share-marker-dot="true" className={`shrink-0 rounded-full ${colour}`} style={{ width: 6, height: 6, flex: "0 0 6px", boxShadow: "0 0 2px rgba(247,209,23,0.10)", filter: "none" }} />;
       })}
     </div>
   );
 }
 
-export function flashTickerFontSize(copy = "") {
-  const flashLength = String(copy || "").length;
-  if (flashLength > 38) return "10px";
-  if (flashLength > 32) return "11px";
-  if (flashLength > 26) return "12px";
-  if (flashLength > 20) return "15px";
+export function flashTickerFontSize() {
   return "20px";
 }
+
 
 export function padArray(values = [], length, fallback = []) {
   return Array.from({ length }).map((_, index) => values[index] || fallback[index] || `TEAM ${index + 1}`);

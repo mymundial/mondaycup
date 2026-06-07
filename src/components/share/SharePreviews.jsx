@@ -164,10 +164,10 @@ function ShareScoreboard({
 
         <div className="relative z-[1] flex h-full items-center px-0 py-0">
           <div
-            className="grid h-[88%] w-full items-center justify-items-center"
+            className="grid h-[82%] w-full items-center justify-items-center"
             style={{
               gridTemplateColumns: "10% minmax(0,27%) 10.5% 5% 10.5% minmax(0,27%) 10%",
-              gridTemplateRows: "26% 48% 26%",
+              gridTemplateRows: "30% 45% 25%",
             }}
           >
             {d.showStage && (
@@ -212,17 +212,17 @@ function ShareScoreboard({
 
             {showMarkers ? (
               <>
-                <div className="col-start-2 row-start-3 flex h-full items-center justify-center">
+                <div className="relative z-[1] col-start-2 row-start-3 flex h-full items-center justify-center overflow-hidden">
                   <div className={markerShell} style={{ transform: editorTransform({ x: d.markerAX, y: d.markerAY, scale: d.markerScale }) }}>
                     <span className="flex min-h-[16px] items-center justify-center leading-none"><MarkerDots markers={teamAMarkers} totalSlots={totalMarkerSlots} /></span>
                   </div>
                 </div>
-                <div data-share-username-slot="true" className="col-start-3 col-end-6 row-start-3 flex h-full items-center justify-center px-1">
+                <div data-share-username-slot="true" className="relative z-[3] col-start-3 col-end-6 row-start-3 flex h-full items-center justify-center px-1">
                   <div className={`${usernameEnabled ? "visible" : "invisible"} led-text-glow font-led inline-flex min-h-[16px] max-w-full items-center justify-center truncate whitespace-nowrap rounded-[6px] border border-[#F5F1E8]/22 bg-[#050505] px-3 text-center text-[9px] font-black uppercase leading-none tracking-[0.11em] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]`} style={{ ...boardTextStyle, transform: editorTransform({ x: d.usernameX, y: d.usernameY, scale: d.usernameScale }) }}>
                     {(String(username || "").replace(/\s+/g, " ").trim().toUpperCase()) || "GUEST"}
                   </div>
                 </div>
-                <div className="col-start-6 row-start-3 flex h-full items-center justify-center">
+                <div className="relative z-[1] col-start-6 row-start-3 flex h-full items-center justify-center overflow-hidden">
                   <div className={markerShell} style={{ transform: editorTransform({ x: d.markerBX, y: d.markerBY, scale: d.markerScale }) }}>
                     <span className="flex min-h-[16px] items-center justify-center leading-none"><MarkerDots markers={teamBMarkers} totalSlots={totalMarkerSlots} /></span>
                   </div>
@@ -241,7 +241,7 @@ function ShareScoreboard({
 
       <div
         data-share-flash="true"
-        className="relative h-[24%] w-full overflow-hidden px-[3%] text-center"
+        className="relative grid h-[24%] w-full place-items-center overflow-hidden px-[3%] text-center"
         style={{
           ...flashStyle,
           background: d.flashBox ? flashStyle.background : "transparent",
@@ -251,18 +251,14 @@ function ShareScoreboard({
       >
         <span
           data-share-flash-text="true"
-          className="home-copy-bold absolute left-1/2 top-1/2 block w-[94%] overflow-hidden truncate whitespace-nowrap text-center font-black uppercase leading-none tracking-[0.085em] [text-wrap:nowrap]"
+          className="home-copy-bold block w-[94%] overflow-hidden truncate whitespace-nowrap text-center font-black uppercase leading-none tracking-[0.085em] [text-wrap:nowrap]"
           style={{
             fontFamily: fontFamilyFor(d.flashFontType),
             fontSize: flashFontSize,
             lineHeight: 1,
             textOverflow: "ellipsis",
             WebkitTextStroke: textStroke(d.flashOutlineWeight, d.flashOutlineColour),
-            transform: mergeTransforms(
-              "translate(-50%, -50%)",
-              "translateY(-1px)",
-              editorTransform({ x: d.flashX, y: d.flashY, scale: d.flashScale })
-            ),
+            transform: editorTransform({ x: d.flashX, y: d.flashY, scale: d.flashScale }),
           }}
         >
           {flashCopy}

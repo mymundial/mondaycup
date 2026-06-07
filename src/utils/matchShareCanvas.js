@@ -317,8 +317,8 @@ function drawCapturedScoreboardFlagOverlays(ctx, props, assets, size, yOffset = 
   if (d.showFlags === false) return;
   const boardH = size * (clamp(d.scoreboardHeight, 24, 46, 34) / 100);
   const mainH = boardH * 0.76;
-  const row1 = mainH * 0.26;
-  const row2 = mainH * 0.47;
+  const row1 = mainH * 0.30;
+  const row2 = mainH * 0.45;
   const r2Y = row1 + row2 / 2 + yOffset;
   const fractions = [0.72, 1.1, 0.75, 0.3, 0.75, 1.1, 0.72];
   const total = fractions.reduce((sum, value) => sum + value, 0);
@@ -405,8 +405,8 @@ function drawScoreboard(ctx, props, assets, size) {
   ctx.stroke();
   drawDotMatrix(ctx, size * 0.005, size * 0.005, size * 0.99, mainH - size * 0.01);
 
-  const row1 = mainH * 0.26;
-  const row2 = mainH * 0.47;
+  const row1 = mainH * 0.30;
+  const row2 = mainH * 0.45;
   const row3 = mainH - row1 - row2;
   const r1Y = row1 / 2;
   const r2Y = row1 + row2 / 2;
@@ -773,19 +773,19 @@ function drawAdvertisingBoard(ctx, image, x, y, width, height) {
 
     // Soft selection-screen style glow. Avoid drop-shadow because Safari/canvas
     // renders it as a hard outline around the lettering rather than a radiating glow.
-    const outerGlow = ctx.createRadialGradient(cx, cy, logoW * 0.02, cx, cy, logoW * 1.05);
-    outerGlow.addColorStop(0, "rgba(245,241,232,0.105)");
-    outerGlow.addColorStop(0.34, "rgba(245,241,232,0.052)");
-    outerGlow.addColorStop(0.74, "rgba(245,241,232,0.014)");
+    const outerGlow = ctx.createRadialGradient(cx, cy, logoW * 0.04, cx, cy, logoW * 1.35);
+    outerGlow.addColorStop(0, "rgba(245,241,232,0.075)");
+    outerGlow.addColorStop(0.42, "rgba(245,241,232,0.034)");
+    outerGlow.addColorStop(0.82, "rgba(245,241,232,0.008)");
     outerGlow.addColorStop(1, "rgba(245,241,232,0)");
     ctx.fillStyle = outerGlow;
     ctx.beginPath();
     ctx.ellipse(cx, cy, logoW * 1.14, logoH * 1.08, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    const yellowGlow = ctx.createRadialGradient(cx + logoW * 0.1, cy, 0, cx + logoW * 0.1, cy, logoW * 0.72);
-    yellowGlow.addColorStop(0, "rgba(247,209,23,0.052)");
-    yellowGlow.addColorStop(0.58, "rgba(247,209,23,0.017)");
+    const yellowGlow = ctx.createRadialGradient(cx + logoW * 0.1, cy, 0, cx + logoW * 0.1, cy, logoW * 0.94);
+    yellowGlow.addColorStop(0, "rgba(247,209,23,0.036)");
+    yellowGlow.addColorStop(0.65, "rgba(247,209,23,0.010)");
     yellowGlow.addColorStop(1, "rgba(247,209,23,0)");
     ctx.fillStyle = yellowGlow;
     ctx.beginPath();
@@ -820,9 +820,9 @@ function drawBadgeOverlay(ctx, badgeMode, assets, x, y, width, height, d) {
 
   ctx.save();
   if (badgeMode === "monday") {
-    const glow = ctx.createRadialGradient(cx, cy + boxH * 0.18, 0, cx, cy + boxH * 0.18, boxW * 0.32);
-    glow.addColorStop(0, "rgba(247,209,23,0.26)");
-    glow.addColorStop(0.55, "rgba(245,241,232,0.16)");
+    const glow = ctx.createRadialGradient(cx, cy + boxH * 0.18, 0, cx, cy + boxH * 0.18, boxW * 0.54);
+    glow.addColorStop(0, "rgba(247,209,23,0.16)");
+    glow.addColorStop(0.62, "rgba(245,241,232,0.075)");
     glow.addColorStop(1, "rgba(247,209,23,0)");
     ctx.fillStyle = glow;
     ctx.beginPath();
@@ -1016,13 +1016,13 @@ export async function createMatchShareBlob(props = {}, options = {}) {
   const capturedScoreboard = await captureScoreboardImageFromDom(options.sourceElement, size);
   let boardH;
   if (capturedScoreboard?.image) {
-    const scoreboardUpShift = Math.max(4, Math.round(size * 0.005));
-    boardH = Math.max(1, capturedScoreboard.height - scoreboardUpShift);
+    const scoreboardUpShift = 0;
+    boardH = Math.max(1, capturedScoreboard.height);
     ctx.drawImage(capturedScoreboard.image, 0, -scoreboardUpShift, size, capturedScoreboard.height);
     ctx.save();
-    ctx.globalAlpha = 0.06;
+    ctx.globalAlpha = 0.035;
     ctx.globalCompositeOperation = "screen";
-    ctx.filter = `blur(${Math.max(1.2, size * 0.0016)}px)`;
+    ctx.filter = `blur(${Math.max(2.4, size * 0.0032)}px)`;
     ctx.drawImage(capturedScoreboard.image, 0, -scoreboardUpShift, size, capturedScoreboard.height);
     ctx.restore();
     drawCapturedScoreboardFlagOverlays(ctx, normalisedProps, assets, size, -scoreboardUpShift);
