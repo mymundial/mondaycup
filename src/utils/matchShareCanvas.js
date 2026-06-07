@@ -312,10 +312,10 @@ function drawMarkers(ctx, markers = [], totalSlots = 5, x, y, scale = 1) {
   });
 }
 
-function flashFontSize(copy, baseScale) {
+function flashFontSize(copy, baseScale, exportSize = MATCH_SHARE_EXPORT_SIZE) {
   const length = String(copy || "").length;
-  const base = length > 38 ? 25 : length > 32 ? 27 : length > 26 ? 30 : length > 20 ? 37 : 50;
-  return base * baseScale;
+  const previewPx = length > 38 ? 10 : length > 32 ? 11 : length > 26 ? 12 : length > 20 ? 15 : 20;
+  return previewPx * (exportSize / 400) * baseScale;
 }
 
 function drawScoreboard(ctx, props, assets, size) {
@@ -508,7 +508,7 @@ function drawScoreboard(ctx, props, assets, size) {
   const flashScale = Number(d.flashScale) || 1;
   drawCenteredText(ctx, flashCopy, size / 2 + (Number(d.flashX) || 0) * unit, mainH + flashH / 2 - unit + (Number(d.flashY) || 0) * unit, {
     family: fontFamilyFor(d.flashFontType),
-    size: flashFontSize(flashCopy, flashScale),
+    size: flashFontSize(flashCopy, flashScale, size),
     weight: 900,
     colour: flashStyle?.color || IVORY,
     maxWidth: size * 0.94,
@@ -523,35 +523,35 @@ function drawScoreboard(ctx, props, assets, size) {
 function drawCrowdPerson(ctx, x, y, scale, shirt, skin, pose, opacity) {
   ctx.save();
   ctx.globalAlpha = opacity;
-  ctx.translate(x, y);
+  ctx.translate(x - 9 * scale, y - 15 * scale);
   ctx.scale(scale, scale);
   ctx.lineCap = "round";
   ctx.lineWidth = 3;
   ctx.strokeStyle = shirt;
   ctx.beginPath();
   if (pose === "up") {
-    ctx.moveTo(-4, 7);
-    ctx.lineTo(-10, -1);
-    ctx.moveTo(4, 7);
-    ctx.lineTo(10, -1);
+    ctx.moveTo(5, 13);
+    ctx.lineTo(1, 6);
+    ctx.moveTo(13, 13);
+    ctx.lineTo(17, 6);
   } else {
-    ctx.moveTo(-4, 7);
-    ctx.lineTo(-8, 15);
-    ctx.moveTo(4, 7);
-    ctx.lineTo(8, 15);
+    ctx.moveTo(5, 13);
+    ctx.lineTo(2, 20);
+    ctx.moveTo(13, 13);
+    ctx.lineTo(16, 20);
   }
   ctx.stroke();
   ctx.fillStyle = skin;
   ctx.beginPath();
-  ctx.arc(0, 0, 4, 0, Math.PI * 2);
+  ctx.arc(9, 6, 4, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = shirt;
-  drawRoundRect(ctx, -5, 5, 10, 12, 3);
+  drawRoundRect(ctx, 4, 11, 10, 12, 3);
   ctx.fill();
   ctx.fillStyle = "#0b2d1d";
-  drawRoundRect(ctx, -4, 16, 3, 8, 1.5);
+  drawRoundRect(ctx, 5, 22, 3, 8, 1.5);
   ctx.fill();
-  drawRoundRect(ctx, 1, 16, 3, 8, 1.5);
+  drawRoundRect(ctx, 10, 22, 3, 8, 1.5);
   ctx.fill();
   ctx.restore();
 }
@@ -560,28 +560,47 @@ function drawCrowd(ctx, x, y, width, height) {
   ctx.save();
   ctx.fillStyle = "#123822";
   ctx.fillRect(x, y, width, height);
-  const grad = ctx.createLinearGradient(0, y, 0, y + height);
-  grad.addColorStop(0, "rgba(5,26,17,0.52)");
-  grad.addColorStop(0.3, "rgba(5,26,17,0.28)");
-  grad.addColorStop(0.58, "rgba(5,26,17,0.18)");
-  grad.addColorStop(1, "rgba(5,26,17,0.10)");
-  ctx.fillStyle = grad;
+
+  const bg = ctx.createLinearGradient(0, y, 0, y + height);
+  bg.addColorStop(0, "rgba(5,26,17,0.52)");
+  bg.addColorStop(0.3, "rgba(5,26,17,0.28)");
+  bg.addColorStop(0.58, "rgba(5,26,17,0.18)");
+  bg.addColorStop(1, "rgba(5,26,17,0.10)");
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, width, height);
+
+  const leftGlow = ctx.createRadialGradient(x + width * 0.18, y + height * 0.1, 0, x + width * 0.18, y + height * 0.1, width * 0.18);
+  leftGlow.addColorStop(0, "rgba(245,241,232,0.05)");
+  leftGlow.addColorStop(1, "rgba(245,241,232,0)");
+  ctx.fillStyle = leftGlow;
+  ctx.fillRect(x, y, width, height);
+
+  const rightGlow = ctx.createRadialGradient(x + width * 0.82, y + height * 0.14, 0, x + width * 0.82, y + height * 0.14, width * 0.16);
+  rightGlow.addColorStop(0, "rgba(255,214,0,0.04)");
+  rightGlow.addColorStop(1, "rgba(255,214,0,0)");
+  ctx.fillStyle = rightGlow;
   ctx.fillRect(x, y, width, height);
 
   [0.06, 0.16, 0.28, 0.41, 0.55, 0.7, 0.85].forEach((top, index) => {
     ctx.fillStyle = index % 2 ? "rgba(11,45,29,0.08)" : "rgba(11,45,29,0.10)";
-    ctx.fillRect(x, y + height * top, width, height * (0.06 + index * 0.006));
+    ctx.fillRect(x, y + height * top, width, height * (index === 1 ? 0.07 : index === 2 ? 0.08 : index === 3 ? 0.09 : index >= 4 ? 0.10 : 0.06));
   });
 
   const rowCount = 16;
+  const safeDensity = 1;
   for (let row = 0; row < rowCount; row += 1) {
     const t = rowCount <= 1 ? 1 : row / (rowCount - 1);
-    const rowY = y + height * (0.025 + 0.94 * Math.pow(t, 1.24));
-    const count = Math.max(10, Math.round(62 - t * 34));
-    const step = width / (count + 2);
+    const rowYPercent = 2.5 + 94 * Math.pow(t, 1.24);
+    const baseCount = 62 - t * 34;
+    const count = Math.max(10, Math.round(baseCount * safeDensity));
+    const stepPercent = (1.68 + t * 2.45) / safeDensity;
+    const staggerPercent = 0.18 + t * 1.04;
+    const startPercent = 50 - (((count - 1) * stepPercent) + staggerPercent) / 2;
     for (let i = 0; i < count; i += 1) {
-      const px = x + step * (i + 1.5) + (i % 2 ? step * 0.18 : 0);
-      const py = rowY + (i % 3) * (height * (0.0012 + t * 0.008));
+      const personXPercent = startPercent + i * stepPercent + (i % 2 ? staggerPercent : 0);
+      const personYPercent = rowYPercent + (i % 3) * (0.12 + t * 0.8);
+      const px = x + width * (personXPercent / 100);
+      const py = y + height * (personYPercent / 100);
       const personScale = (0.26 + t * 0.78) * (width / 400);
       const shirt = CROWD_COLOURS[((i * 7) + row) % CROWD_COLOURS.length];
       const skin = SKIN_TONES[(i + row) % SKIN_TONES.length];
@@ -797,9 +816,9 @@ function drawPitchArea(ctx, props, assets, y, width, height) {
   const mowY = y + virtualHeight * (goalLine / 100);
 
   drawCrowd(ctx, 0, y, width, crowdHeight);
+  drawAdvertisingBoard(ctx, assets.adBoard, 0, boardY, width, boardH);
   drawPitchMow(ctx, 0, mowY, width, virtualHeight - (mowY - y));
   drawGoal(ctx, 0, y, width, height);
-  drawAdvertisingBoard(ctx, assets.adBoard, 0, boardY, width, boardH);
   drawBadgeOverlay(ctx, props.badgeMode, assets, 0, y, width, height, d);
   drawActors(ctx, props, assets, 0, y, width, height, d);
   ctx.restore();
