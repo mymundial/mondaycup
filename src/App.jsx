@@ -110,6 +110,25 @@ runSelfTests();
 const waitForCheckoutConfirmation = (ms) =>
   new Promise((resolve) => window.setTimeout(resolve, ms));
 
+const GOLDEN_TICKET_NEXT_CAMPAIGN_KEY = "mondayCup.goldenTicketNextCampaign";
+
+const readGoldenTicketNextCampaignIntent = () => {
+  try {
+    return window.localStorage?.getItem(GOLDEN_TICKET_NEXT_CAMPAIGN_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const writeGoldenTicketNextCampaignIntent = (active) => {
+  try {
+    if (active) window.localStorage?.setItem(GOLDEN_TICKET_NEXT_CAMPAIGN_KEY, "1");
+    else window.localStorage?.removeItem(GOLDEN_TICKET_NEXT_CAMPAIGN_KEY);
+  } catch {
+    // localStorage can be unavailable in private browsing; state still carries the intent.
+  }
+};
+
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [currentUser, setCurrentUser] = useState(() => auth.currentUser);
@@ -197,7 +216,9 @@ export default function App() {
   const [shopInitialItemId, setShopInitialItemId] = useState(null);
   const [pendingShopItemId, setPendingShopItemId] = useState(null);
   const [shopOpen, setShopOpen] = useState(false);
-  const [goldenTicketNextCampaign, setGoldenTicketNextCampaign] = useState(false);
+  const [goldenTicketNextCampaign, setGoldenTicketNextCampaign] = useState(() =>
+    readGoldenTicketNextCampaignIntent(),
+  );
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -1575,13 +1596,17 @@ export default function App() {
 
   const useGoldenTicketForNextCampaign = () => {
     const ticketQuantity = Number(
-      activeCosmetics?.goldenTicketQuantity ??
+      storeEntitlements?.goldenTicketQty ??
+        activeCosmetics?.goldenTicketQuantity ??
         (activeCosmetics?.goldenTicket ? 1 : 0),
     );
     if (ticketQuantity <= 0) {
+      writeGoldenTicketNextCampaignIntent(false);
+      setGoldenTicketNextCampaign(false);
       requestShopItem("goldenTicket");
       return;
     }
+    writeGoldenTicketNextCampaignIntent(true);
     setGoldenTicketNextCampaign(true);
     setDrawer(null);
     setMenuOpen(false);
@@ -1698,7 +1723,8 @@ export default function App() {
 
   const consumeLocalGoldenTicket = () => {
     const currentTicketQuantity = Number(
-      activeCosmetics?.goldenTicketQuantity ??
+      storeEntitlements?.goldenTicketQty ??
+        activeCosmetics?.goldenTicketQuantity ??
         (activeCosmetics?.goldenTicket ? 1 : 0),
     );
 
@@ -1729,12 +1755,16 @@ export default function App() {
     }
 
     const ticketQuantity = Number(
-      activeCosmetics?.goldenTicketQuantity ??
+      storeEntitlements?.goldenTicketQty ??
+        activeCosmetics?.goldenTicketQuantity ??
         (activeCosmetics?.goldenTicket ? 1 : 0),
     );
-    const canUseGoldenTicket =
-      Boolean(activeCosmetics?.goldenTicket) && ticketQuantity > 0;
-    const useGoldenTicket = canUseGoldenTicket && goldenTicketNextCampaign;
+    const hasGoldenTicketEntitlement =
+      ticketQuantity > 0 || Boolean(storeEntitlements?.goldenTicket) || Boolean(activeCosmetics?.goldenTicket);
+    const pendingGoldenTicketIntent =
+      Boolean(goldenTicketNextCampaign) || readGoldenTicketNextCampaignIntent();
+    const canUseGoldenTicket = hasGoldenTicketEntitlement && ticketQuantity > 0;
+    const useGoldenTicket = canUseGoldenTicket && pendingGoldenTicketIntent;
 
     if (HOST_TEAMS.has(name)) unlockAchievements(["ourTime"]);
 
@@ -1770,12 +1800,14 @@ export default function App() {
         setFixtureView("knockout");
         setStandingsView("knockout");
         consumeLocalGoldenTicket();
+        writeGoldenTicketNextCampaignIntent(false);
         setGoldenTicketNextCampaign(false);
         return;
       }
     }
 
-    if (goldenTicketNextCampaign && !useGoldenTicket) {
+    if (pendingGoldenTicketIntent && !useGoldenTicket) {
+      writeGoldenTicketNextCampaignIntent(false);
       setGoldenTicketNextCampaign(false);
     }
 
