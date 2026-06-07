@@ -445,13 +445,45 @@ function resultOutcomeCode(result) {
   return "L";
 }
 
-function teamRankBucket(teamName) {
-  const rank = Number(TEAM_RANK[teamName] || 48);
-  return rank <= 24 ? "top" : "lower";
+function teamRank(teamName) {
+  return Number(TEAM_RANK[teamName] || 48);
+}
+
+function teamTier(teamName) {
+  const rank = teamRank(teamName);
+  if (rank <= 10) return "elite";
+  if (rank <= 24) return "strong";
+  return "underdog";
 }
 
 function opponentRankIsHigher(userTeamName, opponentTeamName) {
-  return Number(TEAM_RANK[opponentTeamName] || 48) < Number(TEAM_RANK[userTeamName] || 48);
+  return teamRank(opponentTeamName) < teamRank(userTeamName);
+}
+
+function deterministicIndex(seed, length) {
+  if (!length) return 0;
+  const text = String(seed || "MONDAY-CUP");
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash) % length;
+}
+
+function pickShareCopy(pool, seed) {
+  return pool[deterministicIndex(seed, pool.length)] || pool[0] || "SHARE YOUR RESULT";
+}
+
+function pointsFromForm(form = []) {
+  return form.reduce((total, code) => total + (code === "W" ? 3 : code === "D" ? 1 : 0), 0);
+}
+
+function rowStat(row = {}, keys = []) {
+  for (const key of keys) {
+    const value = row?.[key];
+    if (value !== undefined && value !== null && value !== "") return Number(value) || 0;
+  }
+  return 0;
 }
 
 function groupPositionForTeam(groupRows = [], teamName = "") {
@@ -459,11 +491,38 @@ function groupPositionForTeam(groupRows = [], teamName = "") {
   return index >= 0 ? index + 1 : null;
 }
 
+function groupRowForTeam(groupRows = [], teamName = "") {
+  return groupRows.find((row) => row.team === teamName) || null;
+}
+
 function isTeamQualified(qualifiedTeams, teamName) {
   if (!qualifiedTeams || !teamName) return false;
   if (qualifiedTeams instanceof Set) return qualifiedTeams.has(teamName);
   if (Array.isArray(qualifiedTeams)) return qualifiedTeams.includes(teamName);
   return Boolean(qualifiedTeams[teamName]);
+}
+
+function wasNearGoalDifferenceExit(groupRows = [], teamName = "") {
+  const position = groupPositionForTeam(groupRows, teamName);
+  if (!position || position <= 2) return false;
+  const userRow = groupRowForTeam(groupRows, teamName);
+  const secondRow = groupRows[1];
+  if (!userRow || !secondRow) return false;
+  const userPts = rowStat(userRow, ["pts", "points", "P", "PTS"]);
+  const secondPts = rowStat(secondRow, ["pts", "points", "P", "PTS"]);
+  const userGd = rowStat(userRow, ["gd", "goalDifference", "GD"]);
+  const secondGd = rowStat(secondRow, ["gd", "goalDifference", "GD"]);
+  return Math.abs(secondPts - userPts) <= 1 && Math.abs(secondGd - userGd) <= 1;
+}
+
+function knockoutRoundKey(matchNo) {
+  if (matchNo >= 73 && matchNo <= 88) return "r32";
+  if (matchNo >= 89 && matchNo <= 96) return "r16";
+  if (matchNo >= 97 && matchNo <= 100) return "qf";
+  if (matchNo >= 101 && matchNo <= 102) return "sf";
+  if (matchNo === 103) return "third";
+  if (matchNo === 104) return "final";
+  return "generic";
 }
 
 function exportFlashCopy({ result, userTeamName, opponentTeamName, userForm = [], groupRows = [], qualifiedTeams = new Set() }) {
@@ -475,48 +534,95 @@ function exportFlashCopy({ result, userTeamName, opponentTeamName, userForm = []
   const formThroughMatch = Array.isArray(userForm) && userForm.length
     ? userForm.slice(0, Math.max(week || userForm.length, userForm.length))
     : [outcome];
+  const seed = `${matchNo}|${week}|${userTeamName}|${opponentTeamName}|${outcome}|${formThroughMatch.join("")}`;
+  const userTier = teamTier(userTeamName);
+  const opponentTier = teamTier(opponentTeamName);
+  const giantKilling = won && userTier === "underdog" && opponentTier === "elite";
+  const majorUpsetLoss = outcome === "L" && userTier === "elite" && opponentTier === "underdog";
+  const lowerRankBeatHigher = won && opponentRankIsHigher(userTeamName, opponentTeamName);
+  const isGroupMatch = week >= 1 && week <= 3 && (matchNo <= 72 || !matchNo);
 
-  if (week === 1) {
-    if (outcome === "W") return "YOU ARE OFF TO A FLYER!";
-    if (outcome === "L") return "NOT THE BEST START...";
-    return opponentRankIsHigher(userTeamName, opponentTeamName) ? "POINTS ON THE BOARD!" : "YOU SHOULD'VE DONE BETTER";
-  }
-
-  if (week === 2) {
-    const first = formThroughMatch[0] || "";
-    const second = formThroughMatch[1] || outcome;
-    if (first === "W" && second === "W") return "YOU ARE ON A ROLL!";
-    if (first === "W" && second === "L") return "TAKE THE HIGHS WITH THE LOWS";
-    if (first === "L" && second === "L") return "MIRACLES CAN HAPPEN, YOU KNOW?";
-    if (first === "L" && second === "W") return "THINGS ARE LOOKING UP!";
-    if (second === "D") return opponentRankIsHigher(userTeamName, opponentTeamName) ? "A POINT IS A POINT" : "YOU NEED TO TAKE YOUR CHANCES";
-    if (second === "W") return "THINGS ARE LOOKING UP!";
-    return "TAKE THE HIGHS WITH THE LOWS";
-  }
-
-  if (week === 3 || status === RESULT_STATUS.QUALIFIED || status === RESULT_STATUS.ELIMINATED && result?.week) {
+  if (isGroupMatch) {
     const position = groupPositionForTeam(groupRows, userTeamName);
     const qualified = status === RESULT_STATUS.QUALIFIED || isTeamQualified(qualifiedTeams, userTeamName);
-    const rankBucket = teamRankBucket(userTeamName);
-    if (qualified) {
-      if (position === 1) return "YOU MADE IT LOOK EASY";
-      if (position === 2) return rankBucket === "top" ? "SOME EXTRA TRAINING SESSIONS, MAYBE?" : "NOT HERE TO MAKE UP THE NUMBERS";
-      return "THROUGH BY THE SKIN OF YOUR TEETH";
+    const points = pointsFromForm(formThroughMatch.slice(0, Math.max(week, 1)));
+
+    // Priority 1: exceptional group-stage storylines.
+    if (giantKilling) return pickShareCopy(["A GIANT HAS FALLEN", "THE WORLD JUST TOOK NOTICE", "THEY NEVER SAW YOU COMING"], seed);
+    if (majorUpsetLoss) return pickShareCopy(["THE NATION DEMANDS ANSWERS", "A DISASTER UNFOLDS", "HEADLINES WRITE THEMSELVES"], seed);
+    if (week === 3 && points === 9) return pickShareCopy(["THREE GAMES. THREE WINS.", "PERFECTION.", "THE TEAM TO BEAT."], seed);
+    if (week === 3 && outcome === "L" && qualified) return pickShareCopy(["DEFEAT NEVER FELT SO GOOD", "SOMEONE CHECK THE RULEBOOK", "YOU'LL TAKE THAT"], seed);
+    if (week === 3 && !qualified && wasNearGoalDifferenceExit(groupRows, userTeamName)) return pickShareCopy(["MILLIMETRES FROM GLORY", "ONE GOAL CHANGED EVERYTHING", "SO CLOSE IT HURTS"], seed);
+
+    if (week === 1) {
+      if (outcome === "W") {
+        if (lowerRankBeatHigher) return pickShareCopy(["DREAM START", "YOU'VE SHAKEN UP THE GROUP", "THE FAIRYTALE BEGINS"], seed);
+        return pickShareCopy(["DREAM START", "OFF TO A FLYER", "THE JOURNEY BEGINS"], seed);
+      }
+      if (outcome === "L") {
+        if (userTier === "underdog") return pickShareCopy(["NO SHAME IN THAT", "HEADS UP", "STILL ALL TO PLAY FOR"], seed);
+        return pickShareCopy(["NOT THE BEST START", "WORK TO DO", "ALREADY UNDER PRESSURE"], seed);
+      }
+      return opponentRankIsHigher(userTeamName, opponentTeamName)
+        ? pickShareCopy(["YOU'LL TAKE THAT", "A POINT EARNED", "STILL BREATHING"], seed)
+        : pickShareCopy(["TWO POINTS DROPPED", "MISSED OPPORTUNITY", "YOU SHOULD HAVE FINISHED THEM"], seed);
     }
-    return rankBucket === "top" ? "YOU'VE LET YOUR COUNTRY DOWN" : "YOU WERE NEVER GOING TO WIN IT ANYWAY...";
+
+    if (week === 2) {
+      if (points === 6) return pickShareCopy(["ONE FOOT IN THE KNOCKOUTS", "THEY CAN'T STOP YOU", "THE CROWD BELIEVES"], seed);
+      if (points === 0) return pickShareCopy(["PRAY FOR A MIRACLE", "BACKS AGAINST THE WALL", "THE MOUNTAIN JUST GOT STEEPER"], seed);
+      if (formThroughMatch[0] === "L" && outcome === "W") return pickShareCopy(["BACK FROM THE DEAD", "THE DREAM LIVES ON", "THAT'S MORE LIKE IT"], seed);
+      if (userTier === "elite" && points <= 2) return pickShareCopy(["YOU'RE MAKING HARD WORK OF THIS", "THE PRESS ARE CIRCLING", "EXPECTATIONS ARE DROPPING"], seed);
+      return pickShareCopy(["IT'S GOING TO THE WIRE", "EVERYTHING TO PLAY FOR", "STILL IN THE HUNT"], seed);
+    }
+
+    if (week === 3 || status === RESULT_STATUS.QUALIFIED || status === RESULT_STATUS.ELIMINATED) {
+      if (qualified) {
+        if (userTier === "underdog") return pickShareCopy(["THE DREAM CONTINUES", "NOBODY EXPECTED THIS", "THE NATION IS DANCING"], seed);
+        if (position === 1) return pickShareCopy(["TOP OF THE PILE", "GROUP WINNERS", "YOU MADE IT LOOK EASY"], seed);
+        if (position === 2) return pickShareCopy(["THROUGH IS THROUGH", "JOB DONE", "NOT PRETTY, BUT EFFECTIVE"], seed);
+        return pickShareCopy(["THROUGH BY THE SKIN OF YOUR TEETH", "SOMEHOW, SOMEWAY", "NEVER IN DOUBT... HONESTLY"], seed);
+      }
+      if (userTier === "elite") return pickShareCopy(["THE NATION IS IN MOURNING", "YOU'VE LET THEM DOWN", "PACK YOUR BAGS"], seed);
+      if (userTier === "strong") return pickShareCopy(["SO MUCH FOR THE PLAN", "NOT GOOD ENOUGH", "THE FLIGHT HOME AWAITS"], seed);
+      return pickShareCopy(["HEADS HELD HIGH", "YOU GAVE IT A GO", "THE DREAM ENDS HERE"], seed);
+    }
   }
 
-  if (matchNo >= 73 && matchNo <= 88) return won ? "QUALIFIED FOR THE ROUND OF 16" : "ELIMINATED IN THE ROUND OF 32";
-  if (matchNo >= 89 && matchNo <= 96) return won ? "QUALIFIED FOR THE QUARTER-FINALS" : "ELIMINATED IN THE ROUND OF 16";
-  if (matchNo >= 97 && matchNo <= 100) return won ? "QUALIFIED FOR THE SEMI-FINALS" : "ELIMINATED IN THE QUARTER-FINALS";
-  if (matchNo >= 101 && matchNo <= 102) return won ? "QUALIFIED FOR THE FINAL" : "ELIMINATED IN THE SEMI-FINALS";
-  if (matchNo === 103) return won ? "CONGRATULATIONS, YOU'VE WON A WOODEN SPOON!" : "YOU'RE MORE SUNDAY LEAGUE THAN MONDAY CUP";
-  if (matchNo === 104) return won ? "CHAMPIONES, CHAMPIONES, OLE OLE OLE!" : "WE SAW YOU CRYING ON THE TELE";
+  const round = knockoutRoundKey(matchNo);
 
-  if (status === RESULT_STATUS.KNOCKOUT_WIN) return "QUALIFIED FOR THE NEXT ROUND";
-  if (status === RESULT_STATUS.ELIMINATED) return "ELIMINATED";
-  if (outcome === "D") return "POINTS ON THE BOARD!";
-  return won ? "YOU ARE OFF TO A FLYER!" : "NOT THE BEST START...";
+  // Priority 1: knockout giant-killing/upset storylines.
+  if (giantKilling) {
+    if (round === "qf") return pickShareCopy(["A GIANT HAS BEEN SLAIN", "ANOTHER SCALP FOR THE COLLECTION", "THEY THOUGHT YOU WERE THE BYE"], seed);
+    if (round === "sf") return pickShareCopy(["THE GIANTS KEEP FALLING", "WHO WRITES THIS SCRIPT?", "FROM OUTSIDERS TO FINALISTS"], seed);
+    if (round === "final") return pickShareCopy(["FROM NOWHERE TO IMMORTALITY", "THE GREATEST STORY EVER TOLD", "FOOTBALL, BLOODY HELL"], seed);
+    return pickShareCopy(["YOU JUST SLAIN A GIANT", "ANOTHER GIANT FALLS", "THE FAIRYTALE CONTINUES"], seed);
+  }
+  if (majorUpsetLoss) return pickShareCopy(["THE NATION DEMANDS ANSWERS", "A DISASTER UNFOLDS", "HEADLINES WRITE THEMSELVES"], seed);
+
+  if (round === "r32") return won
+    ? pickShareCopy(["THE DREAM CONTINUES", "INTO THE LAST 16", "THE JOURNEY GOES ON"], seed)
+    : pickShareCopy(["ELIMINATED IN THE ROUND OF 32", "PACK YOUR BAGS", "THE DREAM ENDS HERE"], seed);
+  if (round === "r16") return won
+    ? pickShareCopy(["THE PRESSURE IS BUILDING", "EIGHT REMAIN", "CLOSER THAN EVER"], seed)
+    : pickShareCopy(["ELIMINATED IN THE ROUND OF 16", "SO CLOSE IT HURTS", "THE LAST 16 BITES BACK"], seed);
+  if (round === "qf") return won
+    ? pickShareCopy(["ONE GAME FROM GLORY", "THE NATION BELIEVES", "HISTORY BECKONS"], seed)
+    : pickShareCopy(["ELIMINATED IN THE QUARTER-FINALS", "ONE STEP TOO FAR", "THE DREAM STOPS HERE"], seed);
+  if (round === "sf") return won
+    ? (userTier === "underdog" ? pickShareCopy(["FROM OUTSIDERS TO FINALISTS", "NOBODY CAN STOP YOU NOW", "THE DREAM IS STILL ALIVE"], seed) : pickShareCopy(["ONE HAND ON THE TROPHY", "MISSION ALMOST COMPLETE", "THE FINAL AWAITS"], seed))
+    : pickShareCopy(["ELIMINATED IN THE SEMI-FINALS", "SO NEAR YET SO FAR", "THE FINAL SLIPPED AWAY"], seed);
+  if (round === "third") return won
+    ? pickShareCopy(["A PLACE ON THE PODIUM", "NOT A BAD CONSOLATION", "SOMETHING TO TAKE HOME"], seed)
+    : pickShareCopy(["FOURTH IS THIRD'S UGLY COUSIN", "SO NEAR YET SO FAR", "THE WOODEN SPOON AWAITS"], seed);
+  if (round === "final") return won
+    ? (userTier === "underdog" ? pickShareCopy(["FROM NOWHERE TO IMMORTALITY", "THE GREATEST STORY EVER TOLD", "FOOTBALL, BLOODY HELL"], seed) : pickShareCopy(["CHAMPIONS OF THE WORLD", "JUSTICE HAS BEEN SERVED", "THE BEST TEAM WON"], seed))
+    : pickShareCopy(["SO CLOSE YOU COULD TASTE IT", "ONE STEP SHORT OF GREATNESS", "HEARTBREAK"], seed);
+
+  if (status === RESULT_STATUS.KNOCKOUT_WIN) return pickShareCopy(["QUALIFIED FOR THE NEXT ROUND", "THE JOURNEY GOES ON", "STILL STANDING"], seed);
+  if (status === RESULT_STATUS.ELIMINATED) return pickShareCopy(["ELIMINATED", "THE DREAM ENDS HERE", "PACK YOUR BAGS"], seed);
+  if (outcome === "D") return pickShareCopy(["A POINT IS A POINT", "STILL IN THE HUNT", "EVERYTHING TO PLAY FOR"], seed);
+  return won ? pickShareCopy(["DREAM START", "OFF TO A FLYER", "THE JOURNEY BEGINS"], seed) : pickShareCopy(["NOT THE BEST START", "WORK TO DO", "ALREADY UNDER PRESSURE"], seed);
 }
 
 function getResultShareState({ result, fixture = null, podium = null, userTeam, stageLabel, userForm = [], groupRows = [], qualifiedTeams = new Set(), username = "" }) {

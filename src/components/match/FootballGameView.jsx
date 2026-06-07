@@ -160,15 +160,15 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
       {showPodiumBadge && (
         <div
           className="pointer-events-none absolute left-1/2 z-[7] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
-          style={{ top: `${(goalLine - 8) / 2}%`, width: "34%", height: "24%" }}
+          style={{ top: `${(goalLine - 8) / 2}%`, width: "99.825%", height: "74.415%" }}
           aria-hidden="true"
         >
           <div
-            className="absolute left-1/2 top-1/2 h-[86%] w-[96%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
+            className="absolute left-1/2 top-[54%] h-[56%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
             style={{ background: podiumBadge.glowOuter }}
           />
           <div
-            className="absolute left-1/2 top-1/2 h-[58%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-xl"
+            className="absolute left-1/2 top-[54%] h-[38%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
             style={{ background: podiumBadge.glowInner }}
           />
           <img

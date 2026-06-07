@@ -807,9 +807,9 @@ function drawBadgeOverlay(ctx, badgeMode, assets, x, y, width, height, d) {
   const offsetY = (Number(d.badgeY) || 0) * (width / 400);
   const badgeMap = {
     monday: { image: assets.mondayLogo, w: width * 0.99825, h: height * 0.74415, top: 0.39, glow: null },
-    champion: { image: assets.champion, w: width * 0.36, h: height * 0.27, top: 0.43, glow: LED_YELLOW },
-    runnerUp: { image: assets.runnerUp, w: width * 0.36, h: height * 0.27, top: 0.43, glow: IVORY },
-    third: { image: assets.third, w: width * 0.36, h: height * 0.27, top: 0.43, glow: "#C8863A" },
+    champion: { image: assets.champion, w: width * 0.99825, h: height * 0.74415, top: 0.39, glow: LED_YELLOW, glowOuter: "rgba(247,209,23,0.18)", glowMid: "rgba(247,209,23,0.075)" },
+    runnerUp: { image: assets.runnerUp, w: width * 0.99825, h: height * 0.74415, top: 0.39, glow: IVORY, glowOuter: "rgba(245,241,232,0.16)", glowMid: "rgba(216,216,216,0.07)" },
+    third: { image: assets.third, w: width * 0.99825, h: height * 0.74415, top: 0.39, glow: "#C8863A", glowOuter: "rgba(200,134,58,0.18)", glowMid: "rgba(200,134,58,0.075)" },
   };
   const badge = badgeMap[badgeMode] || badgeMap.monday;
   const cx = x + width / 2 + offsetX;
@@ -828,15 +828,18 @@ function drawBadgeOverlay(ctx, badgeMode, assets, x, y, width, height, d) {
     ctx.ellipse(cx, cy + boxH * 0.2, boxW * 0.36, boxH * 0.26, 0, 0, Math.PI * 2);
     ctx.fill();
   } else if (badge.glow) {
-    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, boxW * 0.7);
-    glow.addColorStop(0, `${badge.glow}88`);
-    glow.addColorStop(1, `${badge.glow}00`);
+    const glow = ctx.createRadialGradient(cx, cy + boxH * 0.06, 0, cx, cy + boxH * 0.06, boxW * 0.5);
+    glow.addColorStop(0, badge.glowOuter || "rgba(247,209,23,0.18)");
+    glow.addColorStop(0.58, badge.glowMid || "rgba(247,209,23,0.07)");
+    glow.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = glow;
     ctx.beginPath();
-    ctx.ellipse(cx, cy, boxW * 0.7, boxH * 0.8, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy + boxH * 0.08, boxW * 0.34, boxH * 0.28, 0, 0, Math.PI * 2);
     ctx.fill();
   }
+  ctx.filter = badgeMode === "monday" ? "none" : "drop-shadow(0 18px 24px rgba(0,0,0,0.30))";
   drawImageContain(ctx, badge.image, cx, cy, boxW, boxH);
+  ctx.filter = "none";
   ctx.restore();
 }
 

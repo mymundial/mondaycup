@@ -290,22 +290,22 @@ function ShareBadgeOverlay({ mode, scale = 1, x = 0, y = 0 }) {
       glow: null,
       shadow: "drop-shadow(0 10px 24px rgba(0,0,0,0.44))",
     },
-    champion: { src: ASSETS.badges.champion, alt: "Champion", width: "36%", height: "27%", glow: LED_YELLOW },
-    runnerUp: { src: ASSETS.badges.runnerUp, alt: "Runner-up", width: "36%", height: "27%", glow: IVORY },
-    third: { src: ASSETS.badges.third, alt: "Third place", width: "36%", height: "27%", glow: "#C8863A" },
+    champion: { src: ASSETS.badges.champion, alt: "Champion", width: "99.825%", height: "74.415%", glow: LED_YELLOW, glowOuter: "2E", glowInner: "20", shadow: "drop-shadow(0 18px 24px rgba(0,0,0,0.30))" },
+    runnerUp: { src: ASSETS.badges.runnerUp, alt: "Runner-up", width: "99.825%", height: "74.415%", glow: IVORY, glowOuter: "29", glowInner: "1C", shadow: "drop-shadow(0 18px 24px rgba(0,0,0,0.30))" },
+    third: { src: ASSETS.badges.third, alt: "Third place", width: "99.825%", height: "74.415%", glow: "#C8863A", glowOuter: "2E", glowInner: "20", shadow: "drop-shadow(0 18px 24px rgba(0,0,0,0.30))" },
   };
   const badge = badgeMap[mode] || badgeMap.monday;
   const hasGlow = Boolean(badge.glow);
   return (
     <div
       className="pointer-events-none absolute left-1/2 z-[30] flex items-center justify-center"
-      style={{ top: mode === "monday" ? "39%" : "43%", width: badge.width, height: badge.height, transform: mergeTransforms("translate(-50%, -50%)", editorTransform({ x, y, scale })) }}
+      style={{ top: "39%", width: badge.width, height: badge.height, transform: mergeTransforms("translate(-50%, -50%)", editorTransform({ x, y, scale })) }}
       aria-hidden="true"
     >
       {mode === "monday" && <div className="absolute inset-x-[10%] bottom-[2%] h-[42%] rounded-full bg-[#F7D117]/28 blur-3xl" />}
       {mode === "monday" && <div className="absolute inset-x-[14%] bottom-[3%] h-[36%] rounded-full bg-[#F5F1E8]/24 blur-2xl" />}
-      {hasGlow && <div className="absolute left-1/2 top-1/2 h-[86%] w-[96%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl" style={{ background: `${badge.glow}${badge.glowOuter || "44"}` }} />}
-      {hasGlow && <div className="absolute left-1/2 top-1/2 h-[58%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-xl" style={{ background: `${badge.glow}${badge.glowInner || "55"}` }} />}
+      {hasGlow && <div className="absolute left-1/2 top-[54%] h-[56%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl" style={{ background: `${badge.glow}${badge.glowOuter || "2E"}` }} />}
+      {hasGlow && <div className="absolute left-1/2 top-[54%] h-[38%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl" style={{ background: `${badge.glow}${badge.glowInner || "20"}` }} />}
       <img src={badge.src} alt={badge.alt} className="relative z-[1] h-full w-full object-contain" style={{ filter: badge.shadow || "drop-shadow(0 16px 22px rgba(0,0,0,0.26))" }} draggable={false} crossOrigin="anonymous" />
     </div>
   );
