@@ -1120,31 +1120,38 @@ export default function App() {
       ? { goldenTicket: profileTicket }
       : undefined;
 
+    const currentProgressSnapshot = buildGameSnapshot();
+    const shouldSaveCurrentCampaign = Boolean(currentProgressSnapshot?.active && currentProgressSnapshot?.team && team);
+
     const payload = {
       nickname:
         currentUser.displayName || currentUser.email?.split("@")[0] || "Player",
       email: currentUser.email || "",
       accountStatus: { emailVerified: Boolean(currentUser.emailVerified), verificationRequired: !currentUser.emailVerified },
-      currentCampaign: {
-        active: Boolean(team),
-        team: team || null,
-        opponent: opponent || null,
-        stage: currentRoundLabel || matchStage || "No Campaign",
-        points: Number(scoringState.campaignPoints || 0),
-        cupRun: userForm || [],
-        score,
-        matchResult: matchResult
-          ? {
-              status: matchResult.status || null,
-              matchNo: matchResult.matchNo || null,
-              winner: matchResult.winner || null,
-              loser: matchResult.loser || null,
-              userScore: matchResult.userScore ?? null,
-              opponentScore: matchResult.opponentScore ?? null,
-            }
-          : null,
-      },
-      currentProgress: buildGameSnapshot(),
+      ...(shouldSaveCurrentCampaign
+        ? {
+            currentCampaign: {
+              active: true,
+              team: team || null,
+              opponent: opponent || null,
+              stage: currentRoundLabel || matchStage || "No Campaign",
+              points: Number(scoringState.campaignPoints || 0),
+              cupRun: userForm || [],
+              score,
+              matchResult: matchResult
+                ? {
+                    status: matchResult.status || null,
+                    matchNo: matchResult.matchNo || null,
+                    winner: matchResult.winner || null,
+                    loser: matchResult.loser || null,
+                    userScore: matchResult.userScore ?? null,
+                    opponentScore: matchResult.opponentScore ?? null,
+                  }
+                : null,
+            },
+            currentProgress: currentProgressSnapshot,
+          }
+        : {}),
       bestCampaign: {
         ...(bestCampaignSummary || {}),
         points: Number(bestCampaignScore || 0),
