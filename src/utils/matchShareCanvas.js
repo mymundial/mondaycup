@@ -302,8 +302,12 @@ function drawFlag(ctx, image, x, y, width, height, options = {}) {
   if (image) drawImageCover(ctx, image, x + pad, y + pad, width - pad * 2, height - pad * 2);
   ctx.restore();
 
-  const outline = options.outline || "rgba(245,241,232,0.92)";
+  const outline = options.outline || LED_YELLOW;
+  ctx.save();
+  ctx.shadowColor = options.glow || "rgba(247,209,23,0.16)";
+  ctx.shadowBlur = options.glowBlur ?? Math.max(1.5, width * 0.035);
   strokeRoundRect(ctx, x + outerStroke / 2, y + outerStroke / 2, width - outerStroke, height - outerStroke, radius, outline, outerStroke);
+  ctx.restore();
   strokeRoundRect(ctx, x + pad, y + pad, width - pad * 2, height - pad * 2, Math.max(2, radius - pad), "rgba(3,27,18,0.34)", innerStroke);
   ctx.restore();
 }
@@ -323,7 +327,7 @@ function drawCapturedScoreboardFlagOverlays(ctx, props, assets, size) {
   const unit = size / 400;
   const flagW = 25 * unit * (Number(d.flagScale) || 1);
   const flagH = 17 * unit * (Number(d.flagScale) || 1);
-  const coverPad = Math.max(3, flagW * 0.12);
+  const coverPad = Math.max(8, flagW * 0.46);
   const leftX = centers[0] - flagW / 2 + ((Number(d.flagAX) || 0) + 7) * unit;
   const rightX = centers[6] - flagW / 2 + ((Number(d.flagBX) || 0) - 7) * unit;
   const y = r2Y - flagH / 2;
@@ -333,10 +337,13 @@ function drawCapturedScoreboardFlagOverlays(ctx, props, assets, size) {
   // border cannot show through at the edges. The small black patch is hidden
   // by the flag card but avoids old yellow halos.
   ctx.fillStyle = "#050505";
-  fillRoundRect(ctx, leftX - coverPad, y - coverPad, flagW + coverPad * 2, flagH + coverPad * 2, Math.max(5, flagW * 0.16), "#050505");
-  fillRoundRect(ctx, rightX - coverPad, y - coverPad, flagW + coverPad * 2, flagH + coverPad * 2, Math.max(5, flagW * 0.16), "#050505");
-  drawFlag(ctx, assets.flagA, leftX, y + (Number(d.flagAY) || 0) * unit, flagW, flagH);
-  drawFlag(ctx, assets.flagB, rightX, y + (Number(d.flagBY) || 0) * unit, flagW, flagH);
+  fillRoundRect(ctx, leftX - coverPad * 1.55, y - coverPad * 0.82, flagW + coverPad * 2.35, flagH + coverPad * 1.65, Math.max(5, flagW * 0.18), "#050505");
+  fillRoundRect(ctx, rightX - coverPad * 0.80, y - coverPad * 0.82, flagW + coverPad * 2.35, flagH + coverPad * 1.65, Math.max(5, flagW * 0.18), "#050505");
+  // Reapply a faint dot-matrix texture over the cover patch so hidden DOM flags do not leave a flat scar.
+  drawDotMatrix(ctx, leftX - coverPad * 1.55, y - coverPad * 0.82, flagW + coverPad * 2.35, flagH + coverPad * 1.65);
+  drawDotMatrix(ctx, rightX - coverPad * 0.80, y - coverPad * 0.82, flagW + coverPad * 2.35, flagH + coverPad * 1.65);
+  drawFlag(ctx, assets.flagA, leftX, y + (Number(d.flagAY) || 0) * unit, flagW, flagH, { outline: LED_YELLOW });
+  drawFlag(ctx, assets.flagB, rightX, y + (Number(d.flagBY) || 0) * unit, flagW, flagH, { outline: LED_YELLOW });
   ctx.restore();
 }
 
@@ -347,10 +354,15 @@ function drawMarkers(ctx, markers = [], totalSlots = 5, x, y, scale = 1) {
   const totalWidth = visible.length * dot + Math.max(0, visible.length - 1) * gap;
   let cursor = x - totalWidth / 2 + dot / 2;
   visible.forEach((marker) => {
+    const fill = marker === "G" ? "#22C55E" : marker === "S" ? "#EF4444" : LED_YELLOW;
+    ctx.save();
+    ctx.shadowColor = fill;
+    ctx.shadowBlur = Math.max(1.2, dot * 0.22);
     ctx.beginPath();
     ctx.arc(cursor, y, dot / 2, 0, Math.PI * 2);
-    ctx.fillStyle = marker === "G" ? "#22C55E" : marker === "S" ? "#EF4444" : LED_YELLOW;
+    ctx.fillStyle = fill;
     ctx.fill();
+    ctx.restore();
     cursor += dot + gap;
   });
 }
@@ -541,8 +553,9 @@ function drawScoreboard(ctx, props, assets, size) {
     ctx.fillStyle = flashBg;
     ctx.fillRect(0, mainH, size, flashH);
     const gloss = ctx.createLinearGradient(0, mainH, 0, mainH + flashH);
-    gloss.addColorStop(0, "rgba(255,255,255,0.08)");
-    gloss.addColorStop(1, "rgba(0,0,0,0.14)");
+    gloss.addColorStop(0, "rgba(255,255,255,0.16)");
+    gloss.addColorStop(0.48, "rgba(255,255,255,0.03)");
+    gloss.addColorStop(1, "rgba(0,0,0,0.22)");
     ctx.fillStyle = gloss;
     ctx.fillRect(0, mainH, size, flashH);
   }
@@ -760,8 +773,8 @@ function drawAdvertisingBoard(ctx, image, x, y, width, height) {
   ctx.lineTo(x + width, y + height - 1);
   ctx.stroke();
   if (image) {
-    const logoW = width * 0.61;
-    const logoH = height * 0.69;
+    const logoW = width * 0.671;
+    const logoH = height * 0.759;
     const cx = x + width / 2;
     const cy = y + height / 2;
 
@@ -786,7 +799,7 @@ function drawAdvertisingBoard(ctx, image, x, y, width, height) {
     ctx.ellipse(cx + logoW * 0.1, cy, logoW * 0.52, logoH * 0.48, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.84;
+    ctx.globalAlpha = 0.79;
     ctx.filter = "brightness(0.94)";
     drawImageContain(ctx, image, cx, cy, logoW, logoH);
     ctx.filter = "none";
@@ -997,6 +1010,12 @@ export async function createMatchShareBlob(props = {}, options = {}) {
   if (capturedScoreboard?.image) {
     boardH = capturedScoreboard.height;
     ctx.drawImage(capturedScoreboard.image, 0, 0, size, boardH);
+    ctx.save();
+    ctx.globalAlpha = 0.075;
+    ctx.globalCompositeOperation = "screen";
+    ctx.filter = `blur(${Math.max(0.8, size * 0.0011)}px)`;
+    ctx.drawImage(capturedScoreboard.image, 0, 0, size, boardH);
+    ctx.restore();
     drawCapturedScoreboardFlagOverlays(ctx, normalisedProps, assets, size);
   } else {
     boardH = drawScoreboard(ctx, normalisedProps, assets, size);
