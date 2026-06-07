@@ -141,7 +141,7 @@ function ShareScoreboard({
   });
   const markerShell = "inline-flex max-w-full items-center justify-center px-1 py-0";
   const flashCopy = String(flashText || "SHARE YOUR RESULT").replace(/\s+/g, " ").trim();
-  const flashFontSize = flashTickerFontSize(flashCopy);
+  const flashFontSize = "16px";
 
   return (
     <section
@@ -164,7 +164,7 @@ function ShareScoreboard({
 
         <div className="relative z-[1] flex h-full items-center px-0 py-0">
           <div
-            className="grid h-[82%] w-full items-center justify-items-center"
+            className="grid h-[88%] w-full items-center justify-items-center"
             style={{
               gridTemplateColumns: "10% minmax(0,27%) 10.5% 5% 10.5% minmax(0,27%) 10%",
               gridTemplateRows: "30% 45% 25%",
@@ -172,8 +172,8 @@ function ShareScoreboard({
           >
             {d.showStage && (
               <div data-normalise-stage-label="true" className="col-start-2 col-end-7 row-start-1 flex items-center justify-center">
-                <div className={`${d.stageBox ? "rounded-[6px] border border-[#F5F1E8]/22 bg-[#050505] px-3 py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]" : "px-1 py-0"} inline-flex max-w-full items-center justify-center`} style={{ transform: editorTransform({ x: d.stageX, y: d.stageY, scale: d.stageScale }) }}>
-                  <div className="led-text-glow font-led flex min-h-[16px] items-center justify-center whitespace-nowrap text-center text-[10px] font-black uppercase leading-none tracking-[0.11em]" style={{ ...boardTextStyle, fontWeight: 900 }}>
+                <div className={`${d.stageBox ? "rounded-[6px] border border-[#F5F1E8]/22 bg-[#050505] px-3 py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]" : "px-1 py-0"} inline-flex min-h-[20px] max-w-full items-center justify-center`} style={{ transform: editorTransform({ x: d.stageX, y: d.stageY, scale: d.stageScale }) }}>
+                  <div className="led-text-glow font-led flex h-full items-center justify-center whitespace-nowrap text-center text-[10px] font-black uppercase leading-none tracking-[0.11em]" style={{ ...boardTextStyle, fontWeight: 900 }}>
                     {stageTitle || "FINAL"}
                   </div>
                 </div>
@@ -218,7 +218,7 @@ function ShareScoreboard({
                   </div>
                 </div>
                 <div data-share-username-slot="true" className="relative z-[3] col-start-3 col-end-6 row-start-3 flex h-full items-center justify-center px-1">
-                  <div className={`${usernameEnabled ? "visible" : "invisible"} led-text-glow font-led inline-flex min-h-[16px] max-w-full items-center justify-center truncate whitespace-nowrap rounded-[6px] border border-[#F5F1E8]/22 bg-[#050505] px-3 text-center text-[9px] font-black uppercase leading-none tracking-[0.11em] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]`} style={{ ...boardTextStyle, transform: editorTransform({ x: d.usernameX, y: d.usernameY, scale: d.usernameScale }) }}>
+                  <div className={`${usernameEnabled ? "visible" : "invisible"} led-text-glow font-led inline-flex min-h-[20px] max-w-full items-center justify-center truncate whitespace-nowrap rounded-[6px] border border-[#F5F1E8]/22 bg-[#050505] px-3 text-center text-[9px] font-black uppercase leading-none tracking-[0.11em] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]`} style={{ ...boardTextStyle, transform: editorTransform({ x: d.usernameX, y: d.usernameY, scale: d.usernameScale }) }}>
                     {(String(username || "").replace(/\s+/g, " ").trim().toUpperCase()) || "GUEST"}
                   </div>
                 </div>
@@ -241,7 +241,7 @@ function ShareScoreboard({
 
       <div
         data-share-flash="true"
-        className="relative grid h-[24%] w-full place-items-center overflow-hidden px-[3%] text-center"
+        className="relative flex h-[24%] w-full items-center justify-center overflow-hidden px-[3%] text-center"
         style={{
           ...flashStyle,
           background: d.flashBox ? flashStyle.background : "transparent",
@@ -251,7 +251,7 @@ function ShareScoreboard({
       >
         <span
           data-share-flash-text="true"
-          className="home-copy-bold block w-[94%] overflow-hidden truncate whitespace-nowrap text-center font-black uppercase leading-none tracking-[0.085em] [text-wrap:nowrap]"
+          className="home-copy-bold flex h-full w-[94%] items-center justify-center overflow-hidden truncate whitespace-nowrap text-center font-black uppercase leading-none tracking-[0.085em] [text-wrap:nowrap]"
           style={{
             fontFamily: fontFamilyFor(d.flashFontType),
             fontSize: flashFontSize,

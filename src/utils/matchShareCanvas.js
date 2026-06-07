@@ -361,9 +361,8 @@ function drawMarkers(ctx, markers = [], totalSlots = 5, x, y, scale = 1) {
 }
 
 function flashFontSize(copy, baseScale, exportSize = MATCH_SHARE_EXPORT_SIZE) {
-  const length = String(copy || "").length;
-  const previewPx = length > 38 ? 10 : length > 32 ? 11 : length > 26 ? 12 : length > 20 ? 15 : 20;
-  return previewPx * (exportSize / 400) * baseScale;
+  // Constant size for all commentary; set to comfortably fit the longest export copy.
+  return 15.5 * (exportSize / 400) * baseScale;
 }
 
 function drawScoreboard(ctx, props, assets, size) {
@@ -422,7 +421,7 @@ function drawScoreboard(ctx, props, assets, size) {
       fillRoundRect(ctx, box.x, box.y, box.width, box.height, size * 0.012, "#050505");
       strokeRoundRect(ctx, box.x, box.y, box.width, box.height, size * 0.012, "rgba(245,241,232,0.22)", Math.max(1.5, size * 0.001));
     }
-    drawCenteredText(ctx, cleanText(stageTitle, "FINAL"), box.x + box.width / 2, box.y + box.height * 0.54, {
+    drawCenteredText(ctx, cleanText(stageTitle, "FINAL"), box.x + box.width / 2, box.y + box.height / 2, {
       family,
       size: size * 0.029,
       weight: 900,
@@ -509,7 +508,7 @@ function drawScoreboard(ctx, props, assets, size) {
     if (usernameEnabled) {
       fillRoundRect(ctx, usernameBoxX, usernameBoxY, usernameBoxW, usernameBoxH, size * 0.012, "#050505");
       strokeRoundRect(ctx, usernameBoxX, usernameBoxY, usernameBoxW, usernameBoxH, size * 0.012, "rgba(245,241,232,0.22)", Math.max(1.5, size * 0.001));
-      drawCenteredText(ctx, cleanText(username, "GUEST"), usernameBoxX + usernameBoxW / 2, usernameBoxY + usernameBoxH * 0.56, {
+      drawCenteredText(ctx, cleanText(username, "GUEST"), usernameBoxX + usernameBoxW / 2, usernameBoxY + usernameBoxH / 2, {
         family,
         size: size * 0.023 * (Number(d.usernameScale) || 1),
         weight: 900,
@@ -529,7 +528,7 @@ function drawScoreboard(ctx, props, assets, size) {
       fillRoundRect(ctx, markerBoxX, markerBoxY, markerBoxW, markerBoxH, size * 0.012, "#050505");
       strokeRoundRect(ctx, markerBoxX, markerBoxY, markerBoxW, markerBoxH, size * 0.012, "rgba(245,241,232,0.22)", Math.max(1.5, size * 0.001));
     }
-    drawCenteredText(ctx, cleanText(markerText, "PENALTIES"), markerBoxX + markerBoxW / 2, markerBoxY + markerBoxH * 0.56, {
+    drawCenteredText(ctx, cleanText(markerText, "PENALTIES"), markerBoxX + markerBoxW / 2, markerBoxY + markerBoxH / 2, {
       family,
       size: size * 0.026 * (Number(d.markerScale) || 1),
       weight: 900,
@@ -555,7 +554,7 @@ function drawScoreboard(ctx, props, assets, size) {
 
   const flashCopy = cleanText(flashText, "SHARE YOUR RESULT");
   const flashScale = Number(d.flashScale) || 1;
-  drawCenteredText(ctx, flashCopy, size / 2 + (Number(d.flashX) || 0) * unit, mainH + flashH / 2 - unit + (Number(d.flashY) || 0) * unit, {
+  drawCenteredText(ctx, flashCopy, size / 2 + (Number(d.flashX) || 0) * unit, mainH + flashH / 2 + (Number(d.flashY) || 0) * unit, {
     family: fontFamilyFor(d.flashFontType),
     size: flashFontSize(flashCopy, flashScale, size),
     weight: 900,

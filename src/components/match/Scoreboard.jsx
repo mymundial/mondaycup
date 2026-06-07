@@ -23,7 +23,8 @@ function PenaltyMarkers({ attempts, totalSlots = GAME.regulationPens }) {
 }
 
 function flashTickerFontSize() {
-  return "clamp(17px,2.35dvh,27px)";
+  // Constant export/preview size: sized for the longest commentary line, never changes per copy.
+  return "clamp(13px,1.75dvh,21px)";
 }
 
 
@@ -52,11 +53,11 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
 
         <div className="relative z-[1] flex h-full items-center px-[clamp(8px,3.5%,18px)] py-0">
-          <div className="grid h-[82%] w-full grid-cols-[42px_minmax(0,1fr)_clamp(34px,10vw,48px)_clamp(34px,9vw,46px)_clamp(34px,10vw,48px)_minmax(0,1fr)_42px] grid-rows-[30%_45%_25%] items-center">
+          <div className="grid h-[88%] w-full grid-cols-[42px_minmax(0,1fr)_clamp(34px,10vw,48px)_clamp(34px,9vw,46px)_clamp(34px,10vw,48px)_minmax(0,1fr)_42px] grid-rows-[30%_45%_25%] items-center">
             {!hideStageLabel && (
               <div data-normalise-stage-label="true" className="col-start-2 col-end-7 row-start-1 flex items-center justify-center">
-                <div className="inline-flex max-w-full items-center justify-center rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(7px,2vw,12px)] py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
-                  <div className="led-text-glow font-led flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center whitespace-nowrap text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117]" style={{ fontFamily: "IntoDotMatrix, monospace", fontWeight: 900 }}>
+                <div className="inline-flex min-h-[clamp(17px,2.15vh,22px)] max-w-full items-center justify-center rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(7px,2vw,12px)] py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+                  <div className="led-text-glow font-led flex min-h-full items-center justify-center whitespace-nowrap text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117]" style={{ fontFamily: "IntoDotMatrix, monospace", fontWeight: 900 }}>
                     {normaliseThirdPlaceCopy(stageLabel || "GROUP STAGE")}
                   </div>
                 </div>
@@ -83,8 +84,8 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
               <span className="flex min-h-[clamp(12px,1.65vh,17px)] items-center justify-center leading-none"><PenaltyMarkers attempts={attempts.user} totalSlots={totalMarkerSlots} /></span>
             </div>
             <div data-share-username-slot="true" className="relative z-[3] col-start-3 col-end-6 row-start-3 flex h-full items-center justify-center px-[clamp(5px,1.5vw,10px)]">
-              <div className={`${usernameEnabled ? "visible" : "invisible"} led-text-glow font-led inline-flex max-w-full items-center justify-center truncate whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(7px,2vw,12px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]`}>
-                <span className="flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center leading-none">{cleanUsername || "GUEST"}</span>
+              <div className={`${usernameEnabled ? "visible" : "invisible"} led-text-glow font-led inline-flex min-h-[clamp(17px,2.15vh,22px)] max-w-full items-center justify-center truncate whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(7px,2vw,12px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]`}>
+                <span className="flex h-full items-center justify-center leading-none">{cleanUsername || "GUEST"}</span>
               </div>
             </div>
             <div className="relative z-[1] col-start-6 row-start-3 flex h-full items-center justify-center overflow-hidden">
@@ -96,7 +97,7 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
 
       <div
         data-share-flash="true"
-        className="relative grid w-full place-items-center overflow-hidden px-[3%] text-center uppercase tracking-[0.085em]"
+        className="relative flex w-full items-center justify-center overflow-hidden px-[3%] text-center uppercase tracking-[0.085em]"
         style={{
           height: `calc(${tickerPercent}% + 1px)`,
           marginTop: "-1px",
@@ -109,7 +110,7 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
       >
         <span
           className="block max-w-[94%] overflow-hidden truncate whitespace-nowrap text-center leading-none [text-wrap:nowrap]"
-          style={{ fontSize: tickerFontSize, lineHeight: 1, textOverflow: "ellipsis" }}
+          style={{ fontSize: tickerFontSize, lineHeight: 1, textOverflow: "ellipsis", display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}
         >
           {tickerCopy}
         </span>
