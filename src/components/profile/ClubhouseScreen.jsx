@@ -439,20 +439,21 @@ function CosmeticUpgradeCard({
       : "border-[#F7D117]/42 bg-[#031B12]/42 text-[#F5F1E8] ring-1 ring-[#F7D117]/18";
 
   const status = isTicket
-    ? isMaxTicket
-      ? "MAX"
+    ? ticketQty > 0
+      ? `${ticketQty}/99`
       : price
     : isOwned
       ? isActive
         ? "EQUIPPED"
         : "PURCHASED"
       : price;
+  const buttonDisabled = Boolean(disabled || isMaxTicket);
 
   return (
     <button
       type="button"
       onClick={() => {
-        if (disabled) return;
+        if (buttonDisabled) return;
         if (guestLocked) {
           onOpenShop?.(id);
           return;
@@ -463,7 +464,7 @@ function CosmeticUpgradeCard({
         }
         onToggle?.(id);
       }}
-      disabled={disabled}
+      disabled={buttonDisabled}
       className={`group relative min-h-[108px] overflow-hidden rounded-[1.1rem] border p-2 text-center shadow-[0_8px_16px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all disabled:cursor-default disabled:opacity-70 ${cardTone}`}
     >
       <div className="flex h-full min-h-[92px] flex-col items-center justify-center">
@@ -495,16 +496,11 @@ function CosmeticUpgradeCard({
         </div>
         <div className="mt-2 flex items-center justify-center gap-1.5">
           {isTicket ? (
-            <>
-              <span
-                className={`home-copy-bold text-[11px] uppercase leading-none tracking-[0.06em] ${titleTone}`}
-              >
-                {status}
-              </span>
-              <span className="rounded-full bg-[#052D1D]/88 px-1.5 py-1 home-copy-bold text-[7px] uppercase leading-none tracking-[0.08em] text-[#F7D117]">
-                {ticketQty}/99
-              </span>
-            </>
+            <span
+              className={`home-copy-bold text-[11px] uppercase leading-none tracking-[0.06em] ${titleTone}`}
+            >
+              {status}
+            </span>
           ) : isOwned ? (
             <StatusPill active={isActive}>{status}</StatusPill>
           ) : (
@@ -544,77 +540,146 @@ function AllTeamsUnlockButton({
   guestLocked = false,
   onUnlock,
 }) {
+  const titleTone = unlocked ? "text-[#F5F1E8]" : "text-[#F7D117]";
+  const cardTone = unlocked
+    ? "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-1 ring-[#F5F1E8]/10"
+    : "border-[#F7D117]/42 bg-[#031B12]/42 text-[#F5F1E8] ring-1 ring-[#F7D117]/18";
+  const upgradeGridColumns = "minmax(0,1fr) 0.5rem minmax(0,1fr) 0.5rem minmax(0,1fr) 0.5rem minmax(0,1fr)";
+  const renderShield = () => (
+    <div className="mx-auto grid h-12 w-12 shrink-0 place-items-center rounded-full border border-[#F5F1E8]/12 bg-[#072D1D]/92">
+      <img
+        src="/assets/branding/monday-cup.png"
+        alt=""
+        className="h-11 w-11 object-contain drop-shadow-[0_5px_8px_rgba(0,0,0,0.22)]"
+        draggable={false}
+      />
+    </div>
+  );
   return (
     <button
       type="button"
       onClick={() => {
-        if (guestLocked) {
-          onUnlock?.();
-          return;
-        }
-        if (!unlocked) onUnlock?.();
+        if (guestLocked || !unlocked) onUnlock?.();
       }}
       disabled={unlocked && !guestLocked}
-      className={`relative flex min-h-[74px] w-full items-center gap-3 rounded-[1.15rem] border px-4 py-3 text-left shadow-[0_10px_22px_rgba(0,0,0,0.16),inset_0_1px_0_rgba(245,241,232,0.06)] ring-1 transition-transform active:scale-[0.99] disabled:cursor-default ${unlocked ? "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10" : "border-[#F7D117]/60 bg-[#062819] text-[#F5F1E8] ring-[#F7D117]/24"} ${guestLocked ? "cursor-pointer" : ""}`}
+      className={`group relative min-h-[74px] w-full overflow-hidden rounded-[1.1rem] border p-2 text-center shadow-[0_8px_16px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all active:scale-[0.99] disabled:cursor-default disabled:opacity-70 ${cardTone}`}
     >
-      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[0.9rem] border border-[#F5F1E8]/14 bg-[#031B12]/54">
-        {unlocked ? (
-          <OpenPadlockIcon className="h-7 w-7 text-[#F7D117]" />
-        ) : (
-          <PadlockIcon className="h-7 w-7 text-[#F7D117]" />
-        )}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate home-copy-bold text-[14px] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">
-          ALL TEAMS
-        </span>
-        <span className="mt-1 block truncate home-copy-regular text-[7px] uppercase leading-none tracking-[0.10em] text-[#F5F1E8]/68">
-          UNLOCK EVERY NATION
-        </span>
-      </span>
-      <span className="shrink-0 text-right">
-        {unlocked ? (
-          <StatusPill active>ACTIVE</StatusPill>
-        ) : (
-          <span className="home-copy-bold text-[15px] uppercase tracking-[0.06em] text-[#F7D117]">
-            £1.99
-          </span>
-        )}
-      </span>
+      <div
+        className="grid min-h-[56px] items-center"
+        style={{ gridTemplateColumns: upgradeGridColumns }}
+      >
+        <div className="grid place-items-center" style={{ gridColumn: "1" }}>
+          {renderShield()}
+        </div>
+        <div
+          className="flex min-w-0 flex-col items-center justify-center gap-[2px] text-center"
+          style={{ gridColumn: "3 / 6" }}
+        >
+          <div className={`home-copy-bold min-h-[13px] text-[14px] uppercase leading-none tracking-[0.075em] ${titleTone}`}>
+            ALL TEAMS
+          </div>
+          <div className="home-copy-regular text-[7.8px] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]/72">
+            UNLOCK EVERY PLAYABLE NATION
+          </div>
+        </div>
+        <div className="grid place-items-center" style={{ gridColumn: "7" }}>
+          {unlocked ? (
+            <StatusPill active>ACTIVE</StatusPill>
+          ) : (
+            <span className="home-copy-bold text-[14px] uppercase leading-none tracking-[0.06em] text-[#F7D117]">
+              £1.99
+            </span>
+          )}
+        </div>
+      </div>
     </button>
   );
 }
 
+const KITBAG_INCLUDED_ITEMS = [
+  { key: "allTeams", src: "/assets/branding/monday-cup.png", alt: "All teams" },
+  { key: "goldenBoot", src: "/assets/game/golden-boot.png", alt: "Golden boot" },
+  { key: "goldenBall", src: "/assets/game/golden-ball.png", alt: "Golden ball" },
+  { key: "goldenGlove", src: "/assets/game/golden-glove.png", alt: "Golden glove" },
+  { key: "goldenTicket", src: "/assets/game/golden-ticket.png", alt: "Golden ticket" },
+];
+
+function BundleIncludedIcon({ src, alt, compact = false }) {
+  const sizeClass = compact ? "h-8 w-8" : "h-9 w-9";
+  const imageClass = compact ? "h-7 w-7" : "h-8 w-8";
+  return (
+    <span className={`grid ${sizeClass} shrink-0 place-items-center rounded-full border border-[#F5F1E8]/12 bg-[#072D1D]/92 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]`}>
+      <img
+        src={src}
+        alt={alt}
+        className={`${imageClass} object-contain drop-shadow-[0_4px_7px_rgba(0,0,0,0.22)]`}
+        draggable={false}
+      />
+    </span>
+  );
+}
+
 function GoldenKitbagBundleCard({ onOpenShop, disabled = false }) {
+  const upgradeGridColumns = "minmax(0,1fr) 0.5rem minmax(0,1fr) 0.5rem minmax(0,1fr) 0.5rem minmax(0,1fr)";
   return (
     <button
       type="button"
       onClick={() => !disabled && onOpenShop?.(STORE_ITEM_IDS.fullBundle)}
       disabled={disabled}
-      className="relative flex min-h-[118px] w-full items-center gap-4 overflow-hidden rounded-[1.35rem] border border-[#F7D117]/64 bg-[#062819] px-4 py-4 text-left text-[#F5F1E8] shadow-[0_0_16px_rgba(247,209,23,0.12),0_14px_30px_rgba(0,0,0,0.20),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/24 transition-transform active:scale-[0.99] disabled:opacity-60"
+      className="group relative min-h-[142px] w-full overflow-hidden rounded-[1.1rem] border border-[#F7D117]/42 bg-[#031B12]/42 p-3 text-center text-[#F5F1E8] shadow-[0_8px_16px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.18)] ring-1 ring-[#F7D117]/18 transition-all active:scale-[0.99] disabled:cursor-default disabled:opacity-70"
     >
-      <span className="grid h-[74px] w-[74px] shrink-0 place-items-center rounded-full border border-[#F5F1E8]/12 bg-[#031B12]/54 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
-        <img
-          src="/assets/game/golden-kitbag.png"
-          alt=""
-          className="h-16 w-16 object-contain drop-shadow-[0_8px_10px_rgba(0,0,0,0.28)]"
-          draggable={false}
-        />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="home-copy-bold mb-1 block text-[8px] uppercase leading-none tracking-[0.12em] text-[#F7D117]">
-          BEST VALUE
-        </span>
-        <span className="block truncate home-copy-bold text-[18px] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">
-          GOLDEN KITBAG
-        </span>
-        <span className="mt-2 block truncate home-copy-regular text-[8px] uppercase leading-none tracking-[0.10em] text-[#F5F1E8]/68">
-          ALL UPGRADE ITEMS
-        </span>
-      </span>
-      <span className="shrink-0 home-copy-bold text-[18px] uppercase leading-none tracking-[0.07em] text-[#F7D117]">
-        £4.99
-      </span>
+      <div className="flex h-full min-h-[116px] flex-col items-center justify-center gap-2">
+        <div
+          className="grid w-full items-center"
+          style={{ gridTemplateColumns: upgradeGridColumns }}
+        >
+          <div className="grid place-items-center" style={{ gridColumn: "1" }}>
+            <div className="mx-auto grid h-[78px] w-[78px] shrink-0 place-items-center rounded-full border border-[#F5F1E8]/12 bg-[#072D1D]/92">
+              <img
+                src="/assets/game/golden-kitbag.png"
+                alt=""
+                className="h-[74px] w-[74px] object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.24)]"
+                draggable={false}
+              />
+            </div>
+          </div>
+
+          <div
+            className="flex min-w-0 flex-col items-center justify-center gap-[2px] text-center"
+            style={{ gridColumn: "3 / 6" }}
+          >
+            <div className="home-copy-bold text-[14px] uppercase leading-none tracking-[0.075em] text-[#F7D117]">
+              GOLDEN KITBAG
+            </div>
+            <div className="home-copy-regular text-[7.8px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]/72">
+              ALL UPGRADE ITEMS
+            </div>
+          </div>
+
+          <div
+            className="flex min-w-0 flex-col items-center justify-center gap-[2px] text-center"
+            style={{ gridColumn: "7" }}
+          >
+            <div className="home-copy-bold text-[7.8px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]/72">
+              BEST VALUE
+            </div>
+            <div className="home-copy-bold text-[15px] uppercase leading-none tracking-[0.06em] text-[#F7D117]">
+              £4.99
+            </div>
+          </div>
+        </div>
+
+        <div className="flex w-full flex-col items-center gap-1">
+          <div className="home-copy-bold text-[6.5px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]/72">
+            INCLUDES
+          </div>
+          <div className="flex items-center justify-center gap-1.5">
+            {KITBAG_INCLUDED_ITEMS.map((item) => (
+              <BundleIncludedIcon key={item.key} src={item.src} alt={item.alt} compact />
+            ))}
+          </div>
+        </div>
+      </div>
     </button>
   );
 }
@@ -980,11 +1045,11 @@ export function ClubhouseScreen({
 
   return (
     <main className="home-main-font relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
-      <ScreenTopBar {...menuProps}>CLUBHOUSE</ScreenTopBar>
+      <ScreenTopBar {...menuProps}>PROFILE</ScreenTopBar>
       <PageTabsSlot>
         <PageTabs
           options={[
-            { value: "clubhouse", label: "Clubhouse" },
+            { value: "clubhouse", label: "Profile" },
             { value: "shop", label: "Club Shop" },
           ]}
           value={activeClubTab}
@@ -1044,16 +1109,18 @@ export function ClubhouseScreen({
             </div>
           </MenuPanel>
         ) : (
-          <MenuPanel
-            title="CLUB SHOP"
-            style={CLUBHOUSE_PANEL_STYLE}
-          >
-            <div className="space-y-3 p-4 pt-2">
-              <GoldenKitbagBundleCard
-                onOpenShop={(id) => onOpenShop?.(id)}
-                disabled={false}
-              />
-              <div className="grid grid-cols-4 gap-2">
+          <>
+            <MenuPanel
+              title="UPGRADE ITEMS"
+              style={CLUBHOUSE_PANEL_STYLE}
+            >
+              <div className="p-4 pt-2">
+                <AllTeamsUnlockButton
+                  unlocked={Boolean(allTeamsUnlocked)}
+                  guestLocked={isGuest}
+                  onUnlock={() => onUnlockAllTeams?.()}
+                />
+                <div className="mt-2 grid grid-cols-4 gap-2">
                 <CosmeticUpgradeCard
                   id="goldenBoot"
                   title="Golden Boot"
@@ -1155,13 +1222,21 @@ export function ClubhouseScreen({
                   }}
                 />
               </div>
-              <AllTeamsUnlockButton
-                unlocked={Boolean(allTeamsUnlocked)}
-                guestLocked={isGuest}
-                onUnlock={() => onUnlockAllTeams?.()}
-              />
-            </div>
-          </MenuPanel>
+              </div>
+            </MenuPanel>
+
+            <MenuPanel
+              title="FULL BUNDLE"
+              style={CLUBHOUSE_PANEL_STYLE}
+            >
+              <div className="p-4 pt-2">
+                <GoldenKitbagBundleCard
+                  onOpenShop={(id) => onOpenShop?.(id)}
+                  disabled={false}
+                />
+              </div>
+            </MenuPanel>
+          </>
         )}
       </DrawerContent>
       {registerAuthOpen && (
