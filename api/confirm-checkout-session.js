@@ -398,10 +398,7 @@ function buildUserEntitlementUpdate({ current, grants, session, timestamp }) {
 
   if (grants.allTeams) {
     update.upgradesPurchased = { ...(update.upgradesPurchased || {}), allTeams: true };
-    update.unlocks = { allTeams: true };
-    update.allTeamsEquipped = true;
-    update.allTeamsUnlocked = true;
-    updateMask.push("upgradesPurchased.allTeams", "unlocks.allTeams", "allTeamsEquipped", "allTeamsUnlocked");
+    updateMask.push("upgradesPurchased.allTeams");
   }
 
   if (grants.goldenBoot || grants.goldenBall || grants.goldenGlove) {
@@ -420,23 +417,16 @@ function buildUserEntitlementUpdate({ current, grants, session, timestamp }) {
     update.consumables = {
       goldenTicket: {
         quantity: nextTicketQty,
-        equipped: hasTickets,
         totalPurchased: nextTotalPurchased,
         lastPurchasedAt: timestamp,
       },
     };
-    update.cosmeticsActive = { goldenTicket: hasTickets };
     update.cosmeticsEquipped = { goldenTicket: hasTickets };
-    update.cosmetics = { goldenTicket: hasTickets, goldenTicketQuantity: nextTicketQty };
     updateMask.push(
       "consumables.goldenTicket.quantity",
-      "consumables.goldenTicket.equipped",
       "consumables.goldenTicket.totalPurchased",
       "consumables.goldenTicket.lastPurchasedAt",
-      "cosmeticsActive.goldenTicket",
       "cosmeticsEquipped.goldenTicket",
-      "cosmetics.goldenTicket",
-      "cosmetics.goldenTicketQuantity",
     );
   }
 
@@ -487,10 +477,7 @@ function buildIdempotentEntitlementRepairUpdate(grants = {}, timestamp) {
 
   if (grants.allTeams) {
     update.upgradesPurchased = { ...(update.upgradesPurchased || {}), allTeams: true };
-    update.unlocks = { allTeams: true };
-    update.allTeamsEquipped = true;
-    update.allTeamsUnlocked = true;
-    updateMask.push("upgradesPurchased.allTeams", "unlocks.allTeams", "allTeamsEquipped", "allTeamsUnlocked");
+    updateMask.push("upgradesPurchased.allTeams");
   }
 
   if (grants.goldenBoot || grants.goldenBall || grants.goldenGlove) {
