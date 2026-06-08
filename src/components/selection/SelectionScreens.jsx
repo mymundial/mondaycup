@@ -46,7 +46,7 @@ const HOME_MENU_TOP_OFFSET = `calc(${HOME_GOAL_LINE_PERCENT}% + clamp(10px,1.4vh
 
 function AtIcon({ className = "" }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="4.1" />
       <path d="M16.1 8.1v5.2c0 1.2.7 2 1.8 2 1.5 0 2.6-1.6 2.6-3.6 0-4.7-3.4-8.2-8.2-8.2-5.2 0-8.8 3.8-8.8 8.8 0 5.1 3.8 8.2 8.9 8.2 1.7 0 3.2-.3 4.6-.9" />
     </svg>
@@ -55,7 +55,7 @@ function AtIcon({ className = "" }) {
 
 function PadlockIcon({ className = "" }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="5" y="10" width="14" height="10" rx="2.4" />
       <path d="M8.4 10V7.6C8.4 5.4 10 4 12 4s3.6 1.4 3.6 3.6V10" />
       <path d="M12 14.2v2.3" />
@@ -65,7 +65,7 @@ function PadlockIcon({ className = "" }) {
 
 function OpenPadlockIcon({ className = "" }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="5" y="10" width="14" height="10" rx="2.4" />
       <path d="M8.4 10V7.6C8.4 5.4 10 4 12 4c1.8 0 3.1 1.1 3.5 2.8" />
       <path d="M12 14.2v2.3" />

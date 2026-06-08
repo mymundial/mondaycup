@@ -61,7 +61,7 @@ function BackIcon() {
       className="h-6 w-6"
       fill="none"
       stroke="currentColor"
-      strokeWidth="4"
+      strokeWidth="3"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -73,7 +73,7 @@ function BackIcon() {
 
 function AtIcon({ className = "" }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="4.1" />
       <path d="M16.1 8.1v5.2c0 1.2.7 2 1.8 2 1.5 0 2.6-1.6 2.6-3.6 0-4.7-3.4-8.2-8.2-8.2-5.2 0-8.8 3.8-8.8 8.8 0 5.1 3.8 8.2 8.9 8.2 1.7 0 3.2-.3 4.6-.9" />
     </svg>
@@ -82,7 +82,7 @@ function AtIcon({ className = "" }) {
 
 function PadlockIcon({ className = "" }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="5" y="10" width="14" height="10" rx="2.4" />
       <path d="M8.4 10V7.6C8.4 5.4 10 4 12 4s3.6 1.4 3.6 3.6V10" />
       <path d="M12 14.2v2.3" />
@@ -102,19 +102,19 @@ function MenuActionIcon({ type = "default", className = "h-6 w-6" }) {
   const common = {
     fill: "none",
     stroke: "currentColor",
-    strokeWidth: 2.45,
+    strokeWidth: 1.55,
     strokeLinecap: "round",
     strokeLinejoin: "round",
     "aria-hidden": "true",
   };
   if (type === "onMatch") {
-    return <svg viewBox="0 0 24 24" className={className} {...common}><circle cx="12" cy="12" r="8" /><path d="M12 4l3 5-3 3-3-3 3-5ZM6.4 9.3l5.6 2.7-1.5 6.2M17.6 9.3L12 12l1.5 6.2" /></svg>;
+    return <img src="/icons/menu-match.png" alt="" className={`${className} object-contain`} draggable={false} aria-hidden="true" />;
   }
   if (type === "onFixtures") {
     return <svg viewBox="0 0 24 24" className={className} {...common}><rect x="4" y="5" width="16" height="15" rx="2.6" /><path d="M8 3.8v3M16 3.8v3M4.8 9.2h14.4M8 13h3M13.5 13H16M8 16.5h3M13.5 16.5H16" /></svg>;
   }
   if (type === "onGroups") {
-    return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M5 6h14M5 12h14M5 18h14" /><path d="M8 4.6v14.8M16 4.6v14.8" /></svg>;
+    return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M5.2 6.2h4.1M5.2 17.8h4.1M14.7 12h4.1" /><path d="M9.3 6.2h2.1c1.25 0 2.1.85 2.1 2.1v1.6c0 1.25.85 2.1 2.1 2.1" /><path d="M9.3 17.8h2.1c1.25 0 2.1-.85 2.1-2.1v-1.6c0-1.25.85-2.1 2.1-2.1" /></svg>;
   }
   if (type === "onClubhouse") {
     return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M4.5 20V9.5L12 4l7.5 5.5V20" /><path d="M8.5 20v-6.3h7V20M9 10.5h6" /></svg>;
@@ -157,13 +157,13 @@ function MenuTile({ title, onClick, variant = "primary", iconType = "default", f
       <button
         type="button"
         onClick={onClick}
-        className={`home-copy-bold flex h-[58px] w-full items-center justify-center gap-3 rounded-[1.15rem] border transition active:scale-[0.99] ${
+        className={`home-copy-bold flex h-[58px] w-full items-center justify-center gap-3 rounded-[1rem] border transition active:scale-[0.97] ${
           isAuth
             ? "border-[#F7D117]/75 bg-[#F7D117] text-[#052D1D] shadow-[0_10px_22px_rgba(0,0,0,0.20)]"
             : "border-[#F5F1E8]/70 bg-[#F5F1E8]/10 text-[#F5F1E8]"
         }`}
       >
-        <MenuActionIcon type={iconType} className="h-6 w-6" />
+        <MenuActionIcon type={iconType} className="h-[18px] w-[18px]" />
         <span className="text-[14px] uppercase tracking-[0.1em]">{title}</span>
       </button>
     );
@@ -173,14 +173,14 @@ function MenuTile({ title, onClick, variant = "primary", iconType = "default", f
     <button
       type="button"
       onClick={onClick}
-      className={`flex aspect-square w-full flex-col items-center justify-center rounded-[1.15rem] transition active:scale-[0.985] ${
+      className={`flex aspect-square w-full flex-col items-center justify-center rounded-[1rem] transition active:scale-[0.97] ${
         isDanger
           ? "border border-[#B94135]/45 bg-[#B94135]/12 text-[#F5F1E8]"
           : "bg-[#F7D117] text-[#052D1D] shadow-[0_10px_22px_rgba(0,0,0,0.20),inset_0_2px_0_rgba(255,255,255,0.30)]"
       } ${featured ? "scale-[1.04] shadow-[0_13px_26px_rgba(0,0,0,0.24),0_0_18px_rgba(247,209,23,0.20)]" : ""}`}
     >
-      <MenuActionIcon type={iconType} className={featured ? "h-9 w-9" : "h-8 w-8"} />
-      <span className="mt-3 text-center home-copy-bold text-[11px] uppercase leading-none tracking-[0.075em]">{title}</span>
+      <MenuActionIcon type={iconType} className="h-6 w-6" />
+      <span className="mt-2.5 text-center home-copy-bold text-[11px] uppercase leading-none tracking-[0.075em]">{title}</span>
     </button>
   );
 }
@@ -636,23 +636,26 @@ export function MenuDropdown({
             <>
               <MenuHeader title="MENU" onClose={onClose} />
 
-              <div className="space-y-3 rounded-[1.25rem] border border-[#F5F1E8]/12 bg-[#031B12]/20 p-3">
-                <div className="grid grid-cols-3 gap-3 items-center">
+              <div className="space-y-2.5 rounded-[1.25rem] border border-[#F5F1E8]/12 bg-[#031B12]/20 p-3">
+                <div className="grid grid-cols-3 gap-2.5 items-center">
                   <MenuTile title="SCHEDULE" iconType="onFixtures" onClick={() => runAndClose(onFixtures, onClose)} />
-                  <MenuTile title="MATCH" featured iconType="onMatch" onClick={() => runAndClose(onMatch, onClose)} />
+                  <MenuTile title="MATCH" iconType="onMatch" onClick={() => runAndClose(onMatch, onClose)} />
                   <MenuTile title="STANDINGS" iconType="onGroups" onClick={() => runAndClose(onGroups, onClose)} />
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
-                  <MenuTile title="CLUBHOUSE" iconType="onClubhouse" onClick={() => runAndClose(onClubhouse, onClose)} />
+                <div className="grid grid-cols-3 gap-2.5">
                   <MenuTile title="TROPHIES" iconType="onTrophyCabinet" onClick={() => runAndClose(onTrophyCabinet, onClose)} />
+                  <MenuTile title="CLUBHOUSE" iconType="onClubhouse" onClick={() => runAndClose(onClubhouse, onClose)} />
                   <MenuTile title="LEADERBOARD" iconType="onLeaderboard" onClick={() => runAndClose(onLeaderboard, onClose)} />
                 </div>
 
+              </div>
+
+              <div className="mt-3 rounded-[1.15rem] border border-[#F5F1E8]/12 bg-[#031B12]/20 p-2.5">
                 <MenuTile title={authLabel} variant="auth" iconType="auth" wide onClick={canSignOut ? () => runAndClose(onSignOut, onClose) : openAuthPanel} />
               </div>
 
-              <div className="mt-3 flex justify-center">
+              <div className="mt-2.5 flex justify-center">
                 <button
                   type="button"
                   onClick={() => runAndClose(onRestart, onClose)}
