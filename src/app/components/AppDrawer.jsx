@@ -70,6 +70,7 @@ export function AppDrawer({
           allTeamsUnlocked={clubhouse.allTeamsUnlocked}
           onUnlockAllTeams={clubhouse.onUnlockAllTeams}
           onResumeCampaign={clubhouse.onResumeCampaign}
+          onStartNewCampaign={clubhouse.onStartNewCampaign}
           currentUser={clubhouse.currentUser}
           shirtProfile={clubhouse.shirtProfile}
           onEditShirt={clubhouse.onEditShirt}

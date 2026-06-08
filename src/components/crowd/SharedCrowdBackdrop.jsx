@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 export const DEFAULT_CROWD_COLOURS = [
   "#2DA94F", "#F7D117", "#FF1E3C", "#E1251B", "#2F3ED6", "#8A1538", "#FF8A00", "#1E7FF0",
   "#157A52", "#93BFEA", "#FFFFFF", "#2437C6", "#F20D1B", "#00A86B", "#7CB5E8", "#F7C600",
@@ -56,7 +58,8 @@ export default function SharedCrowdBackdrop({
   className = "pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden",
   style,
 }) {
-  const crowdRows = buildCrowdRows({ crowdColours: crowdColours?.length ? crowdColours : DEFAULT_CROWD_COLOURS, density, rowCount });
+  const colourKey = (crowdColours?.length ? crowdColours : DEFAULT_CROWD_COLOURS).join("|");
+  const crowdRows = useMemo(() => buildCrowdRows({ crowdColours: crowdColours?.length ? crowdColours : DEFAULT_CROWD_COLOURS, density, rowCount }), [colourKey, density, rowCount]);
 
   return (
     <div className={className} style={style} aria-hidden="true">

@@ -349,12 +349,14 @@ function CampaignOverviewCard({
   medalClass = null,
   selectable = false,
   onSelect = null,
+  actionLabel = "Resume current campaign",
+  showFlag = true,
   className = "",
 }) {
   const baseCardClass =
-    "rounded-[1.35rem] border shadow-[0_10px_22px_rgba(0,0,0,0.16),inset_0_1px_0_rgba(245,241,232,0.06)] ring-1";
+    "rounded-[1.35rem] border shadow-[inset_0_1px_0_rgba(245,241,232,0.06)] ring-1";
   const colourClass = highlight
-    ? "border-[#F7D117]/70 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10),0_10px_22px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(245,241,232,0.06)]"
+    ? "border-[#F7D117]/70 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_0_12px_rgba(247,209,23,0.10),inset_0_1px_0_rgba(245,241,232,0.06)]"
     : medalClass ||
       "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10";
   const selectableClass = selectable
@@ -379,12 +381,16 @@ function CampaignOverviewCard({
       >
         {team || "NO TEAM"}
       </div>
-      <TeamFlag
-        team={team}
-        isUserTeam={highlight}
-        className="mt-1.5 h-11 w-[72px] rounded-[9px] object-cover"
-        fallbackRing="ring-[#0B5F35]/18"
-      />
+      {showFlag ? (
+        <TeamFlag
+          team={team}
+          isUserTeam={highlight}
+          className="mt-1.5 h-11 w-[72px] rounded-[9px] object-cover"
+          fallbackRing="ring-[#0B5F35]/18"
+        />
+      ) : (
+        <div className="mt-1.5 grid h-11 w-[72px] place-items-center rounded-[9px] border border-[#F7D117]/40 bg-[#F7D117]/12 text-[24px] leading-none text-[#F7D117]">+</div>
+      )}
       <div className="mt-2 flex w-full flex-col items-center justify-end pt-0">
         <div
           className={`home-copy-bold text-[10px] uppercase leading-none tracking-[0.16em] ${stageClass}`}
@@ -403,7 +409,7 @@ function CampaignOverviewCard({
         type="button"
         onClick={onSelect}
         className="min-w-0 rounded-[1.45rem] text-left outline-none"
-        aria-label="Resume current campaign"
+        aria-label={actionLabel}
       >
         {content}
       </button>
@@ -1016,6 +1022,7 @@ export function ClubhouseScreen({
   onUnlockAllTeams,
   onNicknameUpdate,
   onResumeCampaign,
+  onStartNewCampaign,
   shirtProfile = null,
   onEditShirt,
   currentUser = auth.currentUser,
@@ -1033,11 +1040,12 @@ export function ClubhouseScreen({
   const conversionDisplay = shotsTakenTotal > 0 ? `${conversion}%` : "--";
   const matchesPlayedTotal = Number(allTimeMatchesPlayed || matchesPlayed || 0);
   const highScoreTotal = Number(highScore || 0);
+  const hasCurrentCampaign = Boolean(team);
   const currentSummary = {
-    team: team || "NO TEAM",
-    form: formForSummary(userForm),
-    campaignPoints: Number(campaignPoints || 0),
-    roundLabel: currentRoundLabel || "GROUP STAGE",
+    team: hasCurrentCampaign ? team : "START NEW CAMPAIGN",
+    form: hasCurrentCampaign ? formForSummary(userForm) : [],
+    campaignPoints: hasCurrentCampaign ? Number(campaignPoints || 0) : 0,
+    roundLabel: hasCurrentCampaign ? (currentRoundLabel || "GROUP STAGE") : "NO ACTIVE CAMPAIGN",
   };
   const bestSummary =
     bestCampaignSummary?.campaignPoints || bestCampaignSummary?.points
@@ -1117,8 +1125,10 @@ export function ClubhouseScreen({
                     form={currentSummary.form}
                     score={currentSummary.campaignPoints}
                     highlight
-                    selectable={Boolean(team)}
-                    onSelect={() => onResumeCampaign?.()}
+                    selectable
+                    onSelect={() => (hasCurrentCampaign ? onResumeCampaign?.() : onStartNewCampaign?.())}
+                    actionLabel={hasCurrentCampaign ? "Resume current campaign" : "Start new campaign"}
+                    showFlag={hasCurrentCampaign}
                   />
                   <CampaignOverviewCard
                     title="Best Campaign"

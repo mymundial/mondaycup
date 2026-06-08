@@ -139,7 +139,7 @@ export function FixtureCard({ id = null, home = "TBC", away = "TBC", group, play
   const scoreText = played ? `${homeGoals}-${awayGoals}` : "v";
   const fixtureNo = Number(matchNo || matchNumber || 0);
   const stadium = FIXTURE_VENUES[fixtureNo] || "";
-  const cardClass = `mb-1.5 grid min-h-[62px] grid-rows-[30%_40%_30%] rounded-[1.25rem] border px-2.5 text-center ring-1 last:mb-0 ${isUserFixture ? "border-[#F7D117]/72 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/30 shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(245,241,232,0.06)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10 shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(245,241,232,0.06)]"}`;
+  const cardClass = `mb-1.5 grid min-h-[62px] grid-rows-[30%_40%_30%] rounded-[1.25rem] border px-2.5 text-center ring-1 last:mb-0 ${isUserFixture ? "border-[#F7D117]/72 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/30 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]"}`;
   const teamText = (isUserTeam) => isUserTeam ? "text-[#F7D117]" : "text-[#F5F1E8]";
   const scoreClass = "text-[#F5F1E8]";
   const labelClass = "text-[#F5F1E8]/72";
@@ -147,7 +147,7 @@ export function FixtureCard({ id = null, home = "TBC", away = "TBC", group, play
   return (
     <div className={cardClass}>
       <div className={`flex items-end justify-center gap-2 self-stretch pb-[3px] home-copy-bold text-[11px] uppercase leading-none tracking-[0.14em] ${labelClass}`}>
-        {fixtureNo && !group && <span>M{fixtureNo}</span>}
+        {fixtureNo && !group && <span>MATCH {fixtureNo}</span>}
         {group && <span>GROUP {group}</span>}
       </div>
       <div className="grid min-h-0 grid-cols-[32px_minmax(0,1fr)_34px_minmax(0,1fr)_32px] items-center gap-2 self-stretch home-main-font text-[clamp(12px,3.2vw,14px)] uppercase leading-none">

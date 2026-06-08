@@ -371,7 +371,7 @@ function CupRunProgressStrip({ matchNumber = 1, form = [], result = {}, isKnocko
   const displayPoints = Number(points || 0);
 
   return (
-    <div className="mt-2 rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2.5 py-2 shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]" aria-label={`Cup run progress. Match ${currentMatch} of 8`}>
+    <div className="mt-2 rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2.5 py-2 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]" aria-label={`Cup run progress. Match ${currentMatch} of 8`}>
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
           <div className="mb-1.5 grid grid-cols-[1fr_auto_1fr] items-end px-[clamp(11px,3.1vw,15px)]">
@@ -383,7 +383,7 @@ function CupRunProgressStrip({ matchNumber = 1, form = [], result = {}, isKnocko
             )}
             <div className="text-right home-copy-bold text-[clamp(10px,2.65vw,12px)] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]/72">{currentMatch}/8</div>
           </div>
-          <div className="relative min-w-0 rounded-xl border border-[#F5F1E8]/14 bg-[#052D1D]/68 px-[clamp(11px,3.1vw,15px)] py-[clamp(7px,2.1vw,9px)] text-[#F5F1E8] shadow-[0_6px_14px_rgba(0,0,0,0.10)] ring-1 ring-[#F5F1E8]/10">
+          <div className="relative min-w-0 rounded-xl border border-[#F5F1E8]/14 bg-[#052D1D]/68 px-[clamp(11px,3.1vw,15px)] py-[clamp(7px,2.1vw,9px)] text-[#F5F1E8] shadow-none ring-1 ring-[#F5F1E8]/10">
             <div className="flex w-full min-w-0 items-center" aria-hidden="true">
               {steps.map((_, index) => {
                 const stepNumber = index + 1;
@@ -708,7 +708,7 @@ function StandingsMiniTable({ title = "GROUP", rows = [], qualifiedTeams = new S
         const isUser = row.team === userTeam;
         const isQualified = qualifiedTeams.has(row.team);
         return (
-          <div key={row.team} className={`mb-1 grid items-center gap-[3px] rounded-xl border px-2 py-[5px] text-center text-[12px] leading-none last:mb-0 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)] tabular-nums ${isUser ? "border-[#F7D117]/72 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_6px_14px_rgba(0,0,0,0.10)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"}`} style={{ gridTemplateColumns: tableColumns }}>
+          <div key={row.team} className={`mb-1 grid items-center gap-[3px] rounded-xl border px-2 py-[5px] text-center text-[12px] leading-none last:mb-0 ring-1 shadow-none tabular-nums ${isUser ? "border-[#F7D117]/72 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/32 shadow-none" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"}`} style={{ gridTemplateColumns: tableColumns }}>
             <span className="home-copy-regular text-[#F5F1E8]">{index + 1}</span>
             <span className="flex justify-center"><Flag team={row.team} className={`h-4 w-6 rounded-[4px] ring-1 ${isUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></span>
             <span className={`min-w-0 truncate pl-2 text-left uppercase home-copy-regular ${isUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`} style={tightTeamStyle(row.team)}>{row.team}</span>
@@ -799,8 +799,8 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   const resultAdvanceButtonClass = "flex h-[44px] min-h-[44px] min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[0.85rem] border border-[#F5F1E8]/45 bg-[#F7D117] px-2.5 text-center home-copy-bold text-[clamp(10px,2.8vw,12px)] font-black uppercase leading-none tracking-[0.09em] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.22),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
   const resultControlGridClass = "grid grid-cols-[44px_44px_44px_minmax(0,1fr)] items-center justify-items-stretch gap-2";
   const resultButtonsBoxClass = "mt-2 rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 p-2.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]";
-  const resultMetricBoxClass = "inline-flex h-[44px] min-h-[44px] min-w-[70px] items-center justify-center rounded-[0.9rem] border border-[#F7D117]/35 bg-[#031B12]/62 px-3 text-center shadow-[0_8px_18px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/18";
-  const resultFormGuideBoxClass = "inline-flex h-[44px] min-w-0 items-center justify-center rounded-[0.9rem] border border-[#F7D117]/35 bg-[#031B12]/62 px-3 text-center shadow-[0_8px_18px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/18";
+  const resultMetricBoxClass = "inline-flex h-[44px] min-h-[44px] min-w-[70px] items-center justify-center rounded-[0.9rem] border border-[#F7D117]/35 bg-[#031B12]/62 px-3 text-center shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/18";
+  const resultFormGuideBoxClass = "inline-flex h-[44px] min-w-0 items-center justify-center rounded-[0.9rem] border border-[#F7D117]/35 bg-[#031B12]/62 px-3 text-center shadow-[inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/18";
   const resultHeaderStatsClass = "flex min-w-0 max-w-full items-center justify-center gap-2 overflow-hidden";
   const buildShareBlob = () => {
     const exportNode = shareFrameRef.current;
@@ -961,7 +961,7 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
 
 
             {sharePreviewOpen ? (
-              <div className="rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 p-2.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]">
+              <div className="rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 p-2.5 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
                 <div className="space-y-5">
                   <div className="mx-auto aspect-square w-full overflow-hidden rounded-[1.1rem] border border-[#F5F1E8]/10 bg-[#0d6c3d] shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.08)]" data-share-layout="match-preview-modal">
                     <div ref={shareFrameRef} data-share-layout="match" className="h-full w-full overflow-hidden bg-[#0d6c3d]">
@@ -983,11 +983,11 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
               <>
                 <div className="max-h-[calc(100dvh-342px)] overflow-y-auto pb-0">
                   {isKnockout ? (
-                    <div className="rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2.5 pb-1.5 pt-2.5 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.06),0_10px_22px_rgba(0,0,0,0.16)]">
+                    <div className="rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2.5 pb-1.5 pt-2.5 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
                       <div className="mb-2 text-center home-copy-bold text-[clamp(15px,4.1vw,19px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">
                         {knockoutRoundTitle}
                       </div>
-                      <div className={`grid min-h-[70px] grid-rows-[30%_40%_30%] rounded-[1.1rem] border px-2.5 ring-1 shadow-[0_6px_14px_rgba(0,0,0,0.10)] ${userInKnockout ? "border-[#F7D117]/72 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/32 shadow-[0_6px_14px_rgba(0,0,0,0.10)]" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"}`}>
+                      <div className={`grid min-h-[70px] grid-rows-[30%_40%_30%] rounded-[1.1rem] border px-2.5 ring-1 shadow-none ${userInKnockout ? "border-[#F7D117]/72 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/32 shadow-none" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"}`}>
                         {knockoutMatchLabel && (
                           <div className="flex items-end justify-center self-stretch pb-[3px] text-center home-copy-bold text-[clamp(10px,2.8vw,12px)] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]/72">
                             {knockoutMatchLabel}

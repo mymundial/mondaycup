@@ -99,8 +99,9 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
         data-share-flash="true"
         className="relative flex w-full items-center justify-center overflow-hidden px-[3%] text-center uppercase tracking-[0.085em]"
         style={{
-          height: `calc(${tickerPercent}% + 1px)`,
-          marginTop: "-1px",
+          height: `${tickerPercent}%`,
+          marginTop: 0,
+          boxSizing: "border-box",
           minHeight: 0,
           fontFamily: '"SportsDINRegular", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
           fontWeight: 700,

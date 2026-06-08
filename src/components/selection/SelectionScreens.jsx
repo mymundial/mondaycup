@@ -166,7 +166,7 @@ function HomeLedAdvertisingHoard() {
       <div className="relative mx-auto flex h-full max-w-[61%] items-center justify-center">
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[70%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5F1E8]/16 blur-xl" aria-hidden="true" />
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-[48%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/12 blur-lg" aria-hidden="true" />
-        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[69%] w-full object-contain" style={{ opacity: 0.94, filter: "brightness(0.94) drop-shadow(0 0 9px rgba(245,241,232,0.20))" }} draggable={false} />
+        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[69%] w-full object-contain" style={{ opacity: 0.84, filter: "brightness(0.94) drop-shadow(0 0 9px rgba(245,241,232,0.20))" }} draggable={false} />
       </div>
     </div>
   );
@@ -315,7 +315,7 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, stati
   return (
     <div className="relative z-[1] shrink-0 overflow-hidden bg-transparent" style={{ height: `calc(${MATCH_TOP_BAR_HEIGHT_PX}px + ${scoreboardHeight})` }} >
       <HomeMenuBar menuProps={menuProps} staticRightLogo={staticRightLogo} />
-      <div className="relative mt-0 overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]" style={{ height: scoreboardMainHeight }}>
+      <div className="relative mt-0 overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16)]" style={{ height: scoreboardMainHeight }}>
         <div
           className="pointer-events-none absolute left-[2px] right-[2px] top-[2px] bottom-[2px] opacity-50"
           style={{
@@ -394,7 +394,7 @@ function ActionButton({ children, eyebrow, onClick, variant = "light", disabled 
 
 function SavedCampaignCard({ summary, onContinue }) {
   if (!summary) return null;
-  return <button onClick={onContinue} className="w-full rounded-[1.35rem] border border-[#F7D117]/42 bg-[#052D1D]/68 p-4 text-left text-[#F5F1E8] shadow-[0_6px_14px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.06)]">
+  return <button onClick={onContinue} className="w-full rounded-[1.35rem] border border-[#F7D117]/42 bg-[#052D1D]/68 p-4 text-left text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
     <div className="text-[8px] font-black uppercase tracking-[0.24em] text-[#F7D117]/82">CONTINUE CAMPAIGN</div>
     <div className="mt-2 flex items-center justify-between gap-3">
       <div className="min-w-0">
@@ -422,7 +422,7 @@ function HomeMenuShell({ children, className = "", onBack }) {
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5L8 12L15 19" /></svg>
         </button>
       )}
-      <div className="px-4 py-2 shadow-[inset_0_6px_14px_rgba(255,255,255,0.025)]">
+      <div className="px-4 py-2 shadow-none">
         {children}
       </div>
     </div>
@@ -815,7 +815,7 @@ function HostPanel({ onSelectGroup, onSelectTeam, onBack, currentUser = null, on
           <button
             key={host.name}
             onClick={() => onSelectTeam(host.name, host.group)}
-            className="relative flex h-[50px] items-center justify-center overflow-hidden rounded-[1rem] border border-[#F5F1E8]/22 px-3 shadow-[0_0_8px_rgba(245,241,232,0.06),inset_0_2px_8px_rgba(255,255,255,0.10)] active:scale-[0.99]"
+            className="relative flex h-[50px] items-center justify-center overflow-hidden rounded-[1rem] border border-[#F5F1E8]/22 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] active:scale-[0.99]"
             style={{ backgroundColor: theme.bg, color: theme.text }}
           >
             <span className="home-copy-bold absolute left-[13%] top-1/2 min-w-[2.4em] -translate-y-1/2 text-left text-[clamp(12px,3vw,15px)] uppercase leading-none tracking-[0.07em]">{label}</span>
@@ -854,7 +854,7 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
     <div className="grid gap-2">
       {GROUPS[group].map((name) => {
         const theme = getTeamTheme(name);
-        return <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[42px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] border border-[#F5F1E8]/18 px-4 text-left shadow-[0_0_8px_rgba(245,241,232,0.05),inset_0_2px_8px_rgba(255,255,255,0.08)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-6 w-8 items-center justify-center overflow-hidden rounded-[0.25rem] border border-[#F5F1E8]/24 bg-[#F5F1E8]/90 shadow-[0_2px_5px_rgba(0,0,0,0.18)]"><Flag team={name} className="h-full w-full object-contain" /></span><span className="home-copy-bold truncate text-center text-[19px] uppercase tracking-[0.06em]">{name}</span><span className="home-copy-bold text-right text-[12px] tabular-nums tracking-[0.08em] opacity-65">#{TEAM_RANK[name]}</span></button>;
+        return <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[42px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] border border-[#F5F1E8]/18 px-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-6 w-8 items-center justify-center overflow-hidden rounded-[0.25rem] border border-[#F5F1E8]/24 bg-[#F5F1E8]/90 shadow-[0_2px_5px_rgba(0,0,0,0.18)]"><Flag team={name} className="h-full w-full object-contain" /></span><span className="home-copy-bold truncate text-center text-[19px] uppercase tracking-[0.06em]">{name}</span><span className="home-copy-bold text-right text-[12px] tabular-nums tracking-[0.08em] opacity-65">#{TEAM_RANK[name]}</span></button>;
       })}
     </div>
   </HomeMenuShell>;

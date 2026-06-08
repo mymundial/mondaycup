@@ -2493,6 +2493,7 @@ export default function App() {
         allTeamsUnlocked,
         onUnlockAllTeams: () => requestShopItem("allTeams"),
         onResumeCampaign: openMatch,
+        onStartNewCampaign: openTeamFlow,
         currentUser,
         shirtProfile: userShirtProfile,
         onEditShirt: () => setShirtShareOpen(true),
