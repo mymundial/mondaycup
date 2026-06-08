@@ -123,6 +123,48 @@ This schema removes legacy/duplicate fields from Firestore while keeping UI comp
     }
   },
 
+  feedback: {
+    prompt1Shown, // shown/dismissed after 3 completed campaigns
+    prompt2Shown, // shown/dismissed after first cup win or 10 completed campaigns
+    hasSubmitted,
+    lastPromptType, // prompt1 | prompt2 | null
+    lastPromptedAt,
+    lastSubmittedAt,
+    latestRating: {
+      id,
+      stars,
+      rating,
+      comment,
+      promptType,
+      campaignsCompleted,
+      cupsWon,
+      createdAt
+    },
+    ratings: [
+      {
+        id,
+        stars,
+        rating,
+        comment,
+        promptType,
+        campaignsCompleted,
+        cupsWon,
+        createdAt
+      }
+    ]
+  },
+
+  feedbackLatest: {
+    id,
+    stars,
+    rating,
+    comment,
+    promptType,
+    campaignsCompleted,
+    cupsWon,
+    createdAt
+  },
+
   trophies: {
     careerHighlights: {
       rememberTheName,
