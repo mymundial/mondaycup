@@ -147,31 +147,39 @@ function AuthField({ icon, children }) {
   );
 }
 
-function MenuTile({ title, onClick, variant = "primary", iconType = "default" }) {
-  const rowClass = {
-    primary:
-      "border-[#F5F1E8]/16 bg-[#052D1D]/72 text-[#F5F1E8] ring-[#F5F1E8]/10 hover:bg-[#052D1D]/86",
-    auth:
-      "border-[#F7D117]/34 bg-[#052D1D]/74 text-[#F7D117] ring-[#F7D117]/18 hover:bg-[#052D1D]/88",
-    danger:
-      "border-[#B94135]/36 bg-[#B94135]/22 text-[#F5F1E8] ring-[#B94135]/16 hover:bg-[#B94135]/30",
-  }[variant] || "border-[#F5F1E8]/16 bg-[#052D1D]/72 text-[#F5F1E8] ring-[#F5F1E8]/10";
 
-  const iconClass = "border-[#F7D117]/70 bg-[#F7D117] text-[#052D1D] shadow-[inset_0_2px_0_rgba(255,255,255,0.34),0_0_12px_rgba(247,209,23,0.18)]";
+function MenuTile({ title, onClick, variant = "primary", iconType = "default", featured = false }) {
+  const cardClass = {
+    primary: "bg-[#052D1D]/58 text-[#F5F1E8]",
+    auth: "bg-[#052D1D]/58 text-[#F7D117]",
+    danger: "bg-[#B94135]/10 text-[#F5F1E8]",
+  }[variant] || "bg-[#052D1D]/58 text-[#F5F1E8]";
+
+  if (featured) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`flex min-h-[96px] w-full items-center justify-center gap-4 rounded-[1.5rem] px-5 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition active:scale-[0.99] ${cardClass}`}
+      >
+        <span className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[#F7D117] text-[#052D1D]">
+          <MenuActionIcon type={iconType} className="h-8 w-8" />
+        </span>
+        <span className="home-copy-bold text-[20px] tracking-[0.08em]">{title}</span>
+      </button>
+    );
+  }
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`grid min-h-[64px] w-full grid-cols-[48px_minmax(0,1fr)_34px] items-center gap-3 rounded-[1.12rem] border px-3 py-2.5 text-center shadow-[0_8px_18px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(245,241,232,0.07)] ring-1 transition active:scale-[0.99] ${rowClass}`}
+      className={`flex min-h-[132px] flex-col items-center justify-center rounded-[1.4rem] ${cardClass} shadow-[0_8px_18px_rgba(0,0,0,0.14)] transition active:scale-[0.99]`}
     >
-      <span className={`grid h-12 w-12 place-items-center rounded-[0.9rem] border ${iconClass}`} aria-hidden="true">
-        <MenuActionIcon type={iconType} className="h-7 w-7" />
+      <span className="grid h-11 w-11 place-items-center rounded-[0.9rem] bg-[#F7D117] text-[#052D1D]" aria-hidden="true">
+        <MenuActionIcon type={iconType} className="h-6 w-6" />
       </span>
-      <span className="min-w-0 justify-self-center truncate text-center home-copy-bold text-[15px] font-black uppercase leading-none tracking-[0.08em]">
-        {title}
-      </span>
-      <span className="home-copy-bold justify-self-end text-[34px] leading-none text-[#F7D117] drop-shadow-[0_0_8px_rgba(247,209,23,0.26)]" aria-hidden="true">›</span>
+      <span className="mt-4 text-center home-copy-bold text-[12px] uppercase tracking-[0.08em]">{title}</span>
     </button>
   );
 }
@@ -627,16 +635,26 @@ export function MenuDropdown({
             <>
               <MenuHeader title="MENU" onClose={onClose} />
 
-              <div className="space-y-2 rounded-[1.25rem] border border-[#F5F1E8]/12 bg-[#031B12]/24 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                {MENU_ITEMS.filter((item) => item.action !== "onShare" || (showShare && typeof onShare === "function")).map((item) => (
-                  <MenuTile
-                    key={item.title}
-                    title={item.title}
-                    iconType={item.action}
-                    onClick={() => runAndClose(handlers[item.action], onClose)}
-                  />
-                ))}
+              <div className="space-y-3 rounded-[1.25rem] border border-[#F5F1E8]/12 bg-[#031B12]/24 p-3">
+                <MenuTile
+                  title="MATCH"
+                  featured
+                  iconType="onMatch"
+                  onClick={() => runAndClose(onMatch, onClose)}
+                />
 
+                <div className="grid grid-cols-3 gap-3">
+                  {MENU_ITEMS.filter((item) => item.action !== "onMatch").map((item) => (
+                    <MenuTile
+                      key={item.title}
+                      title={item.title}
+                      iconType={item.action}
+                      onClick={() => runAndClose(handlers[item.action], onClose)}
+                    />
+                  ))}
+                </div>
+
+                <div className="pt-1">
                 <MenuTile
                   title={authLabel}
                   variant="auth"
