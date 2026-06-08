@@ -108,13 +108,29 @@ function MenuActionIcon({ type = "default", className = "h-6 w-6" }) {
     "aria-hidden": "true",
   };
   if (type === "onMatch") {
-    return <img src="/icons/menu-match.png" alt="" className={`${className} object-contain`} draggable={false} aria-hidden="true" />;
+    return (
+      <svg viewBox="0 0 24 24" className={className} {...common}>
+        <circle cx="12" cy="12" r="9.1" />
+        <path d="M12 6.7l3.2 2.3-1.2 3.8h-4L8.8 9z" />
+        <path d="M12 6.7V3M15.2 9l3.4-1.1M14 12.8l2.2 3.1M10 12.8l-2.2 3.1M8.8 9 5.4 7.9" />
+        <path d="M7.8 15.9 5 17.7M16.2 15.9l2.8 1.8M9.9 19h4.2" />
+      </svg>
+    );
   }
   if (type === "onFixtures") {
     return <svg viewBox="0 0 24 24" className={className} {...common}><rect x="4" y="5" width="16" height="15" rx="2.6" /><path d="M8 3.8v3M16 3.8v3M4.8 9.2h14.4M8 13h3M13.5 13H16M8 16.5h3M13.5 16.5H16" /></svg>;
   }
   if (type === "onGroups") {
-    return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M5.2 6.2h4.1M5.2 17.8h4.1M14.7 12h4.1" /><path d="M9.3 6.2h2.1c1.25 0 2.1.85 2.1 2.1v1.6c0 1.25.85 2.1 2.1 2.1" /><path d="M9.3 17.8h2.1c1.25 0 2.1-.85 2.1-2.1v-1.6c0-1.25.85-2.1 2.1-2.1" /></svg>;
+    return (
+      <svg viewBox="0 0 24 24" className={className} {...common}>
+        <path d="M5 5.5h4.6M5 10.5h4.6M5 13.5h4.6M5 18.5h4.6" />
+        <path d="M9.6 5.5h2.4c1.15 0 2 .85 2 2v3c0 1.15.85 2 2 2h3" />
+        <path d="M9.6 10.5H12c1.15 0 2-.85 2-2" />
+        <path d="M9.6 18.5H12c1.15 0 2-.85 2-2v-2c0-1.15.85-2 2-2" />
+        <path d="M9.6 13.5H12c1.15 0 2 .85 2 2" />
+        <path d="M18.7 12.5h.3" />
+      </svg>
+    );
   }
   if (type === "onClubhouse") {
     return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M4.5 20V9.5L12 4l7.5 5.5V20" /><path d="M8.5 20v-6.3h7V20M9 10.5h6" /></svg>;
