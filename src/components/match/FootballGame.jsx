@@ -49,6 +49,9 @@ import { PODIUM_BADGE_MODE } from "../../logic/resultStatus.js";
 import { ControlOverlay, Pitch, TemporaryMatchButtons } from "./FootballGameView.jsx";
 export { MatchPitchPreview } from "./FootballGameView.jsx";
 
+const USER_SHOT_RESULT_DELAY_MS = 300;
+const USER_SHOT_RESULT_VOLUME = 0.5;
+
 export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction, showChampionsBadge = false, podiumBadgeMode = null, activeCosmetics: activeCosmeticsProp = null, username = "" }) {
   const user = useMemo(() => normaliseTeam(userTeam, "Team A"), [userTeam]);
   const opponent = useMemo(() => normaliseTeam(opponentTeam, "Team B"), [opponentTeam]);
@@ -237,7 +240,12 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     });
 
     if (side === "user") {
-      playSound(resolved.goal ? mergedAssets.sounds.goalSound : mergedAssets.sounds.missSound, 0.5);
+      window.setTimeout(() => {
+        playSound(
+          resolved.goal ? mergedAssets.sounds.goalSound : mergedAssets.sounds.missSound,
+          USER_SHOT_RESULT_VOLUME
+        );
+      }, USER_SHOT_RESULT_DELAY_MS);
     }
     const shotNumber = currentAttempts[side].length + 1;
     const safePower = clamp(Number(power) || 0, 0, 100);

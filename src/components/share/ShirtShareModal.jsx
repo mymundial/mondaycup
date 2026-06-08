@@ -84,16 +84,16 @@ function canvasShirtFabricTheme(team, fallbackBackground, fallbackText, fallback
     textColour: fallbackText || IVORY,
     numberColour: fallbackNumber || fallbackText || IVORY,
     numberOutlineEnabled: false,
-    numberOutlineColour: patternOptions.outlineColour || IVORY,
+    numberOutlineColour: patternOptions.outlineColour || "#000000",
     numberOutlineWidth: 0,
     pattern: null,
-    patternColour: patternOptions.patternColour || "#FFFFFF",
+    patternColour: patternOptions.patternColour || LED_YELLOW,
     brothersAsset: ASSETS.branding.myMundialLogo,
   };
 
   const manualPattern = patternOptions.patternMode || "plain";
   if (manualPattern && manualPattern !== "plain") result.pattern = manualPattern;
-  result.patternColour = patternOptions.patternColour || result.patternColour || "#FFFFFF";
+  result.patternColour = patternOptions.patternColour || result.patternColour || LED_YELLOW;
 
   const whiteBackground = ["#FFFFFF", "#F5F1E8"].includes(String(result.background || "").toUpperCase());
   result.brothersAsset = whiteBackground ? ASSETS.branding.brothersDark : ASSETS.branding.myMundialLogo;
@@ -229,7 +229,7 @@ export async function createShirtPosterBlob({
   numberOutlineWeight = null,
   fontType = "bold",
   patternMode = "team",
-  patternColour = "#FFFFFF",
+  patternColour = LED_YELLOW,
 }) {
   const size = 2000;
   const canvas = document.createElement("canvas");
@@ -349,10 +349,10 @@ export function normaliseInitialShirt(initialShirt, currentUser) {
     number: cleanNumber(initialShirt?.number, "11"),
     bg: initialShirt?.bg || SHIRT_BG,
     patternMode: initialShirt?.patternMode || "plain",
-    patternColour: initialShirt?.patternColour || "#FFFFFF",
+    patternColour: initialShirt?.patternColour || LED_YELLOW,
     textColour: initialShirt?.textColour || IVORY,
     numberColour: initialShirt?.numberColour || initialShirt?.textColour || IVORY,
-    outlineColour: initialShirt?.outlineColour || IVORY,
+    outlineColour: initialShirt?.outlineColour || "#000000",
     nameOutlineWidth: Math.max(0, Number(initialShirt?.nameOutlineWidth ?? initialShirt?.outlineWeight ?? 0) || 0),
     numberOutlineWidth: Math.max(0, Number(initialShirt?.numberOutlineWidth ?? initialShirt?.outlineWeight ?? 0) || 0),
     composition: {
@@ -423,11 +423,11 @@ function ExportButton({ icon, label, onClick, disabled, primary = false, busy = 
   );
 }
 
-const editorFieldClass = "h-10 min-w-0 rounded-[13px] border border-[#F5F1E8]/18 bg-[#051A11]/62 px-2.5 home-copy-bold text-[12px] font-black uppercase tracking-[0.06em] text-[#F5F1E8] outline-none focus:border-[#F7D117]/70";
+const editorFieldClass = "h-10 min-w-0 rounded-[13px] border border-[#F5F1E8]/18 bg-[#051A11]/62 px-2.5 text-center home-copy-bold text-[12px] font-black uppercase tracking-[0.06em] text-[#F5F1E8] outline-none focus:border-[#F7D117]/70";
 
 function EditorLabel({ label, children }) {
   return (
-    <label className="grid gap-1 text-left">
+    <label className="grid gap-1 text-center">
       <span className="home-copy-bold text-[10px] font-black uppercase tracking-[0.16em] text-[#F5F1E8]/72">{label}</span>
       {children}
     </label>
@@ -437,22 +437,30 @@ function EditorLabel({ label, children }) {
 function ColourField({ label, value, onChange }) {
   return (
     <EditorLabel label={label}>
-      <div className="grid h-10 grid-cols-[38px_minmax(0,1fr)] items-center gap-2 rounded-[13px] border border-[#F5F1E8]/18 bg-[#051A11]/62 px-2">
-        <input
-          type="color"
-          value={value}
-          onChange={(event) => onChange?.(event.target.value)}
-          className="h-7 w-8 cursor-pointer rounded-[8px] border-0 bg-transparent p-0"
-          aria-label={label}
-        />
-        <input
-          value={value}
-          onChange={(event) => onChange?.(event.target.value)}
-          className="min-w-0 bg-transparent home-copy-bold text-[11px] uppercase tracking-[0.06em] text-[#F5F1E8] outline-none"
-          spellCheck={false}
-        />
-      </div>
+      <input
+        type="color"
+        value={value}
+        onChange={(event) => onChange?.(event.target.value)}
+        className="mx-auto h-10 w-12 cursor-pointer rounded-[10px] border border-[#F5F1E8]/18 bg-transparent p-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.16)]"
+        aria-label={label}
+      />
     </EditorLabel>
+  );
+}
+
+function OutlineToggle({ checked, onChange }) {
+  return (
+    <label className="grid gap-1 text-center">
+      <span className="home-copy-bold text-[10px] font-black uppercase tracking-[0.16em] text-[#F5F1E8]/72">OUTLINE</span>
+      <button
+        type="button"
+        onClick={() => onChange?.(!checked)}
+        className={`flex h-9 items-center justify-center rounded-[12px] border home-copy-bold text-[8px] uppercase tracking-[0.08em] ${checked ? "border-[#F7D117]/82 bg-[#F7D117] text-[#072D1D]" : "border-[#F5F1E8]/16 bg-[#051A11]/62 text-[#F5F1E8]/82"}`}
+        aria-pressed={checked}
+      >
+        {checked ? "ON" : "OFF"}
+      </button>
+    </label>
   );
 }
 
@@ -478,19 +486,18 @@ function RangeField({ label, value, onChange, min = 0, max = 12, step = 1, forma
   );
 }
 
-function ShirtEditorPanelButton({ active, label, number, onClick }) {
+function ShirtEditorPanelButton({ active, label, onClick }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`grid min-h-[46px] grid-cols-[22px_minmax(0,1fr)] items-center gap-1 rounded-[15px] border px-2 text-left transition ${
+      className={`flex min-h-[46px] items-center justify-center rounded-[15px] border px-2 text-center transition ${
         active
           ? "border-[#F7D117]/82 bg-[#F7D117] text-[#072D1D] shadow-[0_7px_18px_rgba(0,0,0,0.22)]"
           : "border-[#F5F1E8]/16 bg-[#051A11]/58 text-[#F5F1E8]/84"
       }`}
     >
-      <span className={`flex h-5 w-5 items-center justify-center rounded-full border home-copy-bold text-[10px] leading-none ${active ? "border-[#072D1D]/28 bg-[#072D1D]/10" : "border-[#F5F1E8]/18 bg-[#031B12]/46"}`}>{number}</span>
-      <span className="home-copy-bold text-[8px] uppercase leading-[0.95] tracking-[0.08em]">{label}</span>
+      <span className="home-copy-bold text-[9px] uppercase leading-none tracking-[0.08em]">{label}</span>
     </button>
   );
 }
@@ -503,7 +510,8 @@ function PatternSelector({ value, onChange }) {
     { value: "checkerboard", label: "CHECKS" },
   ];
   return (
-    <EditorLabel label="Pattern">
+    <div className="grid gap-1 text-center">
+      <span className="home-copy-bold text-[10px] font-black uppercase tracking-[0.16em] text-[#F5F1E8]/72">PATTERN</span>
       <div className="grid grid-cols-4 gap-1.5">
         {options.map((option) => (
           <button
@@ -516,7 +524,7 @@ function PatternSelector({ value, onChange }) {
           </button>
         ))}
       </div>
-    </EditorLabel>
+    </div>
   );
 }
 
@@ -692,19 +700,16 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
         <div className="mt-3 rounded-[1.2rem] border border-[#F5F1E8]/12 bg-[#031B12]/22 p-2.5">
           <div className="grid grid-cols-3 gap-1.5">
             <ShirtEditorPanelButton
-              number="1"
-              label="Personalisation"
+              label="Personalise"
               active={activePanel === "personalisation"}
               onClick={() => setActivePanel("personalisation")}
             />
             <ShirtEditorPanelButton
-              number="2"
-              label="Fabric"
+              label="Design"
               active={activePanel === "fabric"}
               onClick={() => setActivePanel("fabric")}
             />
             <ShirtEditorPanelButton
-              number="3"
               label="Print"
               active={activePanel === "print"}
               onClick={() => setActivePanel("print")}
@@ -724,32 +729,26 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
             )}
 
             {activePanel === "fabric" && (
-              <>
-                <div className="grid grid-cols-2 gap-2.5">
-                  <ColourField label="BG colour" value={shirtBackground} onChange={setCustomBg} />
-                  <ColourField label="Pattern colour" value={patternColour} onChange={setPatternColour} />
-                </div>
+              <div className="grid grid-cols-[minmax(0,1fr)_76px] items-end gap-2.5">
                 <PatternSelector value={patternMode} onChange={setPatternMode} />
-              </>
+                <OutlineToggle
+                  checked={safeNameOutlineWidth > 0 || safeNumberOutlineWidth > 0}
+                  onChange={(checked) => {
+                    setNameOutlineWidth(checked ? 2 : 0);
+                    setNumberOutlineWidth(checked ? 2 : 0);
+                  }}
+                />
+              </div>
             )}
 
             {activePanel === "print" && (
-              <>
-                <div className="grid grid-cols-2 gap-2.5">
-                  <ColourField label="Name colour" value={shirtTextColour} onChange={setTextColour} />
-                  <ColourField label="Number colour" value={shirtNumberColour} onChange={setNumberColour} />
-                </div>
-                <ColourField label="Outline colour" value={outlineColour} onChange={setOutlineColour} />
-                <RangeField
-                  label="Name outline"
-                  value={safeNameOutlineWidth}
-                  onChange={(value) => setNameOutlineWidth(clampOutlineWeight(value))}
-                  min={0}
-                  max={2}
-                  step={0.25}
-                  formatValue={formatOutlineValue}
-                />
-              </>
+              <div className="grid grid-cols-5 gap-1.5">
+                <ColourField label="BG" value={shirtBackground} onChange={setCustomBg} />
+                <ColourField label="Pattern" value={patternColour} onChange={setPatternColour} />
+                <ColourField label="Name" value={shirtTextColour} onChange={setTextColour} />
+                <ColourField label="Number" value={shirtNumberColour} onChange={setNumberColour} />
+                <ColourField label="Outline" value={outlineColour} onChange={setOutlineColour} />
+              </div>
             )}
           </div>
         </div>
