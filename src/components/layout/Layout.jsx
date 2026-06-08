@@ -5,11 +5,11 @@ import AppFooter from "../ui/AppFooter.jsx";
 import AppPanel from "../ui/AppPanel.jsx";
 
 export function Shell({ children }) {
-  return <div className="flex min-h-[100dvh] justify-center bg-[#0d6c3d] text-[#072D1D] mc-bleed-visible antialiased"><div className="min-h-[100dvh] w-full max-w-md mc-bleed-visible">{children}</div></div>;
+  return <div className="flex min-h-[100dvh] justify-center bg-[#0d6c3d] text-[#072D1D] antialiased"><div className="min-h-[100dvh] w-full max-w-md">{children}</div></div>;
 }
 
 export function PageFrame({ children }) {
-  return <div className="flex min-h-[100dvh] flex-col overflow-y-auto bg-[#F5F0E6] px-5 pb-0 pt-2">{children}</div>;
+  return <div className="flex min-h-[100dvh] flex-col overflow-y-auto bg-[#0d6c3d] px-5 pb-0 pt-2">{children}</div>;
 }
 
 export function Footer() {

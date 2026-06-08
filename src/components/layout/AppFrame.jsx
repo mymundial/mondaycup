@@ -2,8 +2,8 @@ import { footerAwareStyle } from '../ui/AppFooter.jsx';
 
 export function AppFrame({ children, className = "" }) {
   return (
-    <div className="fixed inset-0 z-50 flex justify-center bg-[#0d6c3d] antialiased mc-bleed-visible">
-      <div className={`relative flex h-[100dvh] w-full max-w-md flex-col overflow-visible bg-[#0d6c3d] text-[#F5F1E8] ${className}`}>
+    <div className="fixed inset-0 z-50 flex justify-center bg-[#0d6c3d] antialiased">
+      <div className={`relative flex h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-[#0d6c3d] text-[#F5F1E8] ${className}`}>
         {children}
       </div>
     </div>

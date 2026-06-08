@@ -119,8 +119,9 @@ function pitchMowStyleForVariant(goalLine, variant = "game") {
     top: `${goalLine}%`,
     backgroundColor: "#0d6c3d",
     backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))",
-    backgroundSize: "100% 100%",
-    backgroundRepeat: "repeat",
+    backgroundSize: "var(--mc-app-frame-width) 100%, 100% 100%",
+    backgroundPosition: "center top, center top",
+    backgroundRepeat: "repeat-x, no-repeat",
   };
 
   if (variant !== "export") return baseStyle;
@@ -133,8 +134,9 @@ function pitchMowStyleForVariant(goalLine, variant = "game") {
       "radial-gradient(circle at 50% 0%, rgba(247,209,23,0.045), transparent 34%)",
       "linear-gradient(180deg, rgba(245,241,232,0.018) 0%, rgba(5,26,17,0.10) 100%)",
     ].join(", "),
-    backgroundSize: "100% 100%, 100% 100%, 100% 100%",
-    backgroundRepeat: "no-repeat",
+    backgroundSize: "var(--mc-app-frame-width) 100%, 100% 100%, 100% 100%",
+    backgroundPosition: "center top, center top, center top",
+    backgroundRepeat: "repeat-x, no-repeat, no-repeat",
     boxShadow: "inset 0 24px 46px rgba(4,24,15,0.06), inset 0 -42px 76px rgba(4,24,15,0.18)",
   };
 }
@@ -186,7 +188,7 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
           />
         </div>
       )}
-      <div {...(pitchMowVariant === "none" ? {} : { "data-share-force-pitch": "true" })} className="absolute bottom-0 left-0 right-0 mc-full-bleed-layer" style={pitchMowStyleForVariant(goalLine, pitchMowVariant)} />
+      <div {...(pitchMowVariant === "none" ? {} : { "data-share-force-pitch": "true" })} className={`absolute bottom-0 left-0 right-0 mc-full-bleed-layer ${pitchMowVariant === "export" ? "mc-fixed-app-mows-export" : pitchMowVariant === "none" ? "" : "mc-fixed-app-mows"}`} style={pitchMowStyleForVariant(goalLine, pitchMowVariant)} />
       {showPitchMarkings && (
         <>
           <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8] mc-full-bleed-layer" style={{ top: `${goalLine}%` }} />

@@ -192,7 +192,14 @@ function HomePitchBackdrop() {
     <div className="absolute inset-0 overflow-visible bg-[#0d6c3d] mc-bleed-visible">
       <HomeUnifiedCrowdBackdrop />
       <HomeLedAdvertisingHoard />
-      <div className="absolute bottom-0 left-0 right-0 mc-full-bleed-layer" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
+      <div
+        className="absolute bottom-0 left-0 right-0 mc-full-bleed-layer mc-fixed-app-mows"
+        style={{
+          top: `${goalLine}%`,
+          backgroundColor: "#0d6c3d",
+          backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))",
+        }}
+      />
       <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8] mc-full-bleed-layer" style={{ top: `${goalLine}%` }} />
       <div className="pointer-events-none absolute z-[3] rounded-b-[999px] border-b-[8px] border-l-[8px] border-r-[8px] border-[#f5f1e8]" style={{ left: "5%", top: `${goalLine}%`, width: "90%", height: "24.2%" }} />
       <HomeGoalFrame />

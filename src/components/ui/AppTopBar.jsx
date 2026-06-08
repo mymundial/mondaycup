@@ -27,7 +27,7 @@ export default function AppTopBar({
   const heading = title ?? children;
   return (
     <section
-      className={`relative z-[1000] flex shrink-0 items-center justify-center overflow-visible px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.16)] ${className}`}
+      className={`relative z-[1000] flex shrink-0 items-center justify-center overflow-visible px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.16)] mc-full-bleed-bg ${className}`}
       style={{ height: MC_SIZES.topBarHeight, background: MC_COLORS.greenDark, ...style }}
     >
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.16))]" aria-hidden="true" />
