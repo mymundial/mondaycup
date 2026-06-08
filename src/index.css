@@ -244,6 +244,7 @@ body,
 
 .mc-full-bleed-bg {
   position: relative;
+  z-index: 0;
   isolation: isolate;
   overflow: visible !important;
 }
@@ -253,7 +254,7 @@ body,
   position: absolute;
   inset-block: 0;
   left: 50%;
-  z-index: 0;
+  z-index: -1;
   width: 100vw;
   transform: translateX(-50%);
   background: inherit;
@@ -264,6 +265,7 @@ body,
 }
 
 .mc-full-bleed-bg > * {
+  position: relative;
   z-index: 1;
 }
 
