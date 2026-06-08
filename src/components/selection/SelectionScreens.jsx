@@ -354,7 +354,7 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, stati
 
 function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {}, staticRightLogo = false }) {
   return (
-    <Shell>
+    <Shell visualMode="home">
       <div className="home-main-font relative flex h-[100dvh] flex-col overflow-hidden bg-[#0d6c3d] text-[#072D1D]">
         <ScoreboardPlaceholder allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo={staticRightLogo} />
         <main className="relative min-h-0 flex-1 overflow-hidden">

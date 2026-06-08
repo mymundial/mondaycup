@@ -5,6 +5,7 @@ export const ALL_TIME_MATCHES_PLAYED_KEY = "mondayCup.allTimeMatchesPlayed";
 export const ALL_TIME_MATCHES_WON_KEY = "mondayCup.allTimeMatchesWon";
 export const ALL_TIME_MATCHES_DRAWN_KEY = "mondayCup.allTimeMatchesDrawn";
 export const ALL_TIME_MATCHES_LOST_KEY = "mondayCup.allTimeMatchesLost";
+export const ALL_TIME_CAMPAIGNS_COMPLETED_KEY = "mondayCup.allTimeCampaignsCompleted";
 export const HOST_TEAMS = new Set(["Mexico", "Canada", "United States"]);
 export const PODIUM_ACHIEVEMENT_KEYS = ["thirdPlaceFinish", "runnerUpFinish", "championFinish"];
 export const EMPTY_ACTIVE_COSMETICS = {

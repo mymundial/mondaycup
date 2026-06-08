@@ -50,8 +50,10 @@ import {
   saveCheckoutStarted,
   buildStoreEntitlements,
   saveUserShirtProfile,
+  saveUserFeedback,
 } from "./lib/firebaseUser.js";
 import ShopModal from "./components/store/ShopModal.jsx";
+import FeedbackModal from "./components/feedback/FeedbackModal.jsx";
 import {
   BEST_CAMPAIGN_SCORE_KEY,
   BEST_CAMPAIGN_SUMMARY_KEY,
@@ -81,6 +83,7 @@ import {
 import {
   ACHIEVEMENTS_KEY,
   ALL_TIME_MATCHES_DRAWN_KEY,
+  ALL_TIME_CAMPAIGNS_COMPLETED_KEY,
   ALL_TIME_MATCHES_LOST_KEY,
   ALL_TIME_MATCHES_PLAYED_KEY,
   ALL_TIME_MATCHES_WON_KEY,
@@ -109,6 +112,51 @@ runSelfTests();
 
 const waitForCheckoutConfirmation = (ms) =>
   new Promise((resolve) => window.setTimeout(resolve, ms));
+
+
+const FEEDBACK_KEY = "mondayCup.feedback";
+
+const createFeedbackState = (source = {}) => {
+  const ratings = Array.isArray(source?.ratings) ? source.ratings : [];
+  return {
+    prompt1Shown: Boolean(source?.prompt1Shown),
+    prompt2Shown: Boolean(source?.prompt2Shown),
+    hasSubmitted: Boolean(source?.hasSubmitted || ratings.length),
+    ratings,
+    lastPromptType: source?.lastPromptType || null,
+    lastPromptedAt: Number(source?.lastPromptedAt || 0),
+    lastSubmittedAt: Number(source?.lastSubmittedAt || 0),
+  };
+};
+
+const buildFeedbackPromptType = ({ feedback, campaignsCompleted, cupsWon }) => {
+  const state = createFeedbackState(feedback);
+  if (state.hasSubmitted) return null;
+  const campaigns = Number(campaignsCompleted || 0);
+  const wins = Number(cupsWon || 0);
+  if (!state.prompt1Shown && campaigns >= 3) return "prompt1";
+  if (state.prompt1Shown && !state.prompt2Shown && (wins > 0 || campaigns >= 10)) return "prompt2";
+  return null;
+};
+
+const GOLDEN_TICKET_NEXT_CAMPAIGN_KEY = "mondayCup.goldenTicketNextCampaign";
+
+const readGoldenTicketNextCampaignIntent = () => {
+  try {
+    return window.localStorage?.getItem(GOLDEN_TICKET_NEXT_CAMPAIGN_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const writeGoldenTicketNextCampaignIntent = (active) => {
+  try {
+    if (active) window.localStorage?.setItem(GOLDEN_TICKET_NEXT_CAMPAIGN_KEY, "1");
+    else window.localStorage?.removeItem(GOLDEN_TICKET_NEXT_CAMPAIGN_KEY);
+  } catch {
+    // localStorage can be unavailable in private browsing; state still carries the intent.
+  }
+};
 
 export default function App() {
   const [screen, setScreen] = useState("home");
@@ -150,6 +198,14 @@ export default function App() {
   const [mondayCupsWon, setMondayCupsWon] = useState(() =>
     safeReadNumber(MONDAY_CUPS_WON_KEY, 0),
   );
+  const [allTimeCampaignsCompleted, setAllTimeCampaignsCompleted] = useState(() =>
+    safeReadNumber(ALL_TIME_CAMPAIGNS_COMPLETED_KEY, 0),
+  );
+  const [feedbackState, setFeedbackState] = useState(() =>
+    createFeedbackState(safeReadJson(FEEDBACK_KEY, {})),
+  );
+  const [feedbackPromptType, setFeedbackPromptType] = useState(null);
+  const [pendingFeedbackCheck, setPendingFeedbackCheck] = useState(false);
   const [allTimeGoals, setAllTimeGoals] = useState(() =>
     safeReadNumber(ALL_TIME_GOALS_KEY, 0),
   );
@@ -197,7 +253,9 @@ export default function App() {
   const [shopInitialItemId, setShopInitialItemId] = useState(null);
   const [pendingShopItemId, setPendingShopItemId] = useState(null);
   const [shopOpen, setShopOpen] = useState(false);
-  const [goldenTicketNextCampaign, setGoldenTicketNextCampaign] = useState(false);
+  const [goldenTicketNextCampaign, setGoldenTicketNextCampaign] = useState(() =>
+    readGoldenTicketNextCampaignIntent(),
+  );
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -288,29 +346,30 @@ export default function App() {
             });
           }
           if (
+            profile?.bestCampaign?.gameScore ||
             profile?.bestCampaign?.points ||
             profile?.bestCampaign?.campaignPoints
           ) {
             const profileBestScore = Number(
-              profile.bestCampaign.points ??
+              profile.bestCampaign.gameScore ??
+                profile.bestCampaign.points ??
                 profile.bestCampaign.campaignPoints ??
                 0,
             );
             setBestCampaignScore(profileBestScore);
             const summary = {
               ...(profile.bestCampaign || {}),
-              team: profile.bestCampaign.team || "NO TEAM",
-              form:
+              team: profile.bestCampaign.teamName || profile.bestCampaign.team || "NO TEAM",
+              teamName: profile.bestCampaign.teamName || profile.bestCampaign.team || "NO TEAM",
+              cupRun:
+                profile.bestCampaign.cupRun ||
                 profile.bestCampaign.form ||
                 profile.bestCampaign.tournamentProgress ||
                 [],
-              tournamentProgress:
-                profile.bestCampaign.tournamentProgress ||
-                profile.bestCampaign.form ||
-                [],
-              campaignPoints: profileBestScore,
-              points: profileBestScore,
+              gameScore: profileBestScore,
               roundLabel:
+                profile.bestCampaign.round ||
+                profile.bestCampaign.phase ||
                 profile.bestCampaign.roundLabel ||
                 profile.bestCampaign.stage ||
                 "NO CAMPAIGN",
@@ -320,53 +379,35 @@ export default function App() {
             safeWriteNumber(BEST_CAMPAIGN_SCORE_KEY, profileBestScore);
             safeWriteJson(BEST_CAMPAIGN_SUMMARY_KEY, summary);
           }
-          if (profile?.stats) {
-            setMondayCupsWon(Number(profile.stats.mondayCupsWon || 0));
-            setAllTimeGoals(Number(profile.stats.totalGoalsScored || 0));
-            setAllTimeShots(
-              Number(
-                profile.stats.totalShotsTaken || profile.stats.totalShots || 0,
-              ),
-            );
-            setAllTimeMatchesPlayed(
-              Number(
-                profile.stats.matchesPlayed ||
-                  profile.stats.totalMatchesPlayed ||
-                  profile.stats.totalMatchesCompleted ||
-                  0,
-              ),
-            );
-            setAllTimeMatchesWon(
-              Number(
-                profile.stats.matchesWon || profile.stats.totalMatchesWon || 0,
-              ),
-            );
-            setAllTimeMatchesDrawn(
-              Number(
-                profile.stats.matchesDrawn ||
-                  profile.stats.totalMatchesDrawn ||
-                  0,
-              ),
-            );
-            setAllTimeMatchesLost(
-              Number(
-                profile.stats.matchesLost ||
-                  profile.stats.totalMatchesLost ||
-                  0,
-              ),
-            );
+          if (profile?.careerStats || profile?.stats) {
+            const stats = profile.careerStats || profile.stats || {};
+            setMondayCupsWon(Number(stats.cupsWon ?? stats.mondayCupsWon ?? 0));
+            setAllTimeCampaignsCompleted(Number(stats.campaignsCompleted ?? stats.tournamentsCompleted ?? 0));
+            setAllTimeGoals(Number(stats.goalsScored ?? stats.totalGoalsScored ?? 0));
+            setAllTimeShots(Number(stats.totalShots ?? stats.totalShotsTaken ?? 0));
+            setAllTimeMatchesPlayed(Number(stats.matchesPlayed ?? stats.totalMatchesPlayed ?? 0));
+            setAllTimeMatchesWon(Number(stats.matchesWon ?? stats.totalMatchesWon ?? 0));
+            setAllTimeMatchesDrawn(Number(stats.matchesDrawn ?? stats.totalMatchesDrawn ?? 0));
+            setAllTimeMatchesLost(Number(stats.matchesLost ?? stats.totalMatchesLost ?? 0));
           }
-          if (profile?.achievements) {
-            setAchievements(profile.achievements || {});
-            safeWriteJson(ACHIEVEMENTS_KEY, profile.achievements || {});
+          if (profile?.trophies || profile?.achievements) {
+            const trophyState = profile.trophies || profile.achievements || {};
+            setAchievements(trophyState);
+            safeWriteJson(ACHIEVEMENTS_KEY, trophyState);
           }
           if (profile?.nationCupWins) {
             setNationCupWins(profile.nationCupWins || {});
             safeWriteJson(NATION_CUP_WINS_KEY, profile.nationCupWins || {});
           }
-          if (profile?.nationStickerProgress) {
-            setNationStickerProgress(profile.nationStickerProgress || {});
-            safeWriteJson(NATION_STICKER_PROGRESS_KEY, profile.nationStickerProgress || {});
+          if (profile?.stickers || profile?.nationStickerProgress) {
+            const stickerState = profile.stickers || profile.nationStickerProgress || {};
+            setNationStickerProgress(stickerState);
+            safeWriteJson(NATION_STICKER_PROGRESS_KEY, stickerState);
+          }
+          if (profile?.feedback) {
+            const nextFeedback = createFeedbackState(profile.feedback);
+            setFeedbackState(nextFeedback);
+            safeWriteJson(FEEDBACK_KEY, nextFeedback);
           }
         } catch (error) {
           console.warn("User profile sync failed", error);
@@ -522,15 +563,15 @@ export default function App() {
         if (hasGuestProgress) {
           const currentCampaignPayload = {
             active: true,
-            team: team || guestSnapshot.team || null,
+            teamName: team || guestSnapshot.team || null,
             opponent: opponent || guestSnapshot.opponent || null,
-            stage: currentRoundLabel || matchStage || "Group Stage",
-            points: Number(
+            phase: currentRoundLabel || matchStage || "Group Stage",
+            gameScore: Number(
               scoringState.campaignPoints ||
                 guestSnapshot.scoringState?.campaignPoints ||
                 0,
             ),
-            form: userForm || guestSnapshot.userForm || [],
+            cupRun: userForm || guestSnapshot.userForm || [],
             score: Array.isArray(score) ? score : guestSnapshot.score || [0, 0],
             matchResult: matchResult
               ? {
@@ -542,22 +583,21 @@ export default function App() {
                   opponentScore: matchResult.opponentScore ?? null,
                 }
               : null,
+            runtimeSnapshot: guestSnapshot,
           };
 
           await saveUserProfile(nextUser.uid, {
             currentCampaign: currentCampaignPayload,
-            currentProgress: guestSnapshot,
-            cosmetics: activeCosmetics || {
+            cosmeticsEquipped: activeCosmetics || {
               goldenBoot: false,
               goldenBall: false,
               goldenGlove: false,
               goldenTicket: false,
               goldenTicketQuantity: 0,
             },
-            achievements: achievements || {},
+            trophies: achievements || {},
             nationCupWins: nationCupWins || {},
-            nationStickerProgress: nationStickerProgress || {},
-            unlocks: { allTeams: false },
+            stickers: nationStickerProgress || {},
           });
           await saveCurrentProgress(nextUser.uid, guestSnapshot);
         }
@@ -1100,56 +1140,55 @@ export default function App() {
       ? { goldenTicket: profileTicket }
       : undefined;
 
+    const currentProgressSnapshot = buildGameSnapshot();
+    const shouldSaveCurrentCampaign = Boolean(currentProgressSnapshot?.active && currentProgressSnapshot?.team && team);
+
     const payload = {
       nickname:
         currentUser.displayName || currentUser.email?.split("@")[0] || "Player",
       email: currentUser.email || "",
       accountStatus: { emailVerified: Boolean(currentUser.emailVerified), verificationRequired: !currentUser.emailVerified },
-      currentCampaign: {
-        active: Boolean(team),
-        team: team || null,
-        opponent: opponent || null,
-        stage: currentRoundLabel || matchStage || "No Campaign",
-        points: Number(scoringState.campaignPoints || 0),
-        form: userForm || [],
-        score,
-        matchResult: matchResult
-          ? {
-              status: matchResult.status || null,
-              matchNo: matchResult.matchNo || null,
-              winner: matchResult.winner || null,
-              loser: matchResult.loser || null,
-              userScore: matchResult.userScore ?? null,
-              opponentScore: matchResult.opponentScore ?? null,
-            }
-          : null,
-      },
-      currentProgress: buildGameSnapshot(),
+      ...(shouldSaveCurrentCampaign
+        ? {
+            currentCampaign: {
+              active: true,
+              teamName: team || null,
+              opponent: opponent || null,
+              phase: currentRoundLabel || matchStage || "No Campaign",
+              gameScore: Number(scoringState.campaignPoints || 0),
+              cupRun: userForm || [],
+              score,
+              matchResult: matchResult
+                ? {
+                    status: matchResult.status || null,
+                    matchNo: matchResult.matchNo || null,
+                    winner: matchResult.winner || null,
+                    loser: matchResult.loser || null,
+                    userScore: matchResult.userScore ?? null,
+                    opponentScore: matchResult.opponentScore ?? null,
+                  }
+                : null,
+              runtimeSnapshot: currentProgressSnapshot,
+            },
+          }
+        : {}),
       bestCampaign: {
         ...(bestCampaignSummary || {}),
-        points: Number(bestCampaignScore || 0),
-        campaignPoints: Number(bestCampaignScore || 0),
-        formGuide:
+        gameScore: Number(bestCampaignScore || 0),
+        cupRun:
+          bestCampaignSummary?.cupRun ||
           bestCampaignSummary?.formGuide ||
           bestCampaignSummary?.form ||
           bestCampaignSummary?.tournamentProgress ||
           [],
-        tournamentProgress:
-          bestCampaignSummary?.tournamentProgress ||
-          bestCampaignSummary?.formGuide ||
-          bestCampaignSummary?.form ||
-          [],
-        form:
-          bestCampaignSummary?.form ||
-          bestCampaignSummary?.formGuide ||
-          bestCampaignSummary?.tournamentProgress ||
-          [],
-        team: bestCampaignSummary?.team || null,
-        stage:
+        teamName: bestCampaignSummary?.teamName || bestCampaignSummary?.team || null,
+        phase:
+          bestCampaignSummary?.phase ||
           bestCampaignSummary?.roundLabel ||
           bestCampaignSummary?.stage ||
           "No Campaign",
-        roundLabel:
+        round:
+          bestCampaignSummary?.round ||
           bestCampaignSummary?.roundLabel ||
           bestCampaignSummary?.stage ||
           "No Campaign",
@@ -1164,33 +1203,24 @@ export default function App() {
           activeCosmetics?.goldenGlove,
         ),
       },
-      stats: {
-        mondayCupsWon: Number(mondayCupsWon || 0),
+      careerStats: {
+        cupsWon: Number(mondayCupsWon || 0),
+        campaignsCompleted: Number(allTimeCampaignsCompleted || 0),
         matchesPlayed: Number(allTimeMatchesPlayed || 0),
-        totalMatchesPlayed: Number(allTimeMatchesPlayed || 0),
         matchesWon: Number(allTimeMatchesWon || 0),
-        totalMatchesWon: Number(allTimeMatchesWon || 0),
         matchesDrawn: Number(allTimeMatchesDrawn || 0),
-        totalMatchesDrawn: Number(allTimeMatchesDrawn || 0),
         matchesLost: Number(allTimeMatchesLost || 0),
-        totalMatchesLost: Number(allTimeMatchesLost || 0),
-        totalGoalsScored: goals,
-        totalShotsTaken: attempts,
-        conversionPercentage,
+        goalsScored: goals,
+        goalsConceded: Number(firebaseProfile?.careerStats?.goalsConceded || 0),
+        totalShots: attempts,
+        goalConversionRate: conversionPercentage,
         highScore: profileHighScore,
-        gameScore: profileHighScore,
         leaderboardRank: myLeaderboardRank || null,
       },
-      achievements: achievements || {},
+      trophies: achievements || {},
       nationCupWins: nationCupWins || {},
-      nationStickerProgress: nationStickerProgress || {},
-      cosmeticsActive: activeCosmetics || {
-        goldenBoot: false,
-        goldenBall: false,
-        goldenGlove: false,
-        goldenTicket: false,
-        goldenTicketQuantity: 0,
-      },
+      stickers: nationStickerProgress || {},
+      feedback: feedbackState || createFeedbackState({}),
       cosmeticsEquipped: activeCosmetics || {
         goldenBoot: false,
         goldenBall: false,
@@ -1198,24 +1228,8 @@ export default function App() {
         goldenTicket: false,
         goldenTicketQuantity: 0,
       },
-      cosmetics: activeCosmetics || {
-        goldenBoot: false,
-        goldenBall: false,
-        goldenGlove: false,
-        goldenTicket: false,
-        goldenTicketQuantity: 0,
-      },
       ...(Object.keys(autosaveUpgradesPurchased).length
-        ? {
-            upgradesPurchased: autosaveUpgradesPurchased,
-            ...(autosaveUpgradesPurchased.allTeams
-              ? {
-                  unlocks: { allTeams: true },
-                  allTeamsEquipped: true,
-                  allTeamsUnlocked: true,
-                }
-              : {}),
-          }
+        ? { upgradesPurchased: autosaveUpgradesPurchased }
         : {}),
       ...(autosaveConsumables ? { consumables: autosaveConsumables } : {}),
       leaderboard: {
@@ -1237,6 +1251,7 @@ export default function App() {
     activeCosmetics,
     campaignCosmeticsUsed,
     allTeamsUnlocked,
+    allTimeCampaignsCompleted,
     allTimeGoals,
     allTimeShots,
     allTimeMatchesPlayed,
@@ -1246,6 +1261,7 @@ export default function App() {
     achievements,
     nationCupWins,
     nationStickerProgress,
+    feedbackState,
     authReady,
     bestCampaignScore,
     bestCampaignSummary,
@@ -1363,10 +1379,8 @@ export default function App() {
             result: enrichedResult,
             fallbackRound: matchStage,
           }),
-          points: Number(nextScoringState.campaignPoints || 0),
-          formGuide: nextForm,
-          tournamentProgress: nextForm,
-          form: nextForm,
+          gameScore: Number(nextScoringState.campaignPoints || 0),
+          cupRun: nextForm,
           cosmeticsApplied: campaignCosmetics,
           cosmeticBallEquipped: Boolean(campaignCosmetics?.goldenBall),
           cosmeticGloveEquipped: Boolean(campaignCosmetics?.goldenGlove),
@@ -1381,13 +1395,20 @@ export default function App() {
     }
 
     if (isTerminalLeaderboardStatus(baseResult.status)) {
+      setAllTimeCampaignsCompleted((value) => {
+        const next = Number(value || 0) + 1;
+        safeWriteNumber(ALL_TIME_CAMPAIGNS_COMPLETED_KEY, next);
+        return next;
+      });
+
       const leaderboardBestScore = Number(
         Math.max(nextScoringState.campaignPoints || 0, bestCampaignScore || 0),
       );
       const leaderboardBestTeam = nextIsBestCampaign
         ? team
-        : latestBestCampaignSummary?.team || team || null;
+        : latestBestCampaignSummary?.teamName || latestBestCampaignSummary?.team || team || null;
       const leaderboardForm =
+        latestBestCampaignSummary?.cupRun ||
         latestBestCampaignSummary?.formGuide ||
         latestBestCampaignSummary?.form ||
         latestBestCampaignSummary?.tournamentProgress ||
@@ -1406,17 +1427,14 @@ export default function App() {
         uid: localUserId,
         userId: localUserId,
         username: currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST",
-        formGuide: leaderboardForm,
-        form: leaderboardForm,
-        tournamentProgress: leaderboardForm,
+        cupRun: leaderboardForm,
+        gameScore: leaderboardBestScore,
         bestCampaign: latestBestCampaignSummary || {
-          team: leaderboardBestTeam,
-          formGuide: leaderboardForm,
-          form: leaderboardForm,
-          tournamentProgress: leaderboardForm,
-          campaignPoints: leaderboardBestScore,
-          points: leaderboardBestScore,
-          roundLabel: roundLabelForResult(baseResult, matchStage),
+          teamName: leaderboardBestTeam,
+          cupRun: leaderboardForm,
+          gameScore: leaderboardBestScore,
+          round: roundLabelForResult(baseResult, matchStage),
+          phase: roundLabelForResult(baseResult, matchStage),
         },
         cosmeticsApplied: latestBestCampaignSummary?.cosmeticsApplied || campaignCosmeticsApplied(),
         emailVerified: Boolean(isCurrentUserVerified),
@@ -1501,16 +1519,84 @@ export default function App() {
       cosmeticGloveEquipped: false,
       goldenTicketUsed: false,
     });
+    setPendingFeedbackCheck(true);
+  };
+
+  useEffect(() => {
+    if (!pendingFeedbackCheck || screen !== "home") return;
+    const promptType = buildFeedbackPromptType({
+      feedback: feedbackState,
+      campaignsCompleted: allTimeCampaignsCompleted,
+      cupsWon: mondayCupsWon,
+    });
+    if (promptType) setFeedbackPromptType(promptType);
+    setPendingFeedbackCheck(false);
+  }, [pendingFeedbackCheck, screen, feedbackState, allTimeCampaignsCompleted, mondayCupsWon]);
+
+  const persistFeedbackState = (nextFeedback, ratingEntry = null) => {
+    safeWriteJson(FEEDBACK_KEY, nextFeedback);
+    setFeedbackState(nextFeedback);
+    if (hasCloudUser) {
+      saveUserFeedback(currentUser.uid, nextFeedback, ratingEntry).catch((error) => {
+        console.warn("Feedback save failed", error);
+      });
+    }
+  };
+
+  const markFeedbackPromptShown = (promptType) => {
+    const key = promptType === "prompt2" ? "prompt2Shown" : "prompt1Shown";
+    const nextFeedback = createFeedbackState({
+      ...feedbackState,
+      [key]: true,
+      lastPromptType: promptType,
+      lastPromptedAt: Date.now(),
+    });
+    persistFeedbackState(nextFeedback);
+  };
+
+  const closeFeedbackModal = () => {
+    if (feedbackPromptType) markFeedbackPromptShown(feedbackPromptType);
+    setFeedbackPromptType(null);
+  };
+
+  const submitFeedback = ({ rating, comment, promptType }) => {
+    const safeRating = Math.max(1, Math.min(5, Math.round(Number(rating || 0))));
+    if (!safeRating) return;
+    const createdAt = Date.now();
+    const entry = {
+      id: `${createdAt}-${safeRating}`,
+      stars: safeRating,
+      rating: safeRating,
+      comment: String(comment || "").trim().slice(0, 280),
+      promptType: promptType || feedbackPromptType || "prompt1",
+      campaignsCompleted: Number(allTimeCampaignsCompleted || 0),
+      cupsWon: Number(mondayCupsWon || 0),
+      createdAt,
+    };
+    const key = entry.promptType === "prompt2" ? "prompt2Shown" : "prompt1Shown";
+    const nextFeedback = createFeedbackState({
+      ...feedbackState,
+      [key]: true,
+      hasSubmitted: true,
+      lastPromptType: entry.promptType,
+      lastPromptedAt: feedbackState?.lastPromptedAt || createdAt,
+      lastSubmittedAt: createdAt,
+      latestRating: entry,
+      ratings: [...(feedbackState?.ratings || []), entry].slice(-10),
+    });
+    persistFeedbackState(nextFeedback, entry);
   };
   const handleResumeCampaign = async () => {
     const snapshot = hasCloudUser
       ? await loadCurrentProgress(currentUser.uid).catch(
           () =>
+            firebaseProfile?.currentCampaign?.runtimeSnapshot ||
             firebaseProfile?.currentProgress ||
             firebaseProfile?.savedGames?.current ||
             null,
         )
-      : firebaseProfile?.currentProgress ||
+      : firebaseProfile?.currentCampaign?.runtimeSnapshot ||
+        firebaseProfile?.currentProgress ||
         firebaseProfile?.savedGames?.current ||
         null;
     const restored = restoreGameSnapshot(snapshot);
@@ -1537,11 +1623,13 @@ export default function App() {
     const savedProgress = hasCloudUser
       ? await loadCurrentProgress(currentUser.uid).catch(
           () =>
+            firebaseProfile?.currentCampaign?.runtimeSnapshot ||
             firebaseProfile?.currentProgress ||
             firebaseProfile?.savedGames?.current ||
             null,
         )
-      : firebaseProfile?.currentProgress ||
+      : firebaseProfile?.currentCampaign?.runtimeSnapshot ||
+        firebaseProfile?.currentProgress ||
         firebaseProfile?.savedGames?.current ||
         null;
 
@@ -1608,13 +1696,17 @@ export default function App() {
 
   const useGoldenTicketForNextCampaign = () => {
     const ticketQuantity = Number(
-      activeCosmetics?.goldenTicketQuantity ??
+      storeEntitlements?.goldenTicketQty ??
+        activeCosmetics?.goldenTicketQuantity ??
         (activeCosmetics?.goldenTicket ? 1 : 0),
     );
     if (ticketQuantity <= 0) {
+      writeGoldenTicketNextCampaignIntent(false);
+      setGoldenTicketNextCampaign(false);
       requestShopItem("goldenTicket");
       return;
     }
+    writeGoldenTicketNextCampaignIntent(true);
     setGoldenTicketNextCampaign(true);
     setDrawer(null);
     setMenuOpen(false);
@@ -1731,7 +1823,8 @@ export default function App() {
 
   const consumeLocalGoldenTicket = () => {
     const currentTicketQuantity = Number(
-      activeCosmetics?.goldenTicketQuantity ??
+      storeEntitlements?.goldenTicketQty ??
+        activeCosmetics?.goldenTicketQuantity ??
         (activeCosmetics?.goldenTicket ? 1 : 0),
     );
 
@@ -1762,12 +1855,16 @@ export default function App() {
     }
 
     const ticketQuantity = Number(
-      activeCosmetics?.goldenTicketQuantity ??
+      storeEntitlements?.goldenTicketQty ??
+        activeCosmetics?.goldenTicketQuantity ??
         (activeCosmetics?.goldenTicket ? 1 : 0),
     );
-    const canUseGoldenTicket =
-      Boolean(activeCosmetics?.goldenTicket) && ticketQuantity > 0;
-    const useGoldenTicket = canUseGoldenTicket && goldenTicketNextCampaign;
+    const hasGoldenTicketEntitlement =
+      ticketQuantity > 0 || Boolean(storeEntitlements?.goldenTicket) || Boolean(activeCosmetics?.goldenTicket);
+    const pendingGoldenTicketIntent =
+      Boolean(goldenTicketNextCampaign) || readGoldenTicketNextCampaignIntent();
+    const canUseGoldenTicket = hasGoldenTicketEntitlement && ticketQuantity > 0;
+    const useGoldenTicket = canUseGoldenTicket && pendingGoldenTicketIntent;
 
     if (HOST_TEAMS.has(name)) unlockAchievements(["ourTime"]);
 
@@ -1803,12 +1900,14 @@ export default function App() {
         setFixtureView("knockout");
         setStandingsView("knockout");
         consumeLocalGoldenTicket();
+        writeGoldenTicketNextCampaignIntent(false);
         setGoldenTicketNextCampaign(false);
         return;
       }
     }
 
-    if (goldenTicketNextCampaign && !useGoldenTicket) {
+    if (pendingGoldenTicketIntent && !useGoldenTicket) {
+      writeGoldenTicketNextCampaignIntent(false);
       setGoldenTicketNextCampaign(false);
     }
 
@@ -2443,11 +2542,21 @@ export default function App() {
     />
   );
 
+  const feedbackModalElement = (
+    <FeedbackModal
+      open={Boolean(feedbackPromptType) && screen === "home"}
+      promptType={feedbackPromptType || "prompt1"}
+      onSubmit={submitFeedback}
+      onDismiss={closeFeedbackModal}
+    />
+  );
+
   const withShop = (content) => (
     <>
       {content}
       {shopModalElement}
       {shirtShareModalElement}
+      {feedbackModalElement}
     </>
   );
 
@@ -2469,6 +2578,8 @@ export default function App() {
           onOpenAuthPanel={openAuthMenu}
           onResumeCampaign={handleResumeCampaign}
           hasResumeCampaign={Boolean(
+            firebaseProfile?.currentCampaign?.active ||
+            firebaseProfile?.currentCampaign?.runtimeSnapshot?.active ||
             firebaseProfile?.currentProgress?.active ||
             firebaseProfile?.savedGames?.current?.active,
           )}

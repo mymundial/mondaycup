@@ -1,9 +1,11 @@
 import { footerAwareStyle } from '../ui/AppFooter.jsx';
+import StadiumContinuation from './StadiumContinuation.jsx';
 
-export function AppFrame({ children, className = "" }) {
+export function AppFrame({ children, className = "", visualMode = "menu", title = "" }) {
   return (
-    <div className="fixed inset-0 z-50 flex justify-center bg-[#F5F0E6] antialiased">
-      <div className={`relative flex h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-[#0d6c3d] text-[#F5F1E8] ${className}`}>
+    <div className="fixed inset-0 z-50 flex justify-center overflow-hidden bg-[#0d6c3d] antialiased">
+      <StadiumContinuation mode={visualMode} title={title} />
+      <div className={`relative z-10 flex h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-[#0d6c3d] text-[#F5F1E8] shadow-[0_0_0_1px_rgba(245,241,232,0.10),0_0_42px_rgba(0,0,0,0.24)] ${className}`}>
         {children}
       </div>
     </div>

@@ -63,7 +63,7 @@ export function MatchScreen({
   const showSharedResultBadge = Boolean(matchResult && !activeBadgeMode && resultBadge);
 
   return (
-    <Shell>
+    <Shell visualMode="match">
       <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-[#0d6c3d]">
         <ScreenTopBar {...menuProps} style={{ height: MC_SELECTION_LAYOUT.topBarHeight }}>
           MATCH
