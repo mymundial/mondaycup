@@ -372,17 +372,17 @@ function AchievementRatingPanel({ careerStats = {} }) {
   return (
     <div>
       <TrophySection title="PLAYER RATING" compactTitle compactBody>
-        <div className="flex flex-col items-center justify-center gap-0.5 py-0 text-center">
-        <div className="flex items-center justify-center gap-2 text-[#F7D117] drop-shadow-[0_0_10px_rgba(247,209,23,0.22)]" aria-label={`${ratingLabel} player rating`}>
-          {stars.map((star, index) => (
-            <svg key={star.label || index} viewBox="0 0 24 24" className={`h-[27px] w-[27px] ${star.achieved ? "opacity-100" : "opacity-24"}`} fill="currentColor" aria-hidden="true">
-              <path d="M12 2.4l2.65 5.65 6.2.78-4.55 4.28 1.16 6.13L12 16.22 6.54 19.24 7.7 13.1 3.15 8.83l6.2-.78L12 2.4z" />
-            </svg>
-          ))}
-        </div>
-        <div className="home-copy-bold text-[11px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]/76">
-          {ratingLabel}
-        </div>
+        <div className="flex flex-col items-center justify-center gap-1 py-0 text-center">
+          <div className="home-copy-bold text-[11px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]/76">
+            {ratingLabel}
+          </div>
+          <div className="flex items-center justify-center gap-2 text-[#F7D117] drop-shadow-[0_0_10px_rgba(247,209,23,0.22)]" aria-label={`${ratingLabel} player rating`}>
+            {stars.map((star, index) => (
+              <svg key={star.label || index} viewBox="0 0 24 24" className={`h-[27px] w-[27px] ${star.achieved ? "opacity-100" : "opacity-24"}`} fill="currentColor" aria-hidden="true">
+                <path d="M12 2.4l2.65 5.65 6.2.78-4.55 4.28 1.16 6.13L12 16.22 6.54 19.24 7.7 13.1 3.15 8.83l6.2-.78L12 2.4z" />
+              </svg>
+            ))}
+          </div>
         </div>
       </TrophySection>
     </div>

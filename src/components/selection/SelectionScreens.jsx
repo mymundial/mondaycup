@@ -37,7 +37,7 @@ const MENU_TITLE_CLASS = "home-copy-bold text-[28px] uppercase leading-none trac
 const HOME_MAIN_HEIGHT = `calc(100dvh - (${MATCH_TOP_BAR_HEIGHT_PX}px + ((100dvh - ${MATCH_TOP_BAR_HEIGHT_PX}px) * ${MATCH_SCOREBOARD_RATIO})))`;
 const HOME_LOGO_TOP_RATIO = 0;
 const HOME_LOGO_TOP_PADDING = "clamp(18px,3vh,28px)";
-const HOME_LOGO_HEIGHT = "min(132px,17.5vh)";
+const HOME_LOGO_HEIGHT = "min(165px,22vh)";
 const HOME_LOGO_CENTER_Y = "17%";
 const HOME_LOGO_GAP = "clamp(18px,2.6vh,30px)";
 const HOME_AD_BOARD_TOP_PERCENT = GAME.goal.top + GAME.goal.height - SHARED_AD_BOARD_HEIGHT_PERCENT;
@@ -432,7 +432,7 @@ function HomeMenuShell({ children, className = "", onBack }) {
 function FloatingHomeLogo() {
   return (
     <div className="pointer-events-none absolute inset-x-0 z-[20] flex justify-center" style={{ top: HOME_LOGO_CENTER_Y, transform: "translateY(-50%)" }} aria-hidden="true">
-      <div className="relative flex w-[420px] max-w-[92vw] items-start justify-center" style={{ height: HOME_LOGO_HEIGHT }}>
+      <div className="relative flex w-[99.825%] max-w-[92vw] items-start justify-center" style={{ height: HOME_LOGO_HEIGHT }}>
         <div className="absolute inset-x-10 bottom-2 h-[42%] rounded-full bg-[#F7D117]/28 blur-3xl" />
         <div className="absolute inset-x-14 bottom-3 h-[36%] rounded-full bg-[#F5F1E8]/24 blur-2xl" />
         <img src={FLOATING_HOME_LOGO_SRC} alt="Monday Cup" className="relative z-10 h-full w-auto object-contain drop-shadow-[0_10px_24px_rgba(0,0,0,0.44)]" draggable={false} />

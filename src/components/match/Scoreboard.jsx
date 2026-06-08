@@ -103,8 +103,8 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
           marginTop: 0,
           boxSizing: "border-box",
           minHeight: 0,
-          fontFamily: '"SportsDINRegular", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-          fontWeight: 700,
+          fontFamily: '"SportsDINBold", "SportsDINRegular", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          fontWeight: 900,
           lineHeight: 1,
           ...tickerStyle,
         }}

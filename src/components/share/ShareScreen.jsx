@@ -151,7 +151,7 @@ export function ShareScreen({
   const [matchFlashFontType, setMatchFlashFontType] = useState("bold");
   const [matchFlashOutlineWeight, setMatchFlashOutlineWeight] = useState(0);
   const [matchFlashOutlineColour, setMatchFlashOutlineColour] = useState(DARK_GREEN);
-  const [matchBadgeScale, setMatchBadgeScale] = useState(1);
+  const [matchBadgeScale, setMatchBadgeScale] = useState(1.01);
   const [matchBadgeX, setMatchBadgeX] = useState(0);
   const [matchBadgeY, setMatchBadgeY] = useState(0);
   const [matchGoalkeeperScale, setMatchGoalkeeperScale] = useState(1);

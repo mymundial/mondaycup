@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   createUserWithEmailAndPassword,
@@ -251,6 +251,8 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
   const [verifyUser, setVerifyUser] = useState(null);
   const [verifyProfile, setVerifyProfile] = useState(null);
   const [verifyButtonText, setVerifyButtonText] = useState("VERIFY YOUR EMAIL ADDRESS");
+  const [verifyNoticeActive, setVerifyNoticeActive] = useState(false);
+  const verifyNoticeTimerRef = useRef(null);
   const [verificationComplete, setVerificationComplete] = useState(false);
 
   useEffect(() => {
@@ -261,6 +263,7 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
         setVerifyProfile({ accountStatus: { emailVerified: false, verificationRequired: true } });
         setVerifyUser(user);
         setVerifyButtonText("VERIFY YOUR EMAIL ADDRESS");
+        setVerifyNoticeActive(false);
         setVerificationComplete(false);
       }
       return;
@@ -268,6 +271,7 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
 
     setMode(initialMode || "signin");
     setVerifyUser(null);
+    setVerifyNoticeActive(false);
     setVerificationComplete(false);
   }, [initialMode]);
 
@@ -323,6 +327,24 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
     setError("");
     setSuccess("");
   };
+
+  const showVerificationInboxNotice = () => {
+    if (verifyNoticeTimerRef.current) window.clearTimeout(verifyNoticeTimerRef.current);
+    setSuccess("");
+    setVerifyNoticeActive(true);
+    setVerifyButtonText("PLEASE CHECK YOUR INBOX");
+    verifyNoticeTimerRef.current = window.setTimeout(() => {
+      setVerifyNoticeActive(false);
+      setVerifyButtonText("RESEND VERIFICATION EMAIL");
+      verifyNoticeTimerRef.current = null;
+    }, 10000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (verifyNoticeTimerRef.current) window.clearTimeout(verifyNoticeTimerRef.current);
+    };
+  }, []);
 
   const authActionSettings = () => {
     if (typeof window === "undefined") return undefined;
@@ -382,8 +404,7 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
         setVerifyUser(cred.user);
         try {
           await sendEmailVerification(cred.user);
-          setVerifyButtonText("RESEND VERIFICATION EMAIL");
-          setSuccess("Verification email sent please check your inbox");
+          showVerificationInboxNotice();
         } catch (verificationError) {
           const code = String(verificationError?.code || "");
           setVerifyButtonText("SEND VERIFICATION EMAIL");
@@ -442,8 +463,7 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
       const alreadyVerified = await checkEmailVerification();
       if (alreadyVerified) return;
       await sendEmailVerification(user);
-      setVerifyButtonText("RESEND VERIFICATION EMAIL");
-      setSuccess("Verification email sent please check your inbox");
+      showVerificationInboxNotice();
     } catch (err) {
       const code = String(err?.code || "");
       if (code.includes("too-many-requests")) setError("Please wait before sending another email");
@@ -483,12 +503,11 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
       <>
         <MenuHeader title="MONDAY CLUB" onClose={onClose} onBack={onBack} authView authLogoBack={showLogoBack} />
         <div className="mt-2 space-y-2 text-center">
-          <div className="home-copy-bold text-[20px] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">VERIFY YOUR EMAIL</div>
+          <div className="home-copy-regular text-[20px] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">VERIFY YOUR EMAIL</div>
           <p className="home-copy-regular mx-auto max-w-[280px] text-[10px] uppercase leading-snug tracking-[0.07em] text-[#F5F1E8]/78">
-            Check the inbox for {verifyUser.email}. Return to this window after verifying.
+            Check your inbox and spam/junk folders. Return to this window after verifying.
           </p>
           {error && <div className="home-copy-regular rounded-[0.8rem] bg-red-500/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-red-100">{error}</div>}
-          {success && <div className="home-copy-regular rounded-[0.8rem] bg-[#B7FF3C]/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-[#B7FF3C]">{success}</div>}
           <AuthPrimaryButton type="button" loading={loading} disabled={verificationComplete} onClick={handleSendVerification}>
             {loading ? "SENDING..." : verifyButtonText}
           </AuthPrimaryButton>
@@ -560,6 +579,10 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
           autoComplete={isSignup ? "new-password" : "current-password"}
           rightAction={<PasswordVisibilityButton visible={passwordVisible} onToggle={() => setPasswordVisible((value) => !value)} />}
         />
+
+        {isSignup && (
+          <AuthEmailCommsCheckbox checked={emailOptIn} onChange={setEmailOptIn} />
+        )}
 
         <AuthPrimaryButton type="submit" loading={loading}>
           {error || success || (loading ? "LOADING..." : isSignup ? "REGISTER" : "SIGN IN")}

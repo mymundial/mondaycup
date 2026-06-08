@@ -78,10 +78,10 @@ function stageLineInset(connectorCount = 1) {
 }
 
 function StageLabel({ children, connectorCount = 1 }) {
-  const inset = stageLineInset(connectorCount);
+  const showRail = Number(connectorCount || 1) > 1;
   return (
-    <div className="relative flex h-[10px] items-center justify-center text-center home-copy-bold text-[8px] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]">
-      <span aria-hidden="true" className={`absolute top-1/2 h-px -translate-y-1/2 ${PITCH_LINE_BG_CLASS}`} style={{ left: inset, right: inset }} />
+    <div className="relative flex h-[10px] items-center justify-center overflow-visible text-center home-copy-bold text-[8px] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]">
+      {showRail && <span aria-hidden="true" className={`absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 ${PITCH_LINE_BG_CLASS}`} />}
       <span className="relative z-[3] bg-[#052D1D] px-1 leading-none">{children}</span>
     </div>
   );
@@ -91,13 +91,66 @@ function RoundFixtureConnectors({ count = 1, gap = "gap-0", className = "" }) {
   const safeCount = Math.max(1, Number(count || 1));
   return (
     <div
-      className={`grid h-[8px] w-full items-stretch ${gap} ${className}`}
+      className={`grid h-[10px] w-full items-stretch ${gap} ${className}`}
       style={{ gridTemplateColumns: `repeat(${safeCount}, minmax(0, 1fr))` }}
       aria-hidden="true"
     >
       {Array.from({ length: safeCount }).map((_, index) => (
-        <span key={index} className={`mx-auto block h-full w-px ${PITCH_LINE_BG_CLASS}`} />
+        <span key={index} className={`mx-auto block h-full w-[1.5px] ${PITCH_LINE_BG_CLASS}`} />
       ))}
+    </div>
+  );
+}
+
+function railInsetStyle(count = 1, gap = "gap-0") {
+  const safeCount = Math.max(1, Number(count || 1));
+  if (safeCount <= 1) return { left: "50%", right: "50%" };
+
+  const gapPxByClass = {
+    "gap-[1px]": 1,
+    "gap-1": 4,
+    "gap-1.5": 6,
+    "gap-2": 8,
+  };
+  const gapPx = gapPxByClass[gap] ?? 0;
+  const totalGapPx = gapPx * (safeCount - 1);
+  const inset = totalGapPx
+    ? `calc((100% - ${totalGapPx}px) / ${safeCount * 2})`
+    : `${50 / safeCount}%`;
+
+  return { left: inset, right: inset };
+}
+
+function StageRail({ title, count = 1, position = "above", gap = "gap-0" }) {
+  const safeCount = Math.max(1, Number(count || 1));
+  const isAbove = position === "above";
+  const labelTopClass = isAbove ? "top-0" : "bottom-0";
+  const horizontalClass = isAbove ? "top-[5px]" : "bottom-[5px]";
+  const verticalClass = isAbove ? "top-[5px] h-[7px]" : "bottom-[5px] h-[7px]";
+  const showRail = safeCount > 1;
+  const railInset = railInsetStyle(safeCount, gap);
+
+  return (
+    <div className="relative h-[13px] w-full overflow-visible text-center home-copy-bold text-[8px] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]">
+      {showRail && (
+        <span
+          aria-hidden="true"
+          className={`pointer-events-none absolute ${horizontalClass} z-[1] block h-[1.5px] ${PITCH_LINE_BG_CLASS}`}
+          style={railInset}
+        />
+      )}
+      <div
+        className={`pointer-events-none absolute inset-0 z-[2] grid ${gap}`}
+        style={{ gridTemplateColumns: `repeat(${safeCount}, minmax(0, 1fr))` }}
+        aria-hidden="true"
+      >
+        {Array.from({ length: safeCount }).map((_, index) => (
+          <span key={`stem-cell-${index}`} className="relative block h-full min-w-0 overflow-visible">
+            <span className={`absolute left-1/2 ${verticalClass} block w-[1.5px] -translate-x-1/2 ${PITCH_LINE_BG_CLASS}`} />
+          </span>
+        ))}
+      </div>
+      <span className={`absolute left-1/2 ${labelTopClass} z-[3] -translate-x-1/2 whitespace-nowrap bg-[#052D1D] px-1 leading-none`}>{title}</span>
     </div>
   );
 }
@@ -133,20 +186,17 @@ export function GroupTable({ title, rows, qualifiedTeams = new Set(), userTeam =
 }
 
 function BracketStageBox({ title, children, className = "", titlePosition = "above", connectorCount = 1, connectorGap = "gap-0" }) {
-  const titleNode = <StageLabel connectorCount={connectorCount}>{title}</StageLabel>;
   return (
     <section className={`p-0 text-[#F5F1E8] ${className}`}>
       {titlePosition === "above" ? (
         <>
-          {titleNode}
-          <RoundFixtureConnectors count={connectorCount} gap={connectorGap} className="-mb-px -mt-[5px]" />
+          <StageRail title={title} count={connectorCount} gap={connectorGap} position="above" />
           <div>{children}</div>
         </>
       ) : (
         <>
           <div>{children}</div>
-          <RoundFixtureConnectors count={connectorCount} gap={connectorGap} className="-mt-px -mb-[5px]" />
-          {titleNode}
+          <StageRail title={title} count={connectorCount} gap={connectorGap} position="below" />
         </>
       )}
     </section>
@@ -166,8 +216,7 @@ function PodiumStageBox({ winner, runnerUp, thirdPlace }) {
 function BracketHalfBox({ title, fixtures = [], count, gap = "gap-1.5", layout = "horizontal", userTeam = null }) {
   return (
     <section className="p-0 text-[#F5F1E8]">
-      <StageLabel connectorCount={count}>{title}</StageLabel>
-      <RoundFixtureConnectors count={count} gap={gap} className="-mb-px -mt-[5px]" />
+      <StageRail title={title} count={count} gap={gap} position="above" />
       <div>
         <BracketRow count={count} fixtures={fixtures} gap={gap} layout={layout} userTeam={userTeam} />
       </div>
@@ -213,7 +262,7 @@ function CentreFixtureStageBox({ title, fixture, userTeam = null, splitThirdPlac
   return (
     <section className="mx-auto flex w-[68px] flex-col items-center justify-start text-[#F5F1E8]">
       <StageLabel connectorCount={1}>{title}</StageLabel>
-      <RoundFixtureConnectors count={1} className="-mb-px -mt-[5px]" />
+      <RoundFixtureConnectors count={1} className="-mb-[2px] -mt-[5px]" />
       <div className="flex h-[62px] w-[68px] items-center justify-center">
         <BracketFixture fixture={fixture} layout="vertical" userTeam={userTeam} featuredFlags />
       </div>
