@@ -50,10 +50,8 @@ import {
   saveCheckoutStarted,
   buildStoreEntitlements,
   saveUserShirtProfile,
-  saveUserFeedback,
 } from "./lib/firebaseUser.js";
 import ShopModal from "./components/store/ShopModal.jsx";
-import FeedbackModal from "./components/feedback/FeedbackModal.jsx";
 import {
   BEST_CAMPAIGN_SCORE_KEY,
   BEST_CAMPAIGN_SUMMARY_KEY,
@@ -83,7 +81,6 @@ import {
 import {
   ACHIEVEMENTS_KEY,
   ALL_TIME_MATCHES_DRAWN_KEY,
-  ALL_TIME_CAMPAIGNS_COMPLETED_KEY,
   ALL_TIME_MATCHES_LOST_KEY,
   ALL_TIME_MATCHES_PLAYED_KEY,
   ALL_TIME_MATCHES_WON_KEY,
@@ -112,32 +109,6 @@ runSelfTests();
 
 const waitForCheckoutConfirmation = (ms) =>
   new Promise((resolve) => window.setTimeout(resolve, ms));
-
-
-const FEEDBACK_KEY = "mondayCup.feedback";
-
-const createFeedbackState = (source = {}) => {
-  const ratings = Array.isArray(source?.ratings) ? source.ratings : [];
-  return {
-    prompt1Shown: Boolean(source?.prompt1Shown),
-    prompt2Shown: Boolean(source?.prompt2Shown),
-    hasSubmitted: Boolean(source?.hasSubmitted || ratings.length),
-    ratings,
-    lastPromptType: source?.lastPromptType || null,
-    lastPromptedAt: Number(source?.lastPromptedAt || 0),
-    lastSubmittedAt: Number(source?.lastSubmittedAt || 0),
-  };
-};
-
-const buildFeedbackPromptType = ({ feedback, campaignsCompleted, cupsWon }) => {
-  const state = createFeedbackState(feedback);
-  if (state.hasSubmitted) return null;
-  const campaigns = Number(campaignsCompleted || 0);
-  const wins = Number(cupsWon || 0);
-  if (!state.prompt1Shown && campaigns >= 3) return "prompt1";
-  if (state.prompt1Shown && !state.prompt2Shown && (wins > 0 || campaigns >= 10)) return "prompt2";
-  return null;
-};
 
 const GOLDEN_TICKET_NEXT_CAMPAIGN_KEY = "mondayCup.goldenTicketNextCampaign";
 
@@ -198,14 +169,6 @@ export default function App() {
   const [mondayCupsWon, setMondayCupsWon] = useState(() =>
     safeReadNumber(MONDAY_CUPS_WON_KEY, 0),
   );
-  const [allTimeCampaignsCompleted, setAllTimeCampaignsCompleted] = useState(() =>
-    safeReadNumber(ALL_TIME_CAMPAIGNS_COMPLETED_KEY, 0),
-  );
-  const [feedbackState, setFeedbackState] = useState(() =>
-    createFeedbackState(safeReadJson(FEEDBACK_KEY, {})),
-  );
-  const [feedbackPromptType, setFeedbackPromptType] = useState(null);
-  const [pendingFeedbackCheck, setPendingFeedbackCheck] = useState(false);
   const [allTimeGoals, setAllTimeGoals] = useState(() =>
     safeReadNumber(ALL_TIME_GOALS_KEY, 0),
   );
@@ -382,7 +345,6 @@ export default function App() {
           if (profile?.careerStats || profile?.stats) {
             const stats = profile.careerStats || profile.stats || {};
             setMondayCupsWon(Number(stats.cupsWon ?? stats.mondayCupsWon ?? 0));
-            setAllTimeCampaignsCompleted(Number(stats.campaignsCompleted ?? stats.tournamentsCompleted ?? 0));
             setAllTimeGoals(Number(stats.goalsScored ?? stats.totalGoalsScored ?? 0));
             setAllTimeShots(Number(stats.totalShots ?? stats.totalShotsTaken ?? 0));
             setAllTimeMatchesPlayed(Number(stats.matchesPlayed ?? stats.totalMatchesPlayed ?? 0));
@@ -403,11 +365,6 @@ export default function App() {
             const stickerState = profile.stickers || profile.nationStickerProgress || {};
             setNationStickerProgress(stickerState);
             safeWriteJson(NATION_STICKER_PROGRESS_KEY, stickerState);
-          }
-          if (profile?.feedback) {
-            const nextFeedback = createFeedbackState(profile.feedback);
-            setFeedbackState(nextFeedback);
-            safeWriteJson(FEEDBACK_KEY, nextFeedback);
           }
         } catch (error) {
           console.warn("User profile sync failed", error);
@@ -1205,7 +1162,6 @@ export default function App() {
       },
       careerStats: {
         cupsWon: Number(mondayCupsWon || 0),
-        campaignsCompleted: Number(allTimeCampaignsCompleted || 0),
         matchesPlayed: Number(allTimeMatchesPlayed || 0),
         matchesWon: Number(allTimeMatchesWon || 0),
         matchesDrawn: Number(allTimeMatchesDrawn || 0),
@@ -1220,7 +1176,6 @@ export default function App() {
       trophies: achievements || {},
       nationCupWins: nationCupWins || {},
       stickers: nationStickerProgress || {},
-      feedback: feedbackState || createFeedbackState({}),
       cosmeticsEquipped: activeCosmetics || {
         goldenBoot: false,
         goldenBall: false,
@@ -1251,7 +1206,6 @@ export default function App() {
     activeCosmetics,
     campaignCosmeticsUsed,
     allTeamsUnlocked,
-    allTimeCampaignsCompleted,
     allTimeGoals,
     allTimeShots,
     allTimeMatchesPlayed,
@@ -1261,7 +1215,6 @@ export default function App() {
     achievements,
     nationCupWins,
     nationStickerProgress,
-    feedbackState,
     authReady,
     bestCampaignScore,
     bestCampaignSummary,
@@ -1395,12 +1348,6 @@ export default function App() {
     }
 
     if (isTerminalLeaderboardStatus(baseResult.status)) {
-      setAllTimeCampaignsCompleted((value) => {
-        const next = Number(value || 0) + 1;
-        safeWriteNumber(ALL_TIME_CAMPAIGNS_COMPLETED_KEY, next);
-        return next;
-      });
-
       const leaderboardBestScore = Number(
         Math.max(nextScoringState.campaignPoints || 0, bestCampaignScore || 0),
       );
@@ -1519,72 +1466,6 @@ export default function App() {
       cosmeticGloveEquipped: false,
       goldenTicketUsed: false,
     });
-    setPendingFeedbackCheck(true);
-  };
-
-  useEffect(() => {
-    if (!pendingFeedbackCheck || screen !== "home") return;
-    const promptType = buildFeedbackPromptType({
-      feedback: feedbackState,
-      campaignsCompleted: allTimeCampaignsCompleted,
-      cupsWon: mondayCupsWon,
-    });
-    if (promptType) setFeedbackPromptType(promptType);
-    setPendingFeedbackCheck(false);
-  }, [pendingFeedbackCheck, screen, feedbackState, allTimeCampaignsCompleted, mondayCupsWon]);
-
-  const persistFeedbackState = (nextFeedback, ratingEntry = null) => {
-    safeWriteJson(FEEDBACK_KEY, nextFeedback);
-    setFeedbackState(nextFeedback);
-    if (hasCloudUser) {
-      saveUserFeedback(currentUser.uid, nextFeedback, ratingEntry).catch((error) => {
-        console.warn("Feedback save failed", error);
-      });
-    }
-  };
-
-  const markFeedbackPromptShown = (promptType) => {
-    const key = promptType === "prompt2" ? "prompt2Shown" : "prompt1Shown";
-    const nextFeedback = createFeedbackState({
-      ...feedbackState,
-      [key]: true,
-      lastPromptType: promptType,
-      lastPromptedAt: Date.now(),
-    });
-    persistFeedbackState(nextFeedback);
-  };
-
-  const closeFeedbackModal = () => {
-    if (feedbackPromptType) markFeedbackPromptShown(feedbackPromptType);
-    setFeedbackPromptType(null);
-  };
-
-  const submitFeedback = ({ rating, comment, promptType }) => {
-    const safeRating = Math.max(1, Math.min(5, Math.round(Number(rating || 0))));
-    if (!safeRating) return;
-    const createdAt = Date.now();
-    const entry = {
-      id: `${createdAt}-${safeRating}`,
-      stars: safeRating,
-      rating: safeRating,
-      comment: String(comment || "").trim().slice(0, 280),
-      promptType: promptType || feedbackPromptType || "prompt1",
-      campaignsCompleted: Number(allTimeCampaignsCompleted || 0),
-      cupsWon: Number(mondayCupsWon || 0),
-      createdAt,
-    };
-    const key = entry.promptType === "prompt2" ? "prompt2Shown" : "prompt1Shown";
-    const nextFeedback = createFeedbackState({
-      ...feedbackState,
-      [key]: true,
-      hasSubmitted: true,
-      lastPromptType: entry.promptType,
-      lastPromptedAt: feedbackState?.lastPromptedAt || createdAt,
-      lastSubmittedAt: createdAt,
-      latestRating: entry,
-      ratings: [...(feedbackState?.ratings || []), entry].slice(-10),
-    });
-    persistFeedbackState(nextFeedback, entry);
   };
   const handleResumeCampaign = async () => {
     const snapshot = hasCloudUser
@@ -2542,21 +2423,11 @@ export default function App() {
     />
   );
 
-  const feedbackModalElement = (
-    <FeedbackModal
-      open={Boolean(feedbackPromptType) && screen === "home"}
-      promptType={feedbackPromptType || "prompt1"}
-      onSubmit={submitFeedback}
-      onDismiss={closeFeedbackModal}
-    />
-  );
-
   const withShop = (content) => (
     <>
       {content}
       {shopModalElement}
       {shirtShareModalElement}
-      {feedbackModalElement}
     </>
   );
 

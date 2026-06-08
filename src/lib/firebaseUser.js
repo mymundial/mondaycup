@@ -547,31 +547,6 @@ const normaliseCareerStats = (stats = {}, legacy = {}) => {
   };
 };
 
-
-const normaliseFeedback = (feedback = {}) => {
-  const source = feedback && typeof feedback === "object" ? feedback : {};
-  const ratings = Array.isArray(source.ratings) ? source.ratings.slice(-10).map((item) => ({
-    id: String(item?.id || item?.createdAt || Date.now()),
-    stars: number(item?.stars ?? item?.rating, 0),
-    rating: number(item?.rating ?? item?.stars, 0),
-    comment: String(item?.comment || "").slice(0, 280),
-    promptType: item?.promptType || "prompt1",
-    campaignsCompleted: number(item?.campaignsCompleted, 0),
-    cupsWon: number(item?.cupsWon, 0),
-    createdAt: item?.createdAt || Date.now(),
-  })).filter((item) => item.rating >= 1 && item.rating <= 5) : [];
-  return {
-    prompt1Shown: Boolean(source.prompt1Shown),
-    prompt2Shown: Boolean(source.prompt2Shown),
-    hasSubmitted: Boolean(source.hasSubmitted || ratings.length),
-    ratings,
-    latestRating: source.latestRating || ratings[ratings.length - 1] || null,
-    lastPromptType: source.lastPromptType || null,
-    lastPromptedAt: source.lastPromptedAt || null,
-    lastSubmittedAt: source.lastSubmittedAt || null,
-  };
-};
-
 const careerStatsUiAliases = (careerStats = {}) => ({
   ...careerStats,
   totalMatchesPlayed: careerStats.matchesPlayed,
@@ -596,7 +571,7 @@ const careerStatsUiAliases = (careerStats = {}) => ({
   gameScore: careerStats.highScore,
 });
 
-const buildUiProfileAliases = ({ profile, shirt, currentCampaign, bestCampaign, careerStats, trophies, stickers, nationCupWins, upgradesPurchased, cosmeticsEquipped, consumables, feedback }) => {
+const buildUiProfileAliases = ({ profile, shirt, currentCampaign, bestCampaign, careerStats, trophies, stickers, nationCupWins, upgradesPurchased, cosmeticsEquipped, consumables }) => {
   const legacyShirt = toLegacyShirt(shirt);
   const uiCareerStats = careerStatsUiAliases(careerStats);
   const achievements = buildUiAchievements(trophies);
@@ -661,7 +636,6 @@ const buildUiProfileAliases = ({ profile, shirt, currentCampaign, bestCampaign, 
       goldenTicketQuantity: normaliseTicketQuantity(consumables.goldenTicket?.quantity),
     },
     consumables,
-    feedback,
     shirt,
     userShirt: legacyShirt,
     shareShirt: legacyShirt,
@@ -698,7 +672,6 @@ const buildCanonicalProfile = (user, username = "Player", extra = {}) => {
   const trophies = normaliseTrophies(extra.trophies, extra.achievements);
   const stickers = normaliseStickers(extra.stickers || extra.nationStickerProgress);
   const shirt = normaliseShirt(extra.shirt || extra.userShirt || extra.shareShirt, profile.username);
-  const feedback = normaliseFeedback(extra.feedback);
   return {
     profile,
     shirt,
@@ -711,7 +684,6 @@ const buildCanonicalProfile = (user, username = "Player", extra = {}) => {
     trophies,
     stickers,
     nationCupWins: normaliseNationCupWins(extra.nationCupWins),
-    feedback,
     updatedAt: serverTimestamp(),
   };
 };
@@ -826,9 +798,6 @@ const canonicaliseProfileUpdate = (data = {}) => {
   if (hasOwn(data, "nationCupWins")) {
     update.nationCupWins = normaliseNationCupWins(data.nationCupWins);
   }
-  if (hasOwn(data, "feedback")) {
-    update.feedback = normaliseFeedback(data.feedback);
-  }
 
   Object.keys(update).forEach((key) => update[key] === undefined && delete update[key]);
   return update;
@@ -852,7 +821,6 @@ const canonicalFromFirestore = (uid, data = {}) => {
     trophies: normaliseTrophies(data.trophies, data.achievements),
     stickers: normaliseStickers(data.stickers || data.nationStickerProgress),
     nationCupWins: normaliseNationCupWins(data.nationCupWins),
-    feedback: normaliseFeedback(data.feedback),
     updatedAt: serverTimestamp(),
   };
   return canonical;
@@ -1195,17 +1163,6 @@ export async function reserveUsername(uid, username) {
     uid,
     username: clean.toUpperCase(),
     createdAt: serverTimestamp(),
-  }, { merge: true });
-}
-
-export async function saveUserFeedback(uid, feedback = {}, latestRating = null) {
-  if (!uid || !db) return;
-  const nextFeedback = normaliseFeedback(feedback);
-  const latest = latestRating ? normaliseFeedback({ ratings: [latestRating] }).ratings[0] || null : nextFeedback.latestRating || null;
-  await setDoc(doc(db, "users", uid), {
-    feedback: nextFeedback,
-    ...(latest ? { feedbackLatest: latest } : {}),
-    updatedAt: serverTimestamp(),
   }, { merge: true });
 }
 

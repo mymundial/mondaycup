@@ -28,7 +28,7 @@ export function AppDrawer({
 }) {
   if (drawer === "groups") {
     return (
-      <DrawerShell title="STANDINGS">
+      <DrawerShell>
         <GroupsScreen
           allGroups={allGroups}
           qualifiers={qualifiers}
@@ -46,7 +46,7 @@ export function AppDrawer({
 
   if (drawer === "clubhouse") {
     return (
-      <DrawerShell title="CLUBHOUSE">
+      <DrawerShell>
         <ClubhouseScreen
           menuProps={menuProps}
           team={userTeam}
@@ -81,7 +81,7 @@ export function AppDrawer({
 
   if (drawer === "trophyCabinet") {
     return (
-      <DrawerShell title="TROPHIES">
+      <DrawerShell>
         <TrophyCabinetScreen
           menuProps={menuProps}
           achievements={trophies.achievements}
@@ -98,7 +98,7 @@ export function AppDrawer({
 
   if (drawer === "leaderboard") {
     return (
-      <DrawerShell title="LEADERBOARD">
+      <DrawerShell>
         <LeaderboardScreen
           menuProps={menuProps}
           rows={leaderboard.rows}
@@ -115,7 +115,7 @@ export function AppDrawer({
 
   if (drawer === "fixtures") {
     return (
-      <DrawerShell title="SCHEDULE">
+      <DrawerShell>
         <FixturesScreen
           fixtureView={fixtureView}
           onFixtureViewChange={onFixtureViewChange}

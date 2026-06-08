@@ -53,7 +53,7 @@ export default function AppFooter({ fixed = false, className = '' }) {
           aria-hidden="true"
         />
         <div
-          className="relative h-full w-full overflow-hidden border-t border-[#F5F1E8]/28 shadow-[0_-18px_34px_rgba(3,27,18,0.42),0_-4px_12px_rgba(3,27,18,0.30)] mc-full-bleed-bg mc-fixed-app-mows"
+          className="relative h-full w-full overflow-hidden border-t border-[#F5F1E8]/28 shadow-[0_-18px_34px_rgba(3,27,18,0.42),0_-4px_12px_rgba(3,27,18,0.30)]"
           style={pagePitchMowBackground}
         >
           <span
