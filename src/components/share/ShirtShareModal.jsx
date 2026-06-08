@@ -637,7 +637,7 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
   const handleShare = () => withBusy("sharing", async () => {
     const blob = await makeBlob();
     try {
-      await shareNativeImage(blob, "monday-cup-shirt.png", { title: "Monday Cup Shirt", text: "My Monday Cup shirt" });
+      await shareNativeImage(blob, "monday-cup-shirt.png", { title: "Monday Cup Shirt", text: "👕 Designed my Monday Cup shirt.\n\nNow it\'s time to wear it on the pitch.\n\n⚽ mondaycup.co.uk" });
     } catch (error) {
       console.warn("Native shirt share unavailable, falling back", error);
       await shareOrDownloadResult({ blob, filename: "monday-cup-shirt.png" });
