@@ -654,22 +654,17 @@ export function MenuDropdown({
                   ))}
                 </div>
 
-                <div className="pt-1">
-                <MenuTile
-                  title={authLabel}
-                  variant="auth"
-                  iconType="auth"
-                  onClick={() => {
-                    if (canSignOut) runAndClose(onSignOut, onClose);
-                    else openAuthPanel();
-                  }}
-                />
-                <MenuTile
-                  title="RESET"
-                  variant="danger"
-                  iconType="reset"
+              </div>
+
+              <div className="mt-3 flex justify-center">
+                <button
+                  type="button"
                   onClick={() => runAndClose(onRestart, onClose)}
-                />
+                  className="home-copy-bold inline-flex items-center justify-center gap-2 rounded-[0.9rem] border border-[#B94135]/45 bg-[#B94135]/10 px-4 py-2 text-[12px] uppercase tracking-[0.1em] text-[#F5F1E8]"
+                >
+                  <MenuActionIcon type="reset" className="h-5 w-5" />
+                  RESET
+                </button>
               </div>
             </>
           )}
