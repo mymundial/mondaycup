@@ -98,22 +98,27 @@ function StarIcon({ className = "" }) {
   );
 }
 
-function MenuActionIcon({ type = "default", className = "h-6 w-6" }) {
+function MenuActionIcon({ type = "default", className = "h-9 w-9" }) {
   const common = {
     fill: "none",
     stroke: "currentColor",
-    strokeWidth: 1.55,
+    strokeWidth: 2,
     strokeLinecap: "round",
     strokeLinejoin: "round",
     "aria-hidden": "true",
   };
+
   if (type === "onMatch") {
     return (
       <svg viewBox="0 0 24 24" className={className} {...common}>
-        <circle cx="12" cy="12" r="9.1" />
-        <path d="M12 6.7l3.2 2.3-1.2 3.8h-4L8.8 9z" />
-        <path d="M12 6.7V3M15.2 9l3.4-1.1M14 12.8l2.2 3.1M10 12.8l-2.2 3.1M8.8 9 5.4 7.9" />
-        <path d="M7.8 15.9 5 17.7M16.2 15.9l2.8 1.8M9.9 19h4.2" />
+        <circle cx="12" cy="12" r="8.7" />
+        <path d="M12 7.1l4 2.9-1.55 4.75h-4.9L8 10z" />
+        <path d="M12 7.1V3.3" />
+        <path d="M16 10l3.35-1.15" />
+        <path d="M14.45 14.75l2.1 2.95" />
+        <path d="M9.55 14.75l-2.1 2.95" />
+        <path d="M8 10 4.65 8.85" />
+        <path d="M7.45 17.7c1.25 1.05 2.82 1.65 4.55 1.65s3.3-.6 4.55-1.65" />
       </svg>
     );
   }
@@ -121,16 +126,7 @@ function MenuActionIcon({ type = "default", className = "h-6 w-6" }) {
     return <svg viewBox="0 0 24 24" className={className} {...common}><rect x="4" y="5" width="16" height="15" rx="2.6" /><path d="M8 3.8v3M16 3.8v3M4.8 9.2h14.4M8 13h3M13.5 13H16M8 16.5h3M13.5 16.5H16" /></svg>;
   }
   if (type === "onGroups") {
-    return (
-      <svg viewBox="0 0 24 24" className={className} {...common}>
-        <path d="M5 5.5h4.6M5 10.5h4.6M5 13.5h4.6M5 18.5h4.6" />
-        <path d="M9.6 5.5h2.4c1.15 0 2 .85 2 2v3c0 1.15.85 2 2 2h3" />
-        <path d="M9.6 10.5H12c1.15 0 2-.85 2-2" />
-        <path d="M9.6 18.5H12c1.15 0 2-.85 2-2v-2c0-1.15.85-2 2-2" />
-        <path d="M9.6 13.5H12c1.15 0 2 .85 2 2" />
-        <path d="M18.7 12.5h.3" />
-      </svg>
-    );
+    return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M5 5.5h4.5v4H5zM5 14.5h4.5v4H5zM14.5 10h4.5v4h-4.5z" /><path d="M9.5 7.5h2.2c1.2 0 1.8.6 1.8 1.8v.7M9.5 16.5h2.2c1.2 0 1.8-.6 1.8-1.8V14M13.5 12h1" /></svg>;
   }
   if (type === "onClubhouse") {
     return <svg viewBox="0 0 24 24" className={className} {...common}><path d="M4.5 20V9.5L12 4l7.5 5.5V20" /><path d="M8.5 20v-6.3h7V20M9 10.5h6" /></svg>;
@@ -179,7 +175,7 @@ function MenuTile({ title, onClick, variant = "primary", iconType = "default", f
             : "border-[#F5F1E8]/70 bg-[#F5F1E8]/10 text-[#F5F1E8]"
         }`}
       >
-        <MenuActionIcon type={iconType} className="h-[18px] w-[18px]" />
+        <MenuActionIcon type={iconType} className="h-5 w-5" />
         <span className="text-[14px] uppercase tracking-[0.1em]">{title}</span>
       </button>
     );
@@ -195,8 +191,8 @@ function MenuTile({ title, onClick, variant = "primary", iconType = "default", f
           : "bg-[#F7D117] text-[#052D1D] shadow-[0_10px_22px_rgba(0,0,0,0.20),inset_0_2px_0_rgba(255,255,255,0.30)]"
       } ${featured ? "scale-[1.04] shadow-[0_13px_26px_rgba(0,0,0,0.24),0_0_18px_rgba(247,209,23,0.20)]" : ""}`}
     >
-      <MenuActionIcon type={iconType} className="h-6 w-6" />
-      <span className="mt-2.5 text-center home-copy-bold text-[11px] uppercase leading-none tracking-[0.075em]">{title}</span>
+      <MenuActionIcon type={iconType} className="h-9 w-9" />
+      <span className="mt-3 text-center home-copy-bold text-[11px] uppercase leading-none tracking-[0.075em]">{title}</span>
     </button>
   );
 }
