@@ -705,10 +705,11 @@ export function ShirtPosterPreview({
   const brothersWidth = Math.max(8, Math.min(26, 14 * Number(shirtBrothersScale || 0.65)));
   const nameStrokeWidth = clampNumber(shirtOutlineWeight, 0, 16, 0);
   const numberManualStrokeWidth = clampNumber(shirtNumberOutlineWeight ?? shirtOutlineWeight, 0, 16, 0);
+  const numberSvgStrokeWidth = numberManualStrokeWidth * 10;
   const stroke = shirtOutlineEnabled ? textStroke(nameStrokeWidth, shirtOutlineColour) : "0 transparent";
   const numberStrokeEnabled = fabricTheme.numberOutlineEnabled || shirtNumberOutlineEnabled;
   const numberStrokeColour = fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineColour : shirtOutlineColour;
-  const numberStrokeWidth = fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineWidth : (shirtNumberOutlineEnabled ? numberManualStrokeWidth : 0);
+  const numberStrokeWidth = fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineWidth : (shirtNumberOutlineEnabled ? numberSvgStrokeWidth : 0);
   const shirtFontFamily = fontFamilyFor(shirtFontType);
   const numberText = String(shirtNumber || "99").slice(0, 2);
   const doubleNumberSpacing = numberText.length > 1 ? "-0.032em" : "0em";

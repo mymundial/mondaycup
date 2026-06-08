@@ -309,7 +309,7 @@ export async function createShirtPosterBlob({
         strokeColour: fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineColour : (numberOutlineEnabled ? outlineColour : null),
         // Match the SVG preview: outline width lives in the 1000px number viewBox,
         // not the 318px poster composition scale.
-        strokeWidth: fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineWidth * viewBoxScale : (numberOutlineEnabled ? Math.max(0, Number(numberOutlineWeight ?? outlineWeight ?? 0)) * viewBoxScale : 0),
+        strokeWidth: fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineWidth * viewBoxScale : (numberOutlineEnabled ? Math.max(0, Number(numberOutlineWeight ?? outlineWeight ?? 0)) * scale * 3 : 0),
         shadow: true,
         shadowColour: "rgba(0,0,0,0.12)",
         shadowOffsetY: 7 * scale,
@@ -424,6 +424,7 @@ function ExportButton({ icon, label, onClick, disabled, primary = false, busy = 
 }
 
 const editorFieldClass = "h-10 min-w-0 rounded-[13px] border border-[#F5F1E8]/18 bg-[#051A11]/62 px-2.5 text-center home-copy-bold text-[12px] font-black uppercase tracking-[0.06em] text-[#F5F1E8] outline-none focus:border-[#F7D117]/70";
+const editorPanelClass = "mt-2.5 grid h-[96px] items-center gap-2.5 rounded-[18px] border border-[#F5F1E8]/10 bg-[#031B12]/24 p-2.5";
 
 function EditorLabel({ label, children }) {
   return (
@@ -716,9 +717,9 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
             />
           </div>
 
-          <div className="mt-2.5 grid gap-2.5 rounded-[18px] border border-[#F5F1E8]/10 bg-[#031B12]/24 p-2.5">
+          <div className={editorPanelClass}>
             {activePanel === "personalisation" && (
-              <div className="grid grid-cols-[minmax(0,1fr)_76px] gap-2.5">
+              <div className="grid w-full grid-cols-[minmax(0,1fr)_76px] items-end gap-2.5">
                 <EditorLabel label="Name">
                   <input value={name} onChange={(event) => setName(cleanName(event.target.value, ""))} className={editorFieldClass} />
                 </EditorLabel>
@@ -729,7 +730,7 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
             )}
 
             {activePanel === "fabric" && (
-              <div className="grid grid-cols-[minmax(0,1fr)_76px] items-end gap-2.5">
+              <div className="grid w-full grid-cols-[minmax(0,1fr)_76px] items-end gap-2.5">
                 <PatternSelector value={patternMode} onChange={setPatternMode} />
                 <OutlineToggle
                   checked={safeNameOutlineWidth > 0 || safeNumberOutlineWidth > 0}
@@ -742,7 +743,7 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
             )}
 
             {activePanel === "print" && (
-              <div className="grid grid-cols-5 gap-1.5">
+              <div className="grid w-full grid-cols-5 items-end gap-1.5">
                 <ColourField label="BG" value={shirtBackground} onChange={setCustomBg} />
                 <ColourField label="Pattern" value={patternColour} onChange={setPatternColour} />
                 <ColourField label="Name" value={shirtTextColour} onChange={setTextColour} />
