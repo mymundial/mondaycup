@@ -160,7 +160,7 @@ function MenuTile({ title, onClick, variant = "primary", iconType = "default", f
       <button
         type="button"
         onClick={onClick}
-        className={`flex min-h-[96px] w-full items-center justify-center gap-4 rounded-[1.5rem] px-5 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition active:scale-[0.99] ${cardClass}`}
+        className={`flex min-h-[150px] w-full items-center justify-center gap-4 rounded-[1.5rem] px-5 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition active:scale-[0.99] ${cardClass}`}
       >
         <span className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[#F7D117] text-[#052D1D]">
           <MenuActionIcon type={iconType} className="h-8 w-8" />
@@ -636,15 +636,10 @@ export function MenuDropdown({
               <MenuHeader title="MENU" onClose={onClose} />
 
               <div className="space-y-3 rounded-[1.25rem] border border-[#F5F1E8]/12 bg-[#031B12]/24 p-3">
-                <MenuTile
-                  title="MATCH"
-                  featured
+                <div className="grid grid-cols-3 gap-3 items-start"><MenuTile title="SCHEDULE" iconType="onFixtures" onClick={() => runAndClose(onFixtures, onClose)} /> <MenuTile title="MATCH" featured
                   iconType="onMatch"
                   onClick={() => runAndClose(onMatch, onClose)}
-                />
-
-                <div className="grid grid-cols-3 gap-3">
-                  {MENU_ITEMS.filter((item) => item.action !== "onMatch").map((item) => (
+                 onClick={() => runAndClose(onMatch, onClose)} /> <MenuTile title="STANDINGS" iconType="onGroups" onClick={() => runAndClose(onGroups, onClose)} /></div><div className="grid grid-cols-3 gap-3">{MENU_ITEMS.filter((item) => !["onMatch","onFixtures","onGroups"].includes(item.action)).map((item) => (
                     <MenuTile
                       key={item.title}
                       title={item.title}

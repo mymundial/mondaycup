@@ -220,7 +220,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
 
   function commitShot(side, direction, power, currentScore = score, currentAttempts = attempts, plannedKeeperDirection = null, accuracy = null, accuracyOutcome = null) {
     if (hasCompleted) return;
-    playSound(side === "user" ? mergedAssets.sounds.userShot : mergedAssets.sounds.opponentShot, side === "user" ? 0.9 : 0.82);
+    if(side!=="user"){playSound(mergedAssets.sounds.opponentShot,0.82);} 
     let keeperDirection = plannedKeeperDirection || (side === "user" ? keeperReadDirection(direction, Math.random) : randomDirection());
     const resolved = resolvePenalty({
       direction,
@@ -229,6 +229,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       middleBypass: false,
       accuracyOutcome,
     });
+    if(side==="user"){playSound(resolved.goal ? mergedAssets.sounds.goalSound : mergedAssets.sounds.missSound,0.9);} 
     const shotNumber = currentAttempts[side].length + 1;
     const safePower = clamp(Number(power) || 0, 0, 100);
     const safeAccuracy = accuracy === null || accuracy === undefined ? null : clamp(Number(accuracy) || 0, 0, 100);

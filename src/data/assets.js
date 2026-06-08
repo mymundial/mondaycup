@@ -1,3 +1,5 @@
+import goalMp3 from "../assets/goal.mp3";
+import missMp3 from "../assets/miss.mp3";
 const branding = {
   mondayLogo: "/assets/branding/monday-cup.png",
   mondayCupAd: "/assets/branding/mc-ad-board.png",
@@ -21,6 +23,8 @@ const game = {
 };
 
 const sounds = {
+  goalSound: goalMp3,
+  missSound: missMp3,
   userShot: "https://raw.githubusercontent.com/mymundial/mymundial/415282fcde8c537de643f76e83d168f413ee6735/shot2mon.wav",
   opponentShot: "https://raw.githubusercontent.com/mymundial/mymundial/415282fcde8c537de643f76e83d168f413ee6735/Shot5.wav",
 };
