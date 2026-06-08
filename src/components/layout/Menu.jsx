@@ -148,24 +148,23 @@ function AuthField({ icon, children }) {
 }
 
 
-function MenuTile({ title, onClick, variant = "primary", iconType = "default", featured = false }) {
-  const cardClass = {
-    primary: "bg-[#052D1D]/58 text-[#F5F1E8]",
-    auth: "bg-[#052D1D]/58 text-[#F7D117]",
-    danger: "bg-[#B94135]/10 text-[#F5F1E8]",
-  }[variant] || "bg-[#052D1D]/58 text-[#F5F1E8]";
+function MenuTile({ title, onClick, variant = "primary", iconType = "default", featured = false, wide = false }) {
+  const isDanger = variant === "danger";
+  const isAuth = variant === "auth";
 
-  if (featured) {
+  if (wide) {
     return (
       <button
         type="button"
         onClick={onClick}
-        className={`flex min-h-[150px] w-full items-center justify-center gap-4 rounded-[1.5rem] px-5 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition active:scale-[0.99] ${cardClass}`}
+        className={`home-copy-bold flex h-[58px] w-full items-center justify-center gap-3 rounded-[1.15rem] border transition active:scale-[0.99] ${
+          isAuth
+            ? "border-[#F7D117]/75 bg-[#F7D117] text-[#052D1D] shadow-[0_10px_22px_rgba(0,0,0,0.20)]"
+            : "border-[#F5F1E8]/70 bg-[#F5F1E8]/10 text-[#F5F1E8]"
+        }`}
       >
-        <span className="grid h-14 w-14 place-items-center rounded-[1rem] bg-[#F7D117] text-[#052D1D]">
-          <MenuActionIcon type={iconType} className="h-8 w-8" />
-        </span>
-        <span className="home-copy-bold text-[20px] tracking-[0.08em]">{title}</span>
+        <MenuActionIcon type={iconType} className="h-6 w-6" />
+        <span className="text-[14px] uppercase tracking-[0.1em]">{title}</span>
       </button>
     );
   }
@@ -174,12 +173,14 @@ function MenuTile({ title, onClick, variant = "primary", iconType = "default", f
     <button
       type="button"
       onClick={onClick}
-      className={`flex min-h-[132px] flex-col items-center justify-center rounded-[1.4rem] ${cardClass} shadow-[0_8px_18px_rgba(0,0,0,0.14)] transition active:scale-[0.99]`}
+      className={`flex aspect-square w-full flex-col items-center justify-center rounded-[1.15rem] transition active:scale-[0.985] ${
+        isDanger
+          ? "border border-[#B94135]/45 bg-[#B94135]/12 text-[#F5F1E8]"
+          : "bg-[#F7D117] text-[#052D1D] shadow-[0_10px_22px_rgba(0,0,0,0.20),inset_0_2px_0_rgba(255,255,255,0.30)]"
+      } ${featured ? "scale-[1.04] shadow-[0_13px_26px_rgba(0,0,0,0.24),0_0_18px_rgba(247,209,23,0.20)]" : ""}`}
     >
-      <span className="grid h-11 w-11 place-items-center rounded-[0.9rem] bg-[#F7D117] text-[#052D1D]" aria-hidden="true">
-        <MenuActionIcon type={iconType} className="h-6 w-6" />
-      </span>
-      <span className="mt-4 text-center home-copy-bold text-[12px] uppercase tracking-[0.08em]">{title}</span>
+      <MenuActionIcon type={iconType} className={featured ? "h-9 w-9" : "h-8 w-8"} />
+      <span className="mt-3 text-center home-copy-bold text-[11px] uppercase leading-none tracking-[0.075em]">{title}</span>
     </button>
   );
 }
@@ -635,20 +636,20 @@ export function MenuDropdown({
             <>
               <MenuHeader title="MENU" onClose={onClose} />
 
-              <div className="space-y-3 rounded-[1.25rem] border border-[#F5F1E8]/12 bg-[#031B12]/24 p-3">
-                <div className="grid grid-cols-3 gap-3 items-start"><MenuTile title="SCHEDULE" iconType="onFixtures" onClick={() => runAndClose(onFixtures, onClose)} /> <MenuTile title="MATCH" featured
-                  iconType="onMatch"
-                  onClick={() => runAndClose(onMatch, onClose)}
-                 onClick={() => runAndClose(onMatch, onClose)} /> <MenuTile title="STANDINGS" iconType="onGroups" onClick={() => runAndClose(onGroups, onClose)} /></div><div className="grid grid-cols-3 gap-3">{MENU_ITEMS.filter((item) => !["onMatch","onFixtures","onGroups"].includes(item.action)).map((item) => (
-                    <MenuTile
-                      key={item.title}
-                      title={item.title}
-                      iconType={item.action}
-                      onClick={() => runAndClose(handlers[item.action], onClose)}
-                    />
-                  ))}
+              <div className="space-y-3 rounded-[1.25rem] border border-[#F5F1E8]/12 bg-[#031B12]/20 p-3">
+                <div className="grid grid-cols-3 gap-3 items-center">
+                  <MenuTile title="SCHEDULE" iconType="onFixtures" onClick={() => runAndClose(onFixtures, onClose)} />
+                  <MenuTile title="MATCH" featured iconType="onMatch" onClick={() => runAndClose(onMatch, onClose)} />
+                  <MenuTile title="STANDINGS" iconType="onGroups" onClick={() => runAndClose(onGroups, onClose)} />
                 </div>
 
+                <div className="grid grid-cols-3 gap-3">
+                  <MenuTile title="CLUBHOUSE" iconType="onClubhouse" onClick={() => runAndClose(onClubhouse, onClose)} />
+                  <MenuTile title="TROPHIES" iconType="onTrophyCabinet" onClick={() => runAndClose(onTrophyCabinet, onClose)} />
+                  <MenuTile title="LEADERBOARD" iconType="onLeaderboard" onClick={() => runAndClose(onLeaderboard, onClose)} />
+                </div>
+
+                <MenuTile title={authLabel} variant="auth" iconType="auth" wide onClick={canSignOut ? () => runAndClose(onSignOut, onClose) : openAuthPanel} />
               </div>
 
               <div className="mt-3 flex justify-center">
