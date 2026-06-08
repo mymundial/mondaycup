@@ -216,3 +216,63 @@ button, input, textarea, select {
     padding: 0.24rem !important;
   }
 }
+
+/* Monday Cup full-width stadium continuation
+   These utilities let the stadium layers bleed outside the centred app column
+   while keeping the playable/menu content in the original central layout. */
+html,
+body,
+#root {
+  overflow-x: hidden;
+  background: #0d6c3d;
+}
+
+.mc-bleed-visible {
+  overflow: visible !important;
+}
+
+.mc-full-bleed-layer {
+  left: 50% !important;
+  right: auto !important;
+  width: 100vw !important;
+  transform: translateX(-50%);
+}
+
+.mc-full-bleed-bg::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset-block: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  background: inherit;
+  border-top: inherit;
+  border-bottom: inherit;
+  box-shadow: inherit;
+  pointer-events: none;
+}
+
+.mc-full-bleed-bg {
+  isolation: isolate;
+  overflow: visible !important;
+}
+
+.mc-home-crowd-bleed {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.mc-home-crowd-bleed > * {
+  position: absolute !important;
+  top: 0 !important;
+  bottom: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.mc-home-crowd-bleed > *:nth-child(1) { left: -100%; }
+.mc-home-crowd-bleed > *:nth-child(2) { left: 0; }
+.mc-home-crowd-bleed > *:nth-child(3) { left: 100%; }

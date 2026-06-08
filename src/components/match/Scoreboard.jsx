@@ -38,8 +38,8 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
   const cleanUsername = String(username || "").replace(/\s+/g, " ").trim().toUpperCase() || "GUEST";
   const crispLedStyle = { textShadow: "0 0 0.25px rgba(247,209,23,0.20)", WebkitFontSmoothing: "antialiased", filter: "none" };
   return (
-    <section data-share-scoreboard="true" className={`relative mt-0 ${heightClass} shrink-0 overflow-hidden bg-[#050505]`} style={heightStyle}>
-      <div data-share-scoreboard-main="true" className="relative overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[0_2px_8px_rgba(0,0,0,0.20)]" style={{ height: `${100 - tickerPercent}%` }}>
+    <section data-share-scoreboard="true" className={`relative mt-0 ${heightClass} shrink-0 overflow-visible bg-[#050505] mc-full-bleed-bg`} style={heightStyle}>
+      <div data-share-scoreboard-main="true" className="relative overflow-visible border-y border-[#F5F1E8]/18 bg-[#050505] mc-full-bleed-bg shadow-[0_2px_8px_rgba(0,0,0,0.20)]" style={{ height: `${100 - tickerPercent}%` }}>
         <div
           className="pointer-events-none absolute left-[2px] right-[2px] top-[2px] bottom-[2px] opacity-50"
           style={{
@@ -97,7 +97,7 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
 
       <div
         data-share-flash="true"
-        className="relative flex w-full items-center justify-center overflow-hidden px-[3%] text-center uppercase tracking-[0.085em]"
+        className="relative flex w-full items-center justify-center overflow-visible mc-full-bleed-bg px-[3%] text-center uppercase tracking-[0.085em]"
         style={{
           height: `calc(${tickerPercent}% + 1px)`,
           marginTop: "-1px",

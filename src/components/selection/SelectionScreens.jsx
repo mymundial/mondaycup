@@ -144,14 +144,19 @@ function HomeUnifiedCrowdBackdrop() {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = 8;
   const boardTop = goalLine - boardHeight;
+  const crowdProps = {
+    density: 1,
+    rowCount: 16,
+    className: "pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden",
+    style: { height: "100%" },
+  };
 
   return (
-    <SharedCrowdBackdrop
-      density={1}
-      rowCount={16}
-      className="pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden"
-      style={{ height: `${boardTop}%` }}
-    />
+    <div className="mc-home-crowd-bleed z-0" style={{ height: `${boardTop}%` }}>
+      <SharedCrowdBackdrop {...crowdProps} />
+      <SharedCrowdBackdrop {...crowdProps} />
+      <SharedCrowdBackdrop {...crowdProps} />
+    </div>
   );
 }
 
@@ -159,7 +164,7 @@ function HomeLedAdvertisingHoard() {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = SHARED_AD_BOARD_HEIGHT_PERCENT;
   return (
-    <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-hidden border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)]" style={{ bottom: `${100 - goalLine}%`, height: `${boardHeight}%` }}>
+    <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-visible border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)] mc-full-bleed-bg" style={{ bottom: `${100 - goalLine}%`, height: `${boardHeight}%` }}>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
       <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" />
@@ -184,11 +189,11 @@ function HomeGoalFrame() {
 function HomePitchBackdrop() {
   const goalLine = GAME.goal.top + GAME.goal.height;
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[#0d6c3d]">
+    <div className="absolute inset-0 overflow-visible bg-[#0d6c3d] mc-bleed-visible">
       <HomeUnifiedCrowdBackdrop />
       <HomeLedAdvertisingHoard />
-      <div className="absolute bottom-0 left-0 right-0" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
-      <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
+      <div className="absolute bottom-0 left-0 right-0 mc-full-bleed-layer" style={{ top: `${goalLine}%`, backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }} />
+      <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8] mc-full-bleed-layer" style={{ top: `${goalLine}%` }} />
       <div className="pointer-events-none absolute z-[3] rounded-b-[999px] border-b-[8px] border-l-[8px] border-r-[8px] border-[#f5f1e8]" style={{ left: "5%", top: `${goalLine}%`, width: "90%", height: "24.2%" }} />
       <HomeGoalFrame />
       <div className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f1e8]" style={{ left: `${GAME.spot.x}%`, top: `${GAME.spot.y}%` }} />
@@ -213,7 +218,7 @@ function HomeFlashTeamTicker({ scoreboardHeight, tickerHeight }) {
 
   return (
     <div
-      className="flash-team-ticker"
+      className="flash-team-ticker mc-full-bleed-bg"
       style={{
         "--flash-team-bg": theme.bg,
         "--flash-team-text": theme.text,
@@ -291,7 +296,7 @@ function BrothersTopBarTitle() {
 
 function StaticHomeTopBar() {
   return (
-    <section className="relative z-[1000] flex shrink-0 items-center justify-center overflow-visible bg-[#063B25] px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.16)]" style={{ height: MATCH_TOP_BAR_HEIGHT_PX }}>
+    <section className="relative z-[1000] flex shrink-0 items-center justify-center overflow-visible bg-[#063B25] mc-full-bleed-bg px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.16)]" style={{ height: MATCH_TOP_BAR_HEIGHT_PX }}>
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.16))]" aria-hidden="true" />
       <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 z-[1] h-10 w-10 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
       <div className="relative z-[1] flex h-full items-center justify-center"><BrothersTopBarTitle /></div>
@@ -315,7 +320,7 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, stati
   return (
     <div className="relative z-[1] shrink-0 overflow-hidden bg-transparent" style={{ height: `calc(${MATCH_TOP_BAR_HEIGHT_PX}px + ${scoreboardHeight})` }} >
       <HomeMenuBar menuProps={menuProps} staticRightLogo={staticRightLogo} />
-      <div className="relative mt-0 overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]" style={{ height: scoreboardMainHeight }}>
+      <div className="relative mt-0 overflow-visible border-y border-[#F5F1E8]/18 bg-[#050505] mc-full-bleed-bg shadow-[inset_0_1px_0_rgba(245,241,232,0.16),inset_0_-1px_0_rgba(245,241,232,0.18),0_2px_8px_rgba(0,0,0,0.22)]" style={{ height: scoreboardMainHeight }}>
         <div
           className="pointer-events-none absolute left-[2px] right-[2px] top-[2px] bottom-[2px] opacity-50"
           style={{
@@ -354,10 +359,10 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, stati
 
 function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {}, staticRightLogo = false }) {
   return (
-    <Shell visualMode="home">
-      <div className="home-main-font relative flex h-[100dvh] flex-col overflow-hidden bg-[#0d6c3d] text-[#072D1D]">
+    <Shell>
+      <div className="home-main-font relative flex h-[100dvh] flex-col overflow-visible bg-[#0d6c3d] mc-bleed-visible text-[#072D1D]">
         <ScoreboardPlaceholder allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo={staticRightLogo} />
-        <main className="relative min-h-0 flex-1 overflow-hidden">
+        <main className="relative min-h-0 flex-1 overflow-visible mc-bleed-visible">
           <HomePitchBackdrop />
           <FloatingHomeLogo />
           <HomeConfirmSlotBrothersLogo />

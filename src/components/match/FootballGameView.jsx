@@ -71,13 +71,19 @@ function CrowdBackdrop() {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = 8;
   const boardTop = goalLine - boardHeight;
+  const crowdProps = {
+    density: 1,
+    rowCount: 16,
+    className: "pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden",
+    style: { height: "100%" },
+  };
+
   return (
-    <SharedCrowdBackdrop
-      density={1}
-      rowCount={16}
-      className="pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden"
-      style={{ height: `${boardTop}%` }}
-    />
+    <div className="mc-home-crowd-bleed z-0" style={{ height: `${boardTop}%` }}>
+      <SharedCrowdBackdrop {...crowdProps} />
+      <SharedCrowdBackdrop {...crowdProps} />
+      <SharedCrowdBackdrop {...crowdProps} />
+    </div>
   );
 }
 
@@ -85,7 +91,7 @@ function LedAdvertisingHoard() {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = 8;
   return (
-    <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-hidden border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)]" style={{ bottom: `${100 - goalLine}%`, height: `${boardHeight}%` }}>
+    <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-visible border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)] mc-full-bleed-bg" style={{ bottom: `${100 - goalLine}%`, height: `${boardHeight}%` }}>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
       <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" />
@@ -154,7 +160,7 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
   const podiumBadge = getPodiumBadgeVisuals(activeBadgeMode);
   const showPodiumBadge = Boolean(podiumBadge);
   return (
-    <section className={`relative h-full flex-1 shrink overflow-hidden ${pitchMowVariant === "none" ? "bg-transparent" : "bg-[#0d6c3d]"}`}>
+    <section className={`relative h-full flex-1 shrink overflow-visible mc-bleed-visible ${pitchMowVariant === "none" ? "bg-transparent" : "bg-[#0d6c3d]"}`}>
       <CrowdBackdrop />
       {showAdBoard && <LedAdvertisingHoard />}
       {showPodiumBadge && (
@@ -180,10 +186,10 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
           />
         </div>
       )}
-      <div {...(pitchMowVariant === "none" ? {} : { "data-share-force-pitch": "true" })} className="absolute bottom-0 left-0 right-0" style={pitchMowStyleForVariant(goalLine, pitchMowVariant)} />
+      <div {...(pitchMowVariant === "none" ? {} : { "data-share-force-pitch": "true" })} className="absolute bottom-0 left-0 right-0 mc-full-bleed-layer" style={pitchMowStyleForVariant(goalLine, pitchMowVariant)} />
       {showPitchMarkings && (
         <>
-          <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${goalLine}%` }} />
+          <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8] mc-full-bleed-layer" style={{ top: `${goalLine}%` }} />
           <div
             className="pointer-events-none absolute z-[3] rounded-b-[999px] border-b-[clamp(5px,1.55vw,8px)] border-l-[clamp(5px,1.55vw,8px)] border-r-[clamp(5px,1.55vw,8px)] border-[#f5f1e8]"
             style={{ left: "5%", top: `${goalLine}%`, width: "90%", height: "24.2%" }}
