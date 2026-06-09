@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "backfill:leaderboard": "node scripts/backfill-leaderboard-public.mjs"
   },
   "dependencies": {
     "@tailwindcss/postcss": "latest",
