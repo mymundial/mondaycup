@@ -20,21 +20,88 @@ function DrawerContent({ children }) {
   return <PageScroll className="px-0 pt-0.5">{children}</PageScroll>;
 }
 
-const LEADERBOARD_GRID = "34px minmax(76px,96px) minmax(44px,0.85fr) minmax(92px,1.25fr) minmax(32px,0.55fr) minmax(56px,0.9fr)";
+const LEADERBOARD_GRID = "30px minmax(82px,1.35fr) 38px minmax(86px,1.45fr) 36px minmax(50px,0.8fr)";
+
+const COSMETIC_ALIASES = {
+  goldenBoot: ["goldenBoot", "golden_boot", "boot", "cosmetic3", "cosmeticBoot", "cosmeticBootEquipped", "goldenBootEquipped"],
+  goldenBall: ["goldenBall", "golden_ball", "ball", "cosmeticBall", "cosmeticBallEquipped", "goldenBallEquipped"],
+  goldenGlove: ["goldenGlove", "golden_glove", "glove", "cosmeticGlove", "cosmeticGloveEquipped", "goldenGloveEquipped"],
+  goldenTicket: ["goldenTicket", "golden_ticket", "ticket", "cosmetic4", "goldenTicketUsed", "usedGoldenTicket"],
+};
+
+const GENERIC_UPGRADE_FLAGS = [
+  "usedGoldenUpgrade",
+  "goldenUpgradeUsed",
+  "cosmeticsUsed",
+  "cosmeticsAppliedToCampaign",
+  "hasCosmeticsApplied",
+  "hasGoldenUpgrade",
+];
+
+function truthyCosmeticValue(value) {
+  if (Array.isArray(value)) return value.some(truthyCosmeticValue);
+  if (value && typeof value === "object") {
+    if (Object.prototype.hasOwnProperty.call(value, "active")) return truthyCosmeticValue(value.active);
+    if (Object.prototype.hasOwnProperty.call(value, "enabled")) return truthyCosmeticValue(value.enabled);
+    if (Object.prototype.hasOwnProperty.call(value, "equipped")) return truthyCosmeticValue(value.equipped);
+    if (Object.prototype.hasOwnProperty.call(value, "used")) return truthyCosmeticValue(value.used);
+    if (Object.prototype.hasOwnProperty.call(value, "quantity")) return Number(value.quantity || 0) > 0;
+    return Object.values(value).some(truthyCosmeticValue);
+  }
+  if (typeof value === "string") return !["", "false", "0", "no", "none", "off"].includes(value.trim().toLowerCase());
+  return Boolean(value);
+}
+
+function cosmeticFlagFromSource(source = {}, key) {
+  if (!source || typeof source !== "object") return false;
+  const aliases = COSMETIC_ALIASES[key] || [key];
+  return aliases.some((alias) => truthyCosmeticValue(source[alias]));
+}
+
+function genericUpgradeFlagFromSource(source = {}) {
+  if (!source || typeof source !== "object") return false;
+  return GENERIC_UPGRADE_FLAGS.some((key) => truthyCosmeticValue(source[key]));
+}
 
 function leaderboardCosmetics(row = {}) {
-  const applied = row.cosmeticsApplied || row.bestCampaign?.cosmeticsApplied || row.bestCampaign || {};
+  const bestCampaign = row.bestCampaign && typeof row.bestCampaign === "object" ? row.bestCampaign : {};
+  // Only filter scores when an upgrade/cosmetic was actually applied to that run.
+  // Do not treat owned shop items/entitlements as "used", otherwise the clean
+  // leaderboard can incorrectly hide every published row.
+  const sources = [
+    row,
+    row.cosmeticsApplied,
+    row.activeCosmetics,
+    row.upgradesApplied,
+    row.upgradesUsed,
+    row.usedUpgrades,
+    bestCampaign,
+    bestCampaign.cosmeticsApplied,
+    bestCampaign.activeCosmetics,
+    bestCampaign.upgradesApplied,
+    bestCampaign.upgradesUsed,
+    bestCampaign.usedUpgrades,
+  ].filter((source) => source && typeof source === "object");
+
   return {
-    goldenBoot: Boolean(applied.goldenBoot || applied.cosmetic3),
-    goldenBall: Boolean(applied.goldenBall || applied.cosmeticBallEquipped),
-    goldenGlove: Boolean(applied.goldenGlove || applied.cosmeticGloveEquipped),
-    goldenTicket: Boolean(applied.goldenTicket || applied.cosmetic4 || applied.goldenTicketUsed),
+    goldenBoot: sources.some((source) => cosmeticFlagFromSource(source, "goldenBoot")),
+    goldenBall: sources.some((source) => cosmeticFlagFromSource(source, "goldenBall")),
+    goldenGlove: sources.some((source) => cosmeticFlagFromSource(source, "goldenGlove")),
+    goldenTicket: sources.some((source) => cosmeticFlagFromSource(source, "goldenTicket")),
   };
 }
 
 function leaderboardUsedUpgrade(row = {}) {
   const cosmetics = leaderboardCosmetics(row);
-  return Boolean(cosmetics.goldenBoot || cosmetics.goldenBall || cosmetics.goldenGlove || cosmetics.goldenTicket);
+  const bestCampaign = row.bestCampaign && typeof row.bestCampaign === "object" ? row.bestCampaign : {};
+  return Boolean(
+    cosmetics.goldenBoot ||
+    cosmetics.goldenBall ||
+    cosmetics.goldenGlove ||
+    cosmetics.goldenTicket ||
+    genericUpgradeFlagFromSource(row) ||
+    genericUpgradeFlagFromSource(bestCampaign)
+  );
 }
 
 function leaderboardForm(row = {}) {
@@ -43,10 +110,24 @@ function leaderboardForm(row = {}) {
 }
 
 function leaderboardFinishStatus(row = {}) {
-  const raw = String(row.status || row.finish || row.finalPosition || row.bestCampaign?.status || row.bestCampaign?.finalPosition || row.bestCampaign?.roundLabel || row.bestCampaign?.stage || "").toLowerCase();
+  const raw = String(
+    row.podium ||
+    row.finalPosition ||
+    row.bestCampaign?.podium ||
+    row.status ||
+    row.finish ||
+    row.bestCampaign?.finalPosition ||
+    row.bestCampaign?.status ||
+    row.bestCampaign?.finish ||
+    row.bestCampaign?.round ||
+    row.bestCampaign?.phase ||
+    row.bestCampaign?.roundLabel ||
+    row.bestCampaign?.stage ||
+    ""
+  ).toLowerCase();
   if (raw.includes("champion")) return "champion";
-  if (raw.includes("runner")) return "runnerUp";
-  if (raw.includes("third")) return "thirdPlace";
+  if (raw.includes("runner") || raw.includes("second")) return "runnerUp";
+  if (raw.includes("third") || raw.includes("bronze")) return "thirdPlace";
   return null;
 }
 
@@ -100,17 +181,17 @@ function LeaderboardFormGuide({ form = [], isUser = false }) {
 function LeaderboardFilterSlider({ cleanOnly, onToggle }) {
   return (
     <PageTabs
-      value={cleanOnly ? "clean" : "all"}
+      value={cleanOnly ? "clean" : "golden"}
       onChange={(nextValue) => {
         const nextCleanOnly = nextValue === "clean";
         if (nextCleanOnly !== cleanOnly) onToggle?.();
       }}
-      ariaLabel="Toggle clean leaderboard"
+      ariaLabel="Toggle leaderboard score type"
       size="icon"
       className="mb-1.5"
       options={[
-        { value: "clean", label: "Clean", ariaLabel: "Clean leaderboard", iconSrc: "/assets/game/ball1.png" },
-        { value: "all", label: "All", ariaLabel: "All scores", iconSrc: "/assets/game/golden-ball.png" },
+        { value: "clean", label: "Clean", ariaLabel: "Scores without golden upgrades", iconSrc: "/assets/game/ball1.png" },
+        { value: "golden", label: "Golden", ariaLabel: "Scores with golden upgrades", iconSrc: "/assets/game/golden-ball.png" },
       ]}
     />
   );
@@ -126,7 +207,7 @@ function LeaderboardFlag({ team, isUser = false }) {
 function LeaderboardHeader() {
   return (
     <div
-      className="grid items-center gap-0 px-3 pb-1.5 text-center home-copy-bold text-[7px] uppercase leading-none tracking-[0.11em] text-[#F5F1E8]"
+      className="grid items-center gap-[4px] px-2.5 pb-1.5 text-center home-copy-bold text-[7px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]"
       style={{ gridTemplateColumns: LEADERBOARD_GRID }}
     >
       <span className="justify-self-center text-center">Rank</span>
@@ -142,7 +223,7 @@ function LeaderboardHeader() {
 function leaderboardPodiumRowClass(rank) {
   const numericRank = Number(rank);
   const baseRowClass = "bg-[#052D1D]/68 text-[#F5F1E8]";
-  if (numericRank === 1) return `${baseRowClass} border-[#D8B62F]/80 ring-1 ring-[#F7D117]/32`;
+  if (numericRank === 1) return `${baseRowClass} border-[#B98224]/88 ring-1 ring-[#D99A2B]/26`;
   if (numericRank === 2) return `${baseRowClass} border-[#C8C8C8]/80 ring-1 ring-[#F5F1E8]/28`;
   if (numericRank === 3) return `${baseRowClass} border-[#CD7F32]/80 ring-1 ring-[#CD7F32]/30`;
   return "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-1 ring-[#F5F1E8]/10";
@@ -150,20 +231,25 @@ function leaderboardPodiumRowClass(rank) {
 
 function leaderboardPodiumTextClass(row, isUser = false) {
   const numericRank = Number(row?.rank);
-  if (numericRank === 1) return "text-[#D8B62F]";
+  if (numericRank === 1) return "text-[#D99A2B]";
   if (numericRank === 2) return "text-[#C8C8C8]";
   if (numericRank === 3) return "text-[#CD7F32]";
-  if (isUser) return "text-[#F7D117]";
-  return "text-[#F5F1E8]/66";
+  if (isUser) return "text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.38)]";
+  return "text-[#F5F1E8]";
 }
 
-function leaderboardNameTextClass(row, isUser = false) {
-  if (isUser) return "text-[#F7D117]";
+function leaderboardNameTextClass() {
   return "text-[#F5F1E8]";
 }
 
 function leaderboardScoreTextClass(row, isUser = false) {
   return "font-led text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]";
+}
+
+function displayLeaderboardUsername(username) {
+  const value = String(username || "-").toUpperCase();
+  if (value.length <= 10) return value;
+  return `${value.slice(0, 10)}…`;
 }
 
 function LeaderboardRow({ row, isUser = false }) {
@@ -172,19 +258,19 @@ function LeaderboardRow({ row, isUser = false }) {
   const isPodium = [1, 2, 3].includes(numericRank);
   const defaultRowClass = leaderboardPodiumRowClass(row.rank);
   const rowClass = isUser && !isPodium
-    ? "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-1 ring-[#F5F1E8]/10"
+    ? "border-[#F7D117]/82 bg-[#052D1D]/68 text-[#F5F1E8] ring-1 ring-[#F7D117]/34 shadow-[0_0_10px_rgba(247,209,23,0.16)]"
     : defaultRowClass;
 
   return (
     <div
-      className={`grid h-[39px] items-center gap-0 rounded-[1.05rem] border px-3 py-0 shadow-[0_6px_14px_rgba(0,0,0,0.10)] ${rowClass}`}
+      className={`grid h-[39px] items-center gap-[4px] rounded-[1.05rem] border px-2.5 py-0 shadow-[0_6px_14px_rgba(0,0,0,0.10)] ${rowClass}`}
       style={{ gridTemplateColumns: LEADERBOARD_GRID }}
     >
       <div className={`flex min-w-0 items-center justify-center text-center home-copy-bold text-[13px] leading-none ${leaderboardPodiumTextClass(row, isUser)}`}>#{row.rank || "--"}</div>
-      <div className={`flex min-w-0 items-center justify-start text-left home-copy-bold text-[13px] uppercase leading-none tracking-[0.04em] ${leaderboardNameTextClass(row, isUser)}`}>
-        <span className="block max-w-[12ch] truncate">{row.username || "-"}</span>
+      <div className="flex min-w-0 items-center justify-start text-left home-copy-bold text-[12px] uppercase leading-none tracking-[0.035em]">
+        <span className={`block max-w-none overflow-visible whitespace-nowrap rounded-[0.55rem] px-1.5 py-1 leading-none ${leaderboardNameTextClass(row)}`}>{displayLeaderboardUsername(row.username)}</span>
       </div>
-      <div className="flex min-w-0 items-center justify-center"><LeaderboardFlag team={row.team} isUser={isUser} /></div>
+      <div className="flex min-w-0 items-center justify-center"><LeaderboardFlag team={row.team} isUser={false} /></div>
       <LeaderboardFormGuide form={form} isUser={isUser} />
       <div className="flex min-w-0 items-center justify-center"><LeaderboardPodiumBadge row={row} isUser={isUser} /></div>
       <div className={`flex w-full min-w-0 items-center justify-center text-center text-[9px] leading-none tracking-[0.02em] ${leaderboardScoreTextClass(row, isUser)}`}><span className="block w-full text-center tabular-nums">{Number(row.campaignPoints || 0)}</span></div>
@@ -199,7 +285,7 @@ function ScoringTypeBox({ label, points, tone = "ivory" }) {
     green: "border-green-500/55 bg-green-500 text-[#F5F1E8]",
     bronze: "mc-metallic-bronze border-[#CD7F32]/70 text-[#072D1D]",
     silver: "mc-metallic-silver border-[#C8C8C8]/80 text-[#072D1D]",
-    gold: "mc-metallic-gold border-[#D8B62F]/80 text-[#072D1D]",
+    gold: "mc-metallic-gold border-[#B98224]/88 text-[#072D1D]",
     ivory: "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8]",
   }[tone] || "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8]";
 
@@ -328,10 +414,21 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
     };
   };
   const baseRows = rows.length ? rows.map(hydrateCurrentUserLeaderboardRow) : placeholderRows;
-  const filterLeaderboardRow = (row) => !cleanLeaderboardOnly || row.isPlaceholder || row.isUserPreview || !leaderboardUsedUpgrade(row);
-  const rankedRows = [...previewUserRow, ...baseRows].filter(filterLeaderboardRow)
-    .sort((a, b) => Number(b.campaignPoints || 0) - Number(a.campaignPoints || 0))
+  const displayRowsByUser = new Map();
+  [...baseRows, ...previewUserRow].forEach((row) => {
+    const key = row.userId || row.uid || row.id || row.username;
+    if (!key) return;
+    const existing = displayRowsByUser.get(key);
+    const rowScore = Number(row.campaignPoints || row.gameScore || row.points || 0);
+    const existingScore = Number(existing?.campaignPoints || existing?.gameScore || existing?.points || 0);
+    if (!existing || rowScore >= existingScore) displayRowsByUser.set(key, row);
+  });
+  const leaderboardSourceRows = Array.from(displayRowsByUser.values())
+    .sort((a, b) => Number(b.campaignPoints || b.gameScore || b.points || 0) - Number(a.campaignPoints || a.gameScore || a.points || 0))
     .slice(0, 50)
+    .map((row, index) => ({ ...row, rank: index + 1 }));
+  const filterLeaderboardRow = (row) => row.isPlaceholder || (cleanLeaderboardOnly ? !leaderboardUsedUpgrade(row) : true);
+  const rankedRows = leaderboardSourceRows.filter(filterLeaderboardRow)
     .map((row, index) => ({ ...row, rank: index + 1 }));
 
   const visibleRows = rankedRows.length ? rankedRows : placeholderRows.map((row, index) => ({ ...row, rank: index + 1 }));
@@ -346,7 +443,7 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
   const topTenTitle = safeLeaderboardPage === 0 ? "TOP 10" : `RANK ${pageStartRank}-${pageEndRank}`;
   const previousLeaderboardPage = () => setLeaderboardPage((page) => (page <= 0 ? totalLeaderboardPages - 1 : page - 1));
   const nextLeaderboardPage = () => setLeaderboardPage((page) => (page >= totalLeaderboardPages - 1 ? 0 : page + 1));
-  const myRankRow = rankedRows.find((row) => row.isUserPreview || (currentUser?.uid && row.userId === currentUser.uid)) || {
+  const myRankRow = leaderboardSourceRows.find((row) => row.isUserPreview || (currentUser?.uid && row.userId === currentUser.uid)) || {
     id: "my-rank-empty",
     rank: "--",
     username: currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST",

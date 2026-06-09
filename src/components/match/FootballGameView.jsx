@@ -148,10 +148,10 @@ function GoalFrame({ showAim, aimDirection }) {
   );
 }
 
-export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderTeam, showAim, aimDirection, assets, stageLabel = "GROUP STAGE", showChampionsBadge = false, podiumBadgeMode = null, hideMatchActors = false, pitchMowVariant = "game", showAdBoard = true, showPitchMarkings = true }) {
+export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderTeam, showAim, aimDirection, assets, stageLabel = "GROUP STAGE", showChampionsBadge = false, podiumBadgeMode = null, hideMatchActors = false, pitchMowVariant = "game", showAdBoard = true, showPitchMarkings = true, twoPlayerMode = false }) {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const activeBadgeMode = podiumBadgeMode || (showChampionsBadge ? PODIUM_BADGE_MODE.CHAMPION : null);
-  const podiumBadge = getPodiumBadgeVisuals(activeBadgeMode);
+  const podiumBadge = getPodiumBadgeVisuals(activeBadgeMode, { useShieldBadge: twoPlayerMode });
   const showPodiumBadge = Boolean(podiumBadge);
   return (
     <section className={`relative h-full flex-1 shrink overflow-hidden ${pitchMowVariant === "none" ? "bg-transparent" : "bg-[#0d6c3d]"}`}>
@@ -175,7 +175,7 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
             src={podiumBadge.src}
             alt={podiumBadge.alt}
             className="relative z-[1] h-full w-full object-contain"
-            style={{ filter: podiumBadge.shadow }}
+            style={{ filter: podiumBadge.shadow, transform: `scale(${podiumBadge.pitchScale || 1})` }}
             draggable={false}
           />
         </div>

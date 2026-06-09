@@ -38,8 +38,9 @@ const HOME_MAIN_HEIGHT = `calc(100dvh - (${MATCH_TOP_BAR_HEIGHT_PX}px + ((100dvh
 const HOME_LOGO_TOP_RATIO = 0;
 const HOME_LOGO_TOP_PADDING = "clamp(18px,3vh,28px)";
 const HOME_LOGO_HEIGHT = "min(165px,22vh)";
-const HOME_LOGO_CENTER_Y = "17%";
+const HOME_LOGO_CENTER_Y = `${(GAME.goal.top + GAME.goal.height - SHARED_AD_BOARD_HEIGHT_PERCENT) / 2}%`;
 const HOME_LOGO_GAP = "clamp(18px,2.6vh,30px)";
+const HOME_PITCH_BADGE_SCALE = 0.43;
 const HOME_AD_BOARD_TOP_PERCENT = GAME.goal.top + GAME.goal.height - SHARED_AD_BOARD_HEIGHT_PERCENT;
 const HOME_GOAL_LINE_PERCENT = GAME.goal.top + GAME.goal.height;
 const HOME_MENU_TOP_OFFSET = `calc(${HOME_GOAL_LINE_PERCENT}% + clamp(10px,1.4vh,16px))`;
@@ -431,12 +432,20 @@ function HomeMenuShell({ children, className = "", onBack }) {
 
 function FloatingHomeLogo() {
   return (
-    <div className="pointer-events-none absolute inset-x-0 z-[20] flex justify-center" style={{ top: HOME_LOGO_CENTER_Y, transform: "translateY(-50%)" }} aria-hidden="true">
-      <div className="relative flex w-[99.825%] max-w-[92vw] items-start justify-center" style={{ height: HOME_LOGO_HEIGHT }}>
-        <div className="absolute inset-x-10 bottom-2 h-[42%] rounded-full bg-[#F7D117]/28 blur-3xl" />
-        <div className="absolute inset-x-14 bottom-3 h-[36%] rounded-full bg-[#F5F1E8]/24 blur-2xl" />
-        <img src={FLOATING_HOME_LOGO_SRC} alt="Monday Cup" className="relative z-10 h-full w-auto object-contain drop-shadow-[0_10px_24px_rgba(0,0,0,0.44)]" draggable={false} />
-      </div>
+    <div
+      className="pointer-events-none absolute left-1/2 z-[20] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
+      style={{ top: HOME_LOGO_CENTER_Y, width: "99.825%", height: "74.415%" }}
+      aria-hidden="true"
+    >
+      <div className="absolute left-1/2 top-[54%] h-[56%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/28 blur-3xl" />
+      <div className="absolute left-1/2 top-[54%] h-[38%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5F1E8]/24 blur-2xl" />
+      <img
+        src={FLOATING_HOME_LOGO_SRC}
+        alt="Monday Cup"
+        className="relative z-10 h-full w-full object-contain"
+        style={{ filter: "drop-shadow(0 10px 24px rgba(0,0,0,0.44))", transform: `scale(${HOME_PITCH_BADGE_SCALE})` }}
+        draggable={false}
+      />
     </div>
   );
 }
@@ -746,12 +755,13 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
   </div>;
 }
 
-function WelcomeBackPanel({ onResume, onNewCampaign, hasResumeCampaign = false, onMondayClub }) {
+function WelcomeBackPanel({ onResume, onNewCampaign, onTwoPlayer, hasResumeCampaign = false, onMondayClub }) {
   return <div className="space-y-3">
     <HomeMenuShell>
       <div className={`mb-3 flex min-h-[34px] items-center justify-center text-center ${MENU_TITLE_CLASS}`}>WELCOME BACK</div>
       <div className="flex flex-col gap-3">
         <ActionButton onClick={onNewCampaign} variant="yellow" size="journey">NEW CAMPAIGN</ActionButton>
+        <ActionButton onClick={onTwoPlayer} variant="yellow" size="journey">2 PLAYER</ActionButton>
         {hasResumeCampaign && <ActionButton onClick={onResume} variant="yellow" size="journey">RESUME GAME</ActionButton>}
         <ActionButton onClick={onMondayClub} variant="yellow" size="journey">MONDAY CLUB</ActionButton>
       </div>
@@ -759,11 +769,11 @@ function WelcomeBackPanel({ onResume, onNewCampaign, hasResumeCampaign = false, 
   </div>;
 }
 
-function LandingPanel({ onPlayGuest, currentUser, onOpenClubhouse, onOpenAuthPanel, onAuthComplete, onResumeCampaign, hasResumeCampaign = false }) {
+function LandingPanel({ onPlayGuest, onTwoPlayer, currentUser, onOpenClubhouse, onOpenAuthPanel, onAuthComplete, onResumeCampaign, hasResumeCampaign = false }) {
   const [authMode, setAuthMode] = useState(null);
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
   if (showWelcomeBack) {
-    return <WelcomeBackPanel onResume={onResumeCampaign} onNewCampaign={onPlayGuest} hasResumeCampaign={hasResumeCampaign} onMondayClub={() => { if (currentUser?.uid) onOpenClubhouse?.(); else if (typeof onOpenAuthPanel === "function") onOpenAuthPanel("signin", { showLogoBack: true }); else setAuthMode("signin"); }} />;
+    return <WelcomeBackPanel onResume={onResumeCampaign} onNewCampaign={onPlayGuest} onTwoPlayer={onTwoPlayer} hasResumeCampaign={hasResumeCampaign} onMondayClub={() => { if (currentUser?.uid) onOpenClubhouse?.(); else if (typeof onOpenAuthPanel === "function") onOpenAuthPanel("signin", { showLogoBack: true }); else setAuthMode("signin"); }} />;
   }
   if (authMode) return <AuthPanel mode={authMode} setMode={setAuthMode} onBack={() => setAuthMode(null)} onAuthComplete={onAuthComplete} onSignedIn={(user, meta) => { setAuthMode(null); if (meta?.isSignup) onPlayGuest?.(); else onOpenClubhouse?.(); }} />;
 
@@ -778,6 +788,7 @@ function LandingPanel({ onPlayGuest, currentUser, onOpenClubhouse, onOpenAuthPan
       <div className={`mb-3 flex min-h-[34px] items-center justify-center text-center ${MENU_TITLE_CLASS}`}>START YOUR JOURNEY</div>
       <div className="flex flex-col gap-3">
         <ActionButton onClick={onPlayGuest} variant="yellow" size="journey">NEW CAMPAIGN</ActionButton>
+        <ActionButton onClick={onTwoPlayer} variant="yellow" size="journey">2 PLAYER</ActionButton>
         {hasResumeCampaign && <ActionButton onClick={onResumeCampaign} variant="yellow" size="journey">RESUME GAME</ActionButton>}
         <ActionButton onClick={handleMondayClub} variant="yellow" size="journey">MONDAY CLUB</ActionButton>
       </div>
@@ -789,7 +800,7 @@ function getTeamGroup(teamName) {
   return GROUP_LETTERS.find((letter) => GROUPS[letter].includes(teamName)) || "A";
 }
 
-function HostPanel({ onSelectGroup, onSelectTeam, onBack, currentUser = null, onAuthComplete, allTeamsUnlocked = false, onUnlockAllTeams }) {
+function HostPanel({ onSelectGroup, onSelectTeam, onBack, currentUser = null, onAuthComplete, allTeamsUnlocked = false, onUnlockAllTeams, title = "CHOOSE YOUR TEAM", disabledTeam = null }) {
   const hostLabels = { Canada: "CAN", Mexico: "MEX", "United States": "USA" };
   const [authMode, setAuthMode] = useState(null);
 
@@ -806,16 +817,20 @@ function HostPanel({ onSelectGroup, onSelectTeam, onBack, currentUser = null, on
   }
 
   return <HomeMenuShell onBack={onBack}>
-    <div className={`mb-3 flex min-h-[34px] items-center justify-center text-center ${MENU_TITLE_CLASS}`}>CHOOSE YOUR TEAM</div>
+    <div className={`mb-3 flex min-h-[34px] items-center justify-center text-center ${MENU_TITLE_CLASS}`}><TwoPlayerTitle title={title} /></div>
     <div className="grid grid-cols-3 gap-2">
       {HOST_TEAMS.map((host) => {
         const theme = getTeamTheme(host.name);
         const label = hostLabels[host.name] || host.name.slice(0, 3).toUpperCase();
+        const isDisabled = disabledTeam === host.name;
         return (
           <button
             key={host.name}
-            onClick={() => onSelectTeam(host.name, host.group)}
-            className="relative flex h-[50px] items-center justify-center overflow-hidden rounded-[1rem] border border-[#F5F1E8]/22 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] active:scale-[0.99]"
+            type="button"
+            disabled={isDisabled}
+            aria-disabled={isDisabled}
+            onClick={() => { if (!isDisabled) onSelectTeam(host.name, host.group); }}
+            className={`relative flex h-[50px] items-center justify-center overflow-hidden rounded-[1rem] border border-[#F5F1E8]/22 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] active:scale-[0.99] ${isDisabled ? "cursor-not-allowed opacity-35 grayscale" : ""}`}
             style={{ backgroundColor: theme.bg, color: theme.text }}
           >
             <span className="home-copy-bold absolute left-[13%] top-1/2 min-w-[2.4em] -translate-y-1/2 text-left text-[clamp(12px,3vw,15px)] uppercase leading-none tracking-[0.07em]">{label}</span>
@@ -841,11 +856,26 @@ function ArrowButton({ direction, onClick }) {
   return <button onClick={onClick} className="flex h-8 w-8 items-center justify-center text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.32)] active:scale-[0.96]"><svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{direction === "left" ? <path d="M15 5L8 12L15 19" /> : <path d="M9 5L16 12L9 19" />}</svg></button>;
 }
 
-function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
+function TwoPlayerTitle({ title }) {
+  const copy = String(title || "");
+  const match = copy.match(/^(P[12])(.*)$/);
+  if (!match) return <>{copy}</>;
+  return (
+    <>
+      <span className="mr-2 inline-block text-[#F7D117]">{match[1]}</span>
+      <span>{match[2].trimStart()}</span>
+    </>
+  );
+}
+
+function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack, title = "CHOOSE YOUR TEAM", disabledTeam = null }) {
   const currentIndex = GROUP_LETTERS.indexOf(group);
   const previousGroup = () => onSelectGroup(GROUP_LETTERS[(currentIndex - 1 + GROUP_LETTERS.length) % GROUP_LETTERS.length]);
   const nextGroup = () => onSelectGroup(GROUP_LETTERS[(currentIndex + 1) % GROUP_LETTERS.length]);
   return <HomeMenuShell onBack={onBack}>
+    {title && title !== "CHOOSE YOUR TEAM" && (
+      <div className={`mb-2 flex min-h-[28px] items-center justify-center text-center ${MENU_TITLE_CLASS}`}><TwoPlayerTitle title={title} /></div>
+    )}
     <div className="mb-3 flex min-h-[34px] items-center justify-center gap-4">
       <ArrowButton direction="left" onClick={previousGroup} />
       <div className={MENU_TITLE_CLASS}>GROUP {group}</div>
@@ -854,16 +884,17 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack }) {
     <div className="grid gap-2">
       {GROUPS[group].map((name) => {
         const theme = getTeamTheme(name);
-        return <button key={name} onClick={() => onSelectTeam(name)} className="grid h-[42px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] border border-[#F5F1E8]/18 px-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] active:scale-[0.99]" style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-6 w-8 items-center justify-center overflow-hidden rounded-[0.25rem] border border-[#F5F1E8]/24 bg-[#F5F1E8]/90 shadow-[0_2px_5px_rgba(0,0,0,0.18)]"><Flag team={name} className="h-full w-full object-contain" /></span><span className="home-copy-bold truncate text-center text-[19px] uppercase tracking-[0.06em]">{name}</span><span className="home-copy-bold text-right text-[12px] tabular-nums tracking-[0.08em] opacity-65">#{TEAM_RANK[name]}</span></button>;
+        const isDisabled = disabledTeam === name;
+        return <button key={name} type="button" disabled={isDisabled} aria-disabled={isDisabled} onClick={() => { if (!isDisabled) onSelectTeam(name); }} className={`grid h-[42px] grid-cols-[40px_minmax(0,1fr)_32px] items-center gap-2 rounded-[1.15rem] border border-[#F5F1E8]/18 px-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] active:scale-[0.99] ${isDisabled ? "cursor-not-allowed opacity-35 grayscale" : ""}`} style={{ backgroundColor: theme.bg, color: theme.text }}><span className="flex h-6 w-8 items-center justify-center overflow-hidden rounded-[0.25rem] border border-[#F5F1E8]/24 bg-[#F5F1E8]/90 shadow-[0_2px_5px_rgba(0,0,0,0.18)]"><Flag team={name} className="h-full w-full object-contain" /></span><span className="home-copy-bold truncate text-center text-[19px] uppercase tracking-[0.06em]">{name}</span><span className="home-copy-bold text-right text-[12px] tabular-nums tracking-[0.08em] opacity-65">#{TEAM_RANK[name]}</span></button>;
       })}
     </div>
   </HomeMenuShell>;
 }
 
-export function HomeScreen({ onSelectGroup, onSelectTeam, onUnlockAllTeams, allTeamsUnlocked = false, currentUser = null, onOpenClubhouse, onOpenAuthPanel, onAuthComplete, onResumeCampaign, hasResumeCampaign = false, menuProps = {} }) {
+export function HomeScreen({ onSelectGroup, onSelectTeam, onTwoPlayer, onUnlockAllTeams, allTeamsUnlocked = false, currentUser = null, onOpenClubhouse, onOpenAuthPanel, onAuthComplete, onResumeCampaign, hasResumeCampaign = false, menuProps = {} }) {
   const [homeMode, setHomeMode] = useState("landing");
   if (homeMode === "hosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} currentUser={currentUser} onAuthComplete={onAuthComplete} allTeamsUnlocked={allTeamsUnlocked} onUnlockAllTeams={onUnlockAllTeams} /></HomeLayout>;
-  return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo><LandingPanel currentUser={currentUser} onOpenClubhouse={onOpenClubhouse} onOpenAuthPanel={onOpenAuthPanel} onAuthComplete={onAuthComplete} onResumeCampaign={onResumeCampaign} hasResumeCampaign={hasResumeCampaign} onPlayGuest={() => setHomeMode("hosts")} /></HomeLayout>;
+  return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo><LandingPanel currentUser={currentUser} onOpenClubhouse={onOpenClubhouse} onOpenAuthPanel={onOpenAuthPanel} onAuthComplete={onAuthComplete} onResumeCampaign={onResumeCampaign} hasResumeCampaign={hasResumeCampaign} onPlayGuest={() => setHomeMode("hosts")} onTwoPlayer={onTwoPlayer} /></HomeLayout>;
 }
 export function HostSelectScreen(props) { return <HomeLayout allTeamsUnlocked={props.allTeamsUnlocked} menuProps={props.menuProps || {}}><HostPanel {...props} /></HomeLayout>; }
-export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam, onBack, allTeamsUnlocked = false, menuProps = {} }) { return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><TeamPanel group={selectedGroup} onBack={onBack} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} /></HomeLayout>; }
+export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam, onBack, allTeamsUnlocked = false, menuProps = {}, title = "CHOOSE YOUR TEAM", disabledTeam = null }) { return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><TeamPanel group={selectedGroup} onBack={onBack} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} title={title} disabledTeam={disabledTeam} /></HomeLayout>; }

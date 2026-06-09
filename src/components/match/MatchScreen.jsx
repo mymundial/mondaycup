@@ -34,6 +34,7 @@ export function MatchScreen({
   onQuickWin,
   onMatchComplete,
   onNextMatch,
+  onChangeTeams,
   onViewBracket,
   onPlayAgain,
   onOpenTrophies,
@@ -48,6 +49,7 @@ export function MatchScreen({
   campaignId = "default",
   podium = null,
   activeCosmetics = null,
+  twoPlayerMode = false,
 }) {
   const [matchBusy, setMatchBusy] = useState(false);
   const shareCaptureRef = useRef(null);
@@ -85,6 +87,8 @@ export function MatchScreen({
             podiumBadgeMode={activeBadgeMode}
             activeCosmetics={activeCosmetics}
             username={username}
+            twoPlayerMode={twoPlayerMode}
+            stageLabelOverride={twoPlayerMode ? stageLabel : null}
           />
           {showSharedResultBadge && <ResultBadgeShareOverlay badge={resultBadge} />}
         </div>
@@ -94,6 +98,7 @@ export function MatchScreen({
             result={matchResult}
             fixture={fallbackFixture}
             onNext={onNextMatch}
+            onChangeTeams={onChangeTeams}
             onDismiss={onDismissModal}
             onOpenMenu={() => {
               menuProps?.onToggleMenu?.();
@@ -111,6 +116,8 @@ export function MatchScreen({
             shareCaptureRef={shareCaptureRef}
             podium={podium}
             username={username}
+            twoPlayerMode={twoPlayerMode}
+            stageLabelOverride={twoPlayerMode ? stageLabel : null}
           />
         )}
 

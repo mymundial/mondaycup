@@ -79,6 +79,15 @@ function CloseIcon({ className = "h-7 w-7" }) {
   );
 }
 
+
+function TickIcon({ className = "h-7 w-7" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M5.5 12.3l4.15 4.15L18.75 7.35" stroke="currentColor" strokeWidth="2.85" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function BackArrowIcon({ className = "h-7 w-7" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
@@ -774,7 +783,7 @@ function ChampionConfetti({ count = 92 }) {
   );
 }
 
-function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenTrophies, hasNewTrophy = false, groupRows, qualifiedTeams, userTeam, selectedGroup, stageLabel, userForm, shareCaptureRef, podium, username = "" }) {
+function EndMatchModal({ result, fixture, onNext, onChangeTeams, onDismiss, onOpenMenu, onOpenTrophies, hasNewTrophy = false, groupRows, qualifiedTeams, userTeam, selectedGroup, stageLabel, userForm, shareCaptureRef, podium, username = "", twoPlayerMode = false }) {
   const isKnockout = !result.week;
   const userInKnockout = result.home === userTeam || result.away === userTeam;
   const homeIsUser = result.home === userTeam;
@@ -889,13 +898,22 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
 
   const groupTitleSuffix = String(selectedGroup || result?.group || result?.groupId || "").replace(/^GROUP\s*/i, "").trim();
   const groupBoxTitle = groupTitleSuffix ? `GROUP ${groupTitleSuffix}` : "GROUP";
-  const knockoutRoundTitle = normaliseThirdPlaceCopy(modalHeaderTitle({ isKnockout: true, stageLabel, selectedGroup }));
+  const twoPlayerWinnerTitle = result?.userWon ? "PLAYER 1 WINS" : "PLAYER 2 WINS";
+  const twoPlayerWinnerTeam = twoPlayerMode ? (result?.userWon ? "home" : "away") : null;
+  const twoPlayerFixtureRingClass = twoPlayerMode
+    ? "border-[#F7D117]/82 ring-[#F7D117]/32"
+    : "border-[#F7D117]/72 ring-[#F7D117]/32";
+  const knockoutRoundTitle = twoPlayerMode
+    ? twoPlayerWinnerTitle
+    : normaliseThirdPlaceCopy(modalHeaderTitle({ isKnockout: true, stageLabel, selectedGroup }));
   const knockoutMatchNo = fixtureMatchNo;
   const rawKnockoutMatchId = String(result?.matchId || fixture?.matchId || fixture?.id || "").trim().toUpperCase();
-  const knockoutMatchLabel = knockoutMatchNo
-    ? `MATCH ${knockoutMatchNo}`
-    : rawKnockoutMatchId.replace(/^M(\d+)$/i, "MATCH $1");
-  const knockoutStadium = fixtureVenueName(knockoutMatchNo, fixture, result);
+  const knockoutMatchLabel = twoPlayerMode
+    ? "SHOOTOUT"
+    : knockoutMatchNo
+      ? `MATCH ${knockoutMatchNo}`
+      : rawKnockoutMatchId.replace(/^M(\d+)$/i, "MATCH $1");
+  const knockoutStadium = twoPlayerMode ? "mondaycup.co.uk" : fixtureVenueName(knockoutMatchNo, fixture, result);
   const headerTitle = sharePreviewOpen ? "SHARE" : phaseTitle;
   const headerTitleClass = "home-copy-bold text-center text-[clamp(20px,5.4vw,25px)] uppercase leading-none tracking-[0.1em] text-[#F5F1E8]";
   const showRewardDot = Boolean(hasNewTrophy);
@@ -903,7 +921,38 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
     event?.stopPropagation?.();
     onOpenMenu?.();
   };
-  const resultControls = (
+  const twoPlayerControlButtonClass = `${resultAdvanceButtonClass} min-w-0 justify-center px-2 text-[clamp(9px,2.45vw,11px)] tracking-[0.07em]`;
+  const resultControls = twoPlayerMode ? (
+    <div className="grid grid-cols-3 gap-2">
+      <button
+        type="button"
+        onClick={onDismiss}
+        className={twoPlayerControlButtonClass}
+        aria-label="Exit shootout"
+        title="Exit"
+      >
+        <CloseIcon className="h-5 w-5" />
+      </button>
+      <button
+        type="button"
+        onClick={onChangeTeams || onDismiss}
+        className={twoPlayerControlButtonClass}
+        aria-label="Change teams"
+        title="Change teams"
+      >
+        <span className="min-w-0 truncate">CHANGE TEAMS</span>
+      </button>
+      <button
+        type="button"
+        onClick={onNext}
+        className={twoPlayerControlButtonClass}
+        aria-label="Replay shootout"
+        title="Replay"
+      >
+        <TickIcon className="h-5 w-5" />
+      </button>
+    </div>
+  ) : (
     <div className={resultControlGridClass}>
       <button type="button" onClick={handleResultNav} className={resultSquareButtonClass} aria-label="Open menu">
         <MenuIcon />
@@ -923,6 +972,11 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
   );
   const resultButtonsPanel = (
     <div className={resultButtonsBoxClass}>
+      {twoPlayerMode && (
+        <div className="mb-2 text-center home-copy-bold text-[clamp(10px,2.7vw,12px)] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]/78">
+          REPLAY
+        </div>
+      )}
       {resultControls}
     </div>
   );
@@ -985,24 +1039,33 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
                   {isKnockout ? (
                     <div className="rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2.5 pb-1.5 pt-2.5 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
                       <div className="mb-2 text-center home-copy-bold text-[clamp(15px,4.1vw,19px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">
-                        {knockoutRoundTitle}
+                        {twoPlayerMode ? (
+                          <>
+                            <span className="text-[#F7D117]">PLAYER {result?.userWon ? "1" : "2"}</span>
+                            <span className="text-[#F5F1E8]"> WINS</span>
+                          </>
+                        ) : knockoutRoundTitle}
                       </div>
-                      <div className={`grid min-h-[70px] grid-rows-[30%_40%_30%] rounded-[1.1rem] border px-2.5 ring-1 shadow-none ${userInKnockout ? "border-[#F7D117]/72 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/32 shadow-none" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"}`}>
+                      <div className={`grid min-h-[70px] grid-rows-[30%_40%_30%] rounded-[1.1rem] border px-2.5 ring-1 shadow-none ${twoPlayerMode ? `${twoPlayerFixtureRingClass} bg-[#052D1D]/68 text-[#F5F1E8]` : userInKnockout ? "border-[#F7D117]/72 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/32 shadow-none" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10"}`}>
                         {knockoutMatchLabel && (
                           <div className="flex items-end justify-center self-stretch pb-[3px] text-center home-copy-bold text-[clamp(10px,2.8vw,12px)] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]/72">
                             {knockoutMatchLabel}
                           </div>
                         )}
                         <div className="grid min-h-0 grid-cols-[24px_minmax(0,1fr)_32px_minmax(0,1fr)_24px] items-center gap-1 self-stretch home-main-font text-[clamp(13px,3.4vw,15px)] uppercase leading-none text-[#F5F1E8]">
-                          <div className="flex items-center justify-center"><Flag team={result.home} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${homeIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
-                          <span className={`block min-w-0 truncate text-center home-copy-regular ${homeIsUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`} style={tightTeamStyle(result.home)} title={result.home}>{result.home}</span>
+                          <div className="flex items-center justify-center"><Flag team={result.home} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${twoPlayerMode ? "ring-[#F7D117]/90" : homeIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
+                          <span className={`block min-w-0 truncate text-center home-copy-regular ${twoPlayerMode ? (twoPlayerWinnerTeam === "home" ? "text-[#F7D117]" : "text-[#F5F1E8]") : homeIsUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`} style={{ ...tightTeamStyle(result.home) }} title={result.home}>{result.home}</span>
                           <span className="flex items-center justify-center home-copy-bold tabular-nums leading-none text-[#F5F1E8]">{result.homeGoals}-{result.awayGoals}</span>
-                          <span className={`block min-w-0 truncate text-center home-copy-regular ${awayIsUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`} style={tightTeamStyle(result.away)} title={result.away}>{result.away}</span>
-                          <div className="flex items-center justify-center"><Flag team={result.away} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${awayIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
+                          <span className={`block min-w-0 truncate text-center home-copy-regular ${twoPlayerMode ? (twoPlayerWinnerTeam === "away" ? "text-[#F7D117]" : "text-[#F5F1E8]") : awayIsUser ? "text-[#F7D117]" : "text-[#F5F1E8]"}`} style={{ ...tightTeamStyle(result.away) }} title={result.away}>{result.away}</span>
+                          <div className="flex items-center justify-center"><Flag team={result.away} className={`h-[18px] w-[25px] rounded-[4px] ring-1 ${twoPlayerMode ? "ring-[#F7D117]/90" : awayIsUser ? "ring-[#F7D117]/85" : "ring-[#F5F1E8]/35"}`} /></div>
                         </div>
                         {knockoutStadium && (
-                          <div className="flex items-start justify-center self-stretch pt-[3px] text-center home-copy-regular text-[clamp(10px,2.8vw,12px)] uppercase leading-none tracking-[0.14em] text-[#F5F1E8]/72">
-                            {knockoutStadium}
+                          <div className={`flex items-start justify-center self-stretch pt-[3px] text-center home-copy-regular text-[clamp(10px,2.8vw,12px)] leading-none tracking-[0.14em] ${twoPlayerMode ? "normal-case text-[#F5F1E8]/78" : "uppercase text-[#F5F1E8]/72"}`}>
+                            {twoPlayerMode ? (
+                              <span aria-label="mondaycup.co.uk">
+                                <span>monday</span><span className="text-[#F7D117]">cup</span><span>.co.uk</span>
+                              </span>
+                            ) : knockoutStadium}
                           </div>
                         )}
                       </div>
@@ -1013,7 +1076,9 @@ function EndMatchModal({ result, fixture, onNext, onDismiss, onOpenMenu, onOpenT
                     </>
                   )}
                 </div>
-                <CupRunProgressStrip matchNumber={currentCupRunMatch} form={userForm} result={result} isKnockout={isKnockout} qualifiedTeams={qualifiedTeams} userTeam={userTeam} points={campaignPointsTotal} />
+                {!twoPlayerMode && (
+                  <CupRunProgressStrip matchNumber={currentCupRunMatch} form={userForm} result={result} isKnockout={isKnockout} qualifiedTeams={qualifiedTeams} userTeam={userTeam} points={campaignPointsTotal} />
+                )}
                 {resultButtonsPanel}
               </>
             )}

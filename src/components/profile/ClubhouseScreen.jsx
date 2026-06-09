@@ -80,7 +80,7 @@ function StatTile({ label, value, highlight = false, toneClass = null }) {
 function rankMedalClass(value) {
   const rank = Number(String(value || "").replace(/[^0-9]/g, ""));
   if (rank === 1)
-    return "mc-metallic-gold border-[#D8B62F]/80 text-[#072D1D] ring-1 ring-[#F7D117]/32";
+    return "mc-metallic-gold border-[#B98224]/88 text-[#072D1D] ring-1 ring-[#D99A2B]/26";
   if (rank === 2)
     return "mc-metallic-silver border-[#C8C8C8]/80 text-[#072D1D] ring-1 ring-[#F5F1E8]/30";
   if (rank === 3)
@@ -276,7 +276,7 @@ function campaignMedalClass(summary = {}) {
     .join(" ")
     .toUpperCase();
   if (/CHAMP|WINNER|MONDAY CUP/.test(joined))
-    return "border-[#D8B62F]/82 bg-[#052D1D]/68 text-[#F5F1E8] ring-1 ring-[#F7D117]/32";
+    return "border-[#B98224]/88 bg-[#052D1D]/68 text-[#F5F1E8] ring-1 ring-[#D99A2B]/26";
   if (/RUNNER|SECOND|2ND/.test(joined))
     return "border-[#C8C8C8]/82 bg-[#052D1D]/68 text-[#F5F1E8] ring-1 ring-[#F5F1E8]/32";
   if (/THIRD|3RD/.test(joined))

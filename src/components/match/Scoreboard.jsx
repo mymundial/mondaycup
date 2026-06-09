@@ -28,7 +28,7 @@ function flashTickerFontSize() {
 }
 
 
-export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerStyle, tickerTeam = null, stageLabel, totalMarkerSlots = GAME.regulationPens, hideStageLabel = false, sharePreview = false, username = "", usernameEnabled = false }) {
+export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, tickerStyle, tickerTeam = null, stageLabel, totalMarkerSlots = GAME.regulationPens, hideStageLabel = false, sharePreview = false, username = "", usernameEnabled = false, usernameTone = "yellow" }) {
   const scoreboardHeight = `calc((100dvh - ${MC_SELECTION_LAYOUT.topBarHeight}px) * ${MC_SELECTION_LAYOUT.scoreboardRatio})`;
   const tickerPercent = MC_SELECTION_LAYOUT.tickerRatio * 100;
   const heightClass = sharePreview ? "h-[22%]" : "";
@@ -37,6 +37,7 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
   const tickerFontSize = flashTickerFontSize(tickerCopy);
   const cleanUsername = String(username || "").replace(/\s+/g, " ").trim().toUpperCase() || "GUEST";
   const crispLedStyle = { textShadow: "0 0 0.25px rgba(247,209,23,0.20)", WebkitFontSmoothing: "antialiased", filter: "none" };
+  const usernameToneColour = "#F7D117";
   return (
     <section data-share-scoreboard="true" className={`relative mt-0 ${heightClass} shrink-0 overflow-hidden bg-[#050505]`} style={heightStyle}>
       <div data-share-scoreboard-main="true" className="relative overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[0_2px_8px_rgba(0,0,0,0.20)]" style={{ height: `${100 - tickerPercent}%` }}>
@@ -84,7 +85,7 @@ export function Scoreboard({ userTeam, opponentTeam, score, attempts, ticker, ti
               <span className="flex min-h-[clamp(12px,1.65vh,17px)] items-center justify-center leading-none"><PenaltyMarkers attempts={attempts.user} totalSlots={totalMarkerSlots} /></span>
             </div>
             <div data-share-username-slot="true" className="relative z-[3] col-start-3 col-end-6 row-start-3 flex h-full items-center justify-center px-[clamp(5px,1.5vw,10px)]">
-              <div className={`${usernameEnabled ? "visible" : "invisible"} led-text-glow font-led inline-flex min-h-[clamp(17px,2.15vh,22px)] max-w-full items-center justify-center truncate whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(7px,2vw,12px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]`}>
+              <div className={`${usernameEnabled ? "visible" : "invisible"} led-text-glow font-led inline-flex min-h-[clamp(17px,2.15vh,22px)] max-w-full items-center justify-center truncate whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(7px,2vw,12px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]`} style={{ color: usernameToneColour }}>
                 <span className="flex h-full items-center justify-center leading-none">{cleanUsername || "GUEST"}</span>
               </div>
             </div>

@@ -52,7 +52,7 @@ export { MatchPitchPreview } from "./FootballGameView.jsx";
 const USER_SHOT_RESULT_DELAY_MS = 300;
 const USER_SHOT_RESULT_VOLUME = 0.5;
 
-export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction, showChampionsBadge = false, podiumBadgeMode = null, activeCosmetics: activeCosmeticsProp = null, username = "" }) {
+export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction, showChampionsBadge = false, podiumBadgeMode = null, activeCosmetics: activeCosmeticsProp = null, username = "", twoPlayerMode = false, stageLabelOverride = null }) {
   const user = useMemo(() => normaliseTeam(userTeam, "Team A"), [userTeam]);
   const opponent = useMemo(() => normaliseTeam(opponentTeam, "Team B"), [opponentTeam]);
   const storedActiveCosmetics = useMemo(() => readActiveCosmetics(), [fixture?.id, completedResult?.fixtureId, completedResult?.matchNo]);
@@ -66,7 +66,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     goalkeeper: activeCosmetics?.goldenGlove ? GOLDEN_GLOVE_SRC : (assets?.goalkeeper || DEFAULT_ASSETS.goalkeeper),
     sounds: { ...DEFAULT_ASSETS.sounds, ...(assets?.sounds || {}) },
   }), [assets, activeCosmetics]);
-  const stageLabel = stageLabelForFixture(fixture);
+  const stageLabel = stageLabelOverride || stageLabelForFixture(fixture);
 
   const [phase, setPhase] = useState(PHASE.DIRECTION);
   const [shootingSide, setShootingSide] = useState("user");
@@ -192,6 +192,21 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       setShootingSide("opponent");
       setTicker(`${opponent.name.toUpperCase()} TO SHOOT`);
       setShot(null);
+      setSelected(getDirection("CM"));
+      setLockedDirection(null);
+      setPowerValue(0);
+      powerValueRef.current = 0;
+      setPowerCharging(false);
+      setLockedPower(null);
+      setAccuracyValue(0);
+      accuracyValueRef.current = 0;
+      setAccuracyRunning(false);
+      setAccuracySweepMs(DEFAULT_ACCURACY_SWEEP_MS);
+      accuracySweepMsRef.current = DEFAULT_ACCURACY_SWEEP_MS;
+      if (twoPlayerMode) {
+        setPhase(PHASE.DIRECTION);
+        return;
+      }
       setPhase(PHASE.AI_WAIT);
       window.setTimeout(() => {
         const aiDirection = randomDirection();
@@ -224,13 +239,13 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   function commitShot(side, direction, power, currentScore = score, currentAttempts = attempts, plannedKeeperDirection = null, accuracy = null, accuracyOutcome = null) {
     if (hasCompleted) return;
 
-    if (side === "user") {
+    if (side === "user" || twoPlayerMode) {
       playSound(mergedAssets.sounds.userShot, 0.82);
     } else {
       playSound(mergedAssets.sounds.opponentShot, 0.82);
     }
 
-    let keeperDirection = plannedKeeperDirection || (side === "user" ? keeperReadDirection(direction, Math.random) : randomDirection());
+    let keeperDirection = plannedKeeperDirection || ((side === "user" || twoPlayerMode) ? keeperReadDirection(direction, Math.random) : randomDirection());
     const resolved = resolvePenalty({
       direction,
       power,
@@ -239,7 +254,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       accuracyOutcome,
     });
 
-    if (side === "user") {
+    if (side === "user" || twoPlayerMode) {
       window.setTimeout(() => {
         playSound(
           resolved.goal ? mergedAssets.sounds.goalSound : mergedAssets.sounds.missSound,
@@ -433,7 +448,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
 
     const finalPower = clamp(lockedPower ?? powerValueRef.current, 0, 100);
     const accuracyOutcome = accuracyOutcomeForValue(finalAccuracy, lockedDirection, activeCosmetics);
-    commitShot("user", lockedDirection, finalPower, score, attempts, null, finalAccuracy, accuracyOutcome);
+    commitShot(twoPlayerMode ? shootingSide : "user", lockedDirection, finalPower, score, attempts, null, finalAccuracy, accuracyOutcome);
   }
 
   useEffect(() => {
@@ -578,9 +593,9 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
           80%, 100% { background: var(--goal-bg); color: var(--goal-fg); }
         }
       `}</style>
-      <Scoreboard userTeam={user} opponentTeam={opponent} score={score} attempts={attempts} ticker={ticker} tickerStyle={tickerStyle()} tickerTeam={tickerTeam()} stageLabel={stageLabel} totalMarkerSlots={suddenDeathMarkerSlots} username={username} usernameEnabled={Boolean(username)} />
+      <Scoreboard userTeam={user} opponentTeam={opponent} score={score} attempts={attempts} ticker={ticker} tickerStyle={tickerStyle()} tickerTeam={tickerTeam()} stageLabel={stageLabel} totalMarkerSlots={suddenDeathMarkerSlots} username={twoPlayerMode ? (shootingSide === "user" ? "PLAYER 1" : "PLAYER 2") : username} usernameEnabled={twoPlayerMode || Boolean(username)} usernameTone="yellow" />
       {/* Launch build: temporary result/debug buttons hidden. */}
-      <Pitch ballPoint={ballPoint} keeperPoint={keeperPoint} shot={shot} shotActive={shotActive} activeTeam={activeTeam} defenderTeam={defenderTeam} showAim={showAim} aimDirection={aimDirection} assets={mergedAssets} stageLabel={stageLabel} showChampionsBadge={showChampionsBadge} podiumBadgeMode={podiumBadgeMode} hideMatchActors={hideMatchActors} />
+      <Pitch ballPoint={ballPoint} keeperPoint={keeperPoint} shot={shot} shotActive={shotActive} activeTeam={activeTeam} defenderTeam={defenderTeam} showAim={showAim} aimDirection={aimDirection} assets={mergedAssets} stageLabel={stageLabel} showChampionsBadge={showChampionsBadge} podiumBadgeMode={podiumBadgeMode} hideMatchActors={hideMatchActors} twoPlayerMode={twoPlayerMode} />
       <ControlOverlay
         phase={phase}
         selected={selected}
