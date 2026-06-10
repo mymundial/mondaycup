@@ -37,7 +37,7 @@ export default function AppFooter({ fixed = false, className = '', onFeedback = 
     >
       <div className="relative h-full w-full overflow-visible">
         <div
-          className="pointer-events-none fixed inset-x-0 bottom-0 z-[0] overflow-hidden border-t border-[#F5F1E8]/28 shadow-[0_-18px_34px_rgba(3,27,18,0.42),0_-4px_12px_rgba(3,27,18,0.30)]"
+          className="pointer-events-none fixed inset-x-0 bottom-0 z-[0] overflow-hidden border-t border-[#F5F1E8]/28 shadow-[0_-9px_17px_rgba(3,27,18,0.21),0_-2px_6px_rgba(3,27,18,0.15)]"
           style={{ height: `calc(${APP_FOOTER_HEIGHT_PX}px + env(safe-area-inset-bottom))`, ...pagePitchMowBackground }}
           aria-hidden="true"
         />
@@ -59,7 +59,7 @@ export default function AppFooter({ fixed = false, className = '', onFeedback = 
           aria-hidden="true"
         />
         <div
-          className="relative h-full w-full overflow-hidden border-t border-[#F5F1E8]/28 shadow-[0_-18px_34px_rgba(3,27,18,0.42),0_-4px_12px_rgba(3,27,18,0.30)]"
+          className="relative h-full w-full overflow-hidden border-t border-[#F5F1E8]/28 shadow-[0_-9px_17px_rgba(3,27,18,0.21),0_-2px_6px_rgba(3,27,18,0.15)]"
           style={pagePitchMowBackground}
         >
           <span
