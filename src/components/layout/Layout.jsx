@@ -93,8 +93,6 @@ export function FullPitchExtensionBackground({ flashStyle = null }) {
   const pitchHeight = `calc(100dvh - ${topBarHeight}px - ${scoreboardHeight})`;
   const goalLine = MC_SELECTION_LAYOUT.goalTopPercent + MC_SELECTION_LAYOUT.goalHeightPercent;
   const adBoardTop = goalLine - MC_SELECTION_LAYOUT.adBoardHeightPercent;
-  const frameLeft = `max(0px, calc(50vw - ${MC_APP_FRAME_WIDTH_PX / 2}px))`;
-  const frameRight = `max(0px, calc(50vw - ${MC_APP_FRAME_WIDTH_PX / 2}px))`;
   const goalLineTop = `calc(${pitchTop} + (${pitchHeight} * ${goalLine / 100}))`;
   const adBoardTopCss = `calc(${pitchTop} + (${pitchHeight} * ${adBoardTop / 100}))`;
   const adBoardHeightCss = `calc(${pitchHeight} * ${MC_SELECTION_LAYOUT.adBoardHeightPercent / 100})`;
@@ -111,11 +109,6 @@ export function FullPitchExtensionBackground({ flashStyle = null }) {
       <TiledCrowdBackdrop style={{ top: pitchTop, height: crowdHeightCss }} />
       <RepeatingAdBoard style={{ top: adBoardTopCss, height: adBoardHeightCss }} />
       <div className="absolute inset-x-0 bottom-0 z-[1]" style={{ top: goalLineTop, ...mcExtendedPitchMowBackground }} />
-      <div className="absolute inset-x-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: goalLineTop }} />
-      <div className="absolute bottom-0 z-[4] w-2 bg-[#f5f1e8]" style={{ left: frameLeft, top: goalLineTop }} />
-      <div className="absolute bottom-0 z-[4] w-2 bg-[#f5f1e8]" style={{ right: frameRight, top: goalLineTop }} />
-      <div className="absolute z-[4] h-[54px] w-[54px] rounded-bl-[54px] border-b-8 border-l-8 border-[#f5f1e8]" style={{ left: frameLeft, top: goalLineTop }} />
-      <div className="absolute z-[4] h-[54px] w-[54px] rounded-br-[54px] border-b-8 border-r-8 border-[#f5f1e8]" style={{ right: frameRight, top: goalLineTop }} />
       <MobileFrameSideShadows />
     </div>
   );

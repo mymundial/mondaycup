@@ -110,16 +110,7 @@ function StadiumPitch({ includeCrowd = false, belowScoreboard = false }) {
         </div>
       ) : null}
       <PitchMow top={includeCrowd ? `${GOAL_LINE}%` : "0"} />
-      {includeCrowd ? (
-        <>
-          <div className="absolute left-0 right-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${GOAL_LINE}%` }} />
-          <div className="absolute z-[3] overflow-hidden border-[8px] border-b-0 border-[#f5f1e8] bg-[#0d6c3d]/30" style={{ left: `${GOAL_LEFT}%`, top: `${GOAL_TOP}%`, width: `${GOAL_WIDTH}%`, height: `${GOAL_HEIGHT}%` }}>
-            <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "repeating-linear-gradient(90deg, transparent 0%, transparent 1.8%, rgba(245,241,232,0.18) 2.0%, transparent 2.2%), repeating-linear-gradient(180deg, transparent 0%, transparent 2.6%, rgba(245,241,232,0.16) 2.8%, transparent 3.1%), linear-gradient(135deg, transparent 0%, transparent 49%, rgba(245,241,232,0.08) 49.4%, transparent 50%)", backgroundSize: "100% 100%, 100% 100%, 8px 8px" }} />
-          </div>
-          <div className="absolute z-[3] rounded-b-[999px] border-b-[8px] border-l-[8px] border-r-[8px] border-[#f5f1e8]" style={{ left: "5%", top: `${GOAL_LINE}%`, width: "90%", height: "24.2%" }} />
-          <div className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f1e8]" style={{ left: `${MC_SELECTION_LAYOUT.penaltySpotXPercent}%`, top: `${MC_SELECTION_LAYOUT.penaltySpotYPercent}%` }} />
-        </>
-      ) : null}
+      {includeCrowd ? null : null}
     </div>
   );
 }
