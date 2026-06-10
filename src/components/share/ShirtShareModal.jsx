@@ -17,6 +17,35 @@ const PITCH_MOW_BACKGROUND_STYLE = {
   backgroundSize: "100% 100%",
 };
 const SHIRT_LAYOUT_VERSION = 6;
+
+function colourChannels(value) {
+  const raw = String(value || "").trim();
+  const hex = raw.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (hex) {
+    const body = hex[1].length === 3
+      ? hex[1].split("").map((part) => part + part).join("")
+      : hex[1];
+    return [0, 2, 4].map((index) => parseInt(body.slice(index, index + 2), 16));
+  }
+  const rgb = raw.match(/^rgba?\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)/i);
+  if (rgb) return [1, 2, 3].map((index) => Math.max(0, Math.min(255, Number(rgb[index]))));
+  return null;
+}
+
+function colourLuminance(value) {
+  const channels = colourChannels(value);
+  if (!channels) return 0;
+  const [r, g, b] = channels.map((channel) => {
+    const v = channel / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  });
+  return (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+}
+
+function needsDarkBrothersLogo(background) {
+  return colourLuminance(background) >= 0.54;
+}
+
 const DEFAULT_COMPOSITION = {
   mondayScale: 1.18,
   mondayX: 0,
@@ -95,8 +124,7 @@ function canvasShirtFabricTheme(team, fallbackBackground, fallbackText, fallback
   if (manualPattern && manualPattern !== "plain") result.pattern = manualPattern;
   result.patternColour = patternOptions.patternColour || result.patternColour || LED_YELLOW;
 
-  const whiteBackground = ["#FFFFFF", "#F5F1E8"].includes(String(result.background || "").toUpperCase());
-  result.brothersAsset = whiteBackground ? ASSETS.branding.brothersDark : ASSETS.branding.myMundialLogo;
+  result.brothersAsset = needsDarkBrothersLogo(result.background) ? ASSETS.branding.brothersDark : ASSETS.branding.myMundialLogo;
   return result;
 }
 

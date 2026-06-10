@@ -19,8 +19,8 @@ const pagePitchMowBackground = mcExtendedPitchMowBackground;
 
 const softEnvelopeShadow = {
   background: [
-    'linear-gradient(0deg, rgba(3,27,18,0.26) 0%, rgba(3,27,18,0.14) 34%, rgba(3,27,18,0.06) 64%, rgba(3,27,18,0) 100%)',
-    'radial-gradient(ellipse at 50% 100%, rgba(3,27,18,0.22) 0%, rgba(3,27,18,0.12) 42%, rgba(3,27,18,0) 76%)',
+    'linear-gradient(0deg, rgba(3,27,18,0.525) 0%, rgba(3,27,18,0.285) 34%, rgba(3,27,18,0.12) 64%, rgba(3,27,18,0) 100%)',
+    'radial-gradient(ellipse at 50% 100%, rgba(3,27,18,0.435) 0%, rgba(3,27,18,0.24) 42%, rgba(3,27,18,0) 76%)',
   ].join(', '),
 };
 
@@ -37,7 +37,7 @@ export default function AppFooter({ fixed = false, className = '', onFeedback = 
     >
       <div className="relative h-full w-full overflow-visible">
         <div
-          className="pointer-events-none fixed inset-x-0 bottom-0 z-[0] overflow-hidden border-t border-[#F5F1E8]/28 shadow-[0_-9px_17px_rgba(3,27,18,0.105),0_-2px_6px_rgba(3,27,18,0.075)]"
+          className="pointer-events-none fixed inset-x-0 bottom-0 z-[0] overflow-hidden border-t border-[#F5F1E8]/28 shadow-[0_-12px_23px_rgba(3,27,18,0.21),0_-3px_8px_rgba(3,27,18,0.15)]"
           style={{ height: `calc(${APP_FOOTER_HEIGHT_PX}px + env(safe-area-inset-bottom))`, ...pagePitchMowBackground }}
           aria-hidden="true"
         />
@@ -53,13 +53,13 @@ export default function AppFooter({ fixed = false, className = '', onFeedback = 
         <div
           className="pointer-events-none absolute inset-x-0 top-[-18px] h-[24px]"
           style={{
-            background: 'linear-gradient(0deg, rgba(3,27,18,0.17), rgba(3,27,18,0.06) 52%, rgba(3,27,18,0))',
-            filter: 'blur(6px)',
+            background: 'linear-gradient(0deg, rgba(3,27,18,0.345), rgba(3,27,18,0.12) 52%, rgba(3,27,18,0))',
+            filter: 'blur(8px)',
           }}
           aria-hidden="true"
         />
         <div
-          className="relative h-full w-full overflow-hidden border-t border-[#F5F1E8]/28 shadow-[0_-9px_17px_rgba(3,27,18,0.105),0_-2px_6px_rgba(3,27,18,0.075)]"
+          className="relative h-full w-full overflow-hidden border-t border-[#F5F1E8]/28 shadow-[0_-12px_23px_rgba(3,27,18,0.21),0_-3px_8px_rgba(3,27,18,0.15)]"
           style={pagePitchMowBackground}
         >
           <span
@@ -69,7 +69,7 @@ export default function AppFooter({ fixed = false, className = '', onFeedback = 
           <span
             className="pointer-events-none absolute inset-x-0 top-0 h-[76%]"
             style={{
-              background: 'linear-gradient(180deg, rgba(3,27,18,0.17) 0%, rgba(3,27,18,0.08) 35%, rgba(3,27,18,0.015) 100%)',
+              background: 'linear-gradient(180deg, rgba(3,27,18,0.345) 0%, rgba(3,27,18,0.165) 35%, rgba(3,27,18,0.03) 100%)',
             }}
             aria-hidden="true"
           />
