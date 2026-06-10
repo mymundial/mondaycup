@@ -20,7 +20,7 @@ function DrawerContent({ children }) {
   return <PageScroll className="px-0 pt-0.5">{children}</PageScroll>;
 }
 
-const LEADERBOARD_GRID = "30px minmax(86px,1.42fr) 38px minmax(86px,1.38fr) 40px minmax(58px,0.72fr)";
+const LEADERBOARD_GRID = "30px minmax(74px,1.08fr) 38px minmax(86px,1.34fr) 40px minmax(70px,0.90fr)";
 
 const COSMETIC_ALIASES = {
   goldenBoot: ["goldenBoot", "golden_boot", "boot", "cosmetic3", "cosmeticBoot", "cosmeticBootEquipped", "goldenBootEquipped"],
@@ -267,9 +267,7 @@ function leaderboardScoreTextClass(row, isUser = false) {
 }
 
 function displayLeaderboardUsername(username) {
-  const value = String(username || "-").toUpperCase();
-  if (value.length <= 11) return value;
-  return `${value.slice(0, 11)}…`;
+  return String(username || "-").toUpperCase().slice(0, 10);
 }
 
 function LeaderboardRow({ row, isUser = false }) {
@@ -287,13 +285,13 @@ function LeaderboardRow({ row, isUser = false }) {
       style={{ gridTemplateColumns: LEADERBOARD_GRID }}
     >
       <div className={`flex min-w-0 items-center justify-center text-center home-copy-bold text-[13px] leading-none ${leaderboardPodiumTextClass(row, isUser)}`}>#{row.rank || "--"}</div>
-      <div className="flex min-w-0 items-center justify-start justify-self-stretch text-left home-copy-bold text-[12px] uppercase leading-none tracking-[0.035em]">
-        <span className={`block max-w-full overflow-hidden truncate whitespace-nowrap rounded-[0.55rem] py-1 pr-1 leading-none ${leaderboardNameTextClass(row, isUser)}`}>{displayLeaderboardUsername(row.username)}</span>
+      <div className="flex min-w-0 items-center justify-start justify-self-stretch text-left home-copy-bold text-[11px] uppercase leading-none tracking-[0.015em]">
+        <span className={`block max-w-none whitespace-nowrap rounded-[0.55rem] py-1 pr-0 leading-none ${leaderboardNameTextClass(row, isUser)}`}>{displayLeaderboardUsername(row.username)}</span>
       </div>
       <div className="flex min-w-0 items-center justify-center"><LeaderboardFlag team={row.team} isUser={false} /></div>
       <LeaderboardFormGuide form={form} isUser={isUser} />
       <div className="flex w-full min-w-0 items-center justify-center justify-self-stretch text-center"><LeaderboardPodiumBadge row={row} isUser={isUser} /></div>
-      <div className={`flex w-full min-w-0 items-center justify-center justify-self-stretch text-center text-[12px] leading-none tracking-[0.04em] ${leaderboardScoreTextClass(row, isUser)}`}><span className="block w-full text-center tabular-nums">{Number(row.campaignPoints || 0)}</span></div>
+      <div className={`flex w-full min-w-0 items-center justify-center justify-self-stretch text-center text-[12px] leading-none tracking-[0.02em] ${leaderboardScoreTextClass(row, isUser)}`}><span className="block w-full text-center tabular-nums">{Number(row.campaignPoints || 0)}</span></div>
     </div>
   );
 }
