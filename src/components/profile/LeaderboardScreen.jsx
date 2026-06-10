@@ -20,7 +20,7 @@ function DrawerContent({ children }) {
   return <PageScroll className="px-0 pt-0.5">{children}</PageScroll>;
 }
 
-const LEADERBOARD_GRID = "30px minmax(88px,1.42fr) 38px minmax(86px,1.38fr) 40px minmax(58px,0.82fr)";
+const LEADERBOARD_GRID = "30px minmax(96px,1.58fr) 38px minmax(86px,1.38fr) 40px minmax(48px,0.58fr)";
 
 const COSMETIC_ALIASES = {
   goldenBoot: ["goldenBoot", "golden_boot", "boot", "cosmetic3", "cosmeticBoot", "cosmeticBootEquipped", "goldenBootEquipped"],
@@ -263,7 +263,7 @@ function leaderboardNameTextClass(row = {}, isUser = false) {
 }
 
 function leaderboardScoreTextClass(row, isUser = false) {
-  return "font-led text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]";
+  return "home-copy-bold text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]";
 }
 
 function displayLeaderboardUsername(username) {
@@ -293,7 +293,7 @@ function LeaderboardRow({ row, isUser = false }) {
       <div className="flex min-w-0 items-center justify-center"><LeaderboardFlag team={row.team} isUser={false} /></div>
       <LeaderboardFormGuide form={form} isUser={isUser} />
       <div className="flex w-full min-w-0 items-center justify-center justify-self-stretch text-center"><LeaderboardPodiumBadge row={row} isUser={isUser} /></div>
-      <div className={`flex w-full min-w-0 items-center justify-center justify-self-stretch text-center text-[9px] leading-none tracking-[0.02em] ${leaderboardScoreTextClass(row, isUser)}`}><span className="block w-full text-center tabular-nums">{Number(row.campaignPoints || 0)}</span></div>
+      <div className={`flex w-full min-w-0 items-center justify-center justify-self-stretch text-center text-[12px] leading-none tracking-[0.04em] ${leaderboardScoreTextClass(row, isUser)}`}><span className="block w-full text-center tabular-nums">{Number(row.campaignPoints || 0)}</span></div>
     </div>
   );
 }
