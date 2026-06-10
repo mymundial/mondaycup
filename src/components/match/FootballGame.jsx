@@ -106,7 +106,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
   const ballPoint = shot?.targetPoint ?? GAME.spot;
   const keeperPoint = shot ? pointForDirection(shot.keeperDirection) : pointForDirection(getDirection("CM"));
   const aimDirection = lockedDirection ?? selected;
-  const showAim = phase === PHASE.DIRECTION || phase === PHASE.POWER || phase === PHASE_ACCURACY;
+  const showAim = phase === PHASE.DIRECTION;
 
   const isKnockoutShootout = Boolean(fixture?.requiresWinner);
   const matchFinished = phase === PHASE.FINISHED || hasCompleted;
@@ -463,14 +463,12 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       accuracyOutcome,
     });
 
-    if (side === "user" || twoPlayerMode) {
-      window.setTimeout(() => {
-        playSound(
-          resolved.goal ? mergedAssets.sounds.goalSound : mergedAssets.sounds.missSound,
-          USER_SHOT_RESULT_VOLUME
-        );
-      }, USER_SHOT_RESULT_DELAY_MS);
-    }
+    window.setTimeout(() => {
+      playSound(
+        resolved.goal ? mergedAssets.sounds.goalSound : mergedAssets.sounds.missSound,
+        USER_SHOT_RESULT_VOLUME
+      );
+    }, USER_SHOT_RESULT_DELAY_MS);
     const shotNumber = currentAttempts[side].length + 1;
     const safePower = clamp(Number(power) || 0, 0, 100);
     const safeAccuracy = accuracy === null || accuracy === undefined ? null : clamp(Number(accuracy) || 0, 0, 100);

@@ -176,12 +176,12 @@ export function formForSummary(form = []) {
 
 export function roundLabelForResult(result, fallback = "GROUP STAGE") {
   const status = result?.status;
-  if (status === RESULT_STATUS.CHAMPION) return "MONDAY CUP CHAMPION";
+  if (status === RESULT_STATUS.CHAMPION) return "CHAMPIONS";
   if (status === RESULT_STATUS.RUNNER_UP) return "RUNNER-UP";
   if (status === RESULT_STATUS.THIRD_PLACE) return "THIRD PLACE";
-  if (status === RESULT_STATUS.FOURTH_PLACE) return "FOURTH PLACE";
+  if (status === RESULT_STATUS.FOURTH_PLACE) return "THIRD PLACE PLAY-OFF";
   if (status === RESULT_STATUS.THIRD_PLACE_PENDING) return "THIRD PLACE PLAY-OFF";
-  if (status === RESULT_STATUS.ELIMINATED) return "ELIMINATED";
+  if (status === RESULT_STATUS.ELIMINATED) return Number(result?.matchNo) ? knockoutStageLabel(result.matchNo) : fallback || "GROUP STAGE";
   if (status === RESULT_STATUS.QUALIFIED) return "ROUND OF 32";
   if (Number(result?.matchNo)) return knockoutStageLabel(result.matchNo);
   return fallback || "GROUP STAGE";

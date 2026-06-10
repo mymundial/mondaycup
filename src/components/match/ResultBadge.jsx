@@ -37,13 +37,13 @@ export function getResultBadge({ result = null, fixture = null, stageLabel = "" 
     return { id: "third", title: "THIRD PLACE", subtitle: "PODIUM FINISH", image: ASSETS.badges.third, tone: "bronze" };
   }
   if (status === RESULT_STATUS.FOURTH_PLACE || matchNo === 103 && didWin === false) {
-    return { id: "fourth", title: "FOURTH", subtitle: "PLAY-OFF DEFEAT", symbol: "4", tone: "red" };
+    return null;
   }
   if (status === RESULT_STATUS.THIRD_PLACE_PENDING) {
-    return { id: "woodenSpoon", title: "WOODEN-SPOON", subtitle: "THIRD PLACE PLAY-OFF", symbol: "WS", tone: "bronze" };
+    return null;
   }
   if (status === RESULT_STATUS.ELIMINATED) {
-    return { id: "eliminated", title: "ELIMINATED", subtitle: "CUP RUN ENDS", symbol: "×", tone: "red" };
+    return null;
   }
   if (status === RESULT_STATUS.QUALIFIED) {
     return { id: "qualifiedR32", title: "QUALIFIED R32", subtitle: "GROUP ESCAPE", symbol: "32", tone: "green" };

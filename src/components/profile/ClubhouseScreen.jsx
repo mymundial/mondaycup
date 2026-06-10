@@ -250,6 +250,24 @@ function FormDot({ value }) {
   );
 }
 
+
+function normaliseCampaignRoundLabel(summary = {}) {
+  const status = String(summary.status || summary.finish || summary.resultStatus || "").trim();
+  const label = String(summary.roundLabel || summary.round || summary.stage || "").trim();
+  const matchNo = Number(summary.matchNo || summary.lastMatchNo || summary.fixtureMatchNo);
+  const joined = `${status} ${label}`.toUpperCase();
+
+  if (/CHAMPION|MONDAY CUP CHAMPION|WINNER/.test(joined)) return "CHAMPIONS";
+  if (/RUNNER[-_\s]*UP|SECOND|2ND/.test(joined)) return "RUNNER-UP";
+  if (/THIRD PLACE(?! PLAY-OFF)|3RD PLACE(?! PLAY-OFF)|BRONZE/.test(joined)) return "THIRD PLACE";
+  if (/FOURTH|4TH|THIRD PLACE PLAY-OFF|3RD PLACE PLAY-OFF/.test(joined) || matchNo === 103) return "THIRD PLACE PLAY-OFF";
+  if (/QUARTER/.test(joined) || (matchNo >= 97 && matchNo <= 100)) return "QUARTER-FINALS";
+  if (/ROUND OF 16|R16/.test(joined) || (matchNo >= 89 && matchNo <= 96)) return "ROUND OF 16";
+  if (/ROUND OF 32|R32/.test(joined) || (matchNo >= 73 && matchNo <= 88)) return "ROUND OF 32";
+  if (/GROUP/.test(joined) || !label) return "GROUP STAGE";
+  return label.toUpperCase();
+}
+
 function phaseLabel(label, fallback = "GROUP STAGE") {
   const clean = String(label || "")
     .trim()
@@ -1143,6 +1161,7 @@ export function ClubhouseScreen({
   const bestSummaryForm = formForSummary(
     bestSummary.cupRun || bestSummary.formGuide || bestSummary.form || bestSummary.tournamentProgress || [],
   );
+  const bestSummaryRoundLabel = bestSummary.team === "NO TEAM" ? bestSummary.roundLabel : normaliseCampaignRoundLabel(bestSummary);
 
   return (
     <main className="home-main-font relative z-[1] flex h-full min-h-0 w-full flex-col overflow-hidden text-[#F5F1E8]">
@@ -1210,7 +1229,7 @@ export function ClubhouseScreen({
                   <CampaignOverviewCard
                     title="Best Campaign"
                     team={bestSummary.team}
-                    roundLabel={bestSummary.roundLabel}
+                    roundLabel={bestSummaryRoundLabel}
                     form={bestSummaryForm}
                     score={bestSummary.campaignPoints}
                     medalClass={campaignMedalClass(bestSummary)}

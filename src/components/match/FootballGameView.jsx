@@ -277,9 +277,9 @@ export function ControlOverlay({
               <button
                 key={direction.id}
                 type="button"
-                onClick={() => setSelected(direction)}
-                className={`relative isolate flex min-h-0 appearance-none items-center justify-center overflow-hidden rounded-[clamp(14px,2.2vh,28px)] border bg-none home-copy-bold text-[clamp(16px,2.15vh,26px)] font-black leading-none outline-none shadow-lg ring-1 transition-all focus:outline-none focus-visible:outline-none ${selected.id === direction.id ? "border-[#F5F1E8]/55 bg-[#F7D117] text-[#0b2d1d] ring-[#F7D117]/35 shadow-[0_0_12px_rgba(247,209,23,0.20),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.18)]" : "border-[#F5F1E8]/22 bg-[#0b2d1d] text-[#f5f1e8] ring-[#0B5F35]/50 shadow-[0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(245,241,232,0.08)]"}`}
-                style={{ WebkitTapHighlightColor: "transparent", contain: "layout paint", backgroundImage: "none" }}
+                onClick={(event) => { event.currentTarget.blur(); setSelected(direction); }}
+                className={`relative isolate flex min-h-0 appearance-none items-center justify-center overflow-hidden rounded-[clamp(14px,2.2vh,28px)] border bg-none home-copy-bold text-[clamp(16px,2.15vh,26px)] font-black leading-none outline-none shadow-lg ring-1 transition-all focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 active:outline-none active:ring-0 ${selected.id === direction.id ? "border-[#F5F1E8]/55 bg-[#F7D117] text-[#0b2d1d] ring-[#F7D117]/35 shadow-[0_0_12px_rgba(247,209,23,0.20),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.18)]" : "border-[#F5F1E8]/22 bg-[#0b2d1d] text-[#f5f1e8] ring-[#0B5F35]/50 shadow-[0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(245,241,232,0.08)]"}`}
+                style={{ WebkitTapHighlightColor: "transparent", contain: "layout paint", backgroundImage: "none", transform: "translateZ(0)" }}
               >
                 <span className="pointer-events-none relative z-[1] flex h-full w-full max-h-full max-w-full select-none items-center justify-center leading-none no-underline decoration-transparent" style={{ textDecoration: "none" }}>{direction.arrow}</span>
               </button>
