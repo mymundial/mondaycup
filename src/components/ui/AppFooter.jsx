@@ -17,14 +17,39 @@ export function footerAwareStyle(style = {}, mode = 'scroll') {
 
 const pagePitchMowBackground = mcExtendedPitchMowBackground;
 
-const softEnvelopeShadow = {
-  background: [
-    'linear-gradient(0deg, rgba(3,27,18,0.525) 0%, rgba(3,27,18,0.285) 34%, rgba(3,27,18,0.12) 64%, rgba(3,27,18,0) 100%)',
-    'radial-gradient(ellipse at 50% 100%, rgba(3,27,18,0.435) 0%, rgba(3,27,18,0.24) 42%, rgba(3,27,18,0) 76%)',
-  ].join(', '),
+const FOOTER_SHADOWS = {
+  standard: {
+    shellShadow: 'shadow-[0_-18px_34px_rgba(3,27,18,0.42),0_-4px_12px_rgba(3,27,18,0.30)]',
+    envelope: {
+      background: [
+        'linear-gradient(0deg, rgba(3,27,18,0.52) 0%, rgba(3,27,18,0.28) 34%, rgba(3,27,18,0.12) 64%, rgba(3,27,18,0) 100%)',
+        'radial-gradient(ellipse at 50% 100%, rgba(3,27,18,0.44) 0%, rgba(3,27,18,0.24) 42%, rgba(3,27,18,0) 76%)',
+      ].join(', '),
+    },
+    lip: {
+      background: 'linear-gradient(0deg, rgba(3,27,18,0.34), rgba(3,27,18,0.12) 52%, rgba(3,27,18,0))',
+      filter: 'blur(8px)',
+    },
+    insetShade: 'linear-gradient(180deg, rgba(3,27,18,0.345) 0%, rgba(3,27,18,0.165) 35%, rgba(3,27,18,0.03) 100%)',
+  },
+  selection: {
+    shellShadow: 'shadow-[0_-9px_17px_rgba(3,27,18,0.158),0_-2px_6px_rgba(3,27,18,0.113)]',
+    envelope: {
+      background: [
+        'linear-gradient(0deg, rgba(3,27,18,0.394) 0%, rgba(3,27,18,0.214) 34%, rgba(3,27,18,0.09) 64%, rgba(3,27,18,0) 100%)',
+        'radial-gradient(ellipse at 50% 100%, rgba(3,27,18,0.326) 0%, rgba(3,27,18,0.18) 42%, rgba(3,27,18,0) 76%)',
+      ].join(', '),
+    },
+    lip: {
+      background: 'linear-gradient(0deg, rgba(3,27,18,0.259), rgba(3,27,18,0.09) 52%, rgba(3,27,18,0))',
+      filter: 'blur(8px)',
+    },
+    insetShade: 'linear-gradient(180deg, rgba(3,27,18,0.259) 0%, rgba(3,27,18,0.124) 35%, rgba(3,27,18,0.023) 100%)',
+  },
 };
 
-export default function AppFooter({ fixed = false, className = '', onFeedback = null }) {
+export default function AppFooter({ fixed = false, className = '', onFeedback = null, shadowMode = 'standard' }) {
+  const footerShadow = FOOTER_SHADOWS[shadowMode] || FOOTER_SHADOWS.standard;
   const shellClass = fixed
     ? 'pointer-events-none fixed bottom-0 left-1/2 z-[2147483000] w-full max-w-md -translate-x-1/2'
     : 'relative mt-auto shrink-0 text-center';
@@ -37,7 +62,7 @@ export default function AppFooter({ fixed = false, className = '', onFeedback = 
     >
       <div className="relative h-full w-full overflow-visible">
         <div
-          className="pointer-events-none fixed inset-x-0 bottom-0 z-[0] overflow-hidden border-t border-[#F5F1E8]/28 shadow-[0_-12px_23px_rgba(3,27,18,0.21),0_-3px_8px_rgba(3,27,18,0.15)]"
+          className={`pointer-events-none fixed inset-x-0 bottom-0 z-[0] overflow-hidden border-t border-[#F5F1E8]/28 ${footerShadow.shellShadow}`}
           style={{ height: `calc(${APP_FOOTER_HEIGHT_PX}px + env(safe-area-inset-bottom))`, ...pagePitchMowBackground }}
           aria-hidden="true"
         />
@@ -47,19 +72,16 @@ export default function AppFooter({ fixed = false, className = '', onFeedback = 
         />
         <div
           className="pointer-events-none absolute inset-x-0 top-[-76px] h-[78px] overflow-hidden"
-          style={softEnvelopeShadow}
+          style={footerShadow.envelope}
           aria-hidden="true"
         />
         <div
           className="pointer-events-none absolute inset-x-0 top-[-18px] h-[24px]"
-          style={{
-            background: 'linear-gradient(0deg, rgba(3,27,18,0.345), rgba(3,27,18,0.12) 52%, rgba(3,27,18,0))',
-            filter: 'blur(8px)',
-          }}
+          style={footerShadow.lip}
           aria-hidden="true"
         />
         <div
-          className="relative h-full w-full overflow-hidden border-t border-[#F5F1E8]/28 shadow-[0_-12px_23px_rgba(3,27,18,0.21),0_-3px_8px_rgba(3,27,18,0.15)]"
+          className={`relative h-full w-full overflow-hidden border-t border-[#F5F1E8]/28 ${footerShadow.shellShadow}`}
           style={pagePitchMowBackground}
         >
           <span
@@ -69,7 +91,7 @@ export default function AppFooter({ fixed = false, className = '', onFeedback = 
           <span
             className="pointer-events-none absolute inset-x-0 top-0 h-[76%]"
             style={{
-              background: 'linear-gradient(180deg, rgba(3,27,18,0.345) 0%, rgba(3,27,18,0.165) 35%, rgba(3,27,18,0.03) 100%)',
+              background: footerShadow.insetShade,
             }}
             aria-hidden="true"
           />

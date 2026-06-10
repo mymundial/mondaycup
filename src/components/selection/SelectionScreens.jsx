@@ -370,7 +370,7 @@ function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {}, static
             </div>
           </div>
         </main>
-        <AppFooter fixed onFeedback={onOpenFeedback} />
+        <AppFooter fixed onFeedback={onOpenFeedback} shadowMode="selection" />
       </div>
     </Shell>
   );

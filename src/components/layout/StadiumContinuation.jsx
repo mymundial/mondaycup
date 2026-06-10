@@ -110,7 +110,7 @@ function StadiumPitch({ includeCrowd = false, belowScoreboard = false }) {
         </div>
       ) : null}
       <PitchMow top={includeCrowd ? `${GOAL_LINE}%` : "0"} />
-      {includeCrowd ? null : null}
+      {includeCrowd ? <div className="absolute inset-x-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: `${GOAL_LINE}%` }} /> : null}
     </div>
   );
 }

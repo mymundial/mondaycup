@@ -20,7 +20,7 @@ function DrawerContent({ children }) {
   return <PageScroll className="px-0 pt-0.5">{children}</PageScroll>;
 }
 
-const LEADERBOARD_GRID = "30px minmax(74px,1.08fr) 38px minmax(86px,1.34fr) 40px minmax(70px,0.90fr)";
+const LEADERBOARD_GRID = "28px minmax(68px,0.76fr) 34px minmax(82px,1.12fr) 34px minmax(82px,1.12fr)";
 
 const COSMETIC_ALIASES = {
   goldenBoot: ["goldenBoot", "golden_boot", "boot", "cosmetic3", "cosmeticBoot", "cosmeticBootEquipped", "goldenBootEquipped"],
@@ -224,7 +224,7 @@ function LeaderboardFlag({ team, isUser = false }) {
 function LeaderboardHeader() {
   return (
     <div
-      className="grid items-center gap-[4px] px-2.5 pb-1.5 text-center home-copy-bold text-[7px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]"
+      className="grid items-center gap-[3px] px-2 pb-1.5 text-center home-copy-bold text-[7px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]"
       style={{ gridTemplateColumns: LEADERBOARD_GRID }}
     >
       <span className="justify-self-center text-center">Rank</span>
@@ -281,17 +281,17 @@ function LeaderboardRow({ row, isUser = false }) {
 
   return (
     <div
-      className={`grid h-[39px] items-center gap-[4px] rounded-[1.05rem] border px-2.5 py-0 shadow-[0_6px_14px_rgba(0,0,0,0.10)] ${rowClass}`}
+      className={`grid h-[39px] items-center gap-[3px] rounded-[1.05rem] border px-2 py-0 shadow-[0_6px_14px_rgba(0,0,0,0.10)] ${rowClass}`}
       style={{ gridTemplateColumns: LEADERBOARD_GRID }}
     >
       <div className={`flex min-w-0 items-center justify-center text-center home-copy-bold text-[13px] leading-none ${leaderboardPodiumTextClass(row, isUser)}`}>#{row.rank || "--"}</div>
-      <div className="flex min-w-0 items-center justify-start justify-self-stretch text-left home-copy-bold text-[11px] uppercase leading-none tracking-[0.015em]">
+      <div className="flex min-w-0 items-center justify-start justify-self-stretch text-left home-copy-bold text-[10.5px] uppercase leading-none tracking-[0.01em]">
         <span className={`block max-w-none whitespace-nowrap rounded-[0.55rem] py-1 pr-0 leading-none ${leaderboardNameTextClass(row, isUser)}`}>{displayLeaderboardUsername(row.username)}</span>
       </div>
       <div className="flex min-w-0 items-center justify-center"><LeaderboardFlag team={row.team} isUser={false} /></div>
       <LeaderboardFormGuide form={form} isUser={isUser} />
       <div className="flex w-full min-w-0 items-center justify-center justify-self-stretch text-center"><LeaderboardPodiumBadge row={row} isUser={isUser} /></div>
-      <div className={`flex w-full min-w-0 items-center justify-center justify-self-stretch text-center text-[12px] leading-none tracking-[0.02em] ${leaderboardScoreTextClass(row, isUser)}`}><span className="block w-full text-center tabular-nums">{Number(row.campaignPoints || 0)}</span></div>
+      <div className={`flex w-full min-w-0 items-center justify-center justify-self-stretch text-center text-[12px] leading-none tracking-[0.01em] ${leaderboardScoreTextClass(row, isUser)}`}><span className="block w-full text-center tabular-nums">{Number(row.campaignPoints || 0)}</span></div>
     </div>
   );
 }

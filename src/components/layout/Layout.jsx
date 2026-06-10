@@ -109,6 +109,7 @@ export function FullPitchExtensionBackground({ flashStyle = null }) {
       <TiledCrowdBackdrop style={{ top: pitchTop, height: crowdHeightCss }} />
       <RepeatingAdBoard style={{ top: adBoardTopCss, height: adBoardHeightCss }} />
       <div className="absolute inset-x-0 bottom-0 z-[1]" style={{ top: goalLineTop, ...mcExtendedPitchMowBackground }} />
+      <div className="absolute inset-x-0 z-[4] h-2 bg-[#f5f1e8]" style={{ top: goalLineTop }} />
       <MobileFrameSideShadows />
     </div>
   );
