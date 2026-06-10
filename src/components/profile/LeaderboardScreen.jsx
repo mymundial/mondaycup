@@ -20,7 +20,7 @@ function DrawerContent({ children }) {
   return <PageScroll className="px-0 pt-0.5">{children}</PageScroll>;
 }
 
-const LEADERBOARD_GRID = "30px minmax(96px,1.58fr) 38px minmax(86px,1.38fr) 40px minmax(48px,0.58fr)";
+const LEADERBOARD_GRID = "30px minmax(86px,1.42fr) 38px minmax(86px,1.38fr) 40px minmax(58px,0.72fr)";
 
 const COSMETIC_ALIASES = {
   goldenBoot: ["goldenBoot", "golden_boot", "boot", "cosmetic3", "cosmeticBoot", "cosmeticBootEquipped", "goldenBootEquipped"],
@@ -268,8 +268,8 @@ function leaderboardScoreTextClass(row, isUser = false) {
 
 function displayLeaderboardUsername(username) {
   const value = String(username || "-").toUpperCase();
-  if (value.length <= 10) return value;
-  return `${value.slice(0, 10)}…`;
+  if (value.length <= 11) return value;
+  return `${value.slice(0, 11)}…`;
 }
 
 function LeaderboardRow({ row, isUser = false }) {
