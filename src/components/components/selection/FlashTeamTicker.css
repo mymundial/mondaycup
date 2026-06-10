@@ -1,0 +1,74 @@
+.flash-team-ticker {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 100%;
+  overflow: hidden;
+  background: var(--flash-team-bg);
+  color: var(--flash-team-text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-sizing: border-box;
+  padding-inline: 12%;
+  transition: background-color 150ms ease, color 150ms ease;
+  contain: layout paint;
+  pointer-events: none;
+}
+
+.flash-team-ticker__grid {
+  display: grid;
+  height: 100%;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 3%;
+}
+
+.flash-team-ticker__flag {
+  display: flex;
+  width: clamp(18px, 3.2vh, 32px);
+  height: clamp(12px, 2.05vh, 21px);
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  overflow: hidden;
+  border: 1px solid rgba(245, 241, 232, 0.78);
+  border-radius: 0.2rem;
+  background: rgba(245, 241, 232, 0.94);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.24);
+}
+
+.flash-team-ticker__flag-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.flash-team-ticker__name {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+  font-size: clamp(13px, 2.3vh, 28px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.085em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.flash-team-ticker__rank {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: right;
+  font-size: clamp(9px, 1.55vh, 16px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  opacity: 0.72;
+  font-variant-numeric: tabular-nums;
+}
