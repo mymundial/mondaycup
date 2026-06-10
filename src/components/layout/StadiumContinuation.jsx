@@ -1,6 +1,6 @@
 import SharedCrowdBackdrop from "../crowd/SharedCrowdBackdrop.jsx";
 import { ASSETS } from "../../data/assets.js";
-import { MC_SELECTION_LAYOUT } from "../../styles/theme.js";
+import { MC_SELECTION_LAYOUT, mcExtendedPitchMowBackground } from "../../styles/theme.js";
 
 const TOP_BAR_HEIGHT = MC_SELECTION_LAYOUT.topBarHeight;
 const SCOREBOARD_RATIO = MC_SELECTION_LAYOUT.scoreboardRatio;
@@ -12,7 +12,7 @@ const GOAL_LEFT = MC_SELECTION_LAYOUT.goalLeftPercent;
 const AD_BOARD_HEIGHT = MC_SELECTION_LAYOUT.adBoardHeightPercent;
 const GOAL_LINE = GOAL_TOP + GOAL_HEIGHT;
 const AD_BOARD_TOP = GOAL_LINE - AD_BOARD_HEIGHT;
-const FOOTER_HEIGHT = 58;
+const FOOTER_HEIGHT = 52;
 
 function PitchMow({ top = "0", bottom = "0" }) {
   return (
@@ -21,9 +21,7 @@ function PitchMow({ top = "0", bottom = "0" }) {
       style={{
         top,
         bottom,
-        backgroundColor: "#0d6c3d",
-        backgroundImage:
-          "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))",
+...mcExtendedPitchMowBackground,
       }}
       aria-hidden="true"
     />
@@ -130,9 +128,9 @@ function FooterBand() {
   return (
     <footer className="pointer-events-none absolute inset-x-0 bottom-0 z-[30] overflow-visible text-center" style={{ height: `calc(${FOOTER_HEIGHT}px + env(safe-area-inset-bottom))` }} aria-hidden="true">
       <div className="absolute inset-x-0 top-[-76px] h-[78px]" style={{ background: "linear-gradient(0deg, rgba(3,27,18,0.52) 0%, rgba(3,27,18,0.28) 34%, rgba(3,27,18,0.12) 64%, rgba(3,27,18,0) 100%), radial-gradient(ellipse at 50% 100%, rgba(3,27,18,0.44) 0%, rgba(3,27,18,0.24) 42%, rgba(3,27,18,0) 76%)" }} />
-      <div className="relative h-full w-full overflow-hidden border-t border-[#F5F1E8]/28 shadow-[0_-18px_34px_rgba(3,27,18,0.42),0_-4px_12px_rgba(3,27,18,0.30)]" style={{ backgroundColor: "#0d6c3d", backgroundImage: "repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))" }}>
+      <div className="relative h-full w-full overflow-hidden border-t border-[#F5F1E8]/28 shadow-[0_-18px_34px_rgba(3,27,18,0.42),0_-4px_12px_rgba(3,27,18,0.30)]" style={mcExtendedPitchMowBackground}>
         <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/42 shadow-[0_1px_0_rgba(3,27,18,0.34)]" />
-        <div className="relative z-[1] flex h-[58px] w-full items-center justify-center pb-[env(safe-area-inset-bottom)]">
+        <div className="relative z-[1] flex h-[52px] w-full items-center justify-center pb-[env(safe-area-inset-bottom)]">
           <img src={ASSETS.branding.myMundialLogo} alt="" className="h-[20px] w-auto max-w-[112px] object-contain opacity-82 drop-shadow-[0_2px_5px_rgba(0,0,0,0.24)]" draggable={false} />
         </div>
       </div>

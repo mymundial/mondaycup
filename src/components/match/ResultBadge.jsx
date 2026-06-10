@@ -1,5 +1,19 @@
 import { ASSETS } from "../../data/assets.js";
 import { RESULT_STATUS, normalizeResultStatus } from "../../logic/resultStatus.js";
+import { MC_SELECTION_LAYOUT } from "../../styles/theme.js";
+
+const SELECTION_PITCH_BADGE_GLOW_OUTER = "rgba(247,209,23,0.118125)";
+const SELECTION_PITCH_BADGE_GLOW_INNER = "rgba(245,241,232,0.10125)";
+const SELECTION_PITCH_BADGE_SHADOW = "drop-shadow(0 10px 24px rgba(0,0,0,0.33))";
+const SELECTION_PITCH_BADGE_SCALE = 0.43;
+const PODIUM_PITCH_BADGE_SCALE = SELECTION_PITCH_BADGE_SCALE * 0.9;
+const MATCH_PITCH_RATIO = 1 - MC_SELECTION_LAYOUT.scoreboardRatio;
+const MATCH_RESULT_BADGE_TOP = `${MC_SELECTION_LAYOUT.scoreboardRatio * 100 + MATCH_PITCH_RATIO * 15}%`;
+const MATCH_RESULT_BADGE_HEIGHT = `${MATCH_PITCH_RATIO * 74.415}%`;
+
+function pitchBadgeScaleFor(badge) {
+  return ["champion", "runnerUp", "third"].includes(badge?.id) ? PODIUM_PITCH_BADGE_SCALE : SELECTION_PITCH_BADGE_SCALE;
+}
 
 function getMatchNo(result = {}, fixture = {}) {
   const value = result?.matchNo ?? fixture?.matchNo;
@@ -63,11 +77,29 @@ function toneStyles(tone = "yellow") {
   return { accent: "#F7D117", fill: "rgba(247,209,23,0.94)", text: "#072D1D", glow: "rgba(247,209,23,0.30)" };
 }
 
-export function ResultBadgeIcon({ badge, size = "large", className = "" }) {
+export function ResultBadgeIcon({ badge, size = "large", className = "", pitchBadge = false }) {
   if (!badge) return null;
   const tone = toneStyles(badge.tone);
   const compact = size === "small";
   const boxClass = compact ? "h-16 w-16 rounded-[1.05rem]" : "h-[clamp(86px,24vw,118px)] w-[clamp(86px,24vw,118px)] rounded-[1.4rem]";
+  const imageSrc = badge.image || ASSETS.branding.mondayLogo;
+
+  if (pitchBadge) {
+    return (
+      <div className={`relative flex h-full w-full items-center justify-center ${className}`} aria-hidden="true">
+        <div className="absolute left-1/2 top-[54%] h-[56%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl" style={{ background: SELECTION_PITCH_BADGE_GLOW_OUTER }} />
+        <div className="absolute left-1/2 top-[54%] h-[38%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl" style={{ background: SELECTION_PITCH_BADGE_GLOW_INNER }} />
+        <img
+          src={imageSrc}
+          alt=""
+          className="relative z-[1] h-full w-full object-contain"
+          style={{ filter: SELECTION_PITCH_BADGE_SHADOW, transform: `scale(${pitchBadgeScaleFor(badge)})` }}
+          draggable={false}
+        />
+      </div>
+    );
+  }
+
   if (badge.image) {
     return (
       <div className={`relative grid ${boxClass} place-items-center ${className}`} aria-hidden="true">
@@ -107,11 +139,12 @@ export function ResultBadgeShareOverlay({ badge }) {
   if (!badge) return null;
   return (
     <div
-      className="pointer-events-none absolute left-1/2 top-[27.75%] z-[38] flex w-[32%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center text-center"
+      className="pointer-events-none absolute left-1/2 z-[38] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center text-center"
+      style={{ top: MATCH_RESULT_BADGE_TOP, width: "99.825%", height: MATCH_RESULT_BADGE_HEIGHT }}
       data-share-result-badge="true"
       aria-hidden="true"
     >
-      <ResultBadgeIcon badge={badge} className="h-full w-full" />
+      <ResultBadgeIcon badge={badge} pitchBadge className="h-full w-full" />
     </div>
   );
 }

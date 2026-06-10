@@ -27,7 +27,7 @@ export const MC_SIZES = {
   panelRadius: 24,
   cardRadius: 18,
   pillRadius: 999,
-  topBarHeight: 54,
+  topBarHeight: 49,
   buttonHeight: 52,
   inputHeight: 46,
   sliderHeight: 42,
@@ -36,6 +36,21 @@ export const MC_SIZES = {
   gapMd: 12,
   gapLg: 16,
   gapXl: 22,
+};
+
+
+
+export const MC_APP_FRAME_WIDTH_PX = 430;
+export const MC_AD_BOARD_TILE_WIDTH_PX = 450;
+export const MC_FRAME_SIDE_SHADOW_WIDTH_PX = 52;
+
+export const mcExtendedPitchMowBackground = {
+  backgroundColor: '#0d6c3d',
+  backgroundImage:
+    'repeating-linear-gradient(90deg, rgba(245,241,232,0.055) 0%, rgba(245,241,232,0.055) 10%, rgba(11,45,29,0.08) 10%, rgba(11,45,29,0.08) 20%), linear-gradient(rgba(245,241,232,0.03), rgba(11,45,29,0.06))',
+  backgroundSize: `${MC_APP_FRAME_WIDTH_PX}px 100%, ${MC_APP_FRAME_WIDTH_PX}px 100%`,
+  backgroundPosition: 'center top, center top',
+  backgroundRepeat: 'repeat, repeat',
 };
 
 export const MC_TYPE = {
@@ -115,8 +130,8 @@ export const mcIvoryBorder = '1px solid rgba(6,53,31,0.16)';
 export const MC_SELECTION_LAYOUT = {
   // Home / team-selection camera. Kept separate from the live-match camera so
   // menu screens stay balanced while still sharing one editable layout source.
-  topBarHeight: 50,
-  scoreboardRatio: 0.15,
+  topBarHeight: 45,
+  scoreboardRatio: 0.156,
   tickerRatio: 0.24,
   goalTopPercent: 8,
   goalHeightPercent: 30,

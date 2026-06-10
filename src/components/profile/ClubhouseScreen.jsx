@@ -463,11 +463,9 @@ function CosmeticUpgradeCard({
       : "border-[#F7D117]/42 bg-[#031B12]/42 text-[#F5F1E8] ring-1 ring-[#F7D117]/18";
 
   const status = isTicket
-    ? isMaxTicket
-      ? "MAX"
-      : ticketQty > 0
-        ? `${ticketQty}/99`
-        : price
+    ? ticketQty > 0
+      ? `${ticketQty}/99`
+      : price
     : isOwned
       ? isActive
         ? "EQUIPPED"
@@ -494,7 +492,7 @@ function CosmeticUpgradeCard({
         }
         onToggle?.(id);
       }}
-      disabled={disabled || isMaxTicket}
+      disabled={disabled}
       className={`group relative min-h-[108px] overflow-hidden rounded-[1.1rem] border p-2 text-center shadow-[0_8px_16px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all disabled:cursor-default disabled:opacity-70 ${cardTone}`}
     >
       <div className="flex h-full min-h-[92px] flex-col items-center justify-center">
@@ -612,13 +610,14 @@ function AllTeamsUnlockButton({
   );
 }
 
-function GoldenKitbagBundleCard({ onOpenShop, disabled = false }) {
+function GoldenKitbagBundleCard({ onOpenShop, active = false, inactive = false }) {
+  const disabled = active || inactive;
   return (
     <button
       type="button"
       onClick={() => !disabled && onOpenShop?.(STORE_ITEM_IDS.fullBundle)}
       disabled={disabled}
-      className="group relative flex min-h-[118px] w-full items-center gap-4 overflow-hidden rounded-[1.1rem] border border-[#F7D117]/42 bg-[#031B12]/42 px-4 py-4 text-left text-[#F5F1E8] shadow-[0_8px_16px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.18)] ring-1 ring-[#F7D117]/18 transition-all active:scale-[0.99] disabled:opacity-60"
+      className={`group relative flex min-h-[118px] w-full items-center gap-4 overflow-hidden rounded-[1.1rem] border px-4 py-4 text-left shadow-[0_8px_16px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.18)] ring-1 transition-all active:scale-[0.99] disabled:cursor-default ${disabled ? "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8]/72 opacity-72 ring-[#F5F1E8]/10" : "border-[#F7D117]/42 bg-[#031B12]/42 text-[#F5F1E8] ring-[#F7D117]/18"}`}
     >
       <span className="grid h-[74px] w-[74px] shrink-0 place-items-center rounded-full border border-[#F5F1E8]/12 bg-[#031B12]/54 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
         <img
@@ -660,8 +659,16 @@ function GoldenKitbagBundleCard({ onOpenShop, disabled = false }) {
           ))}
         </span>
       </span>
-      <span className="ml-auto grid min-w-[64px] shrink-0 place-items-center home-copy-bold text-[18px] uppercase leading-none tracking-[0.07em] text-[#F7D117]">
-        £4.99
+      <span className="ml-auto grid min-w-[64px] shrink-0 place-items-center text-center">
+        {active ? (
+          <StatusPill active>ACTIVE</StatusPill>
+        ) : inactive ? (
+          <StatusPill>INACTIVE</StatusPill>
+        ) : (
+          <span className="home-copy-bold text-[18px] uppercase leading-none tracking-[0.07em] text-[#F7D117]">
+            £4.99
+          </span>
+        )}
       </span>
     </button>
   );
@@ -669,41 +676,71 @@ function GoldenKitbagBundleCard({ onOpenShop, disabled = false }) {
 
 function TicketOfficeModal({ open, quantity = 0, onUse, onBuyMore, onClose }) {
   if (!open) return null;
+  const ticketQty = normaliseTicketQuantity(quantity);
+
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/62 px-5">
-      <div className="w-full max-w-[340px] rounded-[1.35rem] border border-[#F7D117]/48 bg-[#031B12] p-4 text-center text-[#F5F1E8] shadow-[0_18px_34px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#F7D117]/20">
-        <div className="home-copy-bold text-[18px] uppercase leading-none tracking-[0.12em] text-[#F7D117]">
-          TICKET OFFICE
+    <div className="fixed inset-0 flex items-center justify-center bg-black/68 px-5"
+      style={{ zIndex: 2147483647 }}>
+      <div className="relative w-full max-w-[348px] overflow-hidden rounded-[1.35rem] border border-[#F7D117]/58 bg-[#031B12] p-3 text-center text-[#F5F1E8] shadow-[0_22px_42px_rgba(0,0,0,0.46),0_0_28px_rgba(247,209,23,0.16),inset_0_1px_0_rgba(245,241,232,0.10)] ring-1 ring-[#F7D117]/24">
+        <div className="pointer-events-none absolute inset-0 opacity-70 [background:radial-gradient(circle_at_50%_0%,rgba(247,209,23,0.22),transparent_42%),linear-gradient(135deg,rgba(247,209,23,0.10),transparent_34%,rgba(245,241,232,0.04)_52%,transparent_68%)]" />
+        <div className="relative overflow-hidden rounded-[1.05rem] border border-[#F7D117]/44 bg-[#062817]/90 shadow-[inset_0_1px_0_rgba(245,241,232,0.10)]">
+          <div className="flex min-h-[44px] items-center justify-between border-b border-[#F7D117]/30 bg-[#F7D117]/12 px-3 py-2">
+            <span className="rounded-full border border-[#F7D117]/60 bg-[#F7D117] px-3 py-1.5 home-copy-bold text-[7px] uppercase leading-none tracking-[0.12em] text-[#052D1D] shadow-[0_0_10px_rgba(247,209,23,0.22)]">
+              Golden Ticket
+            </span>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close Golden Ticket panel"
+              className="grid h-9 w-9 place-items-center home-copy-bold text-[26px] leading-none text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.35)]"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="relative grid grid-cols-[74px_1fr] items-center gap-3 px-3 py-4 text-center">
+            <div className="pointer-events-none absolute bottom-0 left-[98px] top-0 border-l border-dashed border-[#F7D117]/30" />
+            <div className="flex h-[74px] w-[74px] items-center justify-center">
+              <div className="relative h-[74px] w-[74px] overflow-hidden rounded-[1rem] border border-[#F7D117]/44 bg-[#031B12]/72 shadow-[0_0_18px_rgba(247,209,23,0.18),inset_0_1px_0_rgba(245,241,232,0.08)]">
+                <img
+                  src="/assets/game/golden-ticket.png"
+                  alt=""
+                  className="absolute left-1/2 top-1/2 h-16 w-16 max-w-none -translate-x-1/2 -translate-y-1/2 object-contain object-center drop-shadow-[0_8px_12px_rgba(0,0,0,0.34)]"
+                  draggable={false}
+                />
+              </div>
+            </div>
+            <div className="flex min-w-0 flex-col items-center pl-1 text-center">
+              <div className="home-copy-bold text-[19px] uppercase leading-[0.92] tracking-[0.10em] text-[#F7D117] drop-shadow-[0_2px_0_rgba(0,0,0,0.26)]">
+                Ticket Office
+              </div>
+              <div className="home-copy-regular mt-2 text-center text-[9px] uppercase leading-snug tracking-[0.08em] text-[#F5F1E8]/78">
+                <span className="block">Use a Golden Ticket for the next campaign</span>
+                <span className="block">and start directly at the final after choosing a team?</span>
+              </div>
+              <div className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-full border border-[#F7D117]/34 bg-[#031B12]/70 px-2.5 py-1 home-copy-bold text-[9px] uppercase leading-none tracking-[0.10em] text-[#F5F1E8]/78">
+                Owned <span className="text-[#F7D117]">{ticketQty}/99</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="home-copy-regular mx-auto mt-3 max-w-[260px] text-[10px] uppercase leading-snug tracking-[0.08em] text-[#F5F1E8]/78">
-          Use a Golden Ticket for the next campaign and start directly at the final after choosing a team?
-        </div>
-        <div className="home-copy-bold mt-3 text-[11px] uppercase leading-none tracking-[0.10em] text-[#F5F1E8]/74">
-          OWNED <span className="text-[#F7D117]">{normaliseTicketQuantity(quantity)}/99</span>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-2">
+
+        <div className="relative mt-3 grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={onBuyMore}
-            className="rounded-full border border-[#F5F1E8]/18 bg-[#052D1D]/72 px-3 py-3 home-copy-bold text-[10px] uppercase tracking-[0.10em] text-[#F5F1E8]"
+            className="rounded-full border border-[#F5F1E8]/18 bg-[#052D1D]/76 px-3 py-3 home-copy-bold text-[10px] uppercase tracking-[0.10em] text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]"
           >
-            NO
+            BUY MORE
           </button>
           <button
             type="button"
             onClick={onUse}
-            className="rounded-full border border-[#F7D117]/78 bg-[#F7D117] px-3 py-3 home-copy-bold text-[10px] uppercase tracking-[0.10em] text-[#072D1D] shadow-[0_0_12px_rgba(247,209,23,0.18)]"
+            className="rounded-full border border-[#F7D117]/84 bg-[#F7D117] px-3 py-3 home-copy-bold text-[10px] uppercase tracking-[0.10em] text-[#072D1D] shadow-[0_0_16px_rgba(247,209,23,0.28),inset_0_1px_0_rgba(255,255,255,0.35)]"
           >
-            YES
+            USE TICKET
           </button>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-3 home-copy-bold text-[8px] uppercase tracking-[0.14em] text-[#F5F1E8]/54"
-        >
-          CANCEL
-        </button>
       </div>
     </div>
   );
@@ -999,6 +1036,7 @@ function ClubhouseShirtCard({
 export function ClubhouseScreen({
   menuProps,
   team,
+  currentCampaign = null,
   userForm,
   campaignPoints,
   bestCampaignSummary,
@@ -1040,12 +1078,51 @@ export function ClubhouseScreen({
   const conversionDisplay = shotsTakenTotal > 0 ? `${conversion}%` : "--";
   const matchesPlayedTotal = Number(allTimeMatchesPlayed || matchesPlayed || 0);
   const highScoreTotal = Number(highScore || 0);
-  const hasCurrentCampaign = Boolean(team);
+  const savedCurrentCampaign = currentCampaign && typeof currentCampaign === "object" ? currentCampaign : {};
+  const savedCampaignStatus = String(savedCurrentCampaign.status || "").toUpperCase();
+  const savedCampaignIsTerminal = ["COMPLETE", "COMPLETED", "ELIMINATED", "WINNER"].includes(savedCampaignStatus);
+  const savedCampaignActive = Boolean(
+    team ||
+      savedCurrentCampaign.active ||
+      savedCampaignStatus === "ACTIVE" ||
+      (!savedCampaignIsTerminal && savedCurrentCampaign.exists) ||
+      savedCurrentCampaign.runtimeSnapshot?.active,
+  );
+  const currentCampaignTeam =
+    team ||
+    savedCurrentCampaign.teamName ||
+    savedCurrentCampaign.selectedTeamName ||
+    savedCurrentCampaign.team ||
+    savedCurrentCampaign.runtimeSnapshot?.team ||
+    null;
+  const hasCurrentCampaign = Boolean(currentCampaignTeam && savedCampaignActive);
+  const currentCampaignForm =
+    Array.isArray(userForm) && userForm.length
+      ? userForm
+      : savedCurrentCampaign.cupRun ||
+        savedCurrentCampaign.formGuide ||
+        savedCurrentCampaign.form ||
+        savedCurrentCampaign.runtimeSnapshot?.userForm ||
+        [];
+  const currentCampaignScore = Number(
+    campaignPoints ||
+      savedCurrentCampaign.gameScore ||
+      savedCurrentCampaign.points ||
+      savedCurrentCampaign.campaignPoints ||
+      savedCurrentCampaign.runtimeSnapshot?.scoringState?.campaignPoints ||
+      0,
+  );
+  const currentCampaignRoundLabel =
+    currentRoundLabel ||
+    savedCurrentCampaign.round ||
+    savedCurrentCampaign.roundLabel ||
+    savedCurrentCampaign.runtimeSnapshot?.matchStage ||
+    "GROUP STAGE";
   const currentSummary = {
-    team: hasCurrentCampaign ? team : "START NEW CAMPAIGN",
-    form: hasCurrentCampaign ? formForSummary(userForm) : [],
-    campaignPoints: hasCurrentCampaign ? Number(campaignPoints || 0) : 0,
-    roundLabel: hasCurrentCampaign ? (currentRoundLabel || "GROUP STAGE") : "NO ACTIVE CAMPAIGN",
+    team: hasCurrentCampaign ? currentCampaignTeam : "START NEW CAMPAIGN",
+    form: hasCurrentCampaign ? formForSummary(currentCampaignForm) : [],
+    campaignPoints: hasCurrentCampaign ? currentCampaignScore : 0,
+    roundLabel: hasCurrentCampaign ? currentCampaignRoundLabel : "NO ACTIVE CAMPAIGN",
   };
   const bestSummary =
     bestCampaignSummary?.campaignPoints || bestCampaignSummary?.points
@@ -1149,11 +1226,6 @@ export function ClubhouseScreen({
               style={CLUBHOUSE_PANEL_STYLE}
             >
               <div className="space-y-3 p-4 pt-2">
-                <AllTeamsUnlockButton
-                  unlocked={Boolean(allTeamsUnlocked)}
-                  guestLocked={isGuest}
-                  onUnlock={() => onUnlockAllTeams?.()}
-                />
                 <div className="grid grid-cols-4 gap-2">
                 <CosmeticUpgradeCard
                   id="goldenBoot"
@@ -1258,6 +1330,11 @@ export function ClubhouseScreen({
                   }}
                 />
                 </div>
+                <AllTeamsUnlockButton
+                  unlocked={Boolean(allTeamsUnlocked)}
+                  guestLocked={isGuest}
+                  onUnlock={() => onUnlockAllTeams?.()}
+                />
               </div>
             </MenuPanel>
 
@@ -1268,7 +1345,14 @@ export function ClubhouseScreen({
               <div className="p-4 pt-2">
                 <GoldenKitbagBundleCard
                   onOpenShop={(id) => onOpenShop?.(id)}
-                  disabled={false}
+                  active={Boolean(ownedItems?.goldenKitbag)}
+                  inactive={Boolean(
+                    !ownedItems?.goldenKitbag &&
+                      (ownedItems?.allTeams ||
+                        ownedItems?.goldenBoot ||
+                        ownedItems?.goldenBall ||
+                        ownedItems?.goldenGlove)
+                  )}
                 />
               </div>
             </MenuPanel>

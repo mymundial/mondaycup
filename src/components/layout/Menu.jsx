@@ -102,7 +102,7 @@ function MenuActionIcon({ type = "default", className = "h-9 w-9" }) {
   const common = {
     fill: "none",
     stroke: "currentColor",
-    strokeWidth: 2,
+    strokeWidth: 1,
     strokeLinecap: "round",
     strokeLinejoin: "round",
     "aria-hidden": "true",
@@ -229,7 +229,7 @@ function MenuHeader({ title = "MENU", onClose, onBack, authView = false, authLog
         type="button"
         onClick={onClose}
         aria-label="Close menu"
-        className="grid h-11 w-11 place-items-center justify-self-end rounded-[0.9rem] bg-[#031B12]/46 text-[#F5F1E8]"
+        className="grid h-11 w-11 place-items-center justify-self-end text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.32)] active:scale-[0.96]"
       >
         <CloseIcon small />
       </button>
@@ -251,7 +251,6 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
   const [verifyUser, setVerifyUser] = useState(null);
   const [verifyProfile, setVerifyProfile] = useState(null);
   const [verifyButtonText, setVerifyButtonText] = useState("VERIFY YOUR EMAIL ADDRESS");
-  const [verifyNoticeActive, setVerifyNoticeActive] = useState(false);
   const verifyNoticeTimerRef = useRef(null);
   const [verificationComplete, setVerificationComplete] = useState(false);
 
@@ -263,7 +262,6 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
         setVerifyProfile({ accountStatus: { emailVerified: false, verificationRequired: true } });
         setVerifyUser(user);
         setVerifyButtonText("VERIFY YOUR EMAIL ADDRESS");
-        setVerifyNoticeActive(false);
         setVerificationComplete(false);
       }
       return;
@@ -271,7 +269,6 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
 
     setMode(initialMode || "signin");
     setVerifyUser(null);
-    setVerifyNoticeActive(false);
     setVerificationComplete(false);
   }, [initialMode]);
 
@@ -328,16 +325,22 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
     setSuccess("");
   };
 
-  const showVerificationInboxNotice = () => {
+  const showVerificationNotice = (message, nextButtonText = "RESEND VERIFICATION EMAIL", immediateButtonText = "PLEASE CHECK YOUR INBOX") => {
     if (verifyNoticeTimerRef.current) window.clearTimeout(verifyNoticeTimerRef.current);
+    setError("");
     setSuccess("");
+    setVerifyNoticeMessage(String(message || "").toUpperCase());
     setVerifyNoticeActive(true);
-    setVerifyButtonText("PLEASE CHECK YOUR INBOX");
+    if (immediateButtonText) setVerifyButtonText(immediateButtonText);
     verifyNoticeTimerRef.current = window.setTimeout(() => {
       setVerifyNoticeActive(false);
-      setVerifyButtonText("RESEND VERIFICATION EMAIL");
+        if (nextButtonText) setVerifyButtonText(nextButtonText);
       verifyNoticeTimerRef.current = null;
-    }, 10000);
+    }, 5000);
+  };
+
+  const showVerificationInboxNotice = () => {
+    showVerificationNotice("CHECK YOUR INBOX/SPAM/JUNK FOLDERS. RETURN TO THIS WINDOW AFTER VERIFYING.");
   };
 
   useEffect(() => {
@@ -408,8 +411,8 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
         } catch (verificationError) {
           const code = String(verificationError?.code || "");
           setVerifyButtonText("SEND VERIFICATION EMAIL");
-          if (code.includes("too-many-requests")) setError("Verification email not sent please wait before trying again");
-          else setError("Account created but verification email did not send please tap the button below");
+          if (code.includes("too-many-requests")) showVerificationNotice("PLEASE WAIT BEFORE SENDING ANOTHER EMAIL", "SEND VERIFICATION EMAIL");
+          else showVerificationNotice("ACCOUNT CREATED. TAP BELOW TO SEND VERIFICATION EMAIL", "SEND VERIFICATION EMAIL");
         }
         return;
       }
@@ -466,8 +469,8 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
       showVerificationInboxNotice();
     } catch (err) {
       const code = String(err?.code || "");
-      if (code.includes("too-many-requests")) setError("Please wait before sending another email");
-      else setError(err?.message || "Could not send verification email");
+      if (code.includes("too-many-requests")) showVerificationNotice("PLEASE WAIT BEFORE SENDING ANOTHER EMAIL", "RESEND VERIFICATION EMAIL");
+      else showVerificationNotice(err?.message || "COULD NOT SEND VERIFICATION EMAIL", "RESEND VERIFICATION EMAIL");
     } finally {
       setLoading(false);
     }
@@ -503,14 +506,17 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
       <>
         <MenuHeader title="MONDAY CLUB" onClose={onClose} onBack={onBack} authView authLogoBack={showLogoBack} />
         <div className="mt-2 space-y-2 text-center">
-          <div className="home-copy-regular text-[20px] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">VERIFY YOUR EMAIL</div>
-          <p className="home-copy-regular mx-auto max-w-[280px] text-[10px] uppercase leading-snug tracking-[0.07em] text-[#F5F1E8]/78">
-            Check your inbox and spam/junk folders. Return to this window after verifying.
-          </p>
-          {error && <div className="home-copy-regular rounded-[0.8rem] bg-red-500/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-red-100">{error}</div>}
-          <AuthPrimaryButton type="button" loading={loading} disabled={verificationComplete} onClick={handleSendVerification}>
-            {loading ? "SENDING..." : verifyButtonText}
-          </AuthPrimaryButton>
+          <div className="rounded-[1.18rem] border border-[#F5F1E8]/14 bg-[#031B12]/34 p-3 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
+            <div className="home-copy-regular text-[20px] uppercase leading-none tracking-[0.08em] text-[#F5F1E8]">VERIFY YOUR EMAIL</div>
+            <p className="home-copy-regular mx-auto mt-4 max-w-[300px] text-[10px] uppercase leading-snug tracking-[0.07em] text-[#F5F1E8]/78">
+              CHECK YOUR INBOX/SPAM/JUNK FOLDERS. RETURN TO THIS WINDOW AFTER VERIFYING.
+            </p>
+            <div className="mt-4">
+              <AuthPrimaryButton type="button" loading={loading} disabled={verificationComplete} onClick={handleSendVerification}>
+                {loading ? "SENDING..." : verifyButtonText}
+              </AuthPrimaryButton>
+            </div>
+          </div>
         </div>
       </>
     );
@@ -580,13 +586,13 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
           rightAction={<PasswordVisibilityButton visible={passwordVisible} onToggle={() => setPasswordVisible((value) => !value)} />}
         />
 
-        {isSignup && (
-          <AuthEmailCommsCheckbox checked={emailOptIn} onChange={setEmailOptIn} />
-        )}
-
         <AuthPrimaryButton type="submit" loading={loading}>
           {error || success || (loading ? "LOADING..." : isSignup ? "REGISTER" : "SIGN IN")}
         </AuthPrimaryButton>
+
+        {isSignup && (
+          <AuthEmailCommsCheckbox checked={emailOptIn} onChange={setEmailOptIn} />
+        )}
 
 
         {!isSignup && (
@@ -673,14 +679,14 @@ export function MenuDropdown({
 
               <div className="space-y-2.5 rounded-[1.25rem] border border-[#F5F1E8]/12 bg-[#031B12]/20 p-3">
                 <div className="grid grid-cols-3 gap-2.5 items-center">
-                  <MenuTile title="SCHEDULE" iconType="onFixtures" onClick={() => runAndClose(onFixtures, onClose)} />
                   <MenuTile title="MATCH" iconType="onMatch" onClick={() => runAndClose(onMatch, onClose)} />
+                  <MenuTile title="SCHEDULE" iconType="onFixtures" onClick={() => runAndClose(onFixtures, onClose)} />
                   <MenuTile title="STANDINGS" iconType="onGroups" onClick={() => runAndClose(onGroups, onClose)} />
                 </div>
 
                 <div className="grid grid-cols-3 gap-2.5">
-                  <MenuTile title="TROPHIES" iconType="onTrophyCabinet" onClick={() => runAndClose(onTrophyCabinet, onClose)} />
                   <MenuTile title="CLUBHOUSE" iconType="onClubhouse" onClick={() => runAndClose(onClubhouse, onClose)} />
+                  <MenuTile title="TROPHIES" iconType="onTrophyCabinet" onClick={() => runAndClose(onTrophyCabinet, onClose)} />
                   <MenuTile title="LEADERBOARD" iconType="onLeaderboard" onClick={() => runAndClose(onLeaderboard, onClose)} />
                 </div>
 

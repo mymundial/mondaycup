@@ -5,7 +5,8 @@ import { HOST_TEAMS, GROUPS, GROUP_LETTERS, TEAM_RANK, getTeamTheme } from "../.
 import { ASSETS } from "../../data/assets.js";
 import { Flag } from "../shared.jsx";
 import { ensureUserDocument } from "../../lib/firebaseUser.js";
-import { GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
+import { FullPitchExtensionBackground, GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
+import AppFooter from "../ui/AppFooter.jsx";
 import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
 import SharedCrowdBackdrop from "../crowd/SharedCrowdBackdrop.jsx";
 import { AuthEmailCommsCheckbox, AuthForgotPasswordButton, AuthPrimaryButton, AuthTabs, AuthTextInput, PasswordVisibilityButton } from "../auth/AuthFormParts.jsx";
@@ -43,7 +44,7 @@ const HOME_LOGO_GAP = "clamp(18px,2.6vh,30px)";
 const HOME_PITCH_BADGE_SCALE = 0.43;
 const HOME_AD_BOARD_TOP_PERCENT = GAME.goal.top + GAME.goal.height - SHARED_AD_BOARD_HEIGHT_PERCENT;
 const HOME_GOAL_LINE_PERCENT = GAME.goal.top + GAME.goal.height;
-const HOME_MENU_TOP_OFFSET = `calc(${HOME_GOAL_LINE_PERCENT}% + clamp(10px,1.4vh,16px))`;
+const HOME_MENU_TOP_OFFSET = `calc(${HOME_GOAL_LINE_PERCENT}% + 20px)`;
 
 function AtIcon({ className = "" }) {
   return (
@@ -211,10 +212,9 @@ function HomeFlashTeamTicker({ scoreboardHeight, tickerHeight }) {
 
   const activeTeam = teams[activeIndex] || teams[0] || "Mexico";
   const theme = getTeamTheme(activeTeam);
-
   return (
     <div
-      className="flash-team-ticker"
+      className="flash-team-ticker relative overflow-visible"
       style={{
         "--flash-team-bg": theme.bg,
         "--flash-team-text": theme.text,
@@ -222,7 +222,7 @@ function HomeFlashTeamTicker({ scoreboardHeight, tickerHeight }) {
       }}
       aria-live="off"
     >
-      <div className="flash-team-ticker__grid">
+      <div className="flash-team-ticker__grid relative z-[1]">
         <span className="flash-team-ticker__flag">
           <Flag team={activeTeam} className="flash-team-ticker__flag-img" />
         </span>
@@ -284,7 +284,7 @@ function BrothersTopBarTitle() {
     <img
       src={ASSETS.branding?.myMundialLogo || ASSETS.myMundialLogo}
       alt="Brothers!"
-      className="mx-auto h-[31px] w-auto max-w-[175px] object-contain drop-shadow-[0_3px_7px_rgba(0,0,0,0.20)]"
+      className="mx-auto h-[25px] w-auto max-w-[140px] object-contain opacity-100 drop-shadow-[0_2px_5px_rgba(0,0,0,0.24)]"
       draggable={false}
     />
   );
@@ -294,9 +294,9 @@ function StaticHomeTopBar() {
   return (
     <section className="relative z-[1000] flex shrink-0 items-center justify-center overflow-visible bg-[#063B25] px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.16)]" style={{ height: MATCH_TOP_BAR_HEIGHT_PX }}>
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.16))]" aria-hidden="true" />
-      <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 z-[1] h-10 w-10 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
+      <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="absolute left-3 top-1/2 z-[1] h-9 w-9 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
       <div className="relative z-[1] flex h-full items-center justify-center"><BrothersTopBarTitle /></div>
-      <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="absolute right-3 top-1/2 z-[1] h-10 w-10 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
+      <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="absolute right-3 top-1/2 z-[1] h-9 w-9 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]" draggable={false} />
     </section>
   );
 }
@@ -314,7 +314,7 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, stati
   const flashTickerHeight = `calc(${scoreboardHeight} * ${MC_SELECTION_LAYOUT.tickerRatio})`;
   const scoreboardMainHeight = `calc(${scoreboardHeight} - ${flashTickerHeight})`;
   return (
-    <div className="relative z-[1] shrink-0 overflow-hidden bg-transparent" style={{ height: `calc(${MATCH_TOP_BAR_HEIGHT_PX}px + ${scoreboardHeight})` }} >
+    <div className="relative z-[1] shrink-0 overflow-visible bg-transparent" style={{ height: `calc(${MATCH_TOP_BAR_HEIGHT_PX}px + ${scoreboardHeight})` }} >
       <HomeMenuBar menuProps={menuProps} staticRightLogo={staticRightLogo} />
       <div className="relative mt-0 overflow-hidden border-y border-[#F5F1E8]/18 bg-[#050505] shadow-[inset_0_1px_0_rgba(245,241,232,0.16)]" style={{ height: scoreboardMainHeight }}>
         <div
@@ -353,23 +353,24 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, stati
   );
 }
 
-function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {}, staticRightLogo = false }) {
+function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {}, staticRightLogo = false, onOpenFeedback = null }) {
   return (
     <Shell>
-      <div className="home-main-font relative flex h-[100dvh] flex-col overflow-hidden bg-[#0d6c3d] text-[#072D1D]">
+      <FullPitchExtensionBackground />
+      <div className="home-main-font relative z-[2] flex h-[100dvh] flex-col overflow-x-visible overflow-y-hidden bg-[#0d6c3d] text-[#072D1D]">
         <ScoreboardPlaceholder allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo={staticRightLogo} />
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
           <FloatingHomeLogo />
-          <HomeConfirmSlotBrothersLogo />
           <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col px-5 pb-0" style={{ top: HOME_MENU_TOP_OFFSET }}>
-            <div className="min-h-0 flex-1 overflow-y-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="min-h-0 flex-1 overflow-y-auto pb-[calc(70px+env(safe-area-inset-bottom))] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="flex min-h-full flex-col justify-start">
                 {children}
               </div>
             </div>
           </div>
         </main>
+        <AppFooter fixed onFeedback={onOpenFeedback} />
       </div>
     </Shell>
   );
@@ -437,13 +438,13 @@ function FloatingHomeLogo() {
       style={{ top: HOME_LOGO_CENTER_Y, width: "99.825%", height: "74.415%" }}
       aria-hidden="true"
     >
-      <div className="absolute left-1/2 top-[54%] h-[56%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/28 blur-3xl" />
-      <div className="absolute left-1/2 top-[54%] h-[38%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5F1E8]/24 blur-2xl" />
+      <div className="absolute left-1/2 top-[54%] h-[56%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/[0.118125] blur-3xl" />
+      <div className="absolute left-1/2 top-[54%] h-[38%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5F1E8]/[0.10125] blur-2xl" />
       <img
         src={FLOATING_HOME_LOGO_SRC}
         alt="Monday Cup"
         className="relative z-10 h-full w-full object-contain"
-        style={{ filter: "drop-shadow(0 10px 24px rgba(0,0,0,0.44))", transform: `scale(${HOME_PITCH_BADGE_SCALE})` }}
+        style={{ filter: "drop-shadow(0 10px 24px rgba(0,0,0,0.33))", transform: `scale(${HOME_PITCH_BADGE_SCALE})` }}
         draggable={false}
       />
     </div>
@@ -761,9 +762,8 @@ function WelcomeBackPanel({ onResume, onNewCampaign, onTwoPlayer, hasResumeCampa
       <div className={`mb-3 flex min-h-[34px] items-center justify-center text-center ${MENU_TITLE_CLASS}`}>WELCOME BACK</div>
       <div className="flex flex-col gap-3">
         <ActionButton onClick={onNewCampaign} variant="yellow" size="journey">NEW CAMPAIGN</ActionButton>
-        <ActionButton onClick={onTwoPlayer} variant="yellow" size="journey">2 PLAYER</ActionButton>
         {hasResumeCampaign && <ActionButton onClick={onResume} variant="yellow" size="journey">RESUME GAME</ActionButton>}
-        <ActionButton onClick={onMondayClub} variant="yellow" size="journey">MONDAY CLUB</ActionButton>
+        <ActionButton onClick={onTwoPlayer} variant="yellow" size="journey">2-PLAYER SHOOTOUT</ActionButton>
       </div>
     </HomeMenuShell>
   </div>;
@@ -783,14 +783,28 @@ function LandingPanel({ onPlayGuest, onTwoPlayer, currentUser, onOpenClubhouse, 
     else setAuthMode("signin");
   };
 
+  const handleSignIn = () => {
+    if (currentUser?.uid) onOpenClubhouse?.();
+    else if (typeof onOpenAuthPanel === "function") onOpenAuthPanel("signin", { showLogoBack: true });
+    else setAuthMode("signin");
+  };
+
   return <div className="space-y-3">
     <HomeMenuShell>
       <div className={`mb-3 flex min-h-[34px] items-center justify-center text-center ${MENU_TITLE_CLASS}`}>START YOUR JOURNEY</div>
       <div className="flex flex-col gap-3">
         <ActionButton onClick={onPlayGuest} variant="yellow" size="journey">NEW CAMPAIGN</ActionButton>
-        <ActionButton onClick={onTwoPlayer} variant="yellow" size="journey">2 PLAYER</ActionButton>
         {hasResumeCampaign && <ActionButton onClick={onResumeCampaign} variant="yellow" size="journey">RESUME GAME</ActionButton>}
-        <ActionButton onClick={handleMondayClub} variant="yellow" size="journey">MONDAY CLUB</ActionButton>
+        <ActionButton onClick={onTwoPlayer} variant="yellow" size="journey">2-PLAYER SHOOTOUT</ActionButton>
+        {!currentUser?.uid ? (
+          <button
+            type="button"
+            onClick={handleSignIn}
+            className="home-copy-bold mx-auto -mt-1 inline-flex items-center justify-center rounded-[0.9rem] px-4 py-1.5 text-[12px] uppercase tracking-[0.1em] text-[#F5F1E8]/86 transition hover:text-[#F7D117]"
+          >
+            SIGN IN
+          </button>
+        ) : null}
       </div>
     </HomeMenuShell>
   </div>;
@@ -891,10 +905,10 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack, title = "CHOOSE
   </HomeMenuShell>;
 }
 
-export function HomeScreen({ onSelectGroup, onSelectTeam, onTwoPlayer, onUnlockAllTeams, allTeamsUnlocked = false, currentUser = null, onOpenClubhouse, onOpenAuthPanel, onAuthComplete, onResumeCampaign, hasResumeCampaign = false, menuProps = {} }) {
+export function HomeScreen({ onSelectGroup, onSelectTeam, onTwoPlayer, onUnlockAllTeams, allTeamsUnlocked = false, currentUser = null, onOpenClubhouse, onOpenAuthPanel, onAuthComplete, onResumeCampaign, hasResumeCampaign = false, menuProps = {}, onOpenFeedback = null }) {
   const [homeMode, setHomeMode] = useState("landing");
-  if (homeMode === "hosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} currentUser={currentUser} onAuthComplete={onAuthComplete} allTeamsUnlocked={allTeamsUnlocked} onUnlockAllTeams={onUnlockAllTeams} /></HomeLayout>;
-  return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo><LandingPanel currentUser={currentUser} onOpenClubhouse={onOpenClubhouse} onOpenAuthPanel={onOpenAuthPanel} onAuthComplete={onAuthComplete} onResumeCampaign={onResumeCampaign} hasResumeCampaign={hasResumeCampaign} onPlayGuest={() => setHomeMode("hosts")} onTwoPlayer={onTwoPlayer} /></HomeLayout>;
+  if (homeMode === "hosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} onOpenFeedback={onOpenFeedback}><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} currentUser={currentUser} onAuthComplete={onAuthComplete} allTeamsUnlocked={allTeamsUnlocked} onUnlockAllTeams={onUnlockAllTeams} /></HomeLayout>;
+  return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo onOpenFeedback={onOpenFeedback}><LandingPanel currentUser={currentUser} onOpenClubhouse={onOpenClubhouse} onOpenAuthPanel={onOpenAuthPanel} onAuthComplete={onAuthComplete} onResumeCampaign={onResumeCampaign} hasResumeCampaign={hasResumeCampaign} onPlayGuest={() => setHomeMode("hosts")} onTwoPlayer={onTwoPlayer} /></HomeLayout>;
 }
-export function HostSelectScreen(props) { return <HomeLayout allTeamsUnlocked={props.allTeamsUnlocked} menuProps={props.menuProps || {}}><HostPanel {...props} /></HomeLayout>; }
-export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam, onBack, allTeamsUnlocked = false, menuProps = {}, title = "CHOOSE YOUR TEAM", disabledTeam = null }) { return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps}><TeamPanel group={selectedGroup} onBack={onBack} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} title={title} disabledTeam={disabledTeam} /></HomeLayout>; }
+export function HostSelectScreen(props) { return <HomeLayout allTeamsUnlocked={props.allTeamsUnlocked} menuProps={props.menuProps || {}} onOpenFeedback={props.onOpenFeedback}><HostPanel {...props} /></HomeLayout>; }
+export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam, onBack, allTeamsUnlocked = false, menuProps = {}, title = "CHOOSE YOUR TEAM", disabledTeam = null, onOpenFeedback = null }) { return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} onOpenFeedback={onOpenFeedback}><TeamPanel group={selectedGroup} onBack={onBack} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} title={title} disabledTeam={disabledTeam} /></HomeLayout>; }

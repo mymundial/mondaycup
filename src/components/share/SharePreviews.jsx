@@ -183,8 +183,17 @@ function ShareScoreboard({
             <div className="col-start-1 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
               {d.showFlags && <TeamFlag team={userTeam} className="h-[17px] w-[25px] border border-[#F7D117]/88 bg-[#F5F1E8] shadow-none drop-shadow-none" style={{ transform: editorTransform({ x: Number(d.flagAX || 0) + 7, y: d.flagAY, scale: d.flagScale }) }} />}
             </div>
-            <div className="col-start-2 row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible px-0">
-              {d.showTeamCodes && <div data-share-team-code="A" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-black leading-none" style={codeTextStyle("A")}>{userTeam.code}</div>}
+            <div className="col-start-2 row-start-2 row-end-4 grid h-full min-w-0 overflow-visible px-0" style={{ gridTemplateRows: "45fr 25fr" }}>
+              <div className="row-start-1 flex h-full min-w-0 items-center justify-center overflow-visible">
+                {d.showTeamCodes && <div data-share-team-code="A" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-black leading-none" style={codeTextStyle("A")}>{userTeam.code}</div>}
+              </div>
+              {showMarkers && (
+                <div className="relative z-[1] row-start-2 flex h-full min-w-0 items-center justify-center overflow-hidden">
+                  <div className={markerShell} style={{ transform: editorTransform({ x: d.markerAX, y: d.markerAY, scale: d.markerScale }) }}>
+                    <span className="flex min-h-[16px] items-center justify-center leading-none"><MarkerDots markers={teamAMarkers} totalSlots={totalMarkerSlots} /></span>
+                  </div>
+                </div>
+              )}
             </div>
             {d.showScore && d.scoreDisplayMode === "vs" ? (
               <div className="col-start-3 col-end-6 row-start-2 flex h-full items-center justify-center">
@@ -203,31 +212,28 @@ function ShareScoreboard({
                 </div>
               </>
             )}
-            <div className="col-start-6 row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible px-0">
-              {d.showTeamCodes && <div data-share-team-code="B" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-black leading-none" style={codeTextStyle("B")}>{opponentTeam.code}</div>}
+            <div className="col-start-6 row-start-2 row-end-4 grid h-full min-w-0 overflow-visible px-0" style={{ gridTemplateRows: "45fr 25fr" }}>
+              <div className="row-start-1 flex h-full min-w-0 items-center justify-center overflow-visible">
+                {d.showTeamCodes && <div data-share-team-code="B" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-black leading-none" style={codeTextStyle("B")}>{opponentTeam.code}</div>}
+              </div>
+              {showMarkers && (
+                <div className="relative z-[1] row-start-2 flex h-full min-w-0 items-center justify-center overflow-hidden">
+                  <div className={markerShell} style={{ transform: editorTransform({ x: d.markerBX, y: d.markerBY, scale: d.markerScale }) }}>
+                    <span className="flex min-h-[16px] items-center justify-center leading-none"><MarkerDots markers={teamBMarkers} totalSlots={totalMarkerSlots} /></span>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="col-start-7 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
               {d.showFlags && <TeamFlag team={opponentTeam} className="h-[17px] w-[25px] border border-[#F7D117]/88 bg-[#F5F1E8] shadow-none drop-shadow-none" style={{ transform: editorTransform({ x: Number(d.flagBX || 0) - 7, y: d.flagBY, scale: d.flagScale }) }} />}
             </div>
 
             {showMarkers ? (
-              <>
-                <div className="relative z-[1] col-start-2 row-start-3 flex h-full items-center justify-center overflow-hidden">
-                  <div className={markerShell} style={{ transform: editorTransform({ x: d.markerAX, y: d.markerAY, scale: d.markerScale }) }}>
-                    <span className="flex min-h-[16px] items-center justify-center leading-none"><MarkerDots markers={teamAMarkers} totalSlots={totalMarkerSlots} /></span>
-                  </div>
+              <div data-share-username-slot="true" className="relative z-[3] col-start-3 col-end-6 row-start-3 flex h-full items-center justify-center px-1">
+                <div className={`${usernameEnabled ? "visible" : "invisible"} led-text-glow font-led inline-flex min-h-[20px] max-w-full items-center justify-center truncate whitespace-nowrap rounded-[6px] border border-[#F5F1E8]/22 bg-[#050505] px-3 text-center text-[9px] font-black uppercase leading-none tracking-[0.11em] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]`} style={{ ...boardTextStyle, transform: editorTransform({ x: d.usernameX, y: d.usernameY, scale: d.usernameScale }) }}>
+                  {(String(username || "").replace(/\s+/g, " ").trim().toUpperCase()) || "GUEST"}
                 </div>
-                <div data-share-username-slot="true" className="relative z-[3] col-start-3 col-end-6 row-start-3 flex h-full items-center justify-center px-1">
-                  <div className={`${usernameEnabled ? "visible" : "invisible"} led-text-glow font-led inline-flex min-h-[20px] max-w-full items-center justify-center truncate whitespace-nowrap rounded-[6px] border border-[#F5F1E8]/22 bg-[#050505] px-3 text-center text-[9px] font-black uppercase leading-none tracking-[0.11em] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]`} style={{ ...boardTextStyle, transform: editorTransform({ x: d.usernameX, y: d.usernameY, scale: d.usernameScale }) }}>
-                    {(String(username || "").replace(/\s+/g, " ").trim().toUpperCase()) || "GUEST"}
-                  </div>
-                </div>
-                <div className="relative z-[1] col-start-6 row-start-3 flex h-full items-center justify-center overflow-hidden">
-                  <div className={markerShell} style={{ transform: editorTransform({ x: d.markerBX, y: d.markerBY, scale: d.markerScale }) }}>
-                    <span className="flex min-h-[16px] items-center justify-center leading-none"><MarkerDots markers={teamBMarkers} totalSlots={totalMarkerSlots} /></span>
-                  </div>
-                </div>
-              </>
+              </div>
             ) : (
               <div className="col-start-2 col-end-7 row-start-3 flex h-full items-center justify-center">
                 <div className="led-text-glow font-led inline-flex min-h-[18px] max-w-full items-center justify-center truncate rounded-[6px] border border-[#F5F1E8]/22 px-3 text-center text-[10px] font-black uppercase leading-none tracking-[0.12em] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]" style={{ ...boardTextStyle, background: d.markerBox ? "#050505" : "transparent", borderColor: d.markerBox ? "rgba(245,241,232,0.22)" : "transparent", transform: editorTransform({ x: d.markerAX, y: d.markerAY, scale: d.markerScale }) }}>
@@ -290,9 +296,9 @@ function ShareBadgeOverlay({ mode, scale = 1, x = 0, y = 0 }) {
       glow: null,
       shadow: "drop-shadow(0 10px 24px rgba(0,0,0,0.44))",
     },
-    champion: { src: ASSETS.badges.champion, alt: "Champion", width: "99.825%", height: "74.415%", glow: LED_YELLOW, glowOuter: "2E", glowInner: "20", shadow: "drop-shadow(0 18px 24px rgba(0,0,0,0.30))" },
-    runnerUp: { src: ASSETS.badges.runnerUp, alt: "Runner-up", width: "99.825%", height: "74.415%", glow: IVORY, glowOuter: "29", glowInner: "1C", shadow: "drop-shadow(0 18px 24px rgba(0,0,0,0.30))" },
-    third: { src: ASSETS.badges.third, alt: "Third place", width: "99.825%", height: "74.415%", glow: "#C8863A", glowOuter: "2E", glowInner: "20", shadow: "drop-shadow(0 18px 24px rgba(0,0,0,0.30))" },
+    champion: { src: ASSETS.badges.champion, alt: "Champion", width: "89.8425%", height: "66.9735%", glow: LED_YELLOW, glowOuter: "2E", glowInner: "20", shadow: "drop-shadow(0 18px 24px rgba(0,0,0,0.30))" },
+    runnerUp: { src: ASSETS.badges.runnerUp, alt: "Runner-up", width: "89.8425%", height: "66.9735%", glow: IVORY, glowOuter: "29", glowInner: "1C", shadow: "drop-shadow(0 18px 24px rgba(0,0,0,0.30))" },
+    third: { src: ASSETS.badges.third, alt: "Third place", width: "89.8425%", height: "66.9735%", glow: "#C8863A", glowOuter: "2E", glowInner: "20", shadow: "drop-shadow(0 18px 24px rgba(0,0,0,0.30))" },
   };
   const badge = badgeMap[mode] || badgeMap.monday;
   const hasGlow = Boolean(badge.glow);

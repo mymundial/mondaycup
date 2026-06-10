@@ -117,6 +117,40 @@ function stickerIsUnlocked(record = {}, stickerKey) {
   return Boolean(rule?.isUnlocked?.(record) || record?.claimable?.[stickerKey]);
 }
 
+const STICKER_PROGRESS_TARGETS = {
+  kit: 1,
+  flag: 1,
+  champions: 1,
+  stopper: 10,
+  talisman: 10,
+  striker: 25,
+};
+
+function stickerProgressValue(record = {}, stickerKey) {
+  switch (stickerKey) {
+    case "kit":
+      return Number(record.campaignsCompleted || record.completedCampaigns || 0);
+    case "flag":
+      return Boolean(record.knockoutQualified || record.qualifiedForKnockouts || record.qualified || record.reachedKnockouts) ? 1 : 0;
+    case "champions":
+      return Boolean(record.cupWon || record.champions || record.champion) ? 1 : 0;
+    case "stopper":
+      return Number(record.keeperSaves || record.saves || 0);
+    case "talisman":
+      return Number(record.wins || record.matchesWon || 0);
+    case "striker":
+      return Number(record.goals || record.totalGoals || 0);
+    default:
+      return 0;
+  }
+}
+
+function stickerProgressLabel(record = {}, stickerKey) {
+  const target = STICKER_PROGRESS_TARGETS[stickerKey] || 1;
+  const current = Math.max(0, Math.min(target, Math.floor(Number(stickerProgressValue(record, stickerKey)) || 0)));
+  return `${current}/${target}`;
+}
+
 const STICKER_ROLES = [
   { key: "stopper", label: "SAFE HANDS", iconSrc: "/assets/stickers/stopper2.png" },
   { key: "talisman", label: "TALISMANIC LEADER", iconSrc: "/assets/stickers/talisman1.png" },
@@ -788,7 +822,7 @@ function ShinyStickerCrest({ team, featured = false }) {
   const codeSize = featured ? "text-[20px]" : "text-[10px]";
 
   return (
-    <div className={`relative flex ${crestSize} items-center justify-center drop-shadow-[0_10px_18px_rgba(0,0,0,0.34)]`}>
+    <div className={`relative flex ${crestSize} items-center justify-center`}>
       <div
         className="absolute inset-0 border border-white/70 bg-[#0B3F28] shadow-[0_0_0_2px_rgba(247,209,23,0.34),inset_0_1px_0_rgba(255,255,255,0.48),inset_0_-9px_18px_rgba(0,0,0,0.28)]"
         style={{
@@ -803,7 +837,7 @@ function ShinyStickerCrest({ team, featured = false }) {
         aria-hidden="true"
       />
       <div className="relative z-[2] flex flex-col items-center gap-1.5 text-center">
-        <div className={`${flagSize} overflow-hidden rounded-[0.35rem] border border-white/50 bg-black/20 shadow-[0_4px_9px_rgba(0,0,0,0.20)]`}>
+        <div className={`${flagSize} overflow-hidden rounded-[0.35rem] border border-white/50 bg-black/20`}>
           <Flag team={team} className="h-full w-full object-cover" />
         </div>
         <div className={`home-copy-bold ${codeSize} uppercase leading-none tracking-[0.11em] text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.48)]`}>
@@ -840,29 +874,29 @@ function StickerShirtBack({ team, name, number, footerLabel }) {
   const text = theme.text || "#F5F1E8";
   return (
     <div
-      className="relative aspect-[5/7] h-full max-h-full w-auto max-w-full overflow-hidden rounded-[0.88rem] border shadow-[0_10px_18px_rgba(0,0,0,0.23),inset_0_1px_0_rgba(255,255,255,0.22)]"
+      className="relative aspect-[5/7] h-full max-h-full w-auto max-w-full overflow-hidden rounded-[0.88rem] border shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]"
       style={{
         borderColor: text,
         background: `radial-gradient(circle at 50% 7%, rgba(255,255,255,0.17), transparent 32%), linear-gradient(145deg, ${bg}, ${bg} 58%, rgba(0,0,0,0.24))`,
       }}
     >
       <div className="absolute left-1/2 top-[6.5%] z-[2] h-[16%] w-[23%] -translate-x-1/2">
-        <img src="/assets/branding/monday-cup.png" alt="" className="h-full w-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.28)]" draggable={false} />
+        <img src="/assets/branding/monday-cup.png" alt="" className="h-full w-full object-contain" draggable={false} />
       </div>
       <div
-        className="absolute left-1/2 top-[29%] z-[2] w-[88%] -translate-x-1/2 truncate text-center home-copy-bold text-[9px] uppercase leading-none tracking-[0.08em] drop-shadow-[0_2px_3px_rgba(0,0,0,0.22)]"
+        className="absolute left-1/2 top-[29%] z-[2] w-[88%] -translate-x-1/2 truncate text-center home-copy-bold text-[9px] uppercase leading-none tracking-[0.08em]"
         style={{ color: text }}
       >
         {name}
       </div>
       <div
-        className="absolute left-1/2 top-[53.5%] z-[2] w-[92%] -translate-x-1/2 -translate-y-1/2 truncate text-center home-copy-bold text-[39px] uppercase leading-none tracking-[-0.04em] drop-shadow-[0_4px_0_rgba(0,0,0,0.13)]"
+        className="absolute left-1/2 top-[53.5%] z-[2] w-[92%] -translate-x-1/2 -translate-y-1/2 truncate text-center home-copy-bold text-[39px] uppercase leading-none tracking-[-0.04em]"
         style={{ color: text }}
       >
         {number}
       </div>
       <div
-        className="absolute bottom-[8%] left-1/2 z-[2] w-[86%] -translate-x-1/2 truncate text-center home-copy-bold text-[5.9px] uppercase leading-none tracking-[0.12em] opacity-88 drop-shadow-[0_2px_3px_rgba(0,0,0,0.20)]"
+        className="absolute bottom-[8%] left-1/2 z-[2] w-[86%] -translate-x-1/2 truncate text-center home-copy-bold text-[5.9px] uppercase leading-none tracking-[0.12em] opacity-88"
         style={{ color: text }}
       >
         {footerLabel}
@@ -876,7 +910,7 @@ function StickerShirtBack({ team, name, number, footerLabel }) {
 function StickerTopLogo() {
   return (
     <div className="pointer-events-none absolute left-1/2 top-[11.8%] z-[5] h-[11.5%] w-[19.5%] -translate-x-1/2">
-      <img src="/assets/branding/monday-cup.png" alt="" className="h-full w-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.30)]" draggable={false} />
+      <img src="/assets/branding/monday-cup.png" alt="" className="h-full w-full object-contain" draggable={false} />
     </div>
   );
 }
@@ -884,7 +918,7 @@ function StickerTopLogo() {
 function StickerTopDescription({ children, colour = "#F5F1E8" }) {
   return (
     <div
-      className="pointer-events-none absolute left-1/2 top-[7.5%] z-[5] flex h-[14%] w-[86%] -translate-x-1/2 items-center justify-center truncate text-center home-copy-bold text-[6.2px] uppercase leading-none tracking-[0.13em] drop-shadow-[0_2px_3px_rgba(0,0,0,0.32)]"
+      className="pointer-events-none absolute left-1/2 top-[7.5%] z-[5] flex h-[14%] w-[86%] -translate-x-1/2 items-center justify-center truncate text-center home-copy-bold text-[6.2px] uppercase leading-none tracking-[0.13em]"
       style={{ color: colour }}
     >
       {children}
@@ -895,7 +929,18 @@ function StickerTopDescription({ children, colour = "#F5F1E8" }) {
 function StickerBottomLabel({ children, colour = "#F5F1E8" }) {
   return (
     <div
-      className="pointer-events-none absolute bottom-[18%] left-1/2 z-[5] w-[86%] -translate-x-1/2 truncate text-center home-copy-bold text-[6px] uppercase leading-none tracking-[0.14em] drop-shadow-[0_2px_3px_rgba(0,0,0,0.32)]"
+      className="pointer-events-none absolute bottom-[18%] left-1/2 z-[5] w-[86%] -translate-x-1/2 truncate text-center home-copy-bold text-[6px] uppercase leading-none tracking-[0.14em]"
+      style={{ color: colour }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function StickerProgressIndicator({ children, colour = "#F7D117" }) {
+  return (
+    <div
+      className="pointer-events-none absolute bottom-[8.6%] left-1/2 z-[5] w-[86%] -translate-x-1/2 truncate text-center home-copy-bold text-[5.8px] uppercase leading-none tracking-[0.13em]"
       style={{ color: colour }}
     >
       {children}
@@ -919,7 +964,7 @@ function ChampionsSticker() {
       <img
         src="/assets/stickers/mc-trophy.png"
         alt=""
-        className="h-full w-full object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.34)]"
+        className="h-full w-full object-contain"
         draggable={false}
       />
     </StickerIconStage>
@@ -932,7 +977,7 @@ function RoleBadgeSticker({ iconSrc }) {
       <img
         src={iconSrc}
         alt=""
-        className="h-full w-full object-contain drop-shadow-[0_8px_13px_rgba(0,0,0,0.28)]"
+        className="h-full w-full object-contain"
         draggable={false}
       />
     </StickerIconStage>
@@ -945,7 +990,7 @@ function KitSticker() {
       <img
         src="/assets/stickers/kit1.png"
         alt=""
-        className="h-full w-full object-contain drop-shadow-[0_8px_13px_rgba(0,0,0,0.28)]"
+        className="h-full w-full object-contain"
         draggable={false}
       />
     </StickerIconStage>
@@ -955,7 +1000,7 @@ function KitSticker() {
 function FlagSticker({ team }) {
   return (
     <StickerIconStage>
-      <div className="flex h-[34px] w-[50px] items-center justify-center overflow-hidden rounded-[0.58rem] border border-[#F5F1E8] bg-[#F5F1E8] p-[2px] shadow-[0_8px_18px_rgba(0,0,0,0.24),0_0_0_1px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.34)]">
+      <div className="flex h-[34px] w-[50px] items-center justify-center overflow-hidden rounded-[0.58rem] border border-[#F5F1E8] bg-[#F5F1E8] p-[2px] shadow-[0_0_0_1px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.34)]">
         <Flag team={team} className="h-full w-full rounded-[0.38rem] object-cover" />
       </div>
     </StickerIconStage>
@@ -996,7 +1041,7 @@ function StickerBookSlot({
     cupWon: Boolean(record?.cupWon || legacyCupWon),
   };
   const unlocked = !lockedTeam && (FORCE_REVEAL_TEAM_STICKERS || stickerIsUnlocked(effectiveRecord, stickerKey));
-  const opened = !lockedTeam && (FORCE_REVEAL_TEAM_STICKERS || Boolean(stickerHasOpened(effectiveRecord, stickerKey)));
+  const opened = !lockedTeam && unlocked && (FORCE_REVEAL_TEAM_STICKERS || Boolean(stickerHasOpened(effectiveRecord, stickerKey)));
   const claimable = Boolean(!opened && unlocked);
   const locked = !opened && !claimable;
   const shinyFrame = Boolean(opened && ["kit", "flag", "champions", "stopper", "talisman", "striker"].includes(stickerKey));
@@ -1005,6 +1050,8 @@ function StickerBookSlot({
   const slotSizeClass = "aspect-[3/4] min-w-0 p-[clamp(0.45rem,2.2vw,0.625rem)]";
   const rule = stickerUnlockRule(stickerKey);
   const titleColour = opened ? (getTeamTheme(team).text || "#F5F1E8") : "#F5F1E8";
+  const progressLabel = stickerProgressLabel(effectiveRecord, stickerKey);
+  const progressColour = opened || claimable ? "#F7D117" : "rgba(245,241,232,0.62)";
 
   return (
     <div
@@ -1012,9 +1059,9 @@ function StickerBookSlot({
         opened
           ? "border-[#F5F1E8]/42 bg-[#052D1D]/72 ring-[#F7D117]/26"
           : claimable
-            ? "border-[#F7D117]/82 bg-[#052D1D]/72 ring-[#F7D117]/28 shadow-[0_0_16px_rgba(247,209,23,0.12)]"
+            ? "border-[#F7D117]/82 bg-[#052D1D]/72 ring-[#F7D117]/28"
             : "border-[#F5F1E8]/14 bg-[#031B12]/46 ring-[#F5F1E8]/8"
-      } ${shinyFrame && opened ? "monday-sticker-shiny-shell" : ""} mc-sticker-book-slot ${slotSizeClass}`}
+      } mc-sticker-book-slot ${slotSizeClass}`}
       style={style}
     >
       <StickerShineOverlay shiny={shinyFrame && opened} />
@@ -1037,6 +1084,7 @@ function StickerBookSlot({
             )}
           </div>
           <StickerBottomLabel colour="#F5F1E8">{label}</StickerBottomLabel>
+          <StickerProgressIndicator colour={progressColour}>{progressLabel}</StickerProgressIndicator>
         </>
       )}
       {opened && (
@@ -1174,7 +1222,7 @@ export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWin
         <TrophyToggle value={trophyView} onChange={handleTrophyViewChange} />
       </PageTabsSlot>
       <PageScroll className="pt-1">
-        <div className={trophyView === "teams" ? "flex flex-col gap-0 pb-4" : "mc-panel-stack pb-4"}>
+        <div className="mc-panel-stack pb-4">
           {trophyView === "player" && (
             <>
               <AchievementRatingPanel careerStats={careerStats} />

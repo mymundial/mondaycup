@@ -25,17 +25,24 @@ export default function AppTopBar({
   titleClassName = '',
 }) {
   const heading = title ?? children;
+  const barHeight = style?.height ?? MC_SIZES.topBarHeight;
   return (
     <section
       className={`relative z-[1000] flex shrink-0 items-center justify-center overflow-visible px-6 text-[#F5F1E8] shadow-[0_2px_8px_rgba(0,0,0,0.16)] ${className}`}
-      style={{ height: MC_SIZES.topBarHeight, background: MC_COLORS.greenDark, ...style }}
+      style={{ height: barHeight, background: MC_COLORS.greenDark, ...style }}
     >
+      <div
+        className="pointer-events-none fixed inset-x-0 top-0 z-[0]"
+        style={{ height: barHeight, background: MC_COLORS.greenDark }}
+        aria-hidden="true"
+      />
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-[0] bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.16))]" style={{ height: barHeight }} aria-hidden="true" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.16))]" aria-hidden="true" />
       {logoSrc ? (
         <img
           src={logoSrc}
           alt={logoAlt}
-          className="absolute left-3 top-1/2 z-[1] h-10 w-10 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]"
+          className="absolute left-3 top-1/2 z-[1] h-9 w-9 -translate-y-1/2 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.28)]"
           draggable={false}
         />
       ) : null}
@@ -49,7 +56,7 @@ export default function AppTopBar({
         <button
           onClick={onMenuButtonClick}
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-          className="absolute right-3 top-1/2 z-[1001] flex h-10 w-10 -translate-y-1/2 items-center justify-center text-[#F5F1E8]"
+          className="absolute right-3 top-1/2 z-[1001] flex h-9 w-9 -translate-y-1/2 items-center justify-center text-[#F5F1E8]"
           type="button"
         >
           {menuOpen ? <CloseIcon /> : <HamburgerIcon />}

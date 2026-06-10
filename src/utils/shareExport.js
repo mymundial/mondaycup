@@ -600,11 +600,11 @@ export async function shareOrDownloadResult({
   buildBlob,
   filename = SHARE_CANVAS_NAME,
   previewWindow = null,
+  shareTitle = "Monday Cup Result",
+  shareText = "🏆 I just played Monday Cup!\n\nCan you beat my score?\n\n⚽ mondaycup.co.uk",
 }) {
   const finalBlob = blob || (await buildBlob?.());
   if (!finalBlob) throw new Error("No share image could be created");
-  const shareTitle = "Monday Cup Result";
-  const shareText = "🏆 I just played Monday Cup!\n\nCan you beat my score?\n\n⚽ mondaycup.co.uk";
 
   try {
     await shareNativeImage(finalBlob, filename, { title: shareTitle, text: shareText });

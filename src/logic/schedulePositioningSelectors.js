@@ -18,16 +18,27 @@ export function selectScheduleFocus({
   team = null,
   groupStageComplete = false,
 }) {
-  if (matchResult?.week) return { view: "group", week: matchResult.week };
-  if (matchResult?.matchNo) return { view: "knockout", round: scheduleRoundForMatchNo(matchResult.matchNo) };
-  if (currentKnockoutMatch?.matchNo) return { view: "knockout", round: scheduleRoundForMatchNo(currentKnockoutMatch.matchNo) };
-  if (activeGroupFixture?.week) return { view: "group", week: activeGroupFixture.week };
+  // Prefer the user's current/upcoming fixture over the last completed result,
+  // so opening Schedule lands on the phase they are actually playing next.
+  if (currentKnockoutMatch?.matchNo) {
+    return { view: "knockout", round: scheduleRoundForMatchNo(currentKnockoutMatch.matchNo) };
+  }
+
+  if (activeGroupFixture?.week && !groupStageComplete) {
+    return { view: "group", week: activeGroupFixture.week };
+  }
 
   const upcomingGroupFixture = team
     ? schedule.find((fixture) => !fixture.played && fixture.group === selectedGroup && (fixture.home === team || fixture.away === team))
     : null;
 
-  if (upcomingGroupFixture?.week) return { view: "group", week: upcomingGroupFixture.week };
+  if (upcomingGroupFixture?.week && !groupStageComplete) {
+    return { view: "group", week: upcomingGroupFixture.week };
+  }
+
+  if (matchResult?.matchNo) return { view: "knockout", round: scheduleRoundForMatchNo(matchResult.matchNo) };
+  if (matchResult?.week && !groupStageComplete) return { view: "group", week: matchResult.week };
+
   return groupStageComplete ? { view: "knockout", round: "Round of 32" } : { view: "group", week: 1 };
 }
 

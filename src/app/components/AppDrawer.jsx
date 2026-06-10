@@ -18,9 +18,11 @@ export function AppDrawer({
   schedule,
   qualifiedTeams,
   userTeam,
+  currentCampaign,
   podium,
   fixtureView,
   onFixtureViewChange,
+  scheduleFocus,
   profile,
   clubhouse,
   trophies,
@@ -50,6 +52,7 @@ export function AppDrawer({
         <ClubhouseScreen
           menuProps={menuProps}
           team={userTeam}
+          currentCampaign={currentCampaign}
           userForm={profile.userForm}
           campaignPoints={profile.campaignPoints}
           bestCampaignSummary={profile.bestCampaignSummary}
@@ -67,6 +70,7 @@ export function AppDrawer({
           ownedItems={clubhouse.storeEntitlements}
           onToggleCosmetic={clubhouse.onToggleCosmetic}
           onOpenShop={clubhouse.onOpenShop}
+          onUseGoldenTicket={clubhouse.onUseGoldenTicket}
           allTeamsUnlocked={clubhouse.allTeamsUnlocked}
           onUnlockAllTeams={clubhouse.onUnlockAllTeams}
           onResumeCampaign={clubhouse.onResumeCampaign}
@@ -124,6 +128,7 @@ export function AppDrawer({
           menuProps={menuProps}
           knockoutFixtures={visibleKnockoutFixtures}
           userTeam={userTeam}
+          scheduleFocus={scheduleFocus}
         />
       </DrawerShell>
     );

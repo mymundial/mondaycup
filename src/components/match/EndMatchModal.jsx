@@ -21,6 +21,9 @@ import {
 import { createMatchShareBlob } from "../../utils/matchShareCanvas.js";
 import { TEAM_RANK } from "../../data/teams.js";
 
+const MATCH_RESULT_SHARE_TITLE = "Monday Cup Result";
+const MATCH_RESULT_SHARE_TEXT = "🏆 ONE NATION.\n⚽ ONE TROPHY.\n👉 MONDAYCUP.CO.UK";
+
 const FIXTURE_VENUES = {
   73: "Los Angeles Stadium",
   74: "Houston Stadium",
@@ -273,12 +276,12 @@ function cupRunResultMeta(result = {}, currentMatch = 1, isKnockout = false) {
   }
 
   if (matchNo === 104 || status === RESULT_STATUS.CHAMPION || status === RESULT_STATUS.RUNNER_UP) {
-    if (won || status === RESULT_STATUS.CHAMPION) return title("CHAMPIONS!", "text-[#F7D117]");
-    return title("RUNNER-UP", "text-[#D9E0DA]");
+    if (won || status === RESULT_STATUS.CHAMPION) return title("CHAMPIONS", "text-[#31E56F]");
+    return title("RUNNER-UP", "text-[#E94B43]");
   }
 
   if (matchNo === 103 || status === RESULT_STATUS.THIRD_PLACE || status === RESULT_STATUS.FOURTH_PLACE) {
-    if (won || status === RESULT_STATUS.THIRD_PLACE) return title("THIRD PLACE", "text-[#CD7F32]");
+    if (won || status === RESULT_STATUS.THIRD_PLACE) return title("THIRD PLACE", "text-[#31E56F]");
     return title("DEFEAT", "text-[#E94B43]");
   }
 
@@ -305,6 +308,16 @@ function cupRunConnectorOutcome({ index, currentMatch = 1, result = {}, runForm 
   const groupQualified = isTeamQualified(qualifiedTeams, userTeam);
   const followingMatchCompleted = Boolean(runForm[index + 1]);
 
+  // Semi-final route is known immediately after match 7:
+  // win = green connector to the final, loss = yellow connector to the third-place play-off.
+  // Keep that route colour when the final/third-place play-off result is shown as match 8.
+  if (stepNumber === 7) {
+    const semiOutcome = runForm[index] || (currentMatch === 7 && matchNo >= 101 && matchNo <= 102 ? currentOutcome : "");
+    if (semiOutcome === "W") return "W";
+    if (semiOutcome === "L" || semiOutcome === "D") return "D";
+    return "";
+  }
+
   // A connector only represents confirmed progress once the following match node exists.
   // Example: after match 1, node 1 is coloured but connector 1→2 stays muted until match 2 is completed.
   if (!followingMatchCompleted) return "";
@@ -321,9 +334,6 @@ function cupRunConnectorOutcome({ index, currentMatch = 1, result = {}, runForm 
     return runForm[index] ? "L" : "";
   }
 
-  // Semi-final: a defeat sends the user to the third-place playoff, so the connector is yellow.
-  if (stepNumber === 7 && matchNo >= 101 && matchNo <= 102) return currentOutcome === "W" ? "W" : "D";
-
   // Earlier knockout wins progress, defeats eliminate.
   const outcome = stepNumber === currentMatch ? currentOutcome : runForm[index];
   if (outcome === "W") return "W";
@@ -332,7 +342,7 @@ function cupRunConnectorOutcome({ index, currentMatch = 1, result = {}, runForm 
   return "";
 }
 
-function CupRunProgressStrip({ matchNumber = 1, form = [], result = {}, isKnockout = false, qualifiedTeams = new Set(), userTeam = null, points = 0 }) {
+function CupRunProgressStrip({ matchNumber = 1, form = [], result = {}, isKnockout = false, qualifiedTeams = new Set(), userTeam = null, points = 0, className = "mt-2" }) {
   const currentMatch = Math.max(1, Math.min(8, Number(matchNumber || 1)));
   const steps = Array.from({ length: 8 });
   const matchNo = Number(result?.matchNo || result?.fixture?.matchNo || 0);
@@ -341,14 +351,7 @@ function CupRunProgressStrip({ matchNumber = 1, form = [], result = {}, isKnocko
   const currentOutcome = cupRunOutcomeForResult(result);
   if (currentOutcome && !runForm[currentMatch - 1]) runForm[currentMatch - 1] = currentOutcome;
 
-  const nodeClass = (outcome, isCurrent, stepNumber) => {
-    const isFinal = matchNo === 104 && stepNumber === currentMatch;
-    const isThirdPlace = matchNo === 103 && stepNumber === currentMatch;
-
-    if (isFinal && (outcome === "W" || status === RESULT_STATUS.CHAMPION)) return "border border-[#F7D117] bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.58)]";
-    if (isFinal && (outcome === "L" || status === RESULT_STATUS.RUNNER_UP)) return "border border-[#D9E0DA] bg-[#D9E0DA] shadow-[0_0_8px_rgba(217,224,218,0.42)]";
-    if (isThirdPlace && (outcome === "W" || status === RESULT_STATUS.THIRD_PLACE)) return "border border-[#CD7F32] bg-[#CD7F32] shadow-[0_0_8px_rgba(205,127,50,0.50)]";
-
+  const nodeClass = (outcome, isCurrent) => {
     if (outcome === "W") return "border border-[#31E56F] bg-[#31E56F] shadow-[0_0_7px_rgba(49,229,111,0.48)]";
     if (outcome === "D") return "border border-[#F7D117] bg-[#F7D117] shadow-[0_0_7px_rgba(247,209,23,0.48)]";
     if (outcome === "L") return "border border-[#E94B43] bg-[#E94B43] shadow-[0_0_7px_rgba(233,75,67,0.46)]";
@@ -368,19 +371,15 @@ function CupRunProgressStrip({ matchNumber = 1, form = [], result = {}, isKnocko
   const outcomeLabel = String(rawOutcomeTitle?.label || fallbackOutcomeLabel || "").trim();
   const outcomeClassName = rawOutcomeTitle?.label
     ? rawOutcomeTitle.className
-    : outcomeLabel === "VICTORY" || outcomeLabel === "QUALIFIED" || outcomeLabel === "CHAMPIONS" || outcomeLabel === "CHAMPIONS!"
+    : outcomeLabel === "VICTORY" || outcomeLabel === "QUALIFIED" || outcomeLabel === "CHAMPIONS" || outcomeLabel === "CHAMPIONS!" || outcomeLabel === "THIRD-PLACE" || outcomeLabel === "THIRD PLACE"
       ? "text-[#31E56F]"
       : outcomeLabel === "DRAW"
         ? "text-[#F7D117]"
-        : outcomeLabel === "RUNNER-UP"
-          ? "text-[#D9E0DA]"
-          : outcomeLabel === "THIRD-PLACE" || outcomeLabel === "THIRD PLACE"
-            ? "text-[#CD7F32]"
-            : "text-[#E94B43]";
+        : "text-[#E94B43]";
   const displayPoints = Number(points || 0);
 
   return (
-    <div className="mt-2 rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2.5 py-2 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]" aria-label={`Cup run progress. Match ${currentMatch} of 8`}>
+    <div className={`${className} rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2.5 py-2 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]`} aria-label={`Cup run progress. Match ${currentMatch} of 8`}>
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
           <div className="mb-1.5 grid grid-cols-[1fr_auto_1fr] items-end px-[clamp(11px,3.1vw,15px)]">
@@ -625,7 +624,7 @@ function exportFlashCopy({ result, userTeamName, opponentTeamName, userForm = []
     ? pickShareCopy(["A PLACE ON THE PODIUM", "NOT A BAD CONSOLATION", "SOMETHING TO TAKE HOME"], seed)
     : pickShareCopy(["FOURTH IS THIRD'S UGLY COUSIN", "SO NEAR YET SO FAR", "THE WOODEN SPOON AWAITS"], seed);
   if (round === "final") return won
-    ? (userTier === "underdog" ? pickShareCopy(["FROM NOWHERE TO IMMORTALITY", "THE GREATEST STORY EVER TOLD", "THE IMPOSSIBLE IS REAL"], seed) : pickShareCopy(["CHAMPIONS OF THE WORLD", "JUSTICE HAS BEEN SERVED", "THE BEST TEAM WON"], seed))
+    ? (userTier === "underdog" ? pickShareCopy(["FROM NOWHERE TO IMMORTALITY", "THE GREATEST STORY EVER TOLD", "THE IMPOSSIBLE IS REAL"], seed) : pickShareCopy(["CHAMPIONS OF THE WORLD", "COMPOSED WHEN IT COUNTED", "THE BEST TEAM WON"], seed))
     : pickShareCopy(["SO CLOSE YOU COULD TASTE IT", "ONE STEP SHORT OF GREATNESS", "HEARTBREAK"], seed);
 
   if (status === RESULT_STATUS.KNOCKOUT_WIN) return pickShareCopy(["QUALIFIED FOR THE NEXT ROUND", "THE JOURNEY GOES ON", "STILL STANDING"], seed);
@@ -783,6 +782,118 @@ function ChampionConfetti({ count = 92 }) {
   );
 }
 
+function ChampionFireworks({ teamColour = "#0B7A3B", count = 10 }) {
+  const bursts = useMemo(() => {
+    const lanes = [16, 72, 31, 84, 47, 22, 65, 38, 78, 54];
+    return Array.from({ length: count }, (_, index) => {
+      const targetX = lanes[index % lanes.length] + (Math.random() - 0.5) * 8;
+      const targetY = 86 + Math.random() * 104;
+      const launchDx = index % 2 === 0 ? -48 - Math.random() * 82 : 48 + Math.random() * 82;
+      const sparks = 20 + Math.floor(Math.random() * 5);
+      return {
+        id: index,
+        left: `${Math.max(8, Math.min(92, targetX))}%`,
+        top: `${targetY}px`,
+        launchDx: `${launchDx}px`,
+        delay: `${0.08 + index * 0.24 + Math.random() * 0.11}s`,
+        rocketDuration: `${0.86 + Math.random() * 0.18}s`,
+        sparkDuration: `${1.05 + Math.random() * 0.2}s`,
+        scale: `${0.9 + Math.random() * 0.28}`,
+        sparks: Array.from({ length: sparks }, (_, sparkIndex) => {
+          const angle = (Math.PI * 2 * sparkIndex) / sparks + (Math.random() - 0.5) * 0.22;
+          const distance = 44 + Math.random() * 66;
+          return {
+            id: sparkIndex,
+            dx: `${Math.cos(angle) * distance}px`,
+            dy: `${Math.sin(angle) * distance}px`,
+            size: `${2.6 + Math.random() * 3.3}px`,
+            colour: sparkIndex % 3 === 0 ? "#F7D117" : teamColour,
+          };
+        }),
+      };
+    });
+  }, [count, teamColour]);
+
+  return (
+    <div className="pointer-events-none fixed left-1/2 top-0 z-0 h-[100dvh] w-full max-w-[450px] -translate-x-1/2 overflow-hidden" aria-hidden="true">
+      <style>{`
+        @keyframes championFireworkRocket {
+          0% { opacity: 0; transform: translate3d(var(--launch-dx), 108dvh, 0) scale(0.72); }
+          7% { opacity: 1; }
+          74% { opacity: 1; }
+          100% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.92); }
+        }
+        @keyframes championFireworkSpark {
+          0%, 69% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.16); }
+          73% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+          100% { opacity: 0; transform: translate3d(var(--dx), var(--dy), 0) scale(0.05); }
+        }
+        @keyframes championFireworkHalo {
+          0%, 68% { opacity: 0; transform: translate(-50%, -50%) scale(0.1); }
+          75% { opacity: 0.52; transform: translate(-50%, -50%) scale(0.72); }
+          100% { opacity: 0; transform: translate(-50%, -50%) scale(1.65); }
+        }
+        @keyframes championFireworkFlash {
+          0%, 69% { opacity: 0; transform: translate(-50%, -50%) scale(0.18); }
+          72% { opacity: 0.92; transform: translate(-50%, -50%) scale(1); }
+          100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+        }
+      `}</style>
+      {bursts.map((burst) => (
+        <span
+          key={burst.id}
+          className="absolute block"
+          style={{
+            left: burst.left,
+            top: burst.top,
+            transform: `scale(${burst.scale})`,
+            "--launch-dx": burst.launchDx,
+          }}
+        >
+          <span
+            className="absolute left-0 top-0 h-[138px] w-[3px] origin-bottom rounded-full opacity-0"
+            style={{
+              background: `linear-gradient(180deg, transparent 0%, ${teamColour} 18%, #F7D117 54%, rgba(247,209,23,0.22) 78%, transparent 100%)`,
+              boxShadow: `0 0 10px ${teamColour}, 0 0 18px rgba(247,209,23,0.62)`,
+              animation: `championFireworkRocket ${burst.rocketDuration} cubic-bezier(0.14,0.82,0.18,1) ${burst.delay} 1 forwards`,
+            }}
+          />
+          <span
+            className="absolute left-0 top-0 h-[132px] w-[132px] rounded-full border border-[#F7D117]/55 opacity-0"
+            style={{
+              boxShadow: `0 0 28px ${teamColour}, inset 0 0 20px rgba(247,209,23,0.22)`,
+              animation: `championFireworkHalo ${burst.sparkDuration} ease-out ${burst.delay} 1 forwards`,
+            }}
+          />
+          <span
+            className="absolute left-0 top-0 h-[28px] w-[28px] rounded-full opacity-0"
+            style={{
+              background: `radial-gradient(circle, #F7D117 0 18%, ${teamColour} 42%, transparent 72%)`,
+              filter: "blur(1px)",
+              animation: `championFireworkFlash ${burst.sparkDuration} ease-out ${burst.delay} 1 forwards`,
+            }}
+          />
+          {burst.sparks.map((spark) => (
+            <span
+              key={spark.id}
+              className="absolute left-0 top-0 block rounded-full opacity-0"
+              style={{
+                width: spark.size,
+                height: spark.size,
+                background: spark.colour,
+                boxShadow: `0 0 9px ${spark.colour}, 0 0 18px rgba(247,209,23,0.42)`,
+                animation: `championFireworkSpark ${burst.sparkDuration} cubic-bezier(0.12,0.72,0.22,1) ${burst.delay} 1 forwards`,
+                "--dx": spark.dx,
+                "--dy": spark.dy,
+              }}
+            />
+          ))}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function EndMatchModal({ result, fixture, onNext, onChangeTeams, onDismiss, onOpenMenu, onOpenTrophies, hasNewTrophy = false, groupRows, qualifiedTeams, userTeam, selectedGroup, stageLabel, userForm, shareCaptureRef, podium, username = "", twoPlayerMode = false }) {
   const isKnockout = !result.week;
   const userInKnockout = result.home === userTeam || result.away === userTeam;
@@ -801,6 +912,8 @@ function EndMatchModal({ result, fixture, onNext, onChangeTeams, onDismiss, onOp
   const phaseTitle = "FULL TIME";
   const campaignPointsTotal = getCampaignPointsTotal({ result, groupRows, userTeam, userForm });
   const activeBadgeMode = getPodiumBadgeMode({ result, fixture, stageLabel, podium, team: userTeam });
+  const championFireworkTeam = teamToGameTeam(userTeam || result?.home || result?.away || "");
+  const championFireworkColour = championFireworkTeam?.primaryColour || "#0B7A3B";
   const resultShareState = useMemo(() => getResultShareState({ result, fixture, podium, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username }), [result, fixture, podium, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username]);
   const resultActionButtonClass = "mx-auto grid h-[clamp(48px,5.6dvh,66px)] min-h-[48px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] px-4 text-center home-copy-bold text-[clamp(14px,2dvh,23px)] font-black uppercase leading-none tracking-[0.14em] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.26),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
   const resultIconButtonClass = "grid h-[clamp(48px,5.6dvh,66px)] min-h-[48px] w-full place-items-center rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/45 bg-[#F7D117] text-[#072D1D] shadow-[0_0_10px_rgba(247,209,23,0.22),0_8px_18px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.24)] ring-1 ring-[#F7D117]/35 disabled:cursor-default disabled:opacity-65";
@@ -878,13 +991,18 @@ function EndMatchModal({ result, fixture, onNext, onChangeTeams, onDismiss, onOp
       const blob = shareBlob || await ensureShareBlob();
       try {
         await shareNativeImage(blob, "monday-cup-result.png", {
-          title: "Monday Cup Result",
-          text: "My Monday Cup result",
+          title: MATCH_RESULT_SHARE_TITLE,
+          text: MATCH_RESULT_SHARE_TEXT,
         });
       } catch (nativeError) {
         if (nativeError?.name === "AbortError") return;
         console.warn("Native result share unavailable, falling back", nativeError);
-        await shareOrDownloadResult({ blob, filename: "monday-cup-result.png" });
+        await shareOrDownloadResult({
+          blob,
+          filename: "monday-cup-result.png",
+          shareTitle: MATCH_RESULT_SHARE_TITLE,
+          shareText: MATCH_RESULT_SHARE_TEXT,
+        });
       }
     } catch (error) {
       console.error("Share result failed", error);
@@ -983,7 +1101,12 @@ function EndMatchModal({ result, fixture, onNext, onChangeTeams, onDismiss, onOp
 
   return (
     <div className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/45 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[4px]" style={{ zIndex: 2147483647 }}>
-      {activeBadgeMode === PODIUM_BADGE_MODE.CHAMPION && <ChampionConfetti />}
+      {activeBadgeMode === PODIUM_BADGE_MODE.CHAMPION && (
+        <>
+          <ChampionConfetti />
+          <ChampionFireworks teamColour={championFireworkColour} />
+        </>
+      )}
       <div className="relative z-[1] flex w-full max-w-[408px] flex-col items-stretch">
         <div
           className="relative w-full overflow-hidden rounded-[2rem] border border-[#F5F1E8]/14 text-center text-[#F5F1E8] shadow-[0_24px_54px_rgba(0,0,0,0.36),inset_0_-2px_6px_rgba(0,0,0,0.08)]"
@@ -1008,7 +1131,7 @@ function EndMatchModal({ result, fixture, onNext, onChangeTeams, onDismiss, onOp
               <div className="flex min-w-0 items-center justify-center self-center overflow-hidden">
                 <div className={headerTitleClass}>{headerTitle}</div>
               </div>
-              <button type="button" onClick={onDismiss} aria-label="Close result" className="grid h-10 w-10 place-items-center justify-self-end rounded-[0.85rem] border border-[#F5F1E8]/10 bg-[#031B12]/46 text-[#F5F1E8]">
+              <button type="button" onClick={onDismiss} aria-label="Close result" className="grid h-10 w-10 place-items-center justify-self-end text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.32)] active:scale-[0.96]">
                 <CloseIcon className="h-6 w-6" />
               </button>
             </div>
@@ -1035,7 +1158,10 @@ function EndMatchModal({ result, fixture, onNext, onChangeTeams, onDismiss, onOp
               </div>
             ) : (
               <>
-                <div className="max-h-[calc(100dvh-342px)] overflow-y-auto pb-0">
+                {!twoPlayerMode && (
+                  <CupRunProgressStrip className="mt-0" matchNumber={currentCupRunMatch} form={userForm} result={result} isKnockout={isKnockout} qualifiedTeams={qualifiedTeams} userTeam={userTeam} points={campaignPointsTotal} />
+                )}
+                <div className={`${!twoPlayerMode ? "mt-2 " : ""}max-h-[calc(100dvh-342px)] overflow-y-auto pb-0`}>
                   {isKnockout ? (
                     <div className="rounded-[1.35rem] border border-[#F5F1E8]/14 bg-[#031B12]/24 px-2.5 pb-1.5 pt-2.5 text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
                       <div className="mb-2 text-center home-copy-bold text-[clamp(15px,4.1vw,19px)] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">
@@ -1076,9 +1202,6 @@ function EndMatchModal({ result, fixture, onNext, onChangeTeams, onDismiss, onOp
                     </>
                   )}
                 </div>
-                {!twoPlayerMode && (
-                  <CupRunProgressStrip matchNumber={currentCupRunMatch} form={userForm} result={result} isKnockout={isKnockout} qualifiedTeams={qualifiedTeams} userTeam={userTeam} points={campaignPointsTotal} />
-                )}
                 {resultButtonsPanel}
               </>
             )}

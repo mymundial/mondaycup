@@ -73,19 +73,32 @@ export const createDefaultCurrentMatchState = () => ({
 });
 
 export const createDefaultCurrentCampaign = () => ({
+  exists: false,
   active: false,
-  status: "not_started",
+  status: "NOT_STARTED",
+  campaignId: null,
   teamId: null,
   teamName: null,
   opponent: null,
-  phase: "Not Started",
   round: null,
   matchId: null,
   cupRun: normaliseCupRun(),
   gameScore: 0,
   score: [0, 0],
-  usedGoldenUpgrade: false,
   matches: [],
+  activeMatchId: null,
+  activeMatchSnapshot: {
+    matchId: null,
+    fixtureId: null,
+    penaltyNumber: 1,
+    currentTurn: "user",
+    suddenDeath: false,
+    penMarkersFor: [],
+    penMarkersAgainst: [],
+    suddenDeathMarkersFor: [],
+    suddenDeathMarkersAgainst: [],
+    score: { user: 0, opponent: 0 },
+  },
   activeMatch: createDefaultCurrentMatchState(),
   startedAt: null,
   updatedAt: null,
@@ -291,6 +304,8 @@ const getTrophyPath = (key) => {
   return aliasMap[key] || null;
 };
 
+const TEAM_STICKER_KEYS = ["kit", "flag", "champions", "stopper", "talisman", "striker"];
+
 const stickerDefaults = () => ({
   wearTheShirt: false,
   flyTheFlag: false,
@@ -298,25 +313,80 @@ const stickerDefaults = () => ({
   safeHands: false,
   talismanicLeader: false,
   superStriker: false,
-  opened: false,
+  opened: {},
+  claimable: {},
 });
+
+const normaliseStickerKeyMap = (value = {}, aliases = {}) => {
+  if (value === true) {
+    return TEAM_STICKER_KEYS.reduce((acc, key) => ({ ...acc, [key]: true }), {});
+  }
+  if (!value || typeof value !== "object") return {};
+  return {
+    kit: Boolean(value.kit ?? value.wearTheShirt ?? value.shirt ?? aliases.kit ?? false),
+    flag: Boolean(value.flag ?? value.flyTheFlag ?? aliases.flag ?? false),
+    champions: Boolean(value.champions ?? value.icon ?? value.liftTheCup ?? aliases.champions ?? false),
+    stopper: Boolean(value.stopper ?? value.safeHands ?? value.keeper ?? aliases.stopper ?? false),
+    talisman: Boolean(value.talisman ?? value.talismanicLeader ?? aliases.talisman ?? false),
+    striker: Boolean(value.striker ?? value.superStriker ?? aliases.striker ?? false),
+  };
+};
 
 const normaliseStickers = (source = {}) => {
   const result = {};
   const records = source && typeof source === "object" ? source : {};
   Object.entries(records).forEach(([teamId, record]) => {
     if (!teamId || !record || typeof record !== "object") return;
+    const wearTheShirt = Boolean(record.wearTheShirt ?? record.kit ?? record.shirt ?? record.campaignCompleted ?? false);
+    const flyTheFlag = Boolean(record.flyTheFlag ?? record.flag ?? record.knockoutQualified ?? false);
+    const liftTheCup = Boolean(record.liftTheCup ?? record.champions ?? record.cupWon ?? record.unlocked ?? false);
+    const safeHands = Boolean(record.safeHands ?? record.stopper ?? record.keeper ?? false);
+    const talismanicLeader = Boolean(record.talismanicLeader ?? record.talisman ?? false);
+    const superStriker = Boolean(record.superStriker ?? record.striker ?? false);
+    const aliasMap = {
+      kit: wearTheShirt,
+      flag: flyTheFlag,
+      champions: liftTheCup,
+      stopper: safeHands,
+      talisman: talismanicLeader,
+      striker: superStriker,
+    };
+
+    const campaignsCompleted = number(record.campaignsCompleted, 0);
+    const wins = number(record.wins, 0);
+    const goals = number(record.goals, 0);
+    const keeperSaves = number(record.keeperSaves, 0);
+    const cupWon = Boolean(record.cupWon ?? record.liftTheCup ?? record.unlocked ?? false);
+    const knockoutQualified = Boolean(record.knockoutQualified ?? record.flyTheFlag ?? false);
+    const earnedMap = {
+      kit: campaignsCompleted >= 1,
+      flag: knockoutQualified,
+      champions: cupWon,
+      stopper: keeperSaves >= 10,
+      talisman: wins >= 10,
+      striker: goals >= 25,
+    };
+    const openedMap = normaliseStickerKeyMap(record.opened, {});
+    const claimableMap = normaliseStickerKeyMap(record.claimable, aliasMap);
+
     result[teamId] = {
       ...stickerDefaults(),
-      ...record,
-      wearTheShirt: Boolean(record.wearTheShirt ?? record.kit ?? record.shirt ?? record.campaignCompleted ?? false),
-      flyTheFlag: Boolean(record.flyTheFlag ?? record.flag ?? record.knockoutQualified ?? false),
-      liftTheCup: Boolean(record.liftTheCup ?? record.champions ?? record.cupWon ?? record.unlocked ?? false),
-      safeHands: Boolean(record.safeHands ?? record.stopper ?? record.keeper ?? false),
-      talismanicLeader: Boolean(record.talismanicLeader ?? record.talisman ?? false),
-      superStriker: Boolean(record.superStriker ?? record.striker ?? false),
-      opened: Boolean(record.opened ?? false),
-      claimable: Boolean(record.claimable ?? false),
+      wearTheShirt,
+      flyTheFlag,
+      liftTheCup,
+      safeHands,
+      talismanicLeader,
+      superStriker,
+      opened: TEAM_STICKER_KEYS.reduce((acc, key) => ({ ...acc, [key]: Boolean(openedMap[key] && earnedMap[key]) }), {}),
+      played: Boolean(record.played ?? false),
+      claimable: TEAM_STICKER_KEYS.reduce((acc, key) => ({ ...acc, [key]: Boolean(claimableMap[key] && earnedMap[key]) }), {}),
+      cupWon,
+      knockoutQualified,
+      campaignsCompleted,
+      matchesPlayed: number(record.matchesPlayed, 0),
+      wins,
+      goals,
+      keeperSaves,
     };
   });
   return result;
@@ -398,13 +468,7 @@ const normaliseGoldenTicket = (source = {}, legacyCosmetics = {}) => {
   const quantity = normaliseTicketQuantity(
     source.quantity ?? source.count ?? source.qty ?? legacyCosmetics.goldenTicketQuantity ?? (legacyCosmetics.goldenTicket ? 1 : 0) ?? 0,
   );
-  return {
-    quantity,
-    totalPurchased: number(source.totalPurchased, 0),
-    totalUsed: number(source.totalUsed, 0),
-    lastPurchasedAt: source.lastPurchasedAt ?? null,
-    lastUsedAt: source.lastUsedAt ?? null,
-  };
+  return { quantity };
 };
 
 const normaliseConsumables = (source = {}, legacyCosmetics = {}) => ({
@@ -524,12 +588,13 @@ const normaliseResultMap = (value, start, end) => ({
 const getCupRunSource = (...values) => values.find((value) => Array.isArray(value) && value.some(Boolean)) || values.find(Array.isArray) || [];
 
 const normalisePodiumValue = (...values) => {
-  const raw = values.find((value) => value !== undefined && value !== null && String(value).trim() !== "");
-  const text = String(raw || "").trim().toLowerCase();
-  if (!text || ["none", "null", "false", "no", "na", "n/a"].includes(text)) return "none";
-  if (text.includes("champion") || text === "winner" || text === "won" || text === "1" || text === "first") return "champion";
-  if (text.includes("runner") || text.includes("second") || text === "2" || text === "silver") return "runner-up";
-  if (text.includes("third") || text.includes("bronze") || text === "3") return "third-place";
+  for (const value of values) {
+    const text = String(value || "").trim().toLowerCase();
+    if (!text || ["none", "null", "false", "no", "na", "n/a", "inprogress", "in progress"].includes(text)) continue;
+    if (text.includes("champion") || text === "winner" || text === "won" || text === "1" || text === "first") return "champion";
+    if (text.includes("runner") || text.includes("second") || text === "runnerup" || text === "runner-up" || text === "2" || text === "silver") return "runner-up";
+    if (text.includes("third") || text.includes("bronze") || text === "thirdplace" || text === "third-place" || text === "3") return "third-place";
+  }
   return "none";
 };
 
@@ -631,6 +696,9 @@ const normaliseCurrentCampaign = (campaign = {}, currentProgress = null) => {
     score: Array.isArray(campaign.score) ? campaign.score.slice(0, 2) : Array.isArray(currentProgress?.score) ? currentProgress.score.slice(0, 2) : [0, 0],
     usedGoldenUpgrade,
     matches,
+    activeMatchId: campaign.activeMatchId || currentProgress?.activeMatchId || campaign.activeMatch?.matchId || currentProgress?.activeMatchSnapshot?.matchId || null,
+    activeMatchSnapshot: campaign.activeMatchSnapshot || currentProgress?.activeMatchSnapshot || defaults.activeMatchSnapshot,
+    matchResult: campaign.matchResult || currentProgress?.matchResult || null,
     activeMatch: normaliseActiveMatchState(campaign, currentProgress),
     startedAt: campaign.startedAt || currentProgress?.startedAt || null,
     runtimeSnapshot: currentProgress || campaign.runtimeSnapshot || null,
@@ -641,18 +709,15 @@ const normaliseCurrentCampaign = (campaign = {}, currentProgress = null) => {
 const normaliseBestCampaign = (campaign = {}) => {
   const score = number(campaign.gameScore ?? campaign.points ?? campaign.campaignPoints, 0);
   const teamName = campaign.teamName || campaign.team || null;
-  const phase = campaign.phase || campaign.tournamentPhase || campaign.roundLabel || campaign.stage || campaign.finish || campaign.status || "Not Started";
-  const round = campaign.round || campaign.roundLabel || campaign.stage || phase || "Not Started";
-  const podium = podiumFromResultFields(campaign.podium, campaign.finish, campaign.status, phase, round);
+  const phase = campaign.phase || campaign.tournamentPhase || campaign.round || campaign.roundLabel || campaign.stage || campaign.finish || campaign.status || "Not Started";
+  const podium = podiumFromResultFields(campaign.podium, campaign.finish, campaign.status, phase, campaign.round, campaign.roundLabel);
 
   return {
     exists: Boolean(teamName || score > 0),
     gameScore: score,
     teamName,
-    team: teamName,
     cupRun: normaliseCupRun(getCupRunSource(campaign.cupRun, campaign.formGuide, campaign.form, campaign.tournamentProgress)),
     phase,
-    round,
     podium,
     completedAt: campaign.completedAt || null,
     updatedAt: campaign.updatedAt || null,
@@ -689,25 +754,26 @@ const normaliseCareerStats = (stats = {}, legacy = {}) => {
 
 const normaliseFeedback = (feedback = {}) => {
   const source = feedback && typeof feedback === "object" ? feedback : {};
-  const ratings = Array.isArray(source.ratings) ? source.ratings.slice(-10).map((item) => ({
-    id: String(item?.id || item?.createdAt || Date.now()),
-    stars: number(item?.stars ?? item?.rating, 0),
-    rating: number(item?.rating ?? item?.stars, 0),
-    comment: String(item?.comment || "").slice(0, 280),
-    promptType: item?.promptType || "prompt1",
-    campaignsCompleted: number(item?.campaignsCompleted, 0),
-    cupsWon: number(item?.cupsWon, 0),
-    createdAt: item?.createdAt || Date.now(),
-  })).filter((item) => item.rating >= 1 && item.rating <= 5) : [];
+  const ratings = Array.isArray(source.ratings) ? source.ratings : [];
+  const latestSource = source.latestRating || source.latest || ratings[ratings.length - 1] || null;
+  const latestRating = latestSource && typeof latestSource === "object" ? {
+    id: String(latestSource.id || latestSource.createdAt || Date.now()),
+    stars: number(latestSource.stars ?? latestSource.rating, 0),
+    rating: number(latestSource.rating ?? latestSource.stars, 0),
+    comment: String(latestSource.comment || "").slice(0, 280),
+    promptType: latestSource.promptType || source.lastPromptType || "prompt1",
+    campaignsCompleted: number(latestSource.campaignsCompleted, 0),
+    cupsWon: number(latestSource.cupsWon, 0),
+    createdAt: latestSource.createdAt || source.lastSubmittedAt || Date.now(),
+  } : null;
   return {
     prompt1Shown: Boolean(source.prompt1Shown),
     prompt2Shown: Boolean(source.prompt2Shown),
-    hasSubmitted: Boolean(source.hasSubmitted || ratings.length),
-    ratings,
-    latestRating: source.latestRating || ratings[ratings.length - 1] || null,
-    lastPromptType: source.lastPromptType || null,
+    hasSubmitted: Boolean(source.hasSubmitted || latestRating),
+    latestRating: latestRating && latestRating.rating >= 1 && latestRating.rating <= 5 ? latestRating : null,
+    lastPromptType: source.lastPromptType || latestRating?.promptType || null,
     lastPromptedAt: source.lastPromptedAt || null,
-    lastSubmittedAt: source.lastSubmittedAt || null,
+    lastSubmittedAt: source.lastSubmittedAt || latestRating?.createdAt || null,
   };
 };
 
@@ -743,9 +809,9 @@ const buildUiProfileAliases = ({ profile, shirt, currentCampaign, bestCampaign, 
     uid: profile.uid,
     email: profile.email,
     username: profile.username,
-    usernameLower: profile.usernameLower,
+    usernameLower: String(profile.username || "").toLowerCase(),
     nickname: profile.username,
-    nicknameLower: profile.usernameLower,
+    nicknameLower: String(profile.username || "").toLowerCase(),
     emailOptIn: Boolean(profile.emailCommsOptIn),
     accountStatus: {
       emailVerified: Boolean(profile.emailVerified),
@@ -767,7 +833,7 @@ const buildUiProfileAliases = ({ profile, shirt, currentCampaign, bestCampaign, 
       exists: Boolean(bestCampaign.teamName || bestCampaign.gameScore),
       team: bestCampaign.teamName,
       tournamentPhase: bestCampaign.phase,
-      roundLabel: bestCampaign.round || bestCampaign.phase,
+      roundLabel: bestCampaign.phase,
       stage: bestCampaign.phase,
       formGuide: bestCampaign.cupRun,
       form: bestCampaign.cupRun,
@@ -813,7 +879,6 @@ const normaliseProfile = (user = {}, data = {}) => {
   return {
     uid: user.uid || src.uid || data.uid || "",
     username,
-    usernameLower: username.toLowerCase(),
     email: user.email || src.email || data.email || "",
     emailVerified: Boolean(src.emailVerified ?? data.accountStatus?.emailVerified ?? user.emailVerified ?? false),
     emailCommsOptIn: Boolean(src.emailCommsOptIn ?? data.emailCommsOptIn ?? data.emailOptIn ?? false),
@@ -886,6 +951,7 @@ const LEGACY_TOP_LEVEL_FIELDS = [
 ];
 
 const LEGACY_NESTED_FIELDS = [
+  "profile.usernameLower",
   "currentCampaign.formGuide",
   "currentCampaign.form",
   "currentCampaign.selectedTeamId",
@@ -904,6 +970,8 @@ const LEGACY_NESTED_FIELDS = [
   "bestCampaign.finish",
   "bestCampaign.status",
   "bestCampaign.groupPosition",
+  "bestCampaign.team",
+  "bestCampaign.round",
   "bestCampaign.cosmeticsApplied",
   "bestCampaign.activeCosmetics",
   "bestCampaign.upgradesApplied",
@@ -915,6 +983,11 @@ const LEGACY_NESTED_FIELDS = [
   "bestCampaign.cosmeticBallEquipped",
   "bestCampaign.cosmeticGloveEquipped",
   "bestCampaign.goldenTicketUsed",
+  "feedback.ratings",
+  "consumables.goldenTicket.totalPurchased",
+  "consumables.goldenTicket.totalUsed",
+  "consumables.goldenTicket.lastPurchasedAt",
+  "consumables.goldenTicket.lastUsedAt",
 ];
 
 const buildLegacyDeleteUpdate = () => {
@@ -937,7 +1010,6 @@ const canonicaliseProfileUpdate = (data = {}) => {
     if (data.username || data.nickname || incomingProfile.username) {
       const username = cleanUsername(data.username || data.nickname || incomingProfile.username);
       update["profile.username"] = username;
-      update["profile.usernameLower"] = username.toLowerCase();
     }
     if (data.email || incomingProfile.email) update["profile.email"] = data.email || incomingProfile.email;
     if (hasOwn(data, "emailOptIn") || hasOwn(data, "emailCommsOptIn") || hasOwn(incomingProfile, "emailCommsOptIn")) {
@@ -1034,7 +1106,6 @@ export async function ensureUserDocument(user, username = "Player", extra = {}) 
   const existing = snap.data() || {};
   const canonical = canonicalFromFirestore(user.uid, { ...existing, ...extra, profile: { ...(existing.profile || {}), email: user.email || existing.profile?.email || existing.email || "", emailVerified: user.emailVerified ?? existing.profile?.emailVerified } });
   canonical.profile.username = cleanUsername(displayName || canonical.profile.username);
-  canonical.profile.usernameLower = canonical.profile.username.toLowerCase();
   await repairUserDocument(user.uid, canonical);
   return { id: user.uid, ...canonical, ...buildUiProfileAliases(canonical) };
 }
@@ -1137,14 +1208,29 @@ export async function saveCheckoutStarted(uid, checkout = {}) {
   }, { merge: true });
 }
 
+function hasGoldenKitbagPurchase(profile = {}, upgrades = {}) {
+  if (upgrades.goldenKitbag || upgrades.fullBundle) return true;
+  const selectedItems = profile?.lastPurchase?.selectedItems;
+  if (Array.isArray(selectedItems)) {
+    return selectedItems.some((item) => {
+      if (typeof item === "string") return item === "fullBundle" || item === "goldenKitbag";
+      return item?.itemId === "fullBundle" || item?.id === "fullBundle" || item?.itemId === "goldenKitbag";
+    });
+  }
+  return false;
+}
+
 export function buildStoreEntitlements(profile = {}) {
   const upgrades = normaliseUpgradeMap(profile.upgradesPurchased, {}, profile.unlocks, profile);
   const consumables = normaliseConsumables(profile.consumables, profile.cosmetics || {});
+  const goldenKitbag = hasGoldenKitbagPurchase(profile, upgrades);
   return {
     allTeams: Boolean(upgrades.allTeams),
     goldenBall: Boolean(upgrades.goldenBall),
     goldenBoot: Boolean(upgrades.goldenBoot),
     goldenGlove: Boolean(upgrades.goldenGlove),
+    goldenKitbag,
+    fullBundle: goldenKitbag,
     goldenTicket: normaliseTicketQuantity(consumables.goldenTicket?.quantity) > 0,
     goldenTicketQty: normaliseTicketQuantity(consumables.goldenTicket?.quantity),
   };
@@ -1186,7 +1272,11 @@ function chooseBetterLeaderboardRow(existing, incoming) {
 
   const incomingHasCosmetics = leaderboardUsesUpgrade(incoming);
   const existingHasCosmetics = leaderboardUsesUpgrade(existing);
-  if (incomingHasCosmetics && !existingHasCosmetics) return incoming;
+  if (existingHasCosmetics !== incomingHasCosmetics) {
+    // Same score: keep the clean/non-upgraded campaign as the better public row.
+    // A later cosmetic campaign must not relabel an older clean best score.
+    return existingHasCosmetics ? incoming : existing;
+  }
 
   const incomingCompletedAt = incoming.completedAt || incoming.bestCampaign?.completedAt || "";
   const existingCompletedAt = existing.completedAt || existing.bestCampaign?.completedAt || "";
@@ -1217,34 +1307,37 @@ function normaliseLeaderboardEntry(uid, entry = {}) {
   const storedFinish = isTerminalResultStatus(finish) ? finish : "completed";
   const podiumCanonical = podiumFromResultFields(entry.podium, bestCampaign.podium, storedFinish, rawBestCampaign.phase, rawBestCampaign.round);
   const podium = leaderboardPodiumFromCanonical(podiumCanonical);
-  const cosmeticsApplied = normaliseCosmeticsApplied(
-    entry,
-    entry.cosmeticsApplied,
-    entry.activeCosmetics,
-    entry.upgradesApplied,
-    entry.upgradesUsed,
-    entry.usedUpgrades,
-    rawBestCampaign,
-    rawBestCampaign.cosmeticsApplied,
-    rawBestCampaign.activeCosmetics,
-    rawBestCampaign.upgradesApplied,
-    rawBestCampaign.upgradesUsed,
-    rawBestCampaign.usedUpgrades,
-    bestCampaign,
-    bestCampaign.cosmeticsApplied,
-    bestCampaign.activeCosmetics,
-    bestCampaign.upgradesApplied,
-    bestCampaign.upgradesUsed,
-    bestCampaign.usedUpgrades,
-  );
+  const hasNestedBestCampaign = Boolean(entry.bestCampaign && typeof entry.bestCampaign === "object");
+  const upgradeSources = hasNestedBestCampaign
+    ? [
+        rawBestCampaign,
+        rawBestCampaign.cosmeticsApplied,
+        rawBestCampaign.activeCosmetics,
+        rawBestCampaign.upgradesApplied,
+        rawBestCampaign.upgradesUsed,
+        rawBestCampaign.usedUpgrades,
+      ]
+    : [
+        entry,
+        entry.cosmeticsApplied,
+        entry.activeCosmetics,
+        entry.upgradesApplied,
+        entry.upgradesUsed,
+        entry.usedUpgrades,
+        rawBestCampaign,
+        rawBestCampaign.cosmeticsApplied,
+        rawBestCampaign.activeCosmetics,
+        rawBestCampaign.upgradesApplied,
+        rawBestCampaign.upgradesUsed,
+        rawBestCampaign.usedUpgrades,
+      ];
+  const cosmeticsApplied = normaliseCosmeticsApplied(...upgradeSources);
   const usedGoldenUpgrade = Boolean(
     cosmeticsApplied.goldenBoot ||
     cosmeticsApplied.goldenBall ||
     cosmeticsApplied.goldenGlove ||
     cosmeticsApplied.goldenTicket ||
-    genericUpgradeFlagFromSource(entry) ||
-    genericUpgradeFlagFromSource(rawBestCampaign) ||
-    genericUpgradeFlagFromSource(bestCampaign)
+    upgradeSources.some(genericUpgradeFlagFromSource)
   );
 
   return {
@@ -1277,18 +1370,8 @@ function normaliseLeaderboardEntry(uid, entry = {}) {
     cosmeticGloveEquipped: Boolean(cosmeticsApplied.goldenGlove),
     goldenTicketUsed: Boolean(cosmeticsApplied.goldenTicket),
     completedAt: entry.completedAt || bestCampaign.completedAt || null,
-    bestCampaign: {
-      exists: true,
-      gameScore,
-      teamName,
-      team: teamName,
-      cupRun,
-      phase: rawBestCampaign.phase || rawBestCampaign.roundLabel || rawBestCampaign.stage || storedFinish,
-      round: rawBestCampaign.round || rawBestCampaign.roundLabel || rawBestCampaign.stage || rawBestCampaign.phase || storedFinish,
-      podium: podiumCanonical,
-      completedAt: entry.completedAt || bestCampaign.completedAt || null,
-      updatedAt: entry.updatedAt || bestCampaign.updatedAt || null,
-    },
+    round: rawBestCampaign.round || rawBestCampaign.roundLabel || rawBestCampaign.stage || rawBestCampaign.phase || storedFinish,
+    phase: rawBestCampaign.phase || rawBestCampaign.roundLabel || rawBestCampaign.stage || storedFinish,
   };
 }
 
@@ -1303,10 +1386,10 @@ export async function saveLeaderboardHighScore(uid, entry = {}) {
     ? buildLeaderboardRowFromData(uid, existingSnap.data() || {}, "leaderboard")
     : null;
   const bestRow = chooseBetterLeaderboardRow(existingRow, row);
-  if (bestRow !== row && leaderboardScoreOf(bestRow) > leaderboardScoreOf(row)) return;
+  if (bestRow !== row) return;
 
   const completedAt = row.completedAt || serverTimestamp();
-  const podiumCanonical = row.bestCampaign?.podium || podiumFromResultFields(row.podium, row.finish);
+  const podiumCanonical = podiumFromResultFields(row.podium, row.finish, row.phase, row.round);
 
   await setDoc(leaderboardRef, {
     uid,
@@ -1317,20 +1400,10 @@ export async function saveLeaderboardHighScore(uid, entry = {}) {
     teamFlag: row.teamName || "",
     gameScore: row.gameScore,
     cupRun: row.cupRun,
+    round: row.round || row.phase || row.finish || "completed",
+    phase: row.phase || row.round || row.finish || "completed",
     podium: podiumCanonical,
-    usedGoldenUpgrade: Boolean(row.usedGoldenUpgrade || row.goldenUpgradeUsed || usesLeaderboardUpgrade(row)),
-    bestCampaign: {
-      exists: true,
-      gameScore: row.gameScore,
-      teamName: row.teamName || "",
-      team: row.teamName || "",
-      cupRun: row.cupRun,
-      phase: row.bestCampaign?.phase || row.finish || "completed",
-      round: row.bestCampaign?.round || row.bestCampaign?.phase || row.finish || "completed",
-      podium: podiumCanonical,
-      completedAt,
-      updatedAt: serverTimestamp(),
-    },
+    usedGoldenUpgrade: Boolean(row.usedGoldenUpgrade || row.goldenUpgradeUsed),
     completedAt,
     updatedAt: serverTimestamp(),
     localOnly: false,
@@ -1357,6 +1430,7 @@ export async function saveLeaderboardHighScore(uid, entry = {}) {
     cosmeticBallEquipped: deleteField(),
     cosmeticGloveEquipped: deleteField(),
     goldenTicketUsed: deleteField(),
+    bestCampaign: deleteField(),
     "bestCampaign.formGuide": deleteField(),
     "bestCampaign.form": deleteField(),
     "bestCampaign.tournamentProgress": deleteField(),
@@ -1407,29 +1481,37 @@ function buildLeaderboardRowFromData(id, data = {}, source = "leaderboard") {
   const podiumCanonical = podiumFromResultFields(data.podium, bestCampaign.podium, finish, data.phase, data.round, data.bestCampaign?.phase, data.bestCampaign?.round);
   const podium = leaderboardPodiumFromCanonical(podiumCanonical);
   const username = cleanUsername(data.username || profile.username || data.nickname || "PLAYER").toUpperCase();
-  const cosmeticsApplied = normaliseCosmeticsApplied(
-    data,
-    data.cosmeticsApplied,
-    data.activeCosmetics,
-    data.upgradesApplied,
-    data.upgradesUsed,
-    data.usedUpgrades,
-    data.bestCampaign,
-    bestCampaign,
-    bestCampaign.cosmeticsApplied,
-    bestCampaign.activeCosmetics,
-    bestCampaign.upgradesApplied,
-    bestCampaign.upgradesUsed,
-    bestCampaign.usedUpgrades,
-  );
+  const dataBestCampaign = data.bestCampaign && typeof data.bestCampaign === "object" ? data.bestCampaign : {};
+  const upgradeSources = source === "users" && Object.keys(dataBestCampaign).length
+    ? [
+        dataBestCampaign,
+        dataBestCampaign.cosmeticsApplied,
+        dataBestCampaign.activeCosmetics,
+        dataBestCampaign.upgradesApplied,
+        dataBestCampaign.upgradesUsed,
+        dataBestCampaign.usedUpgrades,
+      ]
+    : [
+        data,
+        data.cosmeticsApplied,
+        data.activeCosmetics,
+        data.upgradesApplied,
+        data.upgradesUsed,
+        data.usedUpgrades,
+        dataBestCampaign,
+        dataBestCampaign.cosmeticsApplied,
+        dataBestCampaign.activeCosmetics,
+        dataBestCampaign.upgradesApplied,
+        dataBestCampaign.upgradesUsed,
+        dataBestCampaign.usedUpgrades,
+      ];
+  const cosmeticsApplied = normaliseCosmeticsApplied(...upgradeSources);
   const usedGoldenUpgrade = Boolean(
     cosmeticsApplied.goldenBoot ||
     cosmeticsApplied.goldenBall ||
     cosmeticsApplied.goldenGlove ||
     cosmeticsApplied.goldenTicket ||
-    genericUpgradeFlagFromSource(data) ||
-    genericUpgradeFlagFromSource(data.bestCampaign) ||
-    genericUpgradeFlagFromSource(bestCampaign)
+    upgradeSources.some(genericUpgradeFlagFromSource)
   );
 
   return {
@@ -1597,9 +1679,10 @@ export async function loadLeaderboardRows(limitCount = 50) {
 export async function isNicknameTaken(nickname, uidToIgnore = null) {
   const clean = String(nickname || "").trim().toLowerCase();
   if (!clean || !db) return false;
-  const usernameQuery = query(collection(db, "users"), where("profile.usernameLower", "==", clean), limit(3));
-  const snap = await getDocs(usernameQuery);
-  return snap.docs.some((item) => item.id !== uidToIgnore);
+  const reservedSnap = await getDoc(doc(db, "usernames", clean)).catch(() => null);
+  if (reservedSnap?.exists()) return reservedSnap.data()?.uid !== uidToIgnore;
+  const snap = await getDocs(query(collection(db, "users"), limit(250))).catch(() => null);
+  return Boolean(snap?.docs?.some((item) => item.id !== uidToIgnore && String(item.data()?.profile?.username || "").trim().toLowerCase() === clean));
 }
 
 export async function saveUserNickname(uid, username) {
@@ -1607,7 +1690,6 @@ export async function saveUserNickname(uid, username) {
   if (!uid || !clean || !db) return;
   await setDoc(doc(db, "users", uid), {
     "profile.username": clean,
-    "profile.usernameLower": clean.toLowerCase(),
     "profile.updatedAt": serverTimestamp(),
     updatedAt: serverTimestamp(),
   }, { merge: true });

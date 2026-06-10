@@ -48,11 +48,57 @@ export function safeWriteJson(key, value) {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
+function localLeaderboardScore(row = {}) {
+  return Number(row.gameScore ?? row.campaignPoints ?? row.points ?? row.bestCampaign?.gameScore ?? row.bestCampaign?.campaignPoints ?? row.bestCampaign?.points ?? 0) || 0;
+}
+
+function isLocalGuestLeaderboardRow(row = {}) {
+  const userId = String(row.userId || row.uid || row.id || "");
+  return Boolean(row.localOnly || row.isUserPreview || userId === "guest-local" || userId === "guest-preview");
+}
+
+function localLeaderboardUsesUpgrade(row = {}) {
+  return Boolean(row.usedGoldenUpgrade || row.goldenUpgradeUsed || row.cosmeticsApplied?.goldenBoot || row.cosmeticsApplied?.goldenBall || row.cosmeticsApplied?.goldenGlove || row.cosmeticsApplied?.goldenTicket || row.bestCampaign?.usedGoldenUpgrade || row.bestCampaign?.goldenUpgradeUsed || row.bestCampaign?.cosmeticsApplied?.goldenBoot || row.bestCampaign?.cosmeticsApplied?.goldenBall || row.bestCampaign?.cosmeticsApplied?.goldenGlove || row.bestCampaign?.cosmeticsApplied?.goldenTicket);
+}
+
+function chooseBetterLocalLeaderboardRow(existing, row) {
+  if (!existing) return row;
+  const rowScore = localLeaderboardScore(row);
+  const existingScore = localLeaderboardScore(existing);
+  if (rowScore > existingScore) return row;
+  if (rowScore < existingScore) return existing;
+  const rowUsesUpgrade = localLeaderboardUsesUpgrade(row);
+  const existingUsesUpgrade = localLeaderboardUsesUpgrade(existing);
+  if (!rowUsesUpgrade && existingUsesUpgrade) return row;
+  if (rowUsesUpgrade && !existingUsesUpgrade) return existing;
+  const rowCompletedAt = String(row.completedAt || row.bestCampaign?.completedAt || "");
+  const existingCompletedAt = String(existing.completedAt || existing.bestCampaign?.completedAt || "");
+  if (rowCompletedAt > existingCompletedAt) return row;
+  return existing;
+}
+
+function normaliseLocalLeaderboardRows(rows = []) {
+  const byUser = new Map();
+  (Array.isArray(rows) ? rows : []).forEach((row) => {
+    if (!row || typeof row !== "object" || localLeaderboardScore(row) <= 0) return;
+    const isGuest = isLocalGuestLeaderboardRow(row);
+    const key = isGuest ? "guest-local" : String(row.userId || row.uid || row.id || row.username || "");
+    if (!key) return;
+    const nextRow = isGuest
+      ? { ...row, id: "guest-local", uid: "guest-local", userId: "guest-local", localOnly: true, isUserPreview: false }
+      : row;
+    byUser.set(key, chooseBetterLocalLeaderboardRow(byUser.get(key), nextRow));
+  });
+  return Array.from(byUser.values())
+    .sort((a, b) => localLeaderboardScore(b) - localLeaderboardScore(a))
+    .slice(0, 50);
+}
+
 export function safeReadLeaderboardRows() {
   if (typeof window === "undefined") return [];
   try {
     const parsed = JSON.parse(window.localStorage.getItem(LOCAL_LEADERBOARD_KEY) || "[]");
-    return Array.isArray(parsed) ? parsed : [];
+    return normaliseLocalLeaderboardRows(parsed);
   } catch {
     return [];
   }
@@ -60,7 +106,7 @@ export function safeReadLeaderboardRows() {
 
 export function safeWriteLeaderboardRows(rows) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(LOCAL_LEADERBOARD_KEY, JSON.stringify(rows.slice(0, 50)));
+  window.localStorage.setItem(LOCAL_LEADERBOARD_KEY, JSON.stringify(normaliseLocalLeaderboardRows(rows)));
 }
 
 export function isTerminalLeaderboardStatus(status) {

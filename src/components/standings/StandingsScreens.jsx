@@ -30,22 +30,26 @@ function PlaceholderSlot({ value, compact = false, large = false, medium = false
 function BracketSlot({ value, compact = false, large = false, medium = false, small = false, isUserTeam = false }) {
   if (!isRealBracketTeam(value)) return <PlaceholderSlot value={value || "TBC"} compact={compact} large={large} medium={medium} small={small} />;
   const sizeClass = large ? "h-[34px] w-[48px]" : medium ? "h-[18px] w-[27px]" : small ? "h-[11px] w-[16px]" : compact ? "h-[11px] w-[16px]" : "h-[13px] w-[19px]";
-  return <span className={`relative inline-flex ${sizeClass} shrink-0 overflow-visible rounded`}>
-    <Flag team={value} className={`${sizeClass} rounded ring-1 ${isUserTeam ? "ring-[#F7D117]" : "ring-[#F5F1E8]/35"}`} />
+  const outlineClass = isUserTeam ? "border-[#F7D117]/90" : "border-[#F5F1E8]/48";
+  return <span className={`relative inline-flex ${sizeClass} shrink-0 items-center justify-center overflow-visible rounded-[3px] bg-[#F5F1E8]/96`}>
+    <Flag team={value} className={`${sizeClass} rounded-[3px]`} />
+    <span aria-hidden="true" className={`pointer-events-none absolute inset-0 rounded-[3px] border ${outlineClass} shadow-[inset_0_0_0_0.6px_rgba(3,27,18,0.24)]`} />
   </span>;
 }
 
 function BracketFixture({ fixture, layout = "vertical", userTeam = null, large = false, featuredFlags = false, finalFlags = false, className = "" }) {
   const compact = layout === "r32";
-  const widthClass = large ? "w-[72px]" : finalFlags ? "w-[58px]" : layout === "horizontal" ? "w-[48px]" : compact ? "w-[28px]" : "w-[34px]";
-  const heightClass = finalFlags ? "h-[58px]" : !large && layout === "horizontal" ? "h-[30px]" : "";
-  const slotDirection = layout === "horizontal" ? "flex-row" : "flex-col";
+  const isHorizontal = layout === "horizontal";
+  const widthClass = large ? "w-[72px]" : finalFlags ? "w-[58px]" : isHorizontal ? "w-[48px]" : compact ? "w-[28px]" : "w-[34px]";
+  const heightClass = finalFlags ? "h-[58px]" : !large && isHorizontal ? "h-[24px]" : "";
+  const paddingClass = large ? "px-[5px] py-[6px]" : isHorizontal ? "px-[5px] py-[2px]" : "px-[5px] py-[4px]";
+  const slotDirection = isHorizontal ? "flex-row" : "flex-col";
   const smallFlags = !large && !featuredFlags && !finalFlags;
   const isUserFixture = userTeam && (fixture?.home === userTeam || fixture?.away === userTeam);
   const cardClass = isUserFixture ? "border-[#F7D117]/72 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F7D117]/30" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 text-[#F5F1E8] ring-[#F5F1E8]/10";
   const matchNo = Number(fixture?.matchNo);
   const showPlayoffLabel = matchNo === 103;
-  return <div data-bracket-match-no={fixture?.matchNo || ""} className={`mx-auto flex ${widthClass} ${heightClass} ${className} flex-col items-center justify-center ${finalFlags ? "rounded-full" : "rounded-[0.55rem]"} border ${cardClass} px-[5px] py-[4px] ring-1 ${large ? "py-[6px]" : ""}`}>
+  return <div data-bracket-match-no={fixture?.matchNo || ""} className={`mx-auto flex ${widthClass} ${heightClass} ${className} flex-col items-center justify-center ${finalFlags ? "rounded-full" : "rounded-[0.55rem]"} border ${cardClass} ${paddingClass} ring-1`}>
     {showPlayoffLabel && (
       <div className="mb-[2px] max-w-full whitespace-nowrap text-center home-copy-bold text-[8px] font-black uppercase leading-none tracking-[0.035em] text-[#F5F1E8]/72">PLAY-OFF</div>
     )}

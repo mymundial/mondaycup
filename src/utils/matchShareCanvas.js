@@ -324,6 +324,8 @@ function drawCapturedScoreboardFlagOverlays(ctx, props, assets, size, yOffset = 
   const total = fractions.reduce((sum, value) => sum + value, 0);
   const widths = fractions.map((value) => (value / total) * size);
   const centers = widths.map((width, index) => widths.slice(0, index).reduce((sum, value) => sum + value, 0) + width / 2);
+  const teamACenterX = centers[1];
+  const teamBCenterX = centers[5];
   const unit = size / 400;
   const flagW = 25 * unit * (Number(d.flagScale) || 1);
   const flagH = 17 * unit * (Number(d.flagScale) || 1);
@@ -341,7 +343,12 @@ function drawCapturedScoreboardFlagOverlays(ctx, props, assets, size, yOffset = 
 }
 
 function drawMarkers(ctx, markers = [], totalSlots = 5, x, y, scale = 1) {
-  const visible = Array.from({ length: totalSlots }).map((_, index) => markers[index] || "");
+  const MAX_VISIBLE_MARKERS = 10;
+  const displaySlots = Math.min(totalSlots, MAX_VISIBLE_MARKERS);
+  const sourceMarkers = Array.isArray(markers) ? markers : [];
+  const startIndex = totalSlots > MAX_VISIBLE_MARKERS ? Math.max(0, sourceMarkers.length - MAX_VISIBLE_MARKERS) : 0;
+  const slicedMarkers = sourceMarkers.slice(startIndex, startIndex + displaySlots);
+  const visible = Array.from({ length: displaySlots }).map((_, index) => slicedMarkers[index] || "");
   const dot = 13 * scale;
   const gap = 7 * scale;
   const totalWidth = visible.length * dot + Math.max(0, visible.length - 1) * gap;
@@ -439,6 +446,8 @@ function drawScoreboard(ctx, props, assets, size) {
   const total = fractions.reduce((sum, value) => sum + value, 0);
   const widths = fractions.map((value) => (value / total) * size);
   const centers = widths.map((width, index) => widths.slice(0, index).reduce((sum, value) => sum + value, 0) + width / 2);
+  const teamACenterX = centers[1];
+  const teamBCenterX = centers[5];
   const unit = size / 400;
 
   if (d.showFlags) {
@@ -450,7 +459,7 @@ function drawScoreboard(ctx, props, assets, size) {
 
   const codeSize = size * 0.079 * (Number(d.teamScale) || 1);
   if (d.showTeamCodes) {
-    drawCenteredText(ctx, userTeam.code, centers[1] + (Number(d.teamAX) || 0) * unit, r2Y + (Number(d.teamAY) || 0) * unit, {
+    drawCenteredText(ctx, userTeam.code, teamACenterX + (Number(d.teamAX) || 0) * unit, r2Y + (Number(d.teamAY) || 0) * unit, {
       family,
       size: codeSize,
       weight: 900,
@@ -461,7 +470,7 @@ function drawScoreboard(ctx, props, assets, size) {
       shadowColour: "rgba(247,209,23,0.18)",
       shadowBlur: size * 0.004,
     });
-    drawCenteredText(ctx, opponentTeam.code, centers[5] + (Number(d.teamBX) || 0) * unit, r2Y + (Number(d.teamBY) || 0) * unit, {
+    drawCenteredText(ctx, opponentTeam.code, teamBCenterX + (Number(d.teamBX) || 0) * unit, r2Y + (Number(d.teamBY) || 0) * unit, {
       family,
       size: codeSize,
       weight: 900,
@@ -498,8 +507,8 @@ function drawScoreboard(ctx, props, assets, size) {
   }
 
   if (showMarkers) {
-    drawMarkers(ctx, teamAMarkers, totalMarkerSlots, centers[1] + (Number(d.markerAX) || 0) * unit, r3Y + (Number(d.markerAY) || 0) * unit, Number(d.markerScale) || 1);
-    drawMarkers(ctx, teamBMarkers, totalMarkerSlots, centers[5] + (Number(d.markerBX) || 0) * unit, r3Y + (Number(d.markerBY) || 0) * unit, Number(d.markerScale) || 1);
+    drawMarkers(ctx, teamAMarkers, totalMarkerSlots, teamACenterX + (Number(d.markerAX) || 0) * unit, r3Y + (Number(d.markerAY) || 0) * unit, Number(d.markerScale) || 1);
+    drawMarkers(ctx, teamBMarkers, totalMarkerSlots, teamBCenterX + (Number(d.markerBX) || 0) * unit, r3Y + (Number(d.markerBY) || 0) * unit, Number(d.markerScale) || 1);
 
     const usernameBoxW = size * 0.29 * (Number(d.usernameScale) || 1);
     const usernameBoxH = Math.max(size * 0.039, row3 * 0.62) * (Number(d.usernameScale) || 1);
@@ -807,9 +816,9 @@ function drawBadgeOverlay(ctx, badgeMode, assets, x, y, width, height, d) {
   const offsetY = (Number(d.badgeY) || 0) * (width / 400);
   const badgeMap = {
     monday: { image: assets.mondayLogo, w: width * 0.99825, h: height * 0.74415, top: 0.39, glow: null },
-    champion: { image: assets.champion, w: width * 0.99825, h: height * 0.74415, top: 0.39, glow: LED_YELLOW, glowOuter: "rgba(247,209,23,0.18)", glowMid: "rgba(247,209,23,0.075)" },
-    runnerUp: { image: assets.runnerUp, w: width * 0.99825, h: height * 0.74415, top: 0.39, glow: IVORY, glowOuter: "rgba(245,241,232,0.16)", glowMid: "rgba(216,216,216,0.07)" },
-    third: { image: assets.third, w: width * 0.99825, h: height * 0.74415, top: 0.39, glow: "#C8863A", glowOuter: "rgba(200,134,58,0.18)", glowMid: "rgba(200,134,58,0.075)" },
+    champion: { image: assets.champion, w: width * 0.898425, h: height * 0.669735, top: 0.39, glow: LED_YELLOW, glowOuter: "rgba(247,209,23,0.18)", glowMid: "rgba(247,209,23,0.075)" },
+    runnerUp: { image: assets.runnerUp, w: width * 0.898425, h: height * 0.669735, top: 0.39, glow: IVORY, glowOuter: "rgba(245,241,232,0.16)", glowMid: "rgba(216,216,216,0.07)" },
+    third: { image: assets.third, w: width * 0.898425, h: height * 0.669735, top: 0.39, glow: "#C8863A", glowOuter: "rgba(200,134,58,0.18)", glowMid: "rgba(200,134,58,0.075)" },
   };
   const badge = badgeMap[badgeMode] || badgeMap.monday;
   const cx = x + width / 2 + offsetX;

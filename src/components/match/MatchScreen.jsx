@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { auth } from "../../firebase.js";
-import { Shell } from "../layout/Layout.jsx";
+import { FullPitchExtensionBackground, Shell } from "../layout/Layout.jsx";
 import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
 import FootballGame from "./FootballGame.jsx";
 import EndMatchModal from "./EndMatchModal.jsx";
@@ -50,6 +50,9 @@ export function MatchScreen({
   podium = null,
   activeCosmetics = null,
   twoPlayerMode = false,
+  activeMatchSnapshot = null,
+  onActiveMatchSnapshot = null,
+  matchResetKey = 0,
 }) {
   const [matchBusy, setMatchBusy] = useState(false);
   const shareCaptureRef = useRef(null);
@@ -66,13 +69,15 @@ export function MatchScreen({
 
   return (
     <Shell>
-      <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-[#0d6c3d]">
+      <FullPitchExtensionBackground />
+      <div className="relative z-[2] flex h-[100dvh] flex-col overflow-x-visible overflow-y-hidden bg-[#0d6c3d]">
         <ScreenTopBar {...menuProps} style={{ height: MC_SELECTION_LAYOUT.topBarHeight }}>
           MATCH
         </ScreenTopBar>
 
-        <div ref={shareCaptureRef} className="relative min-h-0 flex-1 overflow-hidden bg-[#0d6c3d]">
+        <div ref={shareCaptureRef} className="relative min-h-0 flex-1 overflow-x-visible overflow-y-hidden bg-[#0d6c3d]">
           <FootballGame
+            key={`${fallbackFixture.id || fallbackFixture.matchId || "match"}:${team || ""}:${opponent || ""}:${matchResetKey}`}
             userTeam={userTeam}
             opponentTeam={opponentTeam}
             fixture={fallbackFixture}
@@ -89,6 +94,8 @@ export function MatchScreen({
             username={username}
             twoPlayerMode={twoPlayerMode}
             stageLabelOverride={twoPlayerMode ? stageLabel : null}
+            activeMatchSnapshot={activeMatchSnapshot}
+            onActiveMatchSnapshot={onActiveMatchSnapshot}
           />
           {showSharedResultBadge && <ResultBadgeShareOverlay badge={resultBadge} />}
         </div>

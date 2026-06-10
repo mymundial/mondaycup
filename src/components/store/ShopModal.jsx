@@ -23,15 +23,14 @@ function CloseIcon({ className = "h-6 w-6" }) {
 
 function ownedStateForItem(item, entitlements = {}) {
   if (!item) return false;
-  if (item.id === STORE_ITEM_IDS.fullBundle) return false;
+  if (item.id === STORE_ITEM_IDS.fullBundle) return Boolean(entitlements.goldenKitbag);
   if (item.id === STORE_ITEM_IDS.allTeams) return Boolean(entitlements.allTeams);
   if (item.id === STORE_ITEM_IDS.goldenTicket) return normaliseTicketQuantity(entitlements.goldenTicketQty) >= STORE_ITEMS.goldenTicket.maxQuantity;
   return Boolean(entitlements[item.id]);
 }
 
 function bundleUnavailableReason(entitlements = {}) {
-  const ticketQty = normaliseTicketQuantity(entitlements.goldenTicketQty);
-  if (ticketQty >= STORE_ITEMS.goldenTicket.maxQuantity) return "MAX";
+  if (entitlements.goldenKitbag) return "";
   if (
     entitlements.allTeams ||
     entitlements.goldenBoot ||
@@ -61,10 +60,12 @@ function StoreRow({
   const maxTicketsReached = isTicket && maxTicketPurchaseQty <= 0;
   const selectDisabled = disabled || owned || inactive || (isTicket && maxTicketsReached && !selected);
   const displayPrice = owned
-    ? item.id === STORE_ITEM_IDS.allTeams ? "UNLOCKED" : isTicket ? "MAX" : "OWNED"
+    ? item.id === STORE_ITEM_IDS.allTeams ? "UNLOCKED" : isBundle ? "ACTIVE" : isTicket ? "MAX" : "OWNED"
     : maxTicketsReached || inactiveReason === "MAX"
       ? "MAX"
-      : item.priceLabel;
+      : inactive
+        ? "INACTIVE"
+        : item.priceLabel;
 
   return (
     <div className={`relative grid grid-cols-[32px_44px_minmax(0,1fr)_auto_minmax(48px,auto)] items-center gap-2 rounded-[1rem] border px-2 py-2 shadow-[0_6px_14px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(245,241,232,0.06)] ring-1 transition ${selected ? "border-[#F7D117]/72 bg-[#052D1D]/84 ring-[#F7D117]/26" : "border-[#F5F1E8]/14 bg-[#052D1D]/68 ring-[#F5F1E8]/10"} ${selectDisabled && !selected ? "opacity-60" : "opacity-100"}`}>
@@ -100,7 +101,7 @@ function StoreRow({
         ) : null}
         {inactive ? (
           <div className="home-copy-bold mt-1 text-[7px] uppercase leading-none tracking-[0.1em] text-[#F5F1E8]/58">
-            {inactiveReason === "MAX" ? "MAX GOLDEN TICKETS" : "UNAVAILABLE WITH OWNED ITEMS"}
+            UNAVAILABLE WITH OWNED ITEMS
           </div>
         ) : null}
       </div>
@@ -274,15 +275,15 @@ export default function ShopModal({ open = false, onClose, initialItemId = null,
               <img src={ASSETS.branding.mondayLogo} alt="Monday Cup" className="h-10 w-10 object-contain drop-shadow-[0_5px_8px_rgba(0,0,0,0.3)]" draggable={false} />
             </div>
             <div className="home-copy-bold self-center text-center text-[25px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8]">CLUB STORE</div>
-            <button type="button" onClick={onClose} className="grid h-11 w-11 place-items-center justify-self-end rounded-[0.9rem] bg-[#031B12]/46 text-[#F5F1E8]" aria-label="Close shop"><CloseIcon /></button>
+            <button type="button" onClick={onClose} className="grid h-11 w-11 place-items-center justify-self-end text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.32)] active:scale-[0.96]" aria-label="Close shop"><CloseIcon /></button>
           </div>
 
           <div className="space-y-2 rounded-[1.25rem] border border-[#F5F1E8]/12 bg-[#031B12]/24 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             {itemOrder.map((id) => {
               const item = STORE_ITEMS[id] || STORE_BUNDLES[id];
               if (!item) return null;
-              const owned = item.id === STORE_ITEM_IDS.fullBundle ? false : ownedStateForItem(item, entitlements);
-              const inactive = item.id === STORE_ITEM_IDS.fullBundle && bundleInactive;
+              const owned = ownedStateForItem(item, entitlements);
+              const inactive = item.id === STORE_ITEM_IDS.fullBundle && !owned && bundleInactive;
               const disabled = inactive || (bundleSelected && item.id !== STORE_ITEM_IDS.fullBundle && item.id !== STORE_ITEM_IDS.goldenTicket);
               return (
                 <StoreRow

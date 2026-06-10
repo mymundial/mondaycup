@@ -61,7 +61,9 @@ function chooseBetterRow(existing, row) {
   const existingScore = scoreOf(existing);
   if (rowScore > existingScore) return row;
   if (rowScore < existingScore) return existing;
-  if (hasUsedUpgrade(row) && !hasUsedUpgrade(existing)) return row;
+  const rowHasUpgrade = hasUsedUpgrade(row);
+  const existingHasUpgrade = hasUsedUpgrade(existing);
+  if (rowHasUpgrade !== existingHasUpgrade) return existingHasUpgrade ? row : existing;
   return existing;
 }
 
@@ -75,9 +77,9 @@ function mergeLeaderboardRows(localRows, cloudRows) {
   });
 
   localRows.filter(isLocalGuestRow).forEach((row) => {
-    const userId = row.userId || row.uid || row.id || "guest-local";
     if (scoreOf(row) <= 0) return;
-    byUser.set(userId, chooseBetterRow(byUser.get(userId), { ...row, localOnly: true }));
+    const guestRow = { ...row, id: "guest-local", uid: "guest-local", userId: "guest-local", localOnly: true, isUserPreview: false };
+    byUser.set("guest-local", chooseBetterRow(byUser.get("guest-local"), guestRow));
   });
 
   return Array.from(byUser.values())

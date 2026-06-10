@@ -23,7 +23,7 @@ function PowerChargeMeter({ value, ideal = GAME.powerIdeal, charging = false, fi
   const width = `${ideal[1] - ideal[0]}%`;
 
   return (
-    <div className="relative h-10 rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/22 bg-[#0b2d1d] p-1 shadow-[0_8px_18px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#0B5F35]/50">
+    <div className="relative h-10 rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/22 bg-[#0b2d1d] p-1 shadow-[0_8px_18px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#0B5F35]/50" style={{ contain: "layout paint" }}>
       <div className="relative h-full overflow-hidden rounded-[clamp(14px,2.2vh,28px)] bg-[#061A11]">
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(0,0,0,0.18))]" />
         <div
@@ -33,10 +33,10 @@ function PowerChargeMeter({ value, ideal = GAME.powerIdeal, charging = false, fi
         <div className="absolute inset-y-[-3px] left-1/2 w-[3px] -translate-x-1/2 rounded-full bg-[#F5F1E8] shadow-[0_0_7px_rgba(245,241,232,0.75)]" />
         <div
           ref={fillRef}
-          className="absolute inset-y-[-2px] w-[4px] -translate-x-1/2 rounded-full bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.65)]"
-          style={{ left: `${value}%`, willChange: "left" }}
+          className="absolute inset-y-[-2px] w-[4px] rounded-full bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.65)]"
+          style={{ left: `${value}%`, transform: "translateX(-50%)", willChange: "transform" }}
         />
-        <div className={`pointer-events-none absolute inset-0 ${charging ? "animate-pulse" : ""} bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(0,0,0,0.13))]`} />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(0,0,0,0.13))]" />
       </div>
     </div>
   );
@@ -47,7 +47,7 @@ function AccuracyMeter({ value, ideal, running = false, fillRef = null }) {
   const width = `${ideal[1] - ideal[0]}%`;
 
   return (
-    <div className="relative h-10 rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/22 bg-[#0b2d1d] p-1 shadow-[0_8px_18px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#0B5F35]/50">
+    <div className="relative h-10 rounded-[clamp(14px,2.2vh,28px)] border border-[#F5F1E8]/22 bg-[#0b2d1d] p-1 shadow-[0_8px_18px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(245,241,232,0.08)] ring-1 ring-[#0B5F35]/50" style={{ contain: "layout paint" }}>
       <div className="relative h-full overflow-hidden rounded-[clamp(14px,2.2vh,28px)] bg-[#061A11]">
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(0,0,0,0.18))]" />
         <div
@@ -57,10 +57,10 @@ function AccuracyMeter({ value, ideal, running = false, fillRef = null }) {
         <div className="absolute inset-y-[-3px] left-1/2 w-[3px] -translate-x-1/2 rounded-full bg-[#F5F1E8] shadow-[0_0_7px_rgba(245,241,232,0.75)]" />
         <div
           ref={fillRef}
-          className="absolute inset-y-[-2px] w-[3px] -translate-x-1/2 rounded-full bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.65)]"
-          style={{ left: `${value}%`, willChange: "left" }}
+          className="absolute inset-y-[-2px] w-[3px] rounded-full bg-[#F7D117] shadow-[0_0_8px_rgba(247,209,23,0.65)]"
+          style={{ left: `${value}%`, transform: "translateX(-50%)", willChange: "transform" }}
         />
-        <div className={`pointer-events-none absolute inset-0 ${running ? "animate-pulse" : ""} bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(0,0,0,0.13))]`} />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(0,0,0,0.13))]" />
       </div>
     </div>
   );

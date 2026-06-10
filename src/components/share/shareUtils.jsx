@@ -99,7 +99,11 @@ export function mergeTransforms(...parts) {
 }
 
 export function MarkerDots({ markers = [], totalSlots = GAME.regulationPens }) {
-  const visible = padMarkers(markers, totalSlots);
+  const MAX_VISIBLE_MARKERS = 10;
+  const displaySlots = Math.min(totalSlots, MAX_VISIBLE_MARKERS);
+  const sourceMarkers = Array.isArray(markers) ? markers : [];
+  const startIndex = totalSlots > MAX_VISIBLE_MARKERS ? Math.max(0, sourceMarkers.length - MAX_VISIBLE_MARKERS) : 0;
+  const visible = padMarkers(sourceMarkers.slice(startIndex, startIndex + displaySlots), displaySlots);
   return (
     <div className="inline-flex min-w-0 justify-center gap-[3px]">
       {visible.map((marker, index) => {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { onAuthStateChanged, signOut, updateProfile } from "firebase/auth";
 import { auth } from "./firebase.js";
 import {
@@ -19,6 +19,7 @@ import {
   runSelfTests,
 } from "./logic/tournament.js";
 import { RESULT_STATUS } from "./logic/resultStatus.js";
+import { selectScheduleFocus } from "./logic/schedulePositioningSelectors.js";
 import { GROUPS, GROUP_LETTERS } from "./data/teams.js";
 import { getUserFinishStatus } from "./logic/podium.js";
 import {
@@ -179,6 +180,9 @@ export default function App() {
   const [opponent, setOpponent] = useState("");
   const [score, setScore] = useState([0, 0]);
   const [matchResult, setMatchResult] = useState(null);
+  const [matchResetKey, setMatchResetKey] = useState(0);
+  const [activeMatchSnapshot, setActiveMatchSnapshot] = useState(null);
+  const activeMatchSnapshotRef = useRef(null);
   const [modalDismissed, setModalDismissed] = useState(false);
   const [awardedTrophyMatchKey, setAwardedTrophyMatchKey] = useState(null);
   const [acknowledgedStickerNoticeKey, setAcknowledgedStickerNoticeKey] = useState("");
@@ -305,18 +309,6 @@ export default function App() {
           setUserShirtProfile(
             profile?.userShirt || profile?.shirt || profile?.shareShirt || null,
           );
-          try {
-            const seenKey = `mondayCup.shirtShareSeen.${freshUser.uid}`;
-            if (
-              !profile?.userShirt?.updatedAt &&
-              !window.localStorage?.getItem(seenKey)
-            ) {
-              window.localStorage?.setItem(seenKey, "1");
-              setShirtShareOpen(true);
-            }
-          } catch {
-            if (!profile?.userShirt?.updatedAt) setShirtShareOpen(true);
-          }
           const entitlements = buildStoreEntitlements(profile || {});
           if (entitlements.allTeams) {
             setAllTeamsUnlocked(true);
@@ -574,12 +566,6 @@ export default function App() {
                 0,
             ),
             cupRun: userForm || guestSnapshot.userForm || [],
-            usedGoldenUpgrade: Boolean(
-              guestSnapshot.campaignCosmeticsUsed?.goldenBall ||
-                guestSnapshot.campaignCosmeticsUsed?.goldenBoot ||
-                guestSnapshot.campaignCosmeticsUsed?.goldenGlove ||
-                guestSnapshot.campaignCosmeticsUsed?.goldenTicket,
-            ),
             score: Array.isArray(score) ? score : guestSnapshot.score || [0, 0],
             matchResult: matchResult
               ? {
@@ -615,18 +601,6 @@ export default function App() {
         setUserShirtProfile(
           profile?.userShirt || profile?.shirt || profile?.shareShirt || null,
         );
-        try {
-          const seenKey = `mondayCup.shirtShareSeen.${nextUser.uid}`;
-          if (
-            !profile?.userShirt?.updatedAt &&
-            !window.localStorage?.getItem(seenKey)
-          ) {
-            window.localStorage?.setItem(seenKey, "1");
-            setShirtShareOpen(true);
-          }
-        } catch {
-          if (!profile?.userShirt?.updatedAt) setShirtShareOpen(true);
-        }
         const freshEntitlements = buildStoreEntitlements(profile || {});
         if (freshEntitlements.allTeams) {
           setAllTeamsUnlocked(true);
@@ -650,7 +624,14 @@ export default function App() {
       return;
     }
 
-    if (nextUser && options?.source === "menu-auth") {
+    if (nextUser && signedUpNow) {
+      setDrawer("clubhouse");
+      setMenuOpen(false);
+      setShirtShareOpen(true);
+      return;
+    }
+
+    if (nextUser && (options?.source === "menu-auth" || options?.source === "home-signin")) {
       setDrawer("clubhouse");
       setMenuOpen(false);
       return;
@@ -728,6 +709,15 @@ export default function App() {
   const currentRoundLabel = team
     ? roundLabelForResult(matchResult, matchStage)
     : "NO CAMPAIGN";
+  const scheduleFocus = selectScheduleFocus({
+    matchResult,
+    currentKnockoutMatch,
+    activeGroupFixture,
+    schedule,
+    selectedGroup,
+    team,
+    groupStageComplete,
+  });
   const hasCloudUser = Boolean(currentUser?.uid);
   const isCurrentUserVerified = Boolean(
     currentUser?.uid && currentUser.emailVerified,
@@ -804,19 +794,36 @@ export default function App() {
     });
   };
 
-  const updateNationStickerProgress = (updater) => {
+  const updateNationStickerProgress = (updater, options = {}) => {
+    let nextProgress = null;
     setNationStickerProgress((current) => {
       const next = updater(current || {});
+      nextProgress = next;
       if (next !== current) safeWriteJson(NATION_STICKER_PROGRESS_KEY, next);
       return next;
     });
+
+    if (options?.saveCloud && currentUser?.uid) {
+      window.setTimeout(() => {
+        if (!nextProgress) return;
+        saveUserProfile(currentUser.uid, { stickers: nextProgress }).catch((error) => {
+          console.warn("Sticker open state save failed", error);
+        });
+      }, 0);
+    }
   };
 
   const countKeeperSavesForSticker = (opponentShotEvents = []) => {
     if (!Array.isArray(opponentShotEvents)) return 0;
     return opponentShotEvents.filter((event) => {
+      if (!event || event.goal !== false) return false;
+      if (event.savedByKeeper || event.keeperSave || event.gkSave || event.goalkeeperSave) return true;
       const raw = String(event?.shotResult || event?.result || event?.outcome || "").toLowerCase();
-      return event?.goal === false && (raw.includes("save") || raw.includes("saved"));
+      if (raw.includes("save") || raw.includes("saved")) return true;
+      const shotDirectionId = event.directionId || event.direction?.id || null;
+      const keeperDirectionId = event.keeperDirectionId || event.keeperDirection?.id || null;
+      const targetCode = event.code || event.targetCode || null;
+      return raw === "s" && Boolean(shotDirectionId && keeperDirectionId && targetCode === shotDirectionId && keeperDirectionId === shotDirectionId);
     }).length;
   };
 
@@ -860,11 +867,18 @@ export default function App() {
     });
   };
 
+  const stickerIsEarnedForOpening = (record = {}, stickerKey = "flag") => {
+    const claimable = buildStickerClaimable(record);
+    return Boolean(claimable?.[stickerKey]);
+  };
+
   const markNationStickerOpened = (nation, stickerKey = "flag") => {
     if (!nation || !stickerKey) return;
     updateNationStickerProgress((current) => {
       const existing = current?.[nation] || {};
-      const opened = { ...(existing.opened || {}), [stickerKey]: true };
+      if (!stickerIsEarnedForOpening(existing, stickerKey)) return current || {};
+      const existingOpened = existing.opened && typeof existing.opened === "object" ? existing.opened : {};
+      const opened = { ...existingOpened, [stickerKey]: true };
       const nextNationBase = {
         ...existing,
         played: true,
@@ -876,7 +890,7 @@ export default function App() {
         claimable: buildStickerClaimable(nextNationBase),
       };
       return { ...(current || {}), [nation]: nextNation };
-    });
+    }, { saveCloud: true });
   };
 
   const markNationStickerCupWin = (nation) => {
@@ -1029,81 +1043,34 @@ export default function App() {
   const sanitizeCloudData = (value) =>
     JSON.parse(JSON.stringify(value ?? null));
 
-  const compactFixtureForSave = (fixture = {}) => ({
-    id: fixture.id ?? fixture.matchId ?? fixture.matchNo ?? null,
-    matchId: fixture.matchId ?? fixture.id ?? fixture.matchNo ?? null,
-    week: fixture.week ?? null,
-    group: fixture.group ?? null,
-    round: fixture.round ?? fixture.stage ?? null,
-    home: fixture.home ?? null,
-    away: fixture.away ?? null,
-    homeTeamId: fixture.homeTeamId ?? null,
-    awayTeamId: fixture.awayTeamId ?? null,
-    homeGoals: fixture.homeGoals ?? null,
-    awayGoals: fixture.awayGoals ?? null,
-    played: Boolean(fixture.played),
-    winner: fixture.winner ?? null,
-  });
-
-  const compactTableForSave = (value = {}) => {
-    const rows = Array.isArray(value) ? value : Object.values(value || {});
-    return rows.reduce((next, row) => {
-      const teamName = row.team ?? row.teamName ?? null;
-      if (!teamName) return next;
-      next[teamName] = {
-        team: teamName,
-        group: row.group ?? null,
-        played: Number(row.played || 0),
-        won: Number(row.won || 0),
-        drawn: Number(row.drawn || 0),
-        lost: Number(row.lost || 0),
-        gf: Number(row.gf ?? row.goalsFor ?? 0),
-        ga: Number(row.ga ?? row.goalsAgainst ?? 0),
-        gd: Number(row.gd ?? row.goalDifference ?? 0),
-        pts: Number(row.pts ?? row.points ?? 0),
-      };
-      return next;
-    }, {});
+  const updateActiveMatchSnapshot = (snapshot) => {
+    const safeSnapshot = snapshot ? sanitizeCloudData(snapshot) : null;
+    activeMatchSnapshotRef.current = safeSnapshot;
+    setActiveMatchSnapshot(safeSnapshot);
   };
 
-  const compactScoringStateForSave = (state = {}) => ({
-    campaignPoints: Number(state.campaignPoints || 0),
-    awardedMilestones: Array.isArray(state.awardedMilestones) ? state.awardedMilestones : [],
-    matchCount: Number(state.matchCount || 0),
-  });
-
-  const compactMatchResultForSave = (result = null) =>
-    result
-      ? {
-          status: result.status || null,
-          matchNo: result.matchNo || null,
-          winner: result.winner || null,
-          loser: result.loser || null,
-          userScore: result.userScore ?? null,
-          opponentScore: result.opponentScore ?? null,
-        }
-      : null;
+  const clearActiveMatchSnapshot = () => updateActiveMatchSnapshot(null);
 
   const buildGameSnapshot = () =>
     sanitizeCloudData({
-      version: 2,
+      version: 1,
       active: Boolean(team),
       savedAt: Date.now(),
       selectedGroup,
       team: team || null,
       opponent: opponent || null,
-      score: Array.isArray(score) ? score.slice(0, 2) : [0, 0],
+      score,
       matchStage,
       userForm,
-      scoringState: compactScoringStateForSave(scoringState),
+      scoringState,
       fixtureView,
       standingsView,
-      table: compactTableForSave(table),
-      schedule: Array.isArray(schedule) ? schedule.map(compactFixtureForSave) : [],
-      knockoutFixtures: Array.isArray(knockoutFixtures) ? knockoutFixtures.map(compactFixtureForSave) : [],
-      currentKnockoutMatch: currentKnockoutMatch ? compactFixtureForSave(currentKnockoutMatch) : null,
+      table,
+      schedule,
+      knockoutFixtures,
+      currentKnockoutMatch,
       podium,
-      matchResult: compactMatchResultForSave(matchResult),
+      matchResult,
       modalDismissed,
       activeCosmetics,
       campaignCosmeticsUsed,
@@ -1111,6 +1078,7 @@ export default function App() {
       nationCupWins,
       nationStickerProgress,
       awardedTrophyMatchKey,
+      activeMatchSnapshot: activeMatchSnapshotRef.current || activeMatchSnapshot || null,
     });
 
   const restoreGameSnapshot = (snapshot) => {
@@ -1134,6 +1102,9 @@ export default function App() {
     setCurrentKnockoutMatch(snapshot.currentKnockoutMatch || null);
     setPodium(snapshot.podium || {});
     setMatchResult(snapshot.matchResult || null);
+    const restoredMatchSnapshot = snapshot.activeMatchSnapshot || snapshot.matchSnapshot || null;
+    activeMatchSnapshotRef.current = restoredMatchSnapshot;
+    setActiveMatchSnapshot(restoredMatchSnapshot);
     const terminalStatuses = new Set([
       RESULT_STATUS.ELIMINATED,
       RESULT_STATUS.CHAMPION,
@@ -1202,6 +1173,8 @@ export default function App() {
       "goldenBoot",
       "goldenBall",
       "goldenGlove",
+      "goldenKitbag",
+      "fullBundle",
     ].reduce((next, key) => {
       if (profileUpgrades?.[key] || (key === "allTeams" && allTeamsUnlocked)) {
         next[key] = true;
@@ -1235,12 +1208,6 @@ export default function App() {
               phase: currentRoundLabel || matchStage || "No Campaign",
               gameScore: Number(scoringState.campaignPoints || 0),
               cupRun: userForm || [],
-              usedGoldenUpgrade: Boolean(
-                campaignCosmeticsUsed?.goldenBall ||
-                  campaignCosmeticsUsed?.goldenBoot ||
-                  campaignCosmeticsUsed?.goldenGlove ||
-                  campaignCosmeticsUsed?.goldenTicket,
-              ),
               score,
               matchResult: matchResult
                 ? {
@@ -1328,6 +1295,7 @@ export default function App() {
     return () => window.clearTimeout(timeout);
   }, [
     activeCosmetics,
+    activeMatchSnapshot,
     campaignCosmeticsUsed,
     allTeamsUnlocked,
     allTimeCampaignsCompleted,
@@ -1384,7 +1352,7 @@ export default function App() {
 
     recordNationStickerMatchProgress(team, {
       goals: shotStats.goals,
-      keeperSaves: countKeeperSavesForSticker(baseResult?.opponentShotEvents),
+      keeperSaves: countKeeperSavesForSticker(baseResult?.opponentShotEvents || baseResult?.attempts?.opponent),
       userWon: Boolean(baseResult?.userWon || baseResult?.won),
       campaignCompleted: isTerminalLeaderboardStatus(baseResult?.status),
       knockoutQualified: baseResult?.status === RESULT_STATUS.QUALIFIED,
@@ -1531,12 +1499,17 @@ export default function App() {
         localOnly: !hasCloudUser,
       };
       setLeaderboardRows((rows) => {
-        const withoutUser = rows.filter((row) => (row.userId || row.uid) !== localUserId);
+        const isSameLeaderboardUser = (row = {}) => {
+          const rowUserId = String(row.userId || row.uid || row.id || "");
+          if (hasCloudUser) return rowUserId === localUserId;
+          return Boolean(row.localOnly || row.isUserPreview || rowUserId === "guest-local" || rowUserId === "guest-preview");
+        };
+        const withoutUser = rows.filter((row) => !isSameLeaderboardUser(row));
         const nextRows = [entry, ...withoutUser]
           .sort((a, b) => Number(b.campaignPoints || b.gameScore || 0) - Number(a.campaignPoints || a.gameScore || 0))
           .slice(0, 50)
           .map((row, index) => ({ ...row, rank: index + 1 }));
-        safeWriteLeaderboardRows(nextRows.filter((row) => row.localOnly || row.userId === "guest-local"));
+        safeWriteLeaderboardRows(nextRows.filter((row) => row.localOnly || row.userId === "guest-local" || row.userId === "guest-preview"));
         return nextRows;
       });
       if (hasCloudUser) {
@@ -1577,8 +1550,8 @@ export default function App() {
     }
     return true;
   };
-  const resetTournament = () => {
-    setScreen("home");
+  const resetTournament = (nextScreen = "home") => {
+    setScreen(nextScreen);
     setDrawer(null);
     setMenuOpen(false);
     setFixtureView("group");
@@ -1588,6 +1561,7 @@ export default function App() {
     setOpponent("");
     setScore([0, 0]);
     setMatchResult(null);
+    clearActiveMatchSnapshot();
     setModalDismissed(false);
     setAwardedTrophyMatchKey(null);
     setTable(blankTable());
@@ -1645,6 +1619,11 @@ export default function App() {
   const closeFeedbackModal = () => {
     if (feedbackPromptType) markFeedbackPromptShown(feedbackPromptType);
     setFeedbackPromptType(null);
+  };
+
+  const openManualFeedbackModal = () => {
+    setPendingFeedbackCheck(false);
+    setFeedbackPromptType("prompt1");
   };
 
   const submitFeedback = ({ rating, comment, promptType }) => {
@@ -1734,7 +1713,7 @@ export default function App() {
   const openFixtures = () => {
     closeMenu();
     if (resultIsEliminated(matchResult)) finishTournamentForEliminatedUser();
-    setFixtureView(groupStageComplete || resultIsEliminated(matchResult) ? "knockout" : "group");
+    setFixtureView(resultIsEliminated(matchResult) ? "knockout" : scheduleFocus.view);
     setDrawer("fixtures");
   };
   const openGroups = () => {
@@ -1782,11 +1761,10 @@ export default function App() {
     setShopInitialItemId(null);
   };
 
-  const useGoldenTicketForNextCampaign = () => {
-    const ticketQuantity = Number(
-      storeEntitlements?.goldenTicketQty ??
-        activeCosmetics?.goldenTicketQuantity ??
-        (activeCosmetics?.goldenTicket ? 1 : 0),
+  const useGoldenTicketForNextCampaign = (quantityOverride = null) => {
+    const ticketQuantity = Math.max(
+      getGoldenTicketQuantity(),
+      Number(quantityOverride || 0),
     );
     if (ticketQuantity <= 0) {
       writeGoldenTicketNextCampaignIntent(false);
@@ -1794,11 +1772,36 @@ export default function App() {
       requestShopItem("goldenTicket");
       return;
     }
+
+    // Persist the intent before navigation so the following team selection
+    // starts a final-only Golden Ticket run instead of a normal group campaign.
     writeGoldenTicketNextCampaignIntent(true);
     setGoldenTicketNextCampaign(true);
+    setActiveCosmetics((current) => {
+      const next = {
+        ...(current || {}),
+        goldenTicket: true,
+        goldenTicketQuantity: Math.max(
+          Number(current?.goldenTicketQuantity || 0),
+          ticketQuantity,
+        ),
+      };
+      safeWriteJson(COSMETICS_KEY, next);
+      return next;
+    });
+    setTwoPlayerMode(false);
+    setTwoPlayerSetup(null);
+    setTeam(null);
+    setOpponent("");
+    setScore([0, 0]);
+    setMatchResult(null);
+    clearActiveMatchSnapshot();
+    setModalDismissed(false);
+    setCurrentKnockoutMatch(null);
+    setMatchStage("FINAL");
     setDrawer(null);
     setMenuOpen(false);
-    setScreen("home");
+    setScreen("hosts");
   };
 
   const storeEntitlements = buildStoreEntitlements({
@@ -1807,6 +1810,21 @@ export default function App() {
     upgradesPurchased: firebaseProfile?.upgradesPurchased || {},
     consumables: firebaseProfile?.consumables || {},
   });
+
+  function getGoldenTicketQuantity() {
+    const profileQuantity = Number(
+      firebaseProfile?.consumables?.goldenTicket?.quantity ??
+        firebaseProfile?.cosmetics?.goldenTicketQuantity ??
+        0,
+    );
+    const entitlementQuantity = Number(storeEntitlements?.goldenTicketQty ?? 0);
+    const localQuantity = Number(
+      activeCosmetics?.goldenTicketQuantity ??
+        (activeCosmetics?.goldenTicket ? 1 : 0) ??
+        0,
+    );
+    return Math.max(0, Math.floor(Math.max(profileQuantity, entitlementQuantity, localQuantity)));
+  }
 
 
   const finishTournamentForEliminatedUser = (fixtures = knockoutFixtures, tableState = table) => {
@@ -1910,14 +1928,10 @@ export default function App() {
   };
 
   const consumeLocalGoldenTicket = () => {
-    const currentTicketQuantity = Number(
-      storeEntitlements?.goldenTicketQty ??
-        activeCosmetics?.goldenTicketQuantity ??
-        (activeCosmetics?.goldenTicket ? 1 : 0),
-    );
+    const currentTicketQuantity = getGoldenTicketQuantity();
+    const nextQuantity = Math.max(0, Number(currentTicketQuantity || 0) - 1);
 
     setActiveCosmetics((current) => {
-      const nextQuantity = Math.max(0, Number(currentTicketQuantity || 0) - 1);
       const next = {
         ...(current || {}),
         goldenTicket: nextQuantity > 0,
@@ -1925,6 +1939,39 @@ export default function App() {
       };
       safeWriteJson(COSMETICS_KEY, next);
       return next;
+    });
+
+    setFirebaseProfile((current) => {
+      if (!current) return current;
+      const previousTicket = current?.consumables?.goldenTicket || {};
+      const nextTicket = {
+        ...previousTicket,
+        quantity: nextQuantity,
+        totalUsed: Number(previousTicket.totalUsed || 0) + 1,
+        lastUsedAt: Date.now(),
+      };
+      return {
+        ...current,
+        consumables: {
+          ...(current.consumables || {}),
+          goldenTicket: nextTicket,
+        },
+        cosmeticsEquipped: {
+          ...(current.cosmeticsEquipped || {}),
+          goldenTicket: nextQuantity > 0,
+          goldenTicketQuantity: nextQuantity,
+        },
+        cosmeticsActive: {
+          ...(current.cosmeticsActive || {}),
+          goldenTicket: nextQuantity > 0,
+          goldenTicketQuantity: nextQuantity,
+        },
+        cosmetics: {
+          ...(current.cosmetics || {}),
+          goldenTicket: nextQuantity > 0,
+          goldenTicketQuantity: nextQuantity,
+        },
+      };
     });
 
     if (hasCloudUser) {
@@ -1945,6 +1992,7 @@ export default function App() {
     setOpponent("");
     setScore([0, 0]);
     setMatchResult(null);
+    clearActiveMatchSnapshot();
     setModalDismissed(false);
     setCurrentKnockoutMatch(null);
     setMatchStage("SHOOTOUT");
@@ -1974,6 +2022,7 @@ export default function App() {
     setOpponent(name);
     setScore([0, 0]);
     setMatchResult(null);
+    clearActiveMatchSnapshot();
     setModalDismissed(false);
     setCurrentKnockoutMatch(null);
     setMatchStage("SHOOTOUT");
@@ -2009,8 +2058,10 @@ export default function App() {
   };
 
   const replayTwoPlayerMatch = () => {
+    setMatchResetKey((key) => key + 1);
     setScore([0, 0]);
     setMatchResult(null);
+    clearActiveMatchSnapshot();
     setModalDismissed(false);
     setCurrentKnockoutMatch(null);
     setMatchStage("SHOOTOUT");
@@ -2025,6 +2076,7 @@ export default function App() {
     setOpponent("");
     setScore([0, 0]);
     setMatchResult(null);
+    clearActiveMatchSnapshot();
     setModalDismissed(false);
     setCurrentKnockoutMatch(null);
     setMatchStage("SHOOTOUT");
@@ -2040,6 +2092,7 @@ export default function App() {
     setOpponent("");
     setScore([0, 0]);
     setMatchResult(null);
+    clearActiveMatchSnapshot();
     setModalDismissed(false);
     setCurrentKnockoutMatch(null);
     setMatchStage("GROUP STAGE");
@@ -2054,11 +2107,7 @@ export default function App() {
       return;
     }
 
-    const ticketQuantity = Number(
-      storeEntitlements?.goldenTicketQty ??
-        activeCosmetics?.goldenTicketQuantity ??
-        (activeCosmetics?.goldenTicket ? 1 : 0),
-    );
+    const ticketQuantity = getGoldenTicketQuantity();
     const hasGoldenTicketEntitlement =
       ticketQuantity > 0 || Boolean(storeEntitlements?.goldenTicket) || Boolean(activeCosmetics?.goldenTicket);
     const pendingGoldenTicketIntent =
@@ -2088,6 +2137,7 @@ export default function App() {
         setScore([0, 0]);
         setMatchStage("FINAL");
         setMatchResult(null);
+        clearActiveMatchSnapshot();
         setModalDismissed(false);
         setUserForm(["W", "W", "W", "W", "W", "W", "W"].slice(-8));
         setScoringState(createScoringState());
@@ -2135,6 +2185,7 @@ export default function App() {
     setCurrentKnockoutMatch(null);
     setMatchStage("GROUP STAGE");
     setMatchResult(null);
+    clearActiveMatchSnapshot();
     setModalDismissed(false);
     setAwardedTrophyMatchKey(null);
     setUserForm([]);
@@ -2144,6 +2195,7 @@ export default function App() {
 
   const quickWin = () => {
     if (!team || !opponent) return;
+    clearActiveMatchSnapshot();
     const match = schedule.find(
       (fixture) =>
         !fixture.played &&
@@ -2210,6 +2262,7 @@ export default function App() {
 
   const handleMatchComplete = (result) => {
     if (!result || !team) return;
+    clearActiveMatchSnapshot();
 
     if (
       currentKnockoutMatch &&
@@ -2354,6 +2407,7 @@ export default function App() {
 
   const nextMatch = () => {
     if (!team || !matchResult) return;
+    clearActiveMatchSnapshot();
 
     if (matchResult.status === RESULT_STATUS.THIRD_PLACE_PENDING) {
       const nextFixture =
@@ -2390,12 +2444,8 @@ export default function App() {
     }
 
     if (matchResult.status === RESULT_STATUS.CHAMPION) {
-      setCurrentKnockoutMatch(null);
-      setStandingsView("knockout");
-      setDrawer("groups");
-      setMatchResult(null);
-      setModalDismissed(false);
       clearAwardedTrophyPrompt();
+      resetTournament("hosts");
       return;
     }
 
@@ -2568,6 +2618,7 @@ export default function App() {
     setOpponent("");
     setScore([0, 0]);
     setMatchResult(null);
+    clearActiveMatchSnapshot();
     setModalDismissed(false);
     setAwardedTrophyMatchKey(null);
     setTable(blankTable());
@@ -2668,6 +2719,7 @@ export default function App() {
       podium={podium}
       fixtureView={fixtureView}
       onFixtureViewChange={setFixtureView}
+      scheduleFocus={scheduleFocus}
       schedule={schedule}
       profile={{
         userForm,
@@ -2785,6 +2837,7 @@ export default function App() {
             firebaseProfile?.currentProgress?.active ||
             firebaseProfile?.savedGames?.current?.active,
           )}
+          onOpenFeedback={openManualFeedbackModal}
         />,
       );
     }
@@ -2796,6 +2849,7 @@ export default function App() {
           menuProps={menuProps}
           currentUser={currentUser}
           onAuthComplete={handleAuthComplete}
+          onOpenFeedback={openManualFeedbackModal}
           onBack={twoPlayerMode ? handleTwoPlayerBack : () => setScreen("home")}
           onSelectGroup={selectGroup}
           onSelectTeam={twoPlayerMode ? handleTwoPlayerTeamSelect : startTeam}
@@ -2817,6 +2871,7 @@ export default function App() {
         onSelectTeam={twoPlayerMode ? handleTwoPlayerTeamSelect : startTeam}
         title={twoPlayerMode ? (twoPlayerSetup?.step === "p2" ? "P2 CHOOSE YOUR TEAM" : "P1 CHOOSE YOUR TEAM") : "CHOOSE YOUR TEAM"}
         disabledTeam={twoPlayerMode && twoPlayerSetup?.step === "p2" ? twoPlayerSetup?.p1Team : null}
+        onOpenFeedback={openManualFeedbackModal}
       />,
     );
   }
@@ -2836,6 +2891,7 @@ export default function App() {
       onMatchComplete={twoPlayerMode ? handleTwoPlayerMatchComplete : handleMatchComplete}
       onNextMatch={twoPlayerMode ? replayTwoPlayerMatch : nextMatch}
       onChangeTeams={twoPlayerMode ? changeTwoPlayerTeams : undefined}
+      matchResetKey={matchResetKey}
       onViewBracket={() => {
         setStandingsView("knockout");
         setDrawer("groups");
@@ -2855,6 +2911,8 @@ export default function App() {
       podium={podium}
       activeCosmetics={activeCosmetics}
       twoPlayerMode={twoPlayerMode}
+      activeMatchSnapshot={activeMatchSnapshot}
+      onActiveMatchSnapshot={updateActiveMatchSnapshot}
     />
   );
 

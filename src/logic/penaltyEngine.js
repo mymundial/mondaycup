@@ -499,19 +499,24 @@ export function buildResult({ fixture, userTeam, opponentTeam, score, winnerSide
   const loser = isDraw ? null : winnerSide === "user" ? opponentTeam.id : userTeam.id;
   const userWon = winnerSide === "user";
   const finalMatchOutcome = isDraw ? "draw" : userWon ? "win" : "loss";
+  const enrichShotEvent = (event, index) => ({
+    shotNumber: event?.shotNumber ?? index + 1,
+    ...event,
+    finalMatchOutcome,
+    userWon,
+    matchWon: userWon,
+    matchDrawn: Boolean(isDraw),
+  });
   const userShotEvents = Array.isArray(attempts?.user)
-    ? attempts.user.map((event, index) => ({
-        shotNumber: event?.shotNumber ?? index + 1,
-        ...event,
-        finalMatchOutcome,
-        userWon,
-        matchWon: userWon,
-        matchDrawn: Boolean(isDraw),
-      }))
+    ? attempts.user.map(enrichShotEvent)
+    : [];
+  const opponentShotEvents = Array.isArray(attempts?.opponent)
+    ? attempts.opponent.map(enrichShotEvent)
     : [];
   const enrichedAttempts = {
     ...attempts,
     user: userShotEvents,
+    opponent: opponentShotEvents,
   };
 
   return {
@@ -529,5 +534,6 @@ export function buildResult({ fixture, userTeam, opponentTeam, score, winnerSide
     finalMatchOutcome,
     attempts: enrichedAttempts,
     userShotEvents,
+    opponentShotEvents,
   };
 }

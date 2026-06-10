@@ -20,7 +20,7 @@ function DrawerContent({ children }) {
   return <PageScroll className="px-0 pt-0.5">{children}</PageScroll>;
 }
 
-const LEADERBOARD_GRID = "30px minmax(82px,1.35fr) 38px minmax(86px,1.45fr) 36px minmax(50px,0.8fr)";
+const LEADERBOARD_GRID = "30px minmax(88px,1.42fr) 38px minmax(86px,1.38fr) 40px minmax(58px,0.82fr)";
 
 const COSMETIC_ALIASES = {
   goldenBoot: ["goldenBoot", "golden_boot", "boot", "cosmetic3", "cosmeticBoot", "cosmeticBootEquipped", "goldenBootEquipped"],
@@ -110,24 +110,41 @@ function leaderboardForm(row = {}) {
 }
 
 function leaderboardFinishStatus(row = {}) {
-  const raw = String(
-    row.podium ||
-    row.finalPosition ||
-    row.bestCampaign?.podium ||
-    row.status ||
-    row.finish ||
-    row.bestCampaign?.finalPosition ||
-    row.bestCampaign?.status ||
-    row.bestCampaign?.finish ||
-    row.bestCampaign?.round ||
-    row.bestCampaign?.phase ||
-    row.bestCampaign?.roundLabel ||
-    row.bestCampaign?.stage ||
-    ""
-  ).toLowerCase();
-  if (raw.includes("champion")) return "champion";
-  if (raw.includes("runner") || raw.includes("second")) return "runnerUp";
-  if (raw.includes("third") || raw.includes("bronze")) return "thirdPlace";
+  const candidates = [
+    row.podium,
+    row.finalPosition,
+    row.bestCampaign?.podium,
+    row.status,
+    row.finish,
+    row.round,
+    row.phase,
+    row.roundLabel,
+    row.stage,
+    row.bestCampaign?.finalPosition,
+    row.bestCampaign?.status,
+    row.bestCampaign?.finish,
+    row.bestCampaign?.round,
+    row.bestCampaign?.phase,
+    row.bestCampaign?.roundLabel,
+    row.bestCampaign?.stage,
+  ];
+
+  for (const value of candidates) {
+    const raw = String(value || "").trim().toLowerCase();
+    if (!raw || ["none", "null", "false", "no", "na", "n/a", "inprogress", "in progress"].includes(raw)) continue;
+    if (raw.includes("champion") || raw === "winner" || raw === "won" || raw === "first" || raw === "1") return "champion";
+    if (raw.includes("runner") || raw.includes("second") || raw === "runnerup" || raw === "runner-up" || raw === "silver" || raw === "2") return "runnerUp";
+    if (raw.includes("third") || raw.includes("bronze") || raw === "thirdplace" || raw === "third-place" || raw === "3") return "thirdPlace";
+  }
+
+  const completedForm = leaderboardForm(row)
+    .map((value) => String(value || "").trim().toUpperCase())
+    .filter((value) => ["W", "D", "L"].includes(value));
+  const lastResult = completedForm[completedForm.length - 1];
+
+  if (completedForm.length >= 8 && lastResult === "W") return "champion";
+  if (completedForm.length >= 8 && lastResult === "L") return "runnerUp";
+
   return null;
 }
 
@@ -142,13 +159,13 @@ function LeaderboardPodiumBadge({ row, isUser = false }) {
   const baseClass = isUser ? "border-[#F7D117]/28 bg-[#F7D117]/10" : "border-[#0B5F35]/18 bg-[#0B5F35]/8";
 
   if (!status) {
-    return <span className="block h-[24px] w-[24px]" aria-hidden="true" />;
+    return <span className="mx-auto block h-[24px] w-[24px]" aria-hidden="true" />;
   }
 
   const aria = status === "champion" ? "first place" : status === "runnerUp" ? "second place" : "third place";
 
   return (
-    <span className="grid h-[24px] w-[24px] place-items-center" aria-label={aria}>
+    <span className="mx-auto grid h-[24px] w-[24px] place-items-center" aria-label={aria}>
       <img
         src={LEADERBOARD_PODIUM_SHIELDS[status]}
         alt=""
@@ -238,7 +255,10 @@ function leaderboardPodiumTextClass(row, isUser = false) {
   return "text-[#F5F1E8]";
 }
 
-function leaderboardNameTextClass() {
+function leaderboardNameTextClass(row = {}, isUser = false) {
+  if (isUser) {
+    return "text-[#F7D117] drop-shadow-[0_0_5px_rgba(247,209,23,0.42)]";
+  }
   return "text-[#F5F1E8]";
 }
 
@@ -267,13 +287,13 @@ function LeaderboardRow({ row, isUser = false }) {
       style={{ gridTemplateColumns: LEADERBOARD_GRID }}
     >
       <div className={`flex min-w-0 items-center justify-center text-center home-copy-bold text-[13px] leading-none ${leaderboardPodiumTextClass(row, isUser)}`}>#{row.rank || "--"}</div>
-      <div className="flex min-w-0 items-center justify-start text-left home-copy-bold text-[12px] uppercase leading-none tracking-[0.035em]">
-        <span className={`block max-w-none overflow-visible whitespace-nowrap rounded-[0.55rem] px-1.5 py-1 leading-none ${leaderboardNameTextClass(row)}`}>{displayLeaderboardUsername(row.username)}</span>
+      <div className="flex min-w-0 items-center justify-start justify-self-stretch text-left home-copy-bold text-[12px] uppercase leading-none tracking-[0.035em]">
+        <span className={`block max-w-full overflow-hidden truncate whitespace-nowrap rounded-[0.55rem] py-1 pr-1 leading-none ${leaderboardNameTextClass(row, isUser)}`}>{displayLeaderboardUsername(row.username)}</span>
       </div>
       <div className="flex min-w-0 items-center justify-center"><LeaderboardFlag team={row.team} isUser={false} /></div>
       <LeaderboardFormGuide form={form} isUser={isUser} />
-      <div className="flex min-w-0 items-center justify-center"><LeaderboardPodiumBadge row={row} isUser={isUser} /></div>
-      <div className={`flex w-full min-w-0 items-center justify-center text-center text-[9px] leading-none tracking-[0.02em] ${leaderboardScoreTextClass(row, isUser)}`}><span className="block w-full text-center tabular-nums">{Number(row.campaignPoints || 0)}</span></div>
+      <div className="flex w-full min-w-0 items-center justify-center justify-self-stretch text-center"><LeaderboardPodiumBadge row={row} isUser={isUser} /></div>
+      <div className={`flex w-full min-w-0 items-center justify-center justify-self-stretch text-center text-[9px] leading-none tracking-[0.02em] ${leaderboardScoreTextClass(row, isUser)}`}><span className="block w-full text-center tabular-nums">{Number(row.campaignPoints || 0)}</span></div>
     </div>
   );
 }
@@ -381,9 +401,13 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
     goldenTicketUsed: Boolean(activeCosmetics?.goldenTicket),
   };
   const previewCosmetics = bestCampaignSummary?.cosmeticsApplied || (guestCurrentScore > 0 ? currentCampaignCosmetics : {});
-  const activeUserId = currentUser?.uid || "guest-preview";
+  const activeUserId = currentUser?.uid || "guest-local";
   const hasRegisteredUserRow = Boolean(currentUser?.uid && rows.some((row) => row.userId === currentUser.uid));
-  const previewUserRow = activeUserScore > 0 && !hasRegisteredUserRow
+  const hasGuestPublishedRow = Boolean(!currentUser?.uid && rows.some((row) => {
+    const rowId = String(row?.userId || row?.uid || row?.id || "");
+    return row?.localOnly || rowId === "guest-local" || rowId === "guest-preview";
+  }));
+  const previewUserRow = activeUserScore > 0 && !hasRegisteredUserRow && !hasGuestPublishedRow
     ? [{
         id: "current-user-preview",
         userId: activeUserId,
@@ -416,7 +440,8 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
   const baseRows = rows.length ? rows.map(hydrateCurrentUserLeaderboardRow) : placeholderRows;
   const displayRowsByUser = new Map();
   [...baseRows, ...previewUserRow].forEach((row) => {
-    const key = row.userId || row.uid || row.id || row.username;
+    const rawKey = row.userId || row.uid || row.id || row.username;
+    const key = row?.localOnly || rawKey === "guest-local" || rawKey === "guest-preview" ? "guest-local" : rawKey;
     if (!key) return;
     const existing = displayRowsByUser.get(key);
     const rowScore = Number(row.campaignPoints || row.gameScore || row.points || 0);
@@ -555,7 +580,7 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
                     </div>
                     <LeaderboardFilterSlider cleanOnly={cleanLeaderboardOnly} onToggle={() => { setCleanLeaderboardOnly((value) => !value); setLeaderboardPage(0); }} />
                     <LeaderboardHeader />
-                    <div className="space-y-1.5 pr-1">
+                    <div className="space-y-1.5">
                       {pagedRows.map((row) => {
                         const isUser = Boolean((currentUser && row.userId === currentUser.uid) || row.isUserPreview);
                         return <LeaderboardRow key={`${row.userId || row.id || row.username}-${row.completedAt || row.rank}`} row={row} isUser={isUser} />;
