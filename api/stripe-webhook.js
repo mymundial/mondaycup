@@ -114,6 +114,7 @@ function parseSelectedItems(value = "") {
     goldenBall: false,
     goldenGlove: false,
     goldenTicketQty: 0,
+    goldenKitbag: false,
     rawItems: [],
   };
 
@@ -133,6 +134,7 @@ function parseSelectedItems(value = "") {
       grants.rawItems.push({ itemId, quantity });
 
       if (itemId === STORE_ITEM_IDS.fullBundle) {
+        grants.goldenKitbag = true;
         grants.allTeams = true;
         grants.goldenBoot = true;
         grants.goldenBall = true;
@@ -319,9 +321,16 @@ function buildUserEntitlementUpdate({ current, grants, session, timestamp }) {
     "payments.stripe",
   ];
 
-  if (grants.allTeams) {
-    update.upgradesPurchased = { ...(update.upgradesPurchased || {}), allTeams: true };
-    updateMask.push("upgradesPurchased.allTeams");
+  if (grants.allTeams || grants.goldenKitbag) {
+    update.upgradesPurchased = {
+      ...(update.upgradesPurchased || {}),
+      ...(grants.allTeams ? { allTeams: true } : {}),
+      ...(grants.goldenKitbag ? { goldenKitbag: true, fullBundle: true } : {}),
+    };
+    if (grants.allTeams) updateMask.push("upgradesPurchased.allTeams");
+    if (grants.goldenKitbag) {
+      updateMask.push("upgradesPurchased.goldenKitbag", "upgradesPurchased.fullBundle");
+    }
   }
 
   if (grants.goldenBoot || grants.goldenBall || grants.goldenGlove) {
@@ -382,9 +391,16 @@ function buildIdempotentEntitlementRepairUpdate(grants = {}, timestamp) {
   const update = { updatedAt: timestamp };
   const updateMask = ["updatedAt"];
 
-  if (grants.allTeams) {
-    update.upgradesPurchased = { ...(update.upgradesPurchased || {}), allTeams: true };
-    updateMask.push("upgradesPurchased.allTeams");
+  if (grants.allTeams || grants.goldenKitbag) {
+    update.upgradesPurchased = {
+      ...(update.upgradesPurchased || {}),
+      ...(grants.allTeams ? { allTeams: true } : {}),
+      ...(grants.goldenKitbag ? { goldenKitbag: true, fullBundle: true } : {}),
+    };
+    if (grants.allTeams) updateMask.push("upgradesPurchased.allTeams");
+    if (grants.goldenKitbag) {
+      updateMask.push("upgradesPurchased.goldenKitbag", "upgradesPurchased.fullBundle");
+    }
   }
 
   if (grants.goldenBoot || grants.goldenBall || grants.goldenGlove) {

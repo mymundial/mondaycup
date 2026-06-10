@@ -233,11 +233,14 @@ function isTerminalFinish(value = "") {
   return /champion|runner|third|fourth|eliminated|knocked|lost|complete|completed/.test(raw);
 }
 
-function podiumFromFinish(finish = "") {
-  const raw = String(finish || "").toLowerCase();
-  if (raw.includes("champion")) return "champion";
-  if (raw.includes("runner")) return "runner-up";
-  if (raw.includes("third")) return "third-place";
+function podiumFromFinish(...values) {
+  for (const value of values) {
+    const raw = String(value || "").trim().toLowerCase();
+    if (!raw || ["none", "null", "false", "no", "na", "n/a", "inprogress", "in progress"].includes(raw)) continue;
+    if (raw.includes("champion") || raw === "winner" || raw === "won" || raw === "first" || raw === "1") return "champion";
+    if (raw.includes("runner") || raw.includes("second") || raw === "runnerup" || raw === "runner-up" || raw === "silver" || raw === "2") return "runner-up";
+    if (raw.includes("third") || raw.includes("bronze") || raw === "thirdplace" || raw === "third-place" || raw === "3") return "third-place";
+  }
   return "none";
 }
 
@@ -257,7 +260,7 @@ function buildPublicLeaderboardRow(id, data = {}, source = "leaderboard") {
   const score = number(data.gameScore ?? data.campaignPoints ?? data.points ?? bestCampaign.gameScore ?? bestCampaign.campaignPoints ?? bestCampaign.points, 0);
   if (score <= 0) return null;
 
-  const finish = String(data.finish || data.status || bestCampaign.finish || bestCampaign.status || bestCampaign.roundLabel || bestCampaign.stage || "inProgress");
+  const finish = String(data.finish || data.status || data.phase || data.round || bestCampaign.finish || bestCampaign.status || bestCampaign.phase || bestCampaign.round || bestCampaign.roundLabel || bestCampaign.stage || "inProgress");
   const completedAt = data.completedAt || bestCampaign.completedAt || null;
   if (source === "users" && !completedAt && !isTerminalFinish(finish)) return null;
 
@@ -273,23 +276,39 @@ function buildPublicLeaderboardRow(id, data = {}, source = "leaderboard") {
     bestCampaign.form,
     bestCampaign.tournamentProgress,
   );
-  const podiumCanonical = data.podium || bestCampaign.podium || podiumFromFinish(finish);
+  const podiumCanonical = podiumFromFinish(data.podium, bestCampaign.podium, finish, data.phase, data.round, bestCampaign.phase, bestCampaign.round, bestCampaign.roundLabel, bestCampaign.stage);
   const podium = leaderboardPodium(podiumCanonical);
-  const cosmeticsApplied = normaliseCosmeticsApplied(
-    data,
-    data.cosmeticsApplied,
-    data.activeCosmetics,
-    data.upgradesApplied,
-    data.upgradesUsed,
-    data.usedUpgrades,
-    bestCampaign,
-    bestCampaign.cosmeticsApplied,
-    bestCampaign.activeCosmetics,
-    bestCampaign.upgradesApplied,
-    bestCampaign.upgradesUsed,
-    bestCampaign.usedUpgrades,
+  const upgradeSources = source === "users" && Object.keys(bestCampaign).length
+    ? [
+        bestCampaign,
+        bestCampaign.cosmeticsApplied,
+        bestCampaign.activeCosmetics,
+        bestCampaign.upgradesApplied,
+        bestCampaign.upgradesUsed,
+        bestCampaign.usedUpgrades,
+      ]
+    : [
+        data,
+        data.cosmeticsApplied,
+        data.activeCosmetics,
+        data.upgradesApplied,
+        data.upgradesUsed,
+        data.usedUpgrades,
+        bestCampaign,
+        bestCampaign.cosmeticsApplied,
+        bestCampaign.activeCosmetics,
+        bestCampaign.upgradesApplied,
+        bestCampaign.upgradesUsed,
+        bestCampaign.usedUpgrades,
+      ];
+  const cosmeticsApplied = normaliseCosmeticsApplied(...upgradeSources);
+  const usedGoldenUpgrade = Boolean(
+    cosmeticsApplied.goldenBoot ||
+    cosmeticsApplied.goldenBall ||
+    cosmeticsApplied.goldenGlove ||
+    cosmeticsApplied.goldenTicket ||
+    upgradeSources.some(genericUpgradeFlagFromSource)
   );
-  const usedGoldenUpgrade = usesLeaderboardUpgrade({ ...data, cosmeticsApplied, bestCampaign: { ...bestCampaign, cosmeticsApplied } });
 
   return {
     id,
