@@ -468,7 +468,13 @@ const normaliseGoldenTicket = (source = {}, legacyCosmetics = {}) => {
   const quantity = normaliseTicketQuantity(
     source.quantity ?? source.count ?? source.qty ?? legacyCosmetics.goldenTicketQuantity ?? (legacyCosmetics.goldenTicket ? 1 : 0) ?? 0,
   );
-  return { quantity };
+  return {
+    quantity,
+    totalPurchased: number(source.totalPurchased ?? source.purchased ?? source.totalBought, 0),
+    totalUsed: number(source.totalUsed ?? source.used, 0),
+    lastPurchasedAt: source.lastPurchasedAt || null,
+    lastUsedAt: source.lastUsedAt || null,
+  };
 };
 
 const normaliseConsumables = (source = {}, legacyCosmetics = {}) => ({
@@ -480,6 +486,8 @@ const normaliseUpgradeMap = (source = {}, legacyCosmetics = {}, legacyUnlocks = 
   goldenBoot: Boolean(source?.goldenBoot ?? false),
   goldenBall: Boolean(source?.goldenBall ?? false),
   goldenGlove: Boolean(source?.goldenGlove ?? false),
+  goldenKitbag: Boolean(source?.goldenKitbag ?? source?.fullBundle ?? false),
+  fullBundle: Boolean(source?.fullBundle ?? source?.goldenKitbag ?? false),
 });
 
 const normaliseCosmeticsEquipped = (source = {}, legacy = {}, consumables = {}, upgrades = {}) => {
@@ -542,14 +550,6 @@ const normaliseCosmeticsApplied = (...sources) => {
     goldenGlove: safeSources.some((source) => cosmeticFlagFromSource(source, "goldenGlove")),
     goldenTicket: safeSources.some((source) => cosmeticFlagFromSource(source, "goldenTicket")),
   };
-
-  // Older Firestore bestCampaign records sometimes stored only a generic
-  // "golden/cosmetic upgrade was used" flag. Keep those rows filterable even
-  // when the individual item was not saved.
-  if (!applied.goldenBoot && !applied.goldenBall && !applied.goldenGlove && !applied.goldenTicket) {
-    const usedGenericUpgrade = safeSources.some(genericUpgradeFlagFromSource);
-    if (usedGenericUpgrade) applied.goldenTicket = true;
-  }
 
   return applied;
 };
@@ -679,7 +679,23 @@ const normaliseCurrentCampaign = (campaign = {}, currentProgress = null) => {
   const matches = Array.isArray(campaign.matches) && campaign.matches.length
     ? campaign.matches.map(compactMatchRow).filter(Boolean)
     : compactMatchesFromProgress(currentProgress || campaign.runtimeSnapshot || {});
-  const usedGoldenUpgrade = Boolean(campaign.usedGoldenUpgrade ?? campaign.goldenUpgradeUsed ?? campaign.goldenTicketUsed ?? currentProgress?.campaignCosmeticsUsed?.goldenTicket ?? currentProgress?.campaignCosmeticsUsed?.goldenBall ?? currentProgress?.campaignCosmeticsUsed?.goldenBoot ?? currentProgress?.campaignCosmeticsUsed?.goldenGlove ?? false);
+  const usedGoldenUpgrade = Boolean(
+    campaign.usedGoldenUpgrade ??
+    campaign.goldenUpgradeUsed ??
+    currentProgress?.usedGoldenUpgrade ??
+    currentProgress?.campaignCosmeticsUsed?.goldenBall ??
+    currentProgress?.campaignCosmeticsUsed?.goldenBoot ??
+    currentProgress?.campaignCosmeticsUsed?.goldenGlove ??
+    false
+  );
+  const usedGoldenTicket = Boolean(
+    campaign.usedGoldenTicket ??
+    campaign.goldenTicketUsed ??
+    currentProgress?.usedGoldenTicket ??
+    currentProgress?.campaignCosmeticsUsed?.goldenTicket ??
+    currentProgress?.campaignCosmeticsUsed?.goldenTicketUsed ??
+    false
+  );
 
   return {
     ...defaults,
@@ -695,6 +711,7 @@ const normaliseCurrentCampaign = (campaign = {}, currentProgress = null) => {
     gameScore: scoreValue,
     score: Array.isArray(campaign.score) ? campaign.score.slice(0, 2) : Array.isArray(currentProgress?.score) ? currentProgress.score.slice(0, 2) : [0, 0],
     usedGoldenUpgrade,
+    usedGoldenTicket,
     matches,
     activeMatchId: campaign.activeMatchId || currentProgress?.activeMatchId || campaign.activeMatch?.matchId || currentProgress?.activeMatchSnapshot?.matchId || null,
     activeMatchSnapshot: campaign.activeMatchSnapshot || currentProgress?.activeMatchSnapshot || defaults.activeMatchSnapshot,
@@ -712,6 +729,27 @@ const normaliseBestCampaign = (campaign = {}) => {
   const phase = campaign.phase || campaign.tournamentPhase || campaign.round || campaign.roundLabel || campaign.stage || campaign.finish || campaign.status || "Not Started";
   const podium = podiumFromResultFields(campaign.podium, campaign.finish, campaign.status, phase, campaign.round, campaign.roundLabel);
 
+  const cosmeticsApplied = normaliseCosmeticsApplied(
+    campaign.cosmeticsApplied,
+    campaign.activeCosmetics,
+    campaign.upgradesApplied,
+    campaign.upgradesUsed,
+    campaign.usedUpgrades,
+    campaign,
+  );
+  const usedGoldenUpgrade = Boolean(
+    campaign.usedGoldenUpgrade ||
+    campaign.goldenUpgradeUsed ||
+    cosmeticsApplied.goldenBoot ||
+    cosmeticsApplied.goldenBall ||
+    cosmeticsApplied.goldenGlove
+  );
+  const usedGoldenTicket = Boolean(
+    campaign.usedGoldenTicket ||
+    campaign.goldenTicketUsed ||
+    cosmeticsApplied.goldenTicket
+  );
+
   return {
     exists: Boolean(teamName || score > 0),
     gameScore: score,
@@ -719,6 +757,9 @@ const normaliseBestCampaign = (campaign = {}) => {
     cupRun: normaliseCupRun(getCupRunSource(campaign.cupRun, campaign.formGuide, campaign.form, campaign.tournamentProgress)),
     phase,
     podium,
+    cosmeticsApplied,
+    usedGoldenUpgrade,
+    usedGoldenTicket,
     completedAt: campaign.completedAt || null,
     updatedAt: campaign.updatedAt || null,
   };
@@ -984,10 +1025,6 @@ const LEGACY_NESTED_FIELDS = [
   "bestCampaign.cosmeticGloveEquipped",
   "bestCampaign.goldenTicketUsed",
   "feedback.ratings",
-  "consumables.goldenTicket.totalPurchased",
-  "consumables.goldenTicket.totalUsed",
-  "consumables.goldenTicket.lastPurchasedAt",
-  "consumables.goldenTicket.lastUsedAt",
 ];
 
 const buildLegacyDeleteUpdate = () => {
@@ -1332,11 +1369,14 @@ function normaliseLeaderboardEntry(uid, entry = {}) {
         rawBestCampaign.usedUpgrades,
       ];
   const cosmeticsApplied = normaliseCosmeticsApplied(...upgradeSources);
+  const usedGoldenTicket = Boolean(
+    cosmeticsApplied.goldenTicket ||
+    upgradeSources.some((source) => truthyCosmeticValue(source?.usedGoldenTicket) || truthyCosmeticValue(source?.goldenTicketUsed))
+  );
   const usedGoldenUpgrade = Boolean(
     cosmeticsApplied.goldenBoot ||
     cosmeticsApplied.goldenBall ||
     cosmeticsApplied.goldenGlove ||
-    cosmeticsApplied.goldenTicket ||
     upgradeSources.some(genericUpgradeFlagFromSource)
   );
 
@@ -1364,11 +1404,12 @@ function normaliseLeaderboardEntry(uid, entry = {}) {
     upgradesApplied: cosmeticsApplied,
     usedUpgrades: cosmeticsApplied,
     usedGoldenUpgrade,
+    usedGoldenTicket,
     goldenUpgradeUsed: usedGoldenUpgrade,
+    goldenTicketUsed: usedGoldenTicket,
     cosmeticBootEquipped: Boolean(cosmeticsApplied.goldenBoot),
     cosmeticBallEquipped: Boolean(cosmeticsApplied.goldenBall),
     cosmeticGloveEquipped: Boolean(cosmeticsApplied.goldenGlove),
-    goldenTicketUsed: Boolean(cosmeticsApplied.goldenTicket),
     completedAt: entry.completedAt || bestCampaign.completedAt || null,
     round: rawBestCampaign.round || rawBestCampaign.roundLabel || rawBestCampaign.stage || rawBestCampaign.phase || storedFinish,
     phase: rawBestCampaign.phase || rawBestCampaign.roundLabel || rawBestCampaign.stage || storedFinish,
@@ -1404,6 +1445,7 @@ export async function saveLeaderboardHighScore(uid, entry = {}) {
     phase: row.phase || row.round || row.finish || "completed",
     podium: podiumCanonical,
     usedGoldenUpgrade: Boolean(row.usedGoldenUpgrade || row.goldenUpgradeUsed),
+    usedGoldenTicket: Boolean(row.usedGoldenTicket || row.goldenTicketUsed),
     completedAt,
     updatedAt: serverTimestamp(),
     localOnly: false,
@@ -1506,11 +1548,14 @@ function buildLeaderboardRowFromData(id, data = {}, source = "leaderboard") {
         dataBestCampaign.usedUpgrades,
       ];
   const cosmeticsApplied = normaliseCosmeticsApplied(...upgradeSources);
+  const usedGoldenTicket = Boolean(
+    cosmeticsApplied.goldenTicket ||
+    upgradeSources.some((source) => truthyCosmeticValue(source?.usedGoldenTicket) || truthyCosmeticValue(source?.goldenTicketUsed))
+  );
   const usedGoldenUpgrade = Boolean(
     cosmeticsApplied.goldenBoot ||
     cosmeticsApplied.goldenBall ||
     cosmeticsApplied.goldenGlove ||
-    cosmeticsApplied.goldenTicket ||
     upgradeSources.some(genericUpgradeFlagFromSource)
   );
 
@@ -1541,11 +1586,12 @@ function buildLeaderboardRowFromData(id, data = {}, source = "leaderboard") {
     upgradesApplied: cosmeticsApplied,
     usedUpgrades: cosmeticsApplied,
     usedGoldenUpgrade,
+    usedGoldenTicket,
     goldenUpgradeUsed: usedGoldenUpgrade,
+    goldenTicketUsed: usedGoldenTicket,
     cosmeticBootEquipped: Boolean(cosmeticsApplied.goldenBoot),
     cosmeticBallEquipped: Boolean(cosmeticsApplied.goldenBall),
     cosmeticGloveEquipped: Boolean(cosmeticsApplied.goldenGlove),
-    goldenTicketUsed: Boolean(cosmeticsApplied.goldenTicket),
     bestCampaign: {
       exists: Boolean(teamName || gameScore > 0),
       gameScore,
@@ -1555,6 +1601,9 @@ function buildLeaderboardRowFromData(id, data = {}, source = "leaderboard") {
       phase: data.bestCampaign?.phase || bestCampaign.phase || finish,
       round: data.bestCampaign?.round || bestCampaign.round || data.bestCampaign?.phase || bestCampaign.phase || finish,
       podium: podiumCanonical,
+      cosmeticsApplied,
+      usedGoldenUpgrade,
+      usedGoldenTicket,
       completedAt,
       updatedAt: data.bestCampaign?.updatedAt || bestCampaign.updatedAt || data.updatedAt || null,
     },

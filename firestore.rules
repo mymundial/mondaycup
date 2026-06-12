@@ -9,6 +9,88 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == userId;
     }
 
+    function changedUserKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    function paidUpgradeFlagsAreNotGranted(data) {
+      return (data.upgradesPurchased == null || (
+          data.upgradesPurchased.allTeams != true
+          && data.upgradesPurchased.goldenBoot != true
+          && data.upgradesPurchased.goldenBall != true
+          && data.upgradesPurchased.goldenGlove != true
+          && data.upgradesPurchased.goldenKitbag != true
+          && data.upgradesPurchased.fullBundle != true
+        ))
+        && (data.unlocks == null || data.unlocks.allTeams != true)
+        && data.allTeamsUnlocked != true
+        && data.allTeamsEquipped != true;
+    }
+
+    function ticketQuantityIsEmptyOnCreate(data) {
+      return data.consumables == null
+        || data.consumables.goldenTicket == null
+        || (
+          (data.consumables.goldenTicket.quantity == null || data.consumables.goldenTicket.quantity == 0)
+          && (data.consumables.goldenTicket.totalPurchased == null || data.consumables.goldenTicket.totalPurchased == 0)
+          && (data.consumables.goldenTicket.totalUsed == null || data.consumables.goldenTicket.totalUsed == 0)
+        );
+    }
+
+    function legacyPaidCosmeticFieldsAreNotGranted(data) {
+      return (data.cosmetics == null || (
+          data.cosmetics.goldenTicketQuantity == null
+          || data.cosmetics.goldenTicketQuantity == 0
+        ))
+        && (data.cosmeticsActive == null || (
+          data.cosmeticsActive.goldenTicketQuantity == null
+          || data.cosmeticsActive.goldenTicketQuantity == 0
+        ));
+    }
+
+    function purchaseAuditFieldsAbsentOnCreate(data) {
+      return !data.keys().hasAny([
+        "lastPurchase",
+        "payments",
+        "stripe",
+        "lastCheckoutStarted"
+      ]);
+    }
+
+    function safeUserCreate() {
+      return paidUpgradeFlagsAreNotGranted(request.resource.data)
+        && ticketQuantityIsEmptyOnCreate(request.resource.data)
+        && legacyPaidCosmeticFieldsAreNotGranted(request.resource.data)
+        && purchaseAuditFieldsAbsentOnCreate(request.resource.data);
+    }
+
+    function noProtectedPurchaseFieldsChanged() {
+      return !changedUserKeys().hasAny([
+        "upgradesPurchased",
+        "unlocks",
+        "consumables",
+        "lastPurchase",
+        "payments",
+        "stripe",
+        "lastCheckoutStarted",
+        "allTeamsUnlocked",
+        "allTeamsEquipped",
+        "cosmetics",
+        "cosmeticsActive"
+      ]);
+    }
+
+    function validGoldenTicketConsumption() {
+      return changedUserKeys().hasOnly(["consumables", "cosmeticsEquipped", "updatedAt"])
+        && resource.data.consumables.goldenTicket.quantity is int
+        && request.resource.data.consumables.goldenTicket.quantity is int
+        && request.resource.data.consumables.goldenTicket.quantity == resource.data.consumables.goldenTicket.quantity - 1
+        && request.resource.data.consumables.goldenTicket.quantity >= 0
+        && request.resource.data.consumables.goldenTicket.totalPurchased == resource.data.consumables.goldenTicket.totalPurchased
+        && request.resource.data.consumables.goldenTicket.totalUsed == resource.data.consumables.goldenTicket.totalUsed + 1
+        && request.resource.data.cosmeticsEquipped.goldenTicket == (request.resource.data.consumables.goldenTicket.quantity > 0);
+    }
+
     match /leaderboard/{userId} {
       allow read: if true;
       allow create, update: if ownsDoc(userId)
@@ -18,12 +100,21 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read, create, update, delete: if ownsDoc(userId);
+      allow read: if ownsDoc(userId);
+      allow create: if ownsDoc(userId) && safeUserCreate();
+      allow update: if ownsDoc(userId)
+        && (noProtectedPurchaseFieldsChanged() || validGoldenTicketConsumption());
+      allow delete: if false;
     }
 
     match /usernames/{username} {
       allow read: if true;
-      allow create, update: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && !exists(/databases/$(database)/documents/usernames/$(username));
+      allow update: if signedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid;
       allow delete: if false;
     }
 

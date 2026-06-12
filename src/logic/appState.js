@@ -58,7 +58,7 @@ function isLocalGuestLeaderboardRow(row = {}) {
 }
 
 function localLeaderboardUsesUpgrade(row = {}) {
-  return Boolean(row.usedGoldenUpgrade || row.goldenUpgradeUsed || row.cosmeticsApplied?.goldenBoot || row.cosmeticsApplied?.goldenBall || row.cosmeticsApplied?.goldenGlove || row.cosmeticsApplied?.goldenTicket || row.bestCampaign?.usedGoldenUpgrade || row.bestCampaign?.goldenUpgradeUsed || row.bestCampaign?.cosmeticsApplied?.goldenBoot || row.bestCampaign?.cosmeticsApplied?.goldenBall || row.bestCampaign?.cosmeticsApplied?.goldenGlove || row.bestCampaign?.cosmeticsApplied?.goldenTicket);
+  return Boolean(row.usedGoldenUpgrade || row.goldenUpgradeUsed || row.usedGoldenTicket || row.goldenTicketUsed || row.cosmeticsApplied?.goldenBoot || row.cosmeticsApplied?.goldenBall || row.cosmeticsApplied?.goldenGlove || row.cosmeticsApplied?.goldenTicket || row.bestCampaign?.usedGoldenUpgrade || row.bestCampaign?.goldenUpgradeUsed || row.bestCampaign?.usedGoldenTicket || row.bestCampaign?.goldenTicketUsed || row.bestCampaign?.cosmeticsApplied?.goldenBoot || row.bestCampaign?.cosmeticsApplied?.goldenBall || row.bestCampaign?.cosmeticsApplied?.goldenGlove || row.bestCampaign?.cosmeticsApplied?.goldenTicket);
 }
 
 function chooseBetterLocalLeaderboardRow(existing, row) {

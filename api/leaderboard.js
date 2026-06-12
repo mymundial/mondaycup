@@ -196,9 +196,6 @@ function normaliseCosmeticsApplied(...sources) {
     goldenGlove: safeSources.some((source) => cosmeticFlagFromSource(source, "goldenGlove")),
     goldenTicket: safeSources.some((source) => cosmeticFlagFromSource(source, "goldenTicket")),
   };
-  if (!applied.goldenBoot && !applied.goldenBall && !applied.goldenGlove && !applied.goldenTicket) {
-    if (safeSources.some(genericUpgradeFlagFromSource)) applied.goldenTicket = true;
-  }
   return applied;
 }
 
@@ -302,11 +299,14 @@ function buildPublicLeaderboardRow(id, data = {}, source = "leaderboard") {
         bestCampaign.usedUpgrades,
       ];
   const cosmeticsApplied = normaliseCosmeticsApplied(...upgradeSources);
+  const usedGoldenTicket = Boolean(
+    cosmeticsApplied.goldenTicket ||
+    upgradeSources.some((source) => truthyCosmeticValue(source?.usedGoldenTicket) || truthyCosmeticValue(source?.goldenTicketUsed))
+  );
   const usedGoldenUpgrade = Boolean(
     cosmeticsApplied.goldenBoot ||
     cosmeticsApplied.goldenBall ||
     cosmeticsApplied.goldenGlove ||
-    cosmeticsApplied.goldenTicket ||
     upgradeSources.some(genericUpgradeFlagFromSource)
   );
 
@@ -331,6 +331,7 @@ function buildPublicLeaderboardRow(id, data = {}, source = "leaderboard") {
     completedAt,
     updatedAt: data.updatedAt || null,
     usedGoldenUpgrade,
+    usedGoldenTicket,
     bestCampaign: {
       exists: true,
       teamName,
@@ -340,6 +341,9 @@ function buildPublicLeaderboardRow(id, data = {}, source = "leaderboard") {
       phase: bestCampaign.phase || finish,
       round: bestCampaign.round || bestCampaign.phase || finish,
       podium: podiumCanonical || "none",
+      cosmeticsApplied,
+      usedGoldenUpgrade,
+      usedGoldenTicket,
       completedAt,
       updatedAt: bestCampaign.updatedAt || data.updatedAt || null,
     },

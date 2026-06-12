@@ -30,7 +30,8 @@ function ownedStateForItem(item, entitlements = {}) {
 }
 
 function bundleUnavailableReason(entitlements = {}) {
-  if (entitlements.goldenKitbag) return "";
+  if (entitlements.goldenKitbag) return "OWNED";
+  if (normaliseTicketQuantity(entitlements.goldenTicketQty) >= STORE_ITEMS.goldenTicket.maxQuantity) return "MAX";
   if (
     entitlements.allTeams ||
     entitlements.goldenBoot ||
@@ -60,11 +61,11 @@ function StoreRow({
   const maxTicketsReached = isTicket && maxTicketPurchaseQty <= 0;
   const selectDisabled = disabled || owned || inactive || (isTicket && maxTicketsReached && !selected);
   const displayPrice = owned
-    ? item.id === STORE_ITEM_IDS.allTeams ? "UNLOCKED" : isBundle ? "ACTIVE" : isTicket ? "MAX" : "OWNED"
+    ? item.id === STORE_ITEM_IDS.allTeams ? "UNLOCKED" : isBundle ? "" : isTicket ? "MAX" : "OWNED"
     : maxTicketsReached || inactiveReason === "MAX"
       ? "MAX"
       : inactive
-        ? "INACTIVE"
+        ? isBundle ? "" : "INACTIVE"
         : item.priceLabel;
 
   return (
@@ -101,7 +102,7 @@ function StoreRow({
         ) : null}
         {inactive ? (
           <div className="home-copy-bold mt-1 text-[7px] uppercase leading-none tracking-[0.1em] text-[#F5F1E8]/58">
-            UNAVAILABLE WITH OWNED ITEMS
+            {inactiveReason === "MAX" ? "TICKET LIMIT REACHED" : "UNAVAILABLE WITH OWNED ITEMS"}
           </div>
         ) : null}
       </div>
@@ -149,7 +150,7 @@ export default function ShopModal({ open = false, onClose, initialItemId = null,
       setSelection(buildInitialSelection(initialItemId, entitlements));
       setMessage("");
     }
-  }, [open, initialItemId, entitlements?.allTeams, entitlements?.goldenBall, entitlements?.goldenBoot, entitlements?.goldenGlove, entitlements?.goldenTicketQty]);
+  }, [open, initialItemId, entitlements?.allTeams, entitlements?.goldenBall, entitlements?.goldenBoot, entitlements?.goldenGlove, entitlements?.goldenKitbag, entitlements?.goldenTicketQty]);
 
   const ticketQty = normaliseTicketQuantity(entitlements.goldenTicketQty);
   const bundleSelected = Boolean(selection.items?.fullBundle);

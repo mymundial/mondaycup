@@ -206,6 +206,13 @@ export function createLeaderboardEntry({ user, team, campaignPoints, status, pod
     goldenTicket: Boolean(cosmeticsApplied.goldenTicket || cosmeticsApplied.cosmetic4 || cosmeticsApplied.goldenTicketUsed),
   };
 
+  const usedGoldenUpgrade = Boolean(
+    normalisedCosmeticsApplied.goldenBoot ||
+    normalisedCosmeticsApplied.goldenBall ||
+    normalisedCosmeticsApplied.goldenGlove
+  );
+  const usedGoldenTicket = Boolean(normalisedCosmeticsApplied.goldenTicket);
+
   return {
     userId: user?.uid || null,
     username: user?.displayName || user?.email?.split("@")[0] || "MONDAY HERO",
@@ -216,6 +223,8 @@ export function createLeaderboardEntry({ user, team, campaignPoints, status, pod
     podium: podium || null,
     podiumAchieved: Boolean(podium || ["champion", "runnerUp", "runner_up", "thirdPlace", "third_place"].includes(status)),
     cosmeticsApplied: normalisedCosmeticsApplied,
+    usedGoldenUpgrade,
+    usedGoldenTicket,
     completedAt,
   };
 }

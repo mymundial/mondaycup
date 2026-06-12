@@ -678,15 +678,11 @@ function GoldenKitbagBundleCard({ onOpenShop, active = false, inactive = false }
         </span>
       </span>
       <span className="ml-auto grid min-w-[64px] shrink-0 place-items-center text-center">
-        {active ? (
-          <StatusPill active>ACTIVE</StatusPill>
-        ) : inactive ? (
-          <StatusPill>INACTIVE</StatusPill>
-        ) : (
+        {!active && !inactive ? (
           <span className="home-copy-bold text-[18px] uppercase leading-none tracking-[0.07em] text-[#F7D117]">
             £4.99
           </span>
-        )}
+        ) : null}
       </span>
     </button>
   );
@@ -1370,7 +1366,8 @@ export function ClubhouseScreen({
                       (ownedItems?.allTeams ||
                         ownedItems?.goldenBoot ||
                         ownedItems?.goldenBall ||
-                        ownedItems?.goldenGlove)
+                        ownedItems?.goldenGlove ||
+                        Number(ownedItems?.goldenTicketQty || 0) >= 99)
                   )}
                 />
               </div>

@@ -727,10 +727,12 @@ export default function App() {
     goldenBoot: Boolean(cosmetics?.goldenBoot),
     goldenBall: Boolean(cosmetics?.goldenBall),
     goldenGlove: Boolean(cosmetics?.goldenGlove),
-    goldenTicket: Boolean(cosmetics?.goldenTicket),
+    // Golden Ticket ownership is tracked on activeCosmetics for quantity/UI,
+    // but it is only marked as used when a ticket campaign actually starts.
+    goldenTicket: false,
     cosmeticBallEquipped: Boolean(cosmetics?.goldenBall),
     cosmeticGloveEquipped: Boolean(cosmetics?.goldenGlove),
-    goldenTicketUsed: Boolean(cosmetics?.goldenTicket),
+    goldenTicketUsed: false,
   });
 
   const mergeCosmeticUsage = (current = {}, incoming = {}) => ({
@@ -768,8 +770,7 @@ export default function App() {
       !(
         activeUsage.goldenBoot ||
         activeUsage.goldenBall ||
-        activeUsage.goldenGlove ||
-        activeUsage.goldenTicket
+        activeUsage.goldenGlove
       )
     )
       return;
@@ -1074,6 +1075,8 @@ export default function App() {
       modalDismissed,
       activeCosmetics,
       campaignCosmeticsUsed,
+      usedGoldenUpgrade: Boolean(campaignCosmeticsUsed?.goldenBoot || campaignCosmeticsUsed?.goldenBall || campaignCosmeticsUsed?.goldenGlove),
+      usedGoldenTicket: Boolean(campaignCosmeticsUsed?.goldenTicket || campaignCosmeticsUsed?.goldenTicketUsed),
       achievements,
       nationCupWins,
       nationStickerProgress,
@@ -1208,6 +1211,8 @@ export default function App() {
               phase: currentRoundLabel || matchStage || "No Campaign",
               gameScore: Number(scoringState.campaignPoints || 0),
               cupRun: userForm || [],
+              usedGoldenUpgrade: Boolean(campaignCosmeticsApplied()?.goldenBoot || campaignCosmeticsApplied()?.goldenBall || campaignCosmeticsApplied()?.goldenGlove),
+              usedGoldenTicket: Boolean(campaignCosmeticsApplied()?.goldenTicket || campaignCosmeticsApplied()?.goldenTicketUsed),
               score,
               matchResult: matchResult
                 ? {
@@ -1246,6 +1251,9 @@ export default function App() {
           bestCampaignSummary?.phase ||
           "No Campaign",
         podium: bestCampaignSummary?.podium || "none",
+        cosmeticsApplied: bestCampaignSummary?.cosmeticsApplied || {},
+        usedGoldenUpgrade: Boolean(bestCampaignSummary?.usedGoldenUpgrade || bestCampaignSummary?.goldenUpgradeUsed),
+        usedGoldenTicket: Boolean(bestCampaignSummary?.usedGoldenTicket || bestCampaignSummary?.goldenTicketUsed),
         completedAt: bestCampaignSummary?.completedAt || null,
         updatedAt: bestCampaignSummary?.updatedAt || Date.now(),
       },
@@ -1417,6 +1425,15 @@ export default function App() {
     const nextIsBestCampaign =
       nextScoringState.campaignPoints > Number(bestCampaignScore || 0);
     const campaignCosmetics = campaignCosmeticsApplied();
+    const usedGoldenUpgrade = Boolean(
+      campaignCosmetics?.goldenBoot ||
+      campaignCosmetics?.goldenBall ||
+      campaignCosmetics?.goldenGlove
+    );
+    const usedGoldenTicket = Boolean(
+      campaignCosmetics?.goldenTicket ||
+      campaignCosmetics?.goldenTicketUsed
+    );
     const latestBestCampaignSummary = nextIsBestCampaign
       ? {
           ...buildCampaignSummary({
@@ -1429,6 +1446,9 @@ export default function App() {
           gameScore: Number(nextScoringState.campaignPoints || 0),
           cupRun: nextForm,
           podium: podium === "champion" ? "champion" : podium === "runnerUp" ? "runner-up" : podium === "third" || podium === "thirdPlace" ? "third-place" : "none",
+          cosmeticsApplied: campaignCosmetics,
+          usedGoldenUpgrade,
+          usedGoldenTicket,
           completedAt: isTerminalLeaderboardStatus(baseResult.status) ? Date.now() : null,
           updatedAt: Date.now(),
         }
@@ -1469,6 +1489,7 @@ export default function App() {
           campaignPoints: leaderboardBestScore,
           status: baseResult.status,
           podium,
+          cosmeticsApplied: campaignCosmetics,
         }),
         id: localUserId,
         uid: localUserId,
@@ -1485,15 +1506,14 @@ export default function App() {
           round: roundLabelForResult(baseResult, matchStage),
           phase: roundLabelForResult(baseResult, matchStage),
           podium: podium === "champion" ? "champion" : podium === "runnerUp" ? "runner-up" : podium === "third" || podium === "thirdPlace" ? "third-place" : "none",
+          cosmeticsApplied: campaignCosmetics,
+          usedGoldenUpgrade,
+          usedGoldenTicket,
           completedAt: Date.now(),
           updatedAt: Date.now(),
         },
-        usedGoldenUpgrade: Boolean(
-          campaignCosmeticsApplied()?.goldenBoot ||
-          campaignCosmeticsApplied()?.goldenBall ||
-          campaignCosmeticsApplied()?.goldenGlove ||
-          campaignCosmeticsApplied()?.goldenTicket
-        ),
+        usedGoldenUpgrade,
+        usedGoldenTicket,
         emailVerified: Boolean(isCurrentUserVerified),
         accountStatus: { emailVerified: Boolean(isCurrentUserVerified), verificationRequired: !isCurrentUserVerified },
         localOnly: !hasCloudUser,
@@ -1741,14 +1761,40 @@ export default function App() {
     setShopInitialItemId(itemId);
     setShopOpen(true);
   };
-  const requestShopItem = (itemId = null) => {
-    if (!currentUser?.uid) {
+
+  const refreshCurrentUserForPurchase = async () => {
+    const user = auth.currentUser || currentUser || null;
+    if (!user?.uid) return null;
+    try {
+      await user.reload();
+    } catch (error) {
+      console.warn("Firebase user refresh before purchase failed", error);
+    }
+    const freshUser = auth.currentUser || user;
+    if (freshUser?.uid) {
+      setCurrentUser({ ...freshUser });
+      if (freshUser.emailVerified && firebaseProfile?.profile && !firebaseProfile.profile.emailVerified) {
+        setFirebaseProfile((current) => current
+          ? {
+              ...current,
+              profile: { ...(current.profile || {}), emailVerified: true },
+              accountStatus: { ...(current.accountStatus || {}), emailVerified: true, verificationRequired: false },
+            }
+          : current);
+      }
+    }
+    return freshUser;
+  };
+
+  const requestShopItem = async (itemId = null) => {
+    const freshUser = await refreshCurrentUserForPurchase();
+    if (!freshUser?.uid) {
       setPendingShopItemId(itemId);
       setShopOpen(false);
       openAuthMenu("signup", { showLogoBack: true });
       return;
     }
-    if (!currentUser.emailVerified) {
+    if (!freshUser.emailVerified) {
       setPendingShopItemId(itemId);
       setShopOpen(false);
       openAuthMenu("verify", { showLogoBack: true });
@@ -1818,12 +1864,7 @@ export default function App() {
         0,
     );
     const entitlementQuantity = Number(storeEntitlements?.goldenTicketQty ?? 0);
-    const localQuantity = Number(
-      activeCosmetics?.goldenTicketQuantity ??
-        (activeCosmetics?.goldenTicket ? 1 : 0) ??
-        0,
-    );
-    return Math.max(0, Math.floor(Math.max(profileQuantity, entitlementQuantity, localQuantity)));
+    return Math.max(0, Math.floor(Math.max(profileQuantity, entitlementQuantity)));
   }
 
 
@@ -1844,10 +1885,13 @@ export default function App() {
   const clearAwardedTrophyPrompt = () => setAwardedTrophyMatchKey(null);
 
   const startStripeCheckout = async (selection = {}) => {
-    if (!isCurrentUserVerified)
+    const freshUser = await refreshCurrentUserForPurchase();
+    if (!freshUser?.uid)
+      throw new Error("Please sign in again before buying upgrades");
+    if (!freshUser.emailVerified)
       throw new Error("Please verify your email before buying upgrades");
-    const idToken = await currentUser.getIdToken();
-    await saveCheckoutStarted(currentUser.uid, {
+    const idToken = await freshUser.getIdToken(true);
+    await saveCheckoutStarted(freshUser.uid, {
       selection,
       source: "clubhouse-shop",
     }).catch(() => {});

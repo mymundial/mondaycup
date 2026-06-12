@@ -18,14 +18,42 @@ const STRIPE_API_VERSION = "2024-06-20";
 
 let cachedFirebaseCerts = null;
 let cachedFirebaseCertsExpiry = 0;
+let cachedGoogleAccessToken = null;
+let cachedGoogleAccessTokenExpiry = 0;
 
 function env(name, fallbackName = "") {
   return process.env[name] || (fallbackName ? process.env[fallbackName] : "") || "";
 }
 
+function serviceAccountFromEnv() {
+  const raw = env("FIREBASE_SERVICE_ACCOUNT_KEY") || env("FIREBASE_SERVICE_ACCOUNT_JSON") || env("GOOGLE_SERVICE_ACCOUNT_JSON") || "";
+  if (!raw) return {};
+  const candidates = [raw];
+  try {
+    candidates.push(Buffer.from(raw, "base64").toString("utf8"));
+  } catch {
+    // Ignore non-base64 values.
+  }
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate);
+      return {
+        clientEmail: parsed.client_email || parsed.clientEmail || "",
+        privateKey: parsed.private_key || parsed.privateKey || "",
+        projectId: parsed.project_id || parsed.projectId || "",
+      };
+    } catch {
+      // Try the next representation.
+    }
+  }
+  return {};
+}
+
 function getFirebaseProjectId() {
+  const serviceAccount = serviceAccountFromEnv();
   return (
     env("FIREBASE_PROJECT_ID", "VITE_FIREBASE_PROJECT_ID") ||
+    serviceAccount.projectId ||
     env("GOOGLE_CLOUD_PROJECT") ||
     env("GCLOUD_PROJECT") ||
     DEFAULT_FIREBASE_PROJECT_ID
@@ -61,6 +89,174 @@ function safeQuantity(value, { min = 0, max = 1 } = {}) {
   return Math.max(min, Math.min(max, Math.floor(number)));
 }
 
+async function getGoogleAccessToken() {
+  const now = Math.floor(Date.now() / 1000);
+  if (cachedGoogleAccessToken && cachedGoogleAccessTokenExpiry > now + 60) return cachedGoogleAccessToken;
+
+  const serviceAccount = serviceAccountFromEnv();
+  const clientEmail = env("FIREBASE_CLIENT_EMAIL") || serviceAccount.clientEmail;
+  const privateKey = normalisePrivateKey(env("FIREBASE_PRIVATE_KEY") || serviceAccount.privateKey);
+  if (!clientEmail || !privateKey) {
+    const error = new Error("Firebase service account credentials are not configured");
+    error.code = "firebase_service_account_missing";
+    throw error;
+  }
+
+  const iat = now;
+  const exp = iat + 3600;
+  const header = base64UrlEncode(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const claimSet = base64UrlEncode(JSON.stringify({
+    iss: clientEmail,
+    scope: "https://www.googleapis.com/auth/datastore",
+    aud: "https://oauth2.googleapis.com/token",
+    iat,
+    exp,
+  }));
+  const unsignedJwt = `${header}.${claimSet}`;
+  const signature = crypto
+    .sign("RSA-SHA256", Buffer.from(unsignedJwt), privateKey)
+    .toString("base64")
+    .replace(/=/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion: `${unsignedJwt}.${signature}`,
+    }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload.access_token) {
+    const error = new Error(payload?.error_description || payload?.error || "Could not authenticate Firebase service account");
+    error.code = "firebase_service_account_auth_failed";
+    throw error;
+  }
+
+  cachedGoogleAccessToken = payload.access_token;
+  cachedGoogleAccessTokenExpiry = now + Number(payload.expires_in || 3600);
+  return cachedGoogleAccessToken;
+}
+
+function firestoreDocumentName(projectId, ...segments) {
+  const encoded = segments.map((segment) => encodeURIComponent(String(segment)));
+  return `projects/${projectId}/databases/(default)/documents/${encoded.join("/")}`;
+}
+
+function firestoreJsValue(value) {
+  if (!value || typeof value !== "object") return undefined;
+  if (Object.prototype.hasOwnProperty.call(value, "stringValue")) return value.stringValue;
+  if (Object.prototype.hasOwnProperty.call(value, "integerValue")) return Number(value.integerValue || 0);
+  if (Object.prototype.hasOwnProperty.call(value, "doubleValue")) return Number(value.doubleValue || 0);
+  if (Object.prototype.hasOwnProperty.call(value, "booleanValue")) return Boolean(value.booleanValue);
+  if (Object.prototype.hasOwnProperty.call(value, "timestampValue")) return value.timestampValue;
+  if (Object.prototype.hasOwnProperty.call(value, "nullValue")) return null;
+  if (value.arrayValue) return (value.arrayValue.values || []).map(firestoreJsValue);
+  if (value.mapValue) return firestoreJsObject(value.mapValue.fields || {});
+  return undefined;
+}
+
+function firestoreJsObject(fields = {}) {
+  return Object.fromEntries(
+    Object.entries(fields || {}).map(([key, value]) => [key, firestoreJsValue(value)]),
+  );
+}
+
+async function firestoreGetUserDocument(uid) {
+  const projectId = getFirebaseProjectId();
+  const accessToken = await getGoogleAccessToken();
+  const name = firestoreDocumentName(projectId, "users", uid);
+  const response = await fetch(`https://firestore.googleapis.com/v1/${name}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (response.status === 404) return {};
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(payload?.error?.message || "Could not read Firestore purchase entitlements");
+    error.code = "firestore_read_failed";
+    throw error;
+  }
+
+  return firestoreJsObject(payload.fields || {});
+}
+
+function hasGoldenKitbagPurchase(profile = {}, upgrades = {}) {
+  if (upgrades.goldenKitbag || upgrades.fullBundle) return true;
+  const selectedItems = profile?.lastPurchase?.selectedItems;
+  if (Array.isArray(selectedItems)) {
+    return selectedItems.some((item) => {
+      if (typeof item === "string") return item === STORE_ITEM_IDS.fullBundle || item === "goldenKitbag";
+      return item?.itemId === STORE_ITEM_IDS.fullBundle || item?.id === STORE_ITEM_IDS.fullBundle || item?.itemId === "goldenKitbag";
+    });
+  }
+  return false;
+}
+
+function readCurrentEntitlements(profile = {}) {
+  const upgrades = profile.upgradesPurchased && typeof profile.upgradesPurchased === "object" ? profile.upgradesPurchased : {};
+  const unlocks = profile.unlocks && typeof profile.unlocks === "object" ? profile.unlocks : {};
+  const consumables = profile.consumables && typeof profile.consumables === "object" ? profile.consumables : {};
+  const ticket = consumables.goldenTicket && typeof consumables.goldenTicket === "object" ? consumables.goldenTicket : {};
+  return {
+    allTeams: Boolean(upgrades.allTeams || unlocks.allTeams || profile.allTeamsEquipped || profile.allTeamsUnlocked),
+    goldenBoot: Boolean(upgrades.goldenBoot),
+    goldenBall: Boolean(upgrades.goldenBall),
+    goldenGlove: Boolean(upgrades.goldenGlove),
+    goldenKitbag: hasGoldenKitbagPurchase(profile, upgrades),
+    goldenTicketQty: safeQuantity(ticket.quantity, { min: 0, max: MAX_GOLDEN_TICKETS }),
+  };
+}
+
+function validationError(code, message, status = 409) {
+  const error = new Error(message);
+  error.code = code;
+  error.status = status;
+  return error;
+}
+
+function validateSelectionAgainstEntitlements(lineItems = [], entitlements = {}) {
+  const itemQuantity = (itemId) => lineItems
+    .filter((item) => item.itemId === itemId)
+    .reduce((sum, item) => sum + safeQuantity(item.quantity, { min: 0, max: itemId === STORE_ITEM_IDS.goldenTicket ? MAX_GOLDEN_TICKETS : 1 }), 0);
+
+  const hasBundle = itemQuantity(STORE_ITEM_IDS.fullBundle) > 0;
+  const ticketGrantQty = itemQuantity(STORE_ITEM_IDS.goldenTicket) + (hasBundle ? 1 : 0);
+
+  if (itemQuantity(STORE_ITEM_IDS.allTeams) && entitlements.allTeams) {
+    throw validationError("ALL_TEAMS_ALREADY_OWNED", "All Teams is already unlocked on this account.");
+  }
+  if (itemQuantity(STORE_ITEM_IDS.goldenBoot) && entitlements.goldenBoot) {
+    throw validationError("GOLDEN_BOOT_ALREADY_OWNED", "Golden Boot is already owned on this account.");
+  }
+  if (itemQuantity(STORE_ITEM_IDS.goldenBall) && entitlements.goldenBall) {
+    throw validationError("GOLDEN_BALL_ALREADY_OWNED", "Golden Ball is already owned on this account.");
+  }
+  if (itemQuantity(STORE_ITEM_IDS.goldenGlove) && entitlements.goldenGlove) {
+    throw validationError("GOLDEN_GLOVE_ALREADY_OWNED", "Golden Glove is already owned on this account.");
+  }
+
+  if (hasBundle) {
+    if (entitlements.goldenKitbag) {
+      throw validationError("GOLDEN_KITBAG_ALREADY_OWNED", "Golden Kitbag has already been purchased on this account.");
+    }
+    if (entitlements.allTeams || entitlements.goldenBoot || entitlements.goldenBall || entitlements.goldenGlove) {
+      throw validationError(
+        "GOLDEN_KITBAG_UNAVAILABLE_EXISTING_UPGRADE",
+        "Golden Kitbag is only available before buying individual upgrades.",
+      );
+    }
+  }
+
+  if (entitlements.goldenTicketQty + ticketGrantQty > MAX_GOLDEN_TICKETS) {
+    throw validationError("GOLDEN_TICKET_LIMIT_REACHED", "Golden Ticket limit reached. You can hold a maximum of 99 tickets.");
+  }
+}
+
+
 function getOrigin(req) {
   const configured = env("APP_URL", "VITE_APP_URL") || env("SITE_URL", "VITE_SITE_URL");
   if (configured) return configured.replace(/\/$/, "");
@@ -80,6 +276,18 @@ function base64UrlToBuffer(value = "") {
   const normalised = String(value || "").replace(/-/g, "+").replace(/_/g, "/");
   const padded = normalised.padEnd(normalised.length + ((4 - (normalised.length % 4)) % 4), "=");
   return Buffer.from(padded, "base64");
+}
+
+function base64UrlEncode(input) {
+  return Buffer.from(input)
+    .toString("base64")
+    .replace(/=/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+}
+
+function normalisePrivateKey(value = "") {
+  return String(value || "").replace(/\\n/g, "\n").trim();
 }
 
 function decodeJwtPart(value = "") {
@@ -300,6 +508,18 @@ export default async function handler(req, res) {
 
   if (!lineItems.length) {
     return res.status(400).json({ error: "No valid shop items selected" });
+  }
+
+  try {
+    const profile = await firestoreGetUserDocument(firebaseUid);
+    validateSelectionAgainstEntitlements(lineItems, readCurrentEntitlements(profile));
+  } catch (error) {
+    const isServiceError = String(error?.code || "").startsWith("firebase_") || String(error?.code || "").startsWith("firestore_");
+    const status = Number(error?.status || 0) || (isServiceError ? 503 : 500);
+    return res.status(status).json({
+      error: error?.message || "Could not verify purchase eligibility",
+      code: error?.code || "PURCHASE_ELIGIBILITY_CHECK_FAILED",
+    });
   }
 
   const origin = getOrigin(req);
