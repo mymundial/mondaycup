@@ -41,8 +41,8 @@ import {
   loadCurrentProgress,
   loadLeaderboardRows,
   loadUserProfile,
-  saveAllTeamsUnlocked,
   saveCurrentProgress,
+  clearCurrentProgress,
   saveLeaderboardHighScore,
   saveUserNickname,
   saveUserProfile,
@@ -162,6 +162,7 @@ const writeGoldenTicketNextCampaignIntent = (active) => {
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [twoPlayerMode, setTwoPlayerMode] = useState(false);
+  const twoPlayerThrowawayRef = useRef(false);
   const [twoPlayerSetup, setTwoPlayerSetup] = useState(null);
   const [currentUser, setCurrentUser] = useState(() => auth.currentUser);
   const [shirtShareOpen, setShirtShareOpen] = useState(false);
@@ -516,7 +517,7 @@ export default function App() {
     const nextUser = user || auth.currentUser || null;
     const guestSnapshot = buildGameSnapshot();
     const hasGuestProgress = Boolean(
-      guestSnapshot?.active && guestSnapshot?.team,
+      !isCampaignSaveBlocked() && guestSnapshot?.active && guestSnapshot?.team,
     );
     setCurrentUser(nextUser);
 
@@ -1052,9 +1053,49 @@ export default function App() {
 
   const clearActiveMatchSnapshot = () => updateActiveMatchSnapshot(null);
 
-  const buildGameSnapshot = () =>
-    sanitizeCloudData({
+  const isTwoPlayerSnapshot = (snapshot = {}) => {
+    const matchStageValue = String(snapshot?.matchStage || snapshot?.stage || "").toUpperCase();
+    const fixtureId = String(
+      snapshot?.activeMatchSnapshot?.fixtureId ||
+        snapshot?.activeMatchSnapshot?.id ||
+        snapshot?.currentKnockoutMatch?.id ||
+        snapshot?.matchResult?.fixtureId ||
+        snapshot?.matchResult?.id ||
+        "",
+    ).toLowerCase();
+    const status = snapshot?.matchResult?.status || snapshot?.status || null;
+    const twoPlayerTerminalShootout =
+      matchStageValue === "SHOOTOUT" &&
+      !snapshot?.matchResult?.matchNo &&
+      (status === RESULT_STATUS.CHAMPION || status === RESULT_STATUS.RUNNER_UP);
+
+    return (
+      snapshot?.mode === "twoPlayer" ||
+      fixtureId.startsWith("two-player") ||
+      twoPlayerTerminalShootout
+    );
+  };
+
+  const shouldClearRejectedCampaignSnapshot = (snapshot = {}) =>
+    Boolean(snapshot?.active && snapshot?.team && isTwoPlayerSnapshot(snapshot));
+
+  const isCampaignSaveBlocked = () =>
+    Boolean(twoPlayerMode || twoPlayerThrowawayRef.current);
+
+  const markTwoPlayerThrowaway = () => {
+    twoPlayerThrowawayRef.current = true;
+  };
+
+  const releaseTwoPlayerThrowawayForCampaign = () => {
+    twoPlayerThrowawayRef.current = false;
+  };
+
+  const buildGameSnapshot = () => {
+    if (isCampaignSaveBlocked()) return null;
+
+    return sanitizeCloudData({
       version: 1,
+      mode: "campaign",
       active: Boolean(team),
       savedAt: Date.now(),
       selectedGroup,
@@ -1075,7 +1116,7 @@ export default function App() {
       modalDismissed,
       activeCosmetics,
       campaignCosmeticsUsed,
-      usedGoldenUpgrade: Boolean(campaignCosmeticsUsed?.goldenBoot || campaignCosmeticsUsed?.goldenBall || campaignCosmeticsUsed?.goldenGlove),
+      usedGoldenUpgrade: Boolean(campaignCosmeticsUsed?.goldenBoot || campaignCosmeticsUsed?.goldenBall || campaignCosmeticsUsed?.goldenGlove || campaignCosmeticsUsed?.goldenTicket || campaignCosmeticsUsed?.goldenTicketUsed),
       usedGoldenTicket: Boolean(campaignCosmeticsUsed?.goldenTicket || campaignCosmeticsUsed?.goldenTicketUsed),
       achievements,
       nationCupWins,
@@ -1083,9 +1124,13 @@ export default function App() {
       awardedTrophyMatchKey,
       activeMatchSnapshot: activeMatchSnapshotRef.current || activeMatchSnapshot || null,
     });
+  };
 
   const restoreGameSnapshot = (snapshot) => {
-    if (!snapshot?.active || !snapshot?.team) return false;
+    if (!snapshot?.active || !snapshot?.team || isTwoPlayerSnapshot(snapshot)) return false;
+    releaseTwoPlayerThrowawayForCampaign();
+    setTwoPlayerMode(false);
+    setTwoPlayerSetup(null);
     setSelectedGroup(snapshot.selectedGroup || "A");
     setTeam(snapshot.team || null);
     setOpponent(snapshot.opponent || "Opponent");
@@ -1195,7 +1240,13 @@ export default function App() {
       : undefined;
 
     const currentProgressSnapshot = buildGameSnapshot();
-    const shouldSaveCurrentCampaign = Boolean(currentProgressSnapshot?.active && currentProgressSnapshot?.team && team);
+    const shouldSaveCurrentCampaign = Boolean(
+      !isCampaignSaveBlocked() &&
+        currentProgressSnapshot?.mode === "campaign" &&
+        currentProgressSnapshot?.active &&
+        currentProgressSnapshot?.team &&
+        team,
+    );
 
     const payload = {
       nickname:
@@ -1211,7 +1262,7 @@ export default function App() {
               phase: currentRoundLabel || matchStage || "No Campaign",
               gameScore: Number(scoringState.campaignPoints || 0),
               cupRun: userForm || [],
-              usedGoldenUpgrade: Boolean(campaignCosmeticsApplied()?.goldenBoot || campaignCosmeticsApplied()?.goldenBall || campaignCosmeticsApplied()?.goldenGlove),
+              usedGoldenUpgrade: Boolean(campaignCosmeticsApplied()?.goldenBoot || campaignCosmeticsApplied()?.goldenBall || campaignCosmeticsApplied()?.goldenGlove || campaignCosmeticsApplied()?.goldenTicket || campaignCosmeticsApplied()?.goldenTicketUsed),
               usedGoldenTicket: Boolean(campaignCosmeticsApplied()?.goldenTicket || campaignCosmeticsApplied()?.goldenTicketUsed),
               score,
               matchResult: matchResult
@@ -1252,7 +1303,7 @@ export default function App() {
           "No Campaign",
         podium: bestCampaignSummary?.podium || "none",
         cosmeticsApplied: bestCampaignSummary?.cosmeticsApplied || {},
-        usedGoldenUpgrade: Boolean(bestCampaignSummary?.usedGoldenUpgrade || bestCampaignSummary?.goldenUpgradeUsed),
+        usedGoldenUpgrade: Boolean(bestCampaignSummary?.usedGoldenUpgrade || bestCampaignSummary?.goldenUpgradeUsed || bestCampaignSummary?.usedGoldenTicket || bestCampaignSummary?.goldenTicketUsed),
         usedGoldenTicket: Boolean(bestCampaignSummary?.usedGoldenTicket || bestCampaignSummary?.goldenTicketUsed),
         completedAt: bestCampaignSummary?.completedAt || null,
         updatedAt: bestCampaignSummary?.updatedAt || Date.now(),
@@ -1331,6 +1382,7 @@ export default function App() {
     score,
     scoringState.campaignPoints,
     team,
+    twoPlayerMode,
     userForm,
   ]);
 
@@ -1425,14 +1477,15 @@ export default function App() {
     const nextIsBestCampaign =
       nextScoringState.campaignPoints > Number(bestCampaignScore || 0);
     const campaignCosmetics = campaignCosmeticsApplied();
-    const usedGoldenUpgrade = Boolean(
-      campaignCosmetics?.goldenBoot ||
-      campaignCosmetics?.goldenBall ||
-      campaignCosmetics?.goldenGlove
-    );
     const usedGoldenTicket = Boolean(
       campaignCosmetics?.goldenTicket ||
       campaignCosmetics?.goldenTicketUsed
+    );
+    const usedGoldenUpgrade = Boolean(
+      campaignCosmetics?.goldenBoot ||
+      campaignCosmetics?.goldenBall ||
+      campaignCosmetics?.goldenGlove ||
+      usedGoldenTicket
     );
     const latestBestCampaignSummary = nextIsBestCampaign
       ? {
@@ -1571,6 +1624,10 @@ export default function App() {
     return true;
   };
   const resetTournament = (nextScreen = "home") => {
+    const shouldClearCloudCampaign = Boolean(hasCloudUser && !isCampaignSaveBlocked());
+    releaseTwoPlayerThrowawayForCampaign();
+    setTwoPlayerMode(false);
+    setTwoPlayerSetup(null);
     setScreen(nextScreen);
     setDrawer(null);
     setMenuOpen(false);
@@ -1602,6 +1659,11 @@ export default function App() {
       goldenTicketUsed: false,
     });
     setPendingFeedbackCheck(true);
+    if (shouldClearCloudCampaign) {
+      clearCurrentProgress(currentUser.uid, "reset").catch((error) => {
+        console.warn("Could not clear current campaign", error);
+      });
+    }
   };
 
   useEffect(() => {
@@ -1687,11 +1749,18 @@ export default function App() {
         firebaseProfile?.savedGames?.current ||
         null;
     const restored = restoreGameSnapshot(snapshot);
-    if (!restored) setScreen("home");
+    if (!restored) {
+      if (hasCloudUser && shouldClearRejectedCampaignSnapshot(snapshot)) {
+        clearCurrentProgress(currentUser.uid, "rejected-two-player-snapshot").catch((error) => {
+          console.warn("Could not clear rejected current campaign", error);
+        });
+      }
+      setScreen("home");
+    }
   };
 
   const hasActiveCampaign = () =>
-    Boolean(team && (opponent || currentKnockoutMatch || activeGroupFixture));
+    Boolean(!isCampaignSaveBlocked() && team && (opponent || currentKnockoutMatch || activeGroupFixture));
 
   const openTeamFlow = () => {
     setDrawer(null);
@@ -1720,12 +1789,15 @@ export default function App() {
         firebaseProfile?.savedGames?.current ||
         null;
 
-    if (
-      savedProgress?.active &&
-      savedProgress?.team &&
-      restoreGameSnapshot(savedProgress)
-    ) {
-      return;
+    if (savedProgress?.active && savedProgress?.team) {
+      if (restoreGameSnapshot(savedProgress)) {
+        return;
+      }
+      if (hasCloudUser && shouldClearRejectedCampaignSnapshot(savedProgress)) {
+        clearCurrentProgress(currentUser.uid, "rejected-two-player-snapshot").catch((error) => {
+          console.warn("Could not clear rejected current campaign", error);
+        });
+      }
     }
 
     openTeamFlow();
@@ -1835,6 +1907,7 @@ export default function App() {
       safeWriteJson(COSMETICS_KEY, next);
       return next;
     });
+    releaseTwoPlayerThrowawayForCampaign();
     setTwoPlayerMode(false);
     setTwoPlayerSetup(null);
     setTeam(null);
@@ -1952,15 +2025,6 @@ export default function App() {
     window.location.assign(payload.url);
   };
 
-  const unlockAllTeams = () => {
-    setAllTeamsUnlocked(true);
-    safeWriteJson(ALL_TEAMS_UNLOCKED_KEY, true);
-    if (hasCloudUser) {
-      saveAllTeamsUnlocked(currentUser.uid, true).catch((error) =>
-        console.warn("Unlock-all-teams save failed", error),
-      );
-    }
-  };
 
   const selectGroup = (group) => {
     if (!allTeamsUnlocked) {
@@ -2029,6 +2093,7 @@ export default function App() {
 
 
   const beginTwoPlayer = () => {
+    markTwoPlayerThrowaway();
     setTwoPlayerMode(true);
     setTwoPlayerSetup({ step: "p1", p1Team: null, p1Group: null });
     setSelectedGroup("A");
@@ -2046,6 +2111,7 @@ export default function App() {
   };
 
   const handleTwoPlayerTeamSelect = (name, groupOverride = selectedGroup) => {
+    markTwoPlayerThrowaway();
     if (twoPlayerSetup?.step === "p2" && twoPlayerSetup?.p1Team && name === twoPlayerSetup.p1Team) {
       return;
     }
@@ -2076,6 +2142,7 @@ export default function App() {
   };
 
   const handleTwoPlayerBack = () => {
+    markTwoPlayerThrowaway();
     if (twoPlayerSetup?.step === "p2") {
       setTwoPlayerSetup({ step: "p1", p1Team: null, p1Group: null });
       return;
@@ -2086,6 +2153,7 @@ export default function App() {
   };
 
   const handleTwoPlayerMatchComplete = (result) => {
+    markTwoPlayerThrowaway();
     if (!result || !team) return;
     const p1Won = Boolean(result.userWon);
     setScore(userScoreFromFixtureResult(result, team));
@@ -2102,6 +2170,7 @@ export default function App() {
   };
 
   const replayTwoPlayerMatch = () => {
+    markTwoPlayerThrowaway();
     setMatchResetKey((key) => key + 1);
     setScore([0, 0]);
     setMatchResult(null);
@@ -2113,6 +2182,7 @@ export default function App() {
   };
 
   const changeTwoPlayerTeams = () => {
+    markTwoPlayerThrowaway();
     setTwoPlayerMode(true);
     setTwoPlayerSetup({ step: "p1", p1Team: null, p1Group: null });
     setSelectedGroup("A");
@@ -2130,6 +2200,7 @@ export default function App() {
   };
 
   const exitTwoPlayerMatch = () => {
+    markTwoPlayerThrowaway();
     setTwoPlayerMode(false);
     setTwoPlayerSetup(null);
     setTeam(null);
@@ -2138,12 +2209,19 @@ export default function App() {
     setMatchResult(null);
     clearActiveMatchSnapshot();
     setModalDismissed(false);
+    setTable(blankTable());
+    setSchedule(buildSchedule());
+    setKnockoutFixtures([]);
     setCurrentKnockoutMatch(null);
+    setPodium({});
+    setFixtureView("group");
+    setStandingsView("group");
     setMatchStage("GROUP STAGE");
     setScreen("home");
   };
 
   const startTeam = (name, groupOverride = selectedGroup) => {
+    releaseTwoPlayerThrowawayForCampaign();
     setTwoPlayerMode(false);
     setTwoPlayerSetup(null);
     if (!HOST_TEAMS.has(name) && !allTeamsUnlocked) {
@@ -2205,14 +2283,16 @@ export default function App() {
       setGoldenTicketNextCampaign(false);
     }
 
+    const freshSchedule = buildSchedule();
+    const freshTable = blankTable();
     const fixture =
-      schedule.find(
+      freshSchedule.find(
         (item) =>
           !item.played &&
           item.group === groupOverride &&
           (item.home === name || item.away === name),
       ) ||
-      schedule.find(
+      freshSchedule.find(
         (item) =>
           item.group === groupOverride &&
           (item.home === name || item.away === name),
@@ -2226,7 +2306,13 @@ export default function App() {
     setDrawer(null);
     setMenuOpen(false);
     setScore([0, 0]);
+    setTable(freshTable);
+    setSchedule(freshSchedule);
+    setKnockoutFixtures([]);
     setCurrentKnockoutMatch(null);
+    setPodium({});
+    setFixtureView("group");
+    setStandingsView("group");
     setMatchStage("GROUP STAGE");
     setMatchResult(null);
     clearActiveMatchSnapshot();
@@ -2705,8 +2791,10 @@ export default function App() {
   const handleSignOut = async () => {
     closeMenu();
 
-    if (hasCloudUser) {
-      await saveCurrentProgress(currentUser.uid, buildGameSnapshot()).catch(
+    if (hasCloudUser && !isCampaignSaveBlocked()) {
+      const snapshot = buildGameSnapshot();
+      if (snapshot?.active && snapshot?.mode !== "twoPlayer") {
+        await saveCurrentProgress(currentUser.uid, snapshot).catch(
         (error) => {
           console.warn(
             "Could not save current progress before sign out",
@@ -2714,6 +2802,7 @@ export default function App() {
           );
         },
       );
+      }
     }
 
     await signOut(auth);
@@ -2759,20 +2848,21 @@ export default function App() {
       onStandingsViewChange={setStandingsView}
       visibleKnockoutFixtures={visibleKnockoutFixtures}
       qualifiedTeams={qualifiedTeams}
-      userTeam={team}
+      userTeam={isCampaignSaveBlocked() ? null : team}
+      currentCampaign={firebaseProfile?.currentCampaign || null}
       podium={podium}
       fixtureView={fixtureView}
       onFixtureViewChange={setFixtureView}
       scheduleFocus={scheduleFocus}
       schedule={schedule}
       profile={{
-        userForm,
-        campaignPoints: scoringState.campaignPoints,
+        userForm: isCampaignSaveBlocked() ? [] : userForm,
+        campaignPoints: isCampaignSaveBlocked() ? 0 : scoringState.campaignPoints,
         bestCampaignSummary,
-        currentRoundLabel,
+        currentRoundLabel: isCampaignSaveBlocked() ? null : currentRoundLabel,
         leaderboardRank: myLeaderboardRank,
         mondayCupsWon,
-        highScore: Math.max(scoringState.campaignPoints || 0, bestCampaignScore || 0),
+        highScore: Math.max(isCampaignSaveBlocked() ? 0 : scoringState.campaignPoints || 0, bestCampaignScore || 0),
         allTimeMatchesPlayed,
         allTimeMatchesWon,
         allTimeMatchesDrawn,
@@ -2809,7 +2899,7 @@ export default function App() {
       }}
       leaderboard={{
         rows: leaderboardRows,
-        currentCampaignScore: scoringState.campaignPoints,
+        currentCampaignScore: isCampaignSaveBlocked() ? 0 : scoringState.campaignPoints,
         bestCampaignScore,
         bestCampaignSummary,
         activeCosmetics,
