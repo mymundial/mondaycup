@@ -20,7 +20,7 @@ function DrawerContent({ children }) {
   return <PageScroll className="px-0 pt-0.5">{children}</PageScroll>;
 }
 
-const LEADERBOARD_GRID = "28px minmax(76px,0.84fr) 42px minmax(108px,1.34fr) 42px minmax(62px,0.62fr)";
+const LEADERBOARD_GRID = "27px minmax(0,0.72fr) 34px minmax(84px,1.08fr) 32px minmax(50px,0.58fr)";
 
 const COSMETIC_ALIASES = {
   goldenBoot: ["goldenBoot", "golden_boot", "boot", "cosmetic3", "cosmeticBoot", "cosmeticBootEquipped", "goldenBootEquipped"],
@@ -265,7 +265,7 @@ function LeaderboardFlag({ team, isUser = false }) {
 function LeaderboardHeader() {
   return (
     <div
-      className="grid items-center gap-[3px] px-2 pb-1.5 text-center home-copy-bold text-[7px] uppercase leading-none tracking-[0.09em] text-[#F5F1E8]"
+      className="grid items-center gap-[2px] px-1.5 pb-1.5 text-center home-copy-bold text-[6.5px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]"
       style={{ gridTemplateColumns: LEADERBOARD_GRID }}
     >
       <span className="justify-self-center text-center">Rank</span>
@@ -273,7 +273,7 @@ function LeaderboardHeader() {
       <span className="justify-self-center text-center">Team</span>
       <span className="justify-self-center text-center">Cup Run</span>
       <span className="justify-self-center text-center">Podium</span>
-      <span className="flex w-full min-w-0 items-center justify-center text-center leading-tight">Game Score</span>
+      <span className="flex w-full min-w-0 items-center justify-center overflow-hidden text-center leading-tight">Game Score</span>
     </div>
   );
 }
@@ -322,7 +322,7 @@ function LeaderboardRow({ row, isUser = false }) {
 
   return (
     <div
-      className={`grid h-[39px] items-center gap-[3px] rounded-[1.05rem] border px-2 py-0 shadow-[0_6px_14px_rgba(0,0,0,0.10)] ${rowClass}`}
+      className={`grid h-[39px] items-center gap-[2px] rounded-[1.05rem] border px-1.5 py-0 shadow-[0_6px_14px_rgba(0,0,0,0.10)] ${rowClass}`}
       style={{ gridTemplateColumns: LEADERBOARD_GRID }}
     >
       <div className={`flex min-w-0 items-center justify-center text-center home-copy-bold text-[13px] leading-none ${leaderboardPodiumTextClass(row, isUser)}`}>#{row.rank || "--"}</div>
