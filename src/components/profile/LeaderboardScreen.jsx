@@ -169,6 +169,26 @@ function leaderboardFinishStatus(row = {}) {
   return null;
 }
 
+function terminalCupRunMarkerForStatus(status) {
+  if (status === "champion" || status === "thirdPlace") return "W";
+  if (status === "runnerUp") return "L";
+  return null;
+}
+
+function leaderboardDisplayForm(row = {}) {
+  const rawForm = leaderboardForm(row);
+  const completedForm = rawForm
+    .map((value) => String(value || "").trim().toUpperCase())
+    .filter((value) => ["W", "D", "L"].includes(value));
+  if (completedForm.length >= 8 || leaderboardLooksFourthPlace(row)) return rawForm;
+
+  const status = leaderboardFinishStatus(row);
+  const terminalMarker = terminalCupRunMarkerForStatus(status);
+  if (!terminalMarker) return rawForm;
+
+  return [...completedForm, terminalMarker].slice(-8);
+}
+
 const LEADERBOARD_PODIUM_SHIELDS = {
   champion: "/assets/badges/mc-champs2.png",
   runnerUp: "/assets/badges/mc-runner-up.png",
@@ -292,7 +312,7 @@ function displayLeaderboardUsername(username) {
 }
 
 function LeaderboardRow({ row, isUser = false }) {
-  const form = leaderboardForm(row);
+  const form = leaderboardDisplayForm(row);
   const numericRank = Number(row?.rank);
   const isPodium = [1, 2, 3].includes(numericRank);
   const defaultRowClass = leaderboardPodiumRowClass(row.rank);

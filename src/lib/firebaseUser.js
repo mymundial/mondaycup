@@ -644,6 +644,21 @@ const leaderboardLooksFourthPlaceRun = (cupRun = []) => {
   return lastTwo[0] === "L" && lastTwo[1] === "L";
 };
 
+const terminalCupRunMarkerForPodium = (podium = "") => {
+  const canonical = normalisePodiumValue(podium);
+  if (canonical === "champion" || canonical === "third-place") return "W";
+  if (canonical === "runner-up") return "L";
+  return null;
+};
+
+const fillMissingTerminalCupRunMarker = (cupRun = [], podium = "") => {
+  const completed = leaderboardCompletedCupRun(cupRun);
+  if (completed.length >= 8 || leaderboardLooksFourthPlaceRun(completed)) return cupRun;
+  const marker = terminalCupRunMarkerForPodium(podium);
+  if (!marker) return cupRun;
+  return [...completed, marker].slice(-8);
+};
+
 const compactMatchRow = (match = {}) => {
   if (!match || typeof match !== "object") return null;
   const id = match.id ?? match.matchId ?? match.matchNo ?? match.no ?? null;
@@ -1425,7 +1440,7 @@ function chooseBetterLeaderboardRow(existing, incoming) {
 function normaliseLeaderboardEntry(uid, entry = {}) {
   const rawBestCampaign = entry.bestCampaign || { ...entry };
   const bestCampaign = normaliseBestCampaign(rawBestCampaign);
-  const cupRun = normaliseCupRun(getCupRunSource(
+  let cupRun = normaliseCupRun(getCupRunSource(
     entry.cupRun,
     rawBestCampaign.cupRun,
     entry.formGuide,
@@ -1444,6 +1459,7 @@ function normaliseLeaderboardEntry(uid, entry = {}) {
   const storedFinish = isTerminalResultStatus(finish) ? finish : "completed";
   const rawPodiumCanonical = podiumFromResultFields(entry.podium, bestCampaign.podium, storedFinish);
   const podiumCanonical = leaderboardLooksFourthPlaceRun(cupRun) ? "none" : rawPodiumCanonical;
+  cupRun = fillMissingTerminalCupRunMarker(cupRun, podiumCanonical);
   const podium = leaderboardPodiumFromCanonical(podiumCanonical);
   const hasNestedBestCampaign = Boolean(entry.bestCampaign && typeof entry.bestCampaign === "object");
   const upgradeSources = hasNestedBestCampaign
@@ -1607,7 +1623,7 @@ function buildLeaderboardRowFromData(id, data = {}, source = "leaderboard") {
   const hasCompletedBestCampaign = Boolean(completedAt || isTerminalResultStatus(finish));
   if (source === "users" && !hasCompletedBestCampaign) return null;
 
-  const cupRun = normaliseCupRun(getCupRunSource(
+  let cupRun = normaliseCupRun(getCupRunSource(
     data.cupRun,
     data.formGuide,
     data.form,
@@ -1624,6 +1640,7 @@ function buildLeaderboardRowFromData(id, data = {}, source = "leaderboard") {
   const teamName = data.teamName || data.team || data.teamFlag || bestCampaign.teamName || data.bestCampaign?.team || "";
   const rawPodiumCanonical = podiumFromResultFields(data.podium, bestCampaign.podium, finish);
   const podiumCanonical = leaderboardLooksFourthPlaceRun(cupRun) ? "none" : rawPodiumCanonical;
+  cupRun = fillMissingTerminalCupRunMarker(cupRun, podiumCanonical);
   const podium = leaderboardPodiumFromCanonical(podiumCanonical);
   const username = cleanUsername(data.username || profile.username || data.nickname || "PLAYER").toUpperCase();
   const dataBestCampaign = data.bestCampaign && typeof data.bestCampaign === "object" ? data.bestCampaign : {};
