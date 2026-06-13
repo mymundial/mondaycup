@@ -99,16 +99,16 @@ export function mergeTransforms(...parts) {
 }
 
 export function MarkerDots({ markers = [], totalSlots = GAME.regulationPens }) {
-  const MAX_VISIBLE_MARKERS = 10;
-  const displaySlots = Math.min(totalSlots, MAX_VISIBLE_MARKERS);
+  const MAX_VISIBLE_MARKERS = 11;
   const sourceMarkers = Array.isArray(markers) ? markers : [];
-  const startIndex = totalSlots > MAX_VISIBLE_MARKERS ? Math.max(0, sourceMarkers.length - MAX_VISIBLE_MARKERS) : 0;
-  const visible = padMarkers(sourceMarkers.slice(startIndex, startIndex + displaySlots), displaySlots);
+  const displaySlots = Math.min(MAX_VISIBLE_MARKERS, Math.max(totalSlots, sourceMarkers.length, GAME.regulationPens));
+  const visibleMarkers = sourceMarkers.length > displaySlots ? sourceMarkers.slice(-displaySlots) : sourceMarkers;
+  const visible = padMarkers(visibleMarkers, displaySlots);
   return (
     <div className="inline-flex min-w-0 justify-center gap-[3px]">
       {visible.map((marker, index) => {
         const colour = marker === "G" ? "bg-green-500" : marker === "S" ? "bg-red-500" : "bg-[#F7D117]";
-        return <span key={`${marker}-${index}`} data-share-marker-dot="true" className={`shrink-0 rounded-full ${colour}`} style={{ width: 6, height: 6, flex: "0 0 6px", boxShadow: "0 0 2.5px rgba(247,209,23,0.13)", filter: "none" }} />;
+        return <span key={`${marker}-${index}`} data-share-marker-dot="true" className={`shrink-0 rounded-full ${colour}`} style={{ width: 6, height: 6, flex: "0 0 6px", boxShadow: "0 0 2px rgba(247,209,23,0.10)", filter: "none" }} />;
       })}
     </div>
   );

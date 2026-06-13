@@ -429,6 +429,87 @@ export function runSelfTests() {
   console.assert(finalComplete.podium?.third, "Expected bronze team to come from M103 winner");
 }
 
+
+export function simulateSemiFinalRun(userTeam, selectedGroup = null) {
+  if (!userTeam) return null;
+
+  let updatedSchedule = buildSchedule();
+  let updatedTable = blankTable();
+
+  updatedSchedule = updatedSchedule.map((fixture) => {
+    const userIsHome = fixture.home === userTeam;
+    const userIsAway = fixture.away === userTeam;
+    const simulated = userIsHome
+      ? { homeGoals: 1, awayGoals: 0 }
+      : userIsAway
+        ? { homeGoals: 0, awayGoals: 1 }
+        : simulateFixtureScore(fixture.home, fixture.away);
+
+    updatedTable = applyFixtureResult(updatedTable, fixture, simulated.homeGoals, simulated.awayGoals);
+    return { ...fixture, played: true, ...simulated };
+  });
+
+  let updatedFixtures = buildRound32Fixtures(updatedTable);
+  let currentMatch = findTeamKnockoutFixture(userTeam, updatedFixtures);
+  const simulatedForm = ["W", "W", "W"];
+  let guard = 0;
+
+  while (
+    currentMatch &&
+    currentMatch.matchNo !== 101 &&
+    currentMatch.matchNo !== 102 &&
+    guard < 8
+  ) {
+    const userResult = {
+      ...currentMatch,
+      played: true,
+      homeGoals: currentMatch.home === userTeam ? 1 : 0,
+      awayGoals: currentMatch.away === userTeam ? 1 : 0,
+    };
+    const completed = completeKnockoutRound({
+      fixtures: updatedFixtures,
+      currentMatch,
+      userTeam,
+      userResult,
+    });
+    updatedFixtures = completed.updatedFixtures;
+    simulatedForm.push("W");
+    currentMatch = completed.nextUserFixture || findTeamKnockoutFixture(
+      userTeam,
+      updatedFixtures.filter((fixture) => !fixture.played),
+    );
+    guard += 1;
+  }
+
+  if (!currentMatch || (currentMatch.matchNo !== 101 && currentMatch.matchNo !== 102)) {
+    const fallbackOpponent = Object.keys(TEAM_RANK)
+      .filter((candidate) => candidate !== userTeam)
+      .sort((a, b) => (TEAM_RANK[a] || 99) - (TEAM_RANK[b] || 99))[0] || "Opponent";
+    currentMatch = {
+      id: "M101",
+      matchNo: 101,
+      home: userTeam,
+      away: fallbackOpponent,
+      homeSeed: "W97",
+      awaySeed: "W98",
+      played: false,
+      homeGoals: null,
+      awayGoals: null,
+    };
+    updatedFixtures = replaceFixtures(updatedFixtures, [currentMatch]);
+  }
+
+  return {
+    selectedGroup: selectedGroup || updatedTable[userTeam]?.group || "A",
+    schedule: updatedSchedule,
+    table: updatedTable,
+    knockoutFixtures: updatedFixtures,
+    currentSemiFinalFixture: currentMatch,
+    opponent: getFixtureOpponent(userTeam, currentMatch),
+    userForm: simulatedForm.slice(-8),
+  };
+}
+
 export function simulateGoldenTicketFinalRun(userTeam, selectedGroup = null) {
   if (!userTeam) return null;
 

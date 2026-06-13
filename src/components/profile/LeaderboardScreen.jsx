@@ -20,7 +20,7 @@ function DrawerContent({ children }) {
   return <PageScroll className="px-0 pt-0.5">{children}</PageScroll>;
 }
 
-const LEADERBOARD_GRID = "28px minmax(68px,0.76fr) 34px minmax(82px,1.12fr) 34px minmax(82px,1.12fr)";
+const LEADERBOARD_GRID = "28px minmax(76px,0.84fr) 42px minmax(108px,1.34fr) 42px minmax(62px,0.62fr)";
 
 const COSMETIC_ALIASES = {
   goldenBoot: ["goldenBoot", "golden_boot", "boot", "cosmetic3", "cosmeticBoot", "cosmeticBootEquipped", "goldenBootEquipped"],
@@ -109,41 +109,62 @@ function leaderboardForm(row = {}) {
   return Array.isArray(form) ? form.slice(-8) : [];
 }
 
+function normaliseLeaderboardPodium(value, { allowCanonicalThirdPlace = false } = {}) {
+  const raw = String(value || "").trim();
+  const lower = raw.toLowerCase();
+  if (!lower || ["none", "null", "false", "no", "na", "n/a", "inprogress", "in progress", "completed"].includes(lower)) return null;
+  if (["fourth", "4", "fourthplace", "fourth-place"].includes(lower) || lower.includes("fourth")) return "none";
+  if (lower.includes("champion") || lower === "winner" || lower === "won" || lower === "first" || lower === "1" || lower === "gold") return "champion";
+  if (lower.includes("runner") || lower.includes("second") || lower === "runnerup" || lower === "runner-up" || lower === "silver" || lower === "2") return "runnerUp";
+  if (
+    lower === "third" ||
+    lower === "bronze" ||
+    lower === "3" ||
+    lower === "third-place" ||
+    (allowCanonicalThirdPlace && lower === "thirdplace")
+  ) return "thirdPlace";
+  return null;
+}
+
+function leaderboardCompletedForm(row = {}) {
+  return leaderboardForm(row)
+    .map((value) => String(value || "").trim().toUpperCase())
+    .filter((value) => ["W", "D", "L"].includes(value));
+}
+
+function leaderboardLooksFourthPlace(row = {}) {
+  const completedForm = leaderboardCompletedForm(row);
+  if (completedForm.length < 8) return false;
+  const lastTwo = completedForm.slice(-2);
+  return lastTwo[0] === "L" && lastTwo[1] === "L";
+}
+
 function leaderboardFinishStatus(row = {}) {
-  const candidates = [
-    row.podium,
+  // Podium badges must come from an explicit final placing/podium result.
+  // Do not infer third place from a "thirdPlace" round/phase, because that can
+  // be the third-place play-off fixture before the user has actually won it.
+  // Also guard against older leaderboard rows where a third-place badge was
+  // stored incorrectly despite a full cup run ending L/L, which is 4th place.
+  if (leaderboardLooksFourthPlace(row)) return null;
+
+  const explicitPodium = normaliseLeaderboardPodium(row.podium, { allowCanonicalThirdPlace: true })
+    || normaliseLeaderboardPodium(row.bestCampaign?.podium, { allowCanonicalThirdPlace: true });
+  if (explicitPodium && explicitPodium !== "none") return explicitPodium;
+
+  const resultCandidates = [
     row.finalPosition,
-    row.bestCampaign?.podium,
     row.status,
     row.finish,
-    row.round,
-    row.phase,
-    row.roundLabel,
-    row.stage,
     row.bestCampaign?.finalPosition,
     row.bestCampaign?.status,
     row.bestCampaign?.finish,
-    row.bestCampaign?.round,
-    row.bestCampaign?.phase,
-    row.bestCampaign?.roundLabel,
-    row.bestCampaign?.stage,
   ];
 
-  for (const value of candidates) {
-    const raw = String(value || "").trim().toLowerCase();
-    if (!raw || ["none", "null", "false", "no", "na", "n/a", "inprogress", "in progress"].includes(raw)) continue;
-    if (raw.includes("champion") || raw === "winner" || raw === "won" || raw === "first" || raw === "1") return "champion";
-    if (raw.includes("runner") || raw.includes("second") || raw === "runnerup" || raw === "runner-up" || raw === "silver" || raw === "2") return "runnerUp";
-    if (raw.includes("third") || raw.includes("bronze") || raw === "thirdplace" || raw === "third-place" || raw === "3") return "thirdPlace";
+  for (const value of resultCandidates) {
+    const status = normaliseLeaderboardPodium(value);
+    if (status === "none") return null;
+    if (status) return status;
   }
-
-  const completedForm = leaderboardForm(row)
-    .map((value) => String(value || "").trim().toUpperCase())
-    .filter((value) => ["W", "D", "L"].includes(value));
-  const lastResult = completedForm[completedForm.length - 1];
-
-  if (completedForm.length >= 8 && lastResult === "W") return "champion";
-  if (completedForm.length >= 8 && lastResult === "L") return "runnerUp";
 
   return null;
 }

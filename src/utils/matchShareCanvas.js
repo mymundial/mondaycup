@@ -1,13 +1,16 @@
 import { ASSETS } from "../data/assets.js";
 import { GAME, getDirection } from "../logic/penaltyEngine.js";
+import { buildCrowdRows, DEFAULT_CROWD_COLOURS } from "../components/crowd/SharedCrowdBackdrop.jsx";
+import { getMondayCupShieldVisuals } from "../logic/matchVisuals.js";
+import { EXPORT_PITCH_CROP_RATIO, MATCH_RESULT_EXPORT_VISUALS, resolveFallbackExportVisuals } from "../logic/exportVisuals.js";
 
 export const MATCH_SHARE_EXPORT_SIZE = 1600;
+const EXPORT_PEN_MARKER_CAP = 11;
 
 const LED_YELLOW = "#F7D117";
 const IVORY = "#F5F1E8";
 const DARK_GREEN = "#072D1D";
 const PITCH_GREEN = "#0d6c3d";
-const EXPORT_PITCH_CROP_RATIO = 100 / 38;
 const MONDAY_CUP_AD_SRC = "/assets/branding/mondaycup_co_uk.png";
 
 const DEFAULT_DESIGN = {
@@ -61,12 +64,6 @@ const DEFAULT_DESIGN = {
   ballScale: 1,
 };
 
-const CROWD_COLOURS = [
-  "#2DA94F", "#F7D117", "#FF1E3C", "#E1251B", "#2F3ED6", "#8A1538", "#FF8A00", "#1E7FF0",
-  "#157A52", "#93BFEA", "#FFFFFF", "#2437C6", "#F20D1B", "#00A86B", "#7CB5E8", "#F7C600",
-  "#E10600", "#1A22C9", "#9B003F", "#D50000", "#FF3B30", "#3131E8",
-];
-const SKIN_TONES = ["#c98f65", "#8f5f3f", "#e0b184", "#6f4632"];
 
 function clamp(value, min, max, fallback = min) {
   const number = Number(value);
@@ -259,7 +256,7 @@ function drawCenteredText(ctx, text, x, y, options = {}) {
 function drawDotMatrix(ctx, x, y, width, height) {
   ctx.save();
   ctx.globalAlpha = 0.5;
-  ctx.fillStyle = "rgba(247,209,23,0.24)";
+  ctx.fillStyle = "rgba(247,209,23,0.14)";
   const spacingX = width / 58;
   const spacingY = height / 17;
   const radius = Math.max(1.4, width * 0.0019);
@@ -286,29 +283,41 @@ function transformedBox(baseX, baseY, width, height, { x = 0, y = 0, scale = 1 }
 }
 
 function drawFlag(ctx, image, x, y, width, height, options = {}) {
-  const radius = Math.max(4, width * 0.105);
-  const pad = Math.max(1.25, width * 0.035);
+  const radius = Math.max(3, width * 0.075);
   const outerStroke = Math.max(1.4, width * 0.026);
-  const innerStroke = Math.max(0.7, width * 0.012);
   ctx.save();
 
-  // Draw the same object every time rather than relying on translated DOM/CSS
-  // flag borders. This keeps Safari/iPhone exports crisp and avoids the thick
-  // yellow halo that the captured CSS layer can produce.
-  fillRoundRect(ctx, x, y, width, height, radius, IVORY);
+  // The DOM flag is removed before scoreboard capture, so the export only needs
+  // one clean canvas flag layer. Draw the artwork at the true flag footprint and
+  // then draw the yellow outline on top. No backing plate and no overscan.
   ctx.save();
-  drawRoundRect(ctx, x + pad, y + pad, width - pad * 2, height - pad * 2, Math.max(2, radius - pad));
+  drawRoundRect(ctx, x, y, width, height, radius);
   ctx.clip();
-  if (image) drawImageCover(ctx, image, x + pad, y + pad, width - pad * 2, height - pad * 2);
+  if (image) drawImageCover(ctx, image, x, y, width, height);
   ctx.restore();
 
   const outline = options.outline || LED_YELLOW;
   ctx.save();
-  ctx.shadowColor = options.glow || "rgba(247,209,23,0.16)";
-  ctx.shadowBlur = options.glowBlur ?? Math.max(1.5, width * 0.035);
+  ctx.shadowColor = options.glow || "rgba(247,209,23,0.10)";
+  ctx.shadowBlur = options.glowBlur ?? Math.max(0.75, width * 0.018);
   strokeRoundRect(ctx, x + outerStroke / 2, y + outerStroke / 2, width - outerStroke, height - outerStroke, radius, outline, outerStroke);
   ctx.restore();
-  strokeRoundRect(ctx, x + pad, y + pad, width - pad * 2, height - pad * 2, Math.max(2, radius - pad), "rgba(3,27,18,0.34)", innerStroke);
+  ctx.restore();
+}
+
+function eraseCapturedFlagPlate(ctx, x, y, width, height, boardWidth, boardHeight) {
+  // Safety clean-up for any DOM-captured flag residue. The DOM flag is hidden
+  // before capture, but this clears the small area where older captures or
+  // browser artefacts can leave the previous outline/background visible.
+  const bleedX = Math.max(5, width * 0.25);
+  const bleedY = Math.max(7, height * 0.45);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x - bleedX, y - bleedY, width + bleedX * 2, height + bleedY * 2);
+  ctx.clip();
+  ctx.fillStyle = "#050505";
+  ctx.fillRect(x - bleedX, y - bleedY, width + bleedX * 2, height + bleedY * 2);
+  drawDotMatrix(ctx, 0, 0, boardWidth, boardHeight);
   ctx.restore();
 }
 
@@ -320,34 +329,43 @@ function drawCapturedScoreboardFlagOverlays(ctx, props, assets, size, yOffset = 
   const row1 = mainH * 0.30;
   const row2 = mainH * 0.45;
   const r2Y = row1 + row2 / 2 + yOffset;
-  const fractions = [0.72, 1.1, 0.75, 0.3, 0.75, 1.1, 0.72];
-  const total = fractions.reduce((sum, value) => sum + value, 0);
-  const widths = fractions.map((value) => (value / total) * size);
-  const centers = widths.map((width, index) => widths.slice(0, index).reduce((sum, value) => sum + value, 0) + width / 2);
-  const teamACenterX = centers[1];
-  const teamBCenterX = centers[5];
   const unit = size / 400;
-  const flagW = 25 * unit * (Number(d.flagScale) || 1);
-  const flagH = 17 * unit * (Number(d.flagScale) || 1);
-  const leftX = centers[0] - flagW / 2 + ((Number(d.flagAX) || 0) + 7) * unit;
-  const rightX = centers[6] - flagW / 2 + ((Number(d.flagBX) || 0) - 7) * unit;
+  const sidePadding = size * 0.042;
+  const flagColW = 34 * unit;
+  const scoreColW = 40 * unit;
+  const dashColW = 36 * unit;
+  const teamColW = Math.max(0, (size - sidePadding * 2 - flagColW * 2 - scoreColW * 2 - dashColW) / 2);
+  const gridStart = sidePadding;
+  const flagACenterX = gridStart + flagColW / 2;
+  const teamACenterX = gridStart + flagColW + teamColW / 2;
+  const flagBCenterX = size - sidePadding - flagColW / 2;
+  const teamBCenterX = size - sidePadding - flagColW - teamColW / 2;
+  const previewFlagScale = (Number(d.flagScale) || 1) * 0.9;
+  const flagW = 20 * unit * previewFlagScale;
+  const flagH = 14 * unit * previewFlagScale;
+  const frameToTeamMidpointNudge = 12 * unit;
+  const leftX = flagACenterX - flagW / 2 + ((Number(d.flagAX) || 0) * unit) - frameToTeamMidpointNudge;
+  const rightX = flagBCenterX - flagW / 2 + ((Number(d.flagBX) || 0) * unit) + frameToTeamMidpointNudge;
   const y = r2Y - flagH / 2;
 
   ctx.save();
+  const leftY = y + (Number(d.flagAY) || 0) * unit;
+  const rightY = y + (Number(d.flagBY) || 0) * unit;
   // The captured DOM flags are hidden before capture. Draw only the clean export
-  // flag objects here, directly over the live scoreboard background. No cover
-  // texture panel is used, which keeps the dot-matrix grid continuous.
-  drawFlag(ctx, assets.flagA, leftX, y + (Number(d.flagAY) || 0) * unit, flagW, flagH, { outline: LED_YELLOW });
-  drawFlag(ctx, assets.flagB, rightX, y + (Number(d.flagBY) || 0) * unit, flagW, flagH, { outline: LED_YELLOW });
+  // flag objects here, directly over the live scoreboard background. No filled
+  // backing plate or clean-up rectangle is used.
+  drawFlag(ctx, assets.flagA, leftX, leftY, flagW, flagH, { outline: LED_YELLOW });
+  drawFlag(ctx, assets.flagB, rightX, rightY, flagW, flagH, { outline: LED_YELLOW });
   ctx.restore();
 }
 
 function drawMarkers(ctx, markers = [], totalSlots = 5, x, y, scale = 1) {
-  const MAX_VISIBLE_MARKERS = 10;
-  const displaySlots = Math.min(totalSlots, MAX_VISIBLE_MARKERS);
   const sourceMarkers = Array.isArray(markers) ? markers : [];
-  const startIndex = totalSlots > MAX_VISIBLE_MARKERS ? Math.max(0, sourceMarkers.length - MAX_VISIBLE_MARKERS) : 0;
-  const slicedMarkers = sourceMarkers.slice(startIndex, startIndex + displaySlots);
+  const displaySlots = Math.min(
+    EXPORT_PEN_MARKER_CAP,
+    Math.max(totalSlots, sourceMarkers.length, GAME.regulationPens),
+  );
+  const slicedMarkers = sourceMarkers.slice(-displaySlots);
   const visible = Array.from({ length: displaySlots }).map((_, index) => slicedMarkers[index] || "");
   const dot = 13 * scale;
   const gap = 7 * scale;
@@ -442,19 +460,28 @@ function drawScoreboard(ctx, props, assets, size) {
     });
   }
 
-  const fractions = [0.72, 1.1, 0.75, 0.3, 0.75, 1.1, 0.72];
-  const total = fractions.reduce((sum, value) => sum + value, 0);
-  const widths = fractions.map((value) => (value / total) * size);
-  const centers = widths.map((width, index) => widths.slice(0, index).reduce((sum, value) => sum + value, 0) + width / 2);
-  const teamACenterX = centers[1];
-  const teamBCenterX = centers[5];
   const unit = size / 400;
+  const sidePadding = size * 0.042;
+  const flagColW = 34 * unit;
+  const scoreColW = 40 * unit;
+  const dashColW = 36 * unit;
+  const teamColW = Math.max(0, (size - sidePadding * 2 - flagColW * 2 - scoreColW * 2 - dashColW) / 2);
+  const gridStart = sidePadding;
+  const flagACenterX = gridStart + flagColW / 2;
+  const teamACenterX = gridStart + flagColW + teamColW / 2;
+  const scoreACenterX = gridStart + flagColW + teamColW + scoreColW / 2;
+  const dashCenterX = gridStart + flagColW + teamColW + scoreColW + dashColW / 2;
+  const scoreBCenterX = gridStart + flagColW + teamColW + scoreColW + dashColW + scoreColW / 2;
+  const teamBCenterX = size - sidePadding - flagColW - teamColW / 2;
+  const flagBCenterX = size - sidePadding - flagColW / 2;
 
   if (d.showFlags) {
-    const flagW = 25 * unit * (Number(d.flagScale) || 1);
-    const flagH = 17 * unit * (Number(d.flagScale) || 1);
-    drawFlag(ctx, assets.flagA, centers[0] - flagW / 2 + ((Number(d.flagAX) || 0) + 7) * unit, r2Y - flagH / 2 + (Number(d.flagAY) || 0) * unit, flagW, flagH);
-    drawFlag(ctx, assets.flagB, centers[6] - flagW / 2 + ((Number(d.flagBX) || 0) - 7) * unit, r2Y - flagH / 2 + (Number(d.flagBY) || 0) * unit, flagW, flagH);
+    const previewFlagScale = (Number(d.flagScale) || 1) * 0.9;
+    const flagW = 20 * unit * previewFlagScale;
+    const flagH = 14 * unit * previewFlagScale;
+    const frameToTeamMidpointNudge = 12 * unit;
+    drawFlag(ctx, assets.flagA, flagACenterX - flagW / 2 + ((Number(d.flagAX) || 0) * unit) - frameToTeamMidpointNudge, r2Y - flagH / 2 + (Number(d.flagAY) || 0) * unit, flagW, flagH);
+    drawFlag(ctx, assets.flagB, flagBCenterX - flagW / 2 + ((Number(d.flagBX) || 0) * unit) + frameToTeamMidpointNudge, r2Y - flagH / 2 + (Number(d.flagBY) || 0) * unit, flagW, flagH);
   }
 
   const codeSize = size * 0.079 * (Number(d.teamScale) || 1);
@@ -464,7 +491,7 @@ function drawScoreboard(ctx, props, assets, size) {
       size: codeSize,
       weight: 900,
       colour: textColour,
-      maxWidth: widths[1] * 0.92,
+      maxWidth: teamColW * 0.92,
       strokeColour,
       strokeWidth,
       shadowColour: "rgba(247,209,23,0.18)",
@@ -475,7 +502,7 @@ function drawScoreboard(ctx, props, assets, size) {
       size: codeSize,
       weight: 900,
       colour: textColour,
-      maxWidth: widths[5] * 0.92,
+      maxWidth: teamColW * 0.92,
       strokeColour,
       strokeWidth,
       shadowColour: "rgba(247,209,23,0.18)",
@@ -486,12 +513,12 @@ function drawScoreboard(ctx, props, assets, size) {
   if (d.showScore) {
     const scoreSize = size * 0.079 * (Number(d.scoreScale) || 1);
     if (d.scoreDisplayMode === "vs") {
-      drawCenteredText(ctx, "VS", (centers[2] + centers[4]) / 2 + (Number(d.scoreX) || 0) * unit, r2Y + (Number(d.scoreY) || 0) * unit, {
+      drawCenteredText(ctx, "VS", (scoreACenterX + scoreBCenterX) / 2 + (Number(d.scoreX) || 0) * unit, r2Y + (Number(d.scoreY) || 0) * unit, {
         family,
         size: scoreSize,
         weight: 900,
         colour: textColour,
-        maxWidth: widths[2] + widths[3] + widths[4],
+        maxWidth: scoreColW * 2 + dashColW,
         strokeColour,
         strokeWidth,
         shadowColour: "rgba(247,209,23,0.18)",
@@ -500,15 +527,15 @@ function drawScoreboard(ctx, props, assets, size) {
     } else {
       const sy = r2Y + (Number(d.scoreY) || 0) * unit;
       const sx = (Number(d.scoreX) || 0) * unit;
-      drawCenteredText(ctx, score?.user ?? 0, centers[2] + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: widths[2], strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
-      drawCenteredText(ctx, "-", centers[3] + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: widths[3], strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
-      drawCenteredText(ctx, score?.opponent ?? 0, centers[4] + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: widths[4], strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
+      drawCenteredText(ctx, score?.user ?? 0, scoreACenterX + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: scoreColW, strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
+      drawCenteredText(ctx, "-", dashCenterX + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: dashColW, strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
+      drawCenteredText(ctx, score?.opponent ?? 0, scoreBCenterX + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: scoreColW, strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
     }
   }
 
   if (showMarkers) {
-    drawMarkers(ctx, teamAMarkers, totalMarkerSlots, teamACenterX + (Number(d.markerAX) || 0) * unit, r3Y + (Number(d.markerAY) || 0) * unit, Number(d.markerScale) || 1);
-    drawMarkers(ctx, teamBMarkers, totalMarkerSlots, teamBCenterX + (Number(d.markerBX) || 0) * unit, r3Y + (Number(d.markerBY) || 0) * unit, Number(d.markerScale) || 1);
+    drawMarkers(ctx, teamAMarkers, totalMarkerSlots, teamACenterX + ((Number(d.teamAX) || 0) + (Number(d.markerAX) || 0)) * unit, r3Y + (Number(d.markerAY) || 0) * unit, Number(d.markerScale) || 1);
+    drawMarkers(ctx, teamBMarkers, totalMarkerSlots, teamBCenterX + ((Number(d.teamBX) || 0) + (Number(d.markerBX) || 0)) * unit, r3Y + (Number(d.markerBY) || 0) * unit, Number(d.markerScale) || 1);
 
     const usernameBoxW = size * 0.29 * (Number(d.usernameScale) || 1);
     const usernameBoxH = Math.max(size * 0.039, row3 * 0.62) * (Number(d.usernameScale) || 1);
@@ -526,7 +553,7 @@ function drawScoreboard(ctx, props, assets, size) {
         letterSpacing: size * 0.0028,
         strokeColour,
         strokeWidth,
-      });
+        });
     }
   } else {
     const markerBoxW = size * 0.42 * (Number(d.markerScale) || 1);
@@ -613,7 +640,7 @@ function drawCrowdPerson(ctx, x, y, scale, shirt, skin, pose, opacity) {
   ctx.restore();
 }
 
-function drawCrowd(ctx, x, y, width, height) {
+function drawCrowd(ctx, x, y, width, height, visuals = MATCH_RESULT_EXPORT_VISUALS.fallback) {
   ctx.save();
   ctx.fillStyle = "#123822";
   ctx.fillRect(x, y, width, height);
@@ -638,34 +665,27 @@ function drawCrowd(ctx, x, y, width, height) {
   ctx.fillStyle = rightGlow;
   ctx.fillRect(x, y, width, height);
 
-  [0.06, 0.16, 0.28, 0.41, 0.55, 0.7, 0.85].forEach((top, index) => {
-    ctx.fillStyle = index % 2 ? "rgba(11,45,29,0.08)" : "rgba(11,45,29,0.10)";
-    ctx.fillRect(x, y + height * top, width, height * (index === 1 ? 0.07 : index === 2 ? 0.08 : index === 3 ? 0.09 : index >= 4 ? 0.10 : 0.06));
+  [
+    { top: 0.06, h: 0.06, alpha: 0.10 },
+    { top: 0.16, h: 0.07, alpha: 0.08 },
+    { top: 0.28, h: 0.08, alpha: 0.10 },
+    { top: 0.41, h: 0.09, alpha: 0.08 },
+    { top: 0.55, h: 0.10, alpha: 0.10 },
+    { top: 0.70, h: 0.11, alpha: 0.08 },
+    { top: 0.85, h: 0.10, alpha: 0.10 },
+  ].forEach(({ top, h, alpha }) => {
+    ctx.fillStyle = `rgba(11,45,29,${alpha})`;
+    ctx.fillRect(x, y + height * top, width, height * h);
   });
 
-  const rowCount = 16;
-  const safeDensity = 1;
-  for (let row = 0; row < rowCount; row += 1) {
-    const t = rowCount <= 1 ? 1 : row / (rowCount - 1);
-    const rowYPercent = 2.5 + 94 * Math.pow(t, 1.24);
-    const baseCount = 62 - t * 34;
-    const count = Math.max(10, Math.round(baseCount * safeDensity));
-    const stepPercent = (1.68 + t * 2.45) / safeDensity;
-    const staggerPercent = 0.18 + t * 1.04;
-    const startPercent = 50 - (((count - 1) * stepPercent) + staggerPercent) / 2;
-    for (let i = 0; i < count; i += 1) {
-      const personXPercent = startPercent + i * stepPercent + (i % 2 ? staggerPercent : 0);
-      const personYPercent = rowYPercent + (i % 3) * (0.12 + t * 0.8);
-      const px = x + width * (personXPercent / 100);
-      const py = y + height * (personYPercent / 100);
-      const personScale = (0.26 + t * 0.78) * (width / 400);
-      const shirt = CROWD_COLOURS[((i * 7) + row) % CROWD_COLOURS.length];
-      const skin = SKIN_TONES[(i + row) % SKIN_TONES.length];
-      const pose = i % 4 === 0 || i % 7 === 0 ? "up" : "down";
-      const opacity = 0.16 + t * 0.84;
-      drawCrowdPerson(ctx, px, py, personScale, shirt, skin, pose, opacity);
-    }
-  }
+  const crowd = visuals?.crowd || {};
+  const crowdRows = buildCrowdRows({ crowdColours: DEFAULT_CROWD_COLOURS, density: crowd.density ?? 1, rowCount: crowd.rowCount ?? 16 });
+  crowdRows.forEach((person) => {
+    const px = x + width * (person.x / 100);
+    const py = y + height * (person.y / 100);
+    const personScale = person.scale * (width / 400);
+    drawCrowdPerson(ctx, px, py, personScale, person.shirt, person.skin, person.pose, person.opacity * (crowd.personOpacityScale ?? 1));
+  });
   ctx.restore();
 }
 
@@ -691,7 +711,7 @@ function drawPitchMow(ctx, x, y, width, height) {
   ctx.restore();
 }
 
-function drawGoal(ctx, x, y, width, height) {
+function drawGoal(ctx, x, y, width, height, visuals = MATCH_RESULT_EXPORT_VISUALS.fallback) {
   const goal = GAME.goal;
   const gx = x + width * (goal.left / 100);
   const gy = y + height * ((goal.top / 100) * EXPORT_PITCH_CROP_RATIO);
@@ -715,10 +735,10 @@ function drawGoal(ctx, x, y, width, height) {
   ctx.beginPath();
   ctx.rect(gx + line / 2, gy + line / 2, gw - line, gh - line / 2);
   ctx.clip();
-  ctx.globalAlpha = 0.55;
+  ctx.globalAlpha = visuals?.goal?.netOpacity ?? 0.55;
 
-  // Net rendering mirrors the match/share preview CSS gradients:
-  // fine vertical/horizontal mesh plus a subtle small-scale diagonal weave.
+  // Match the live GoalFrame visual emphasis: visible vertical and horizontal mesh,
+  // without the previous export-only pronounced diagonal stroke pattern.
   ctx.strokeStyle = "rgba(245,241,232,0.18)";
   ctx.lineWidth = Math.max(1.1, gw * 0.002);
   const verticalGap = gw * 0.022;
@@ -739,21 +759,12 @@ function drawGoal(ctx, x, y, width, height) {
     ctx.stroke();
   }
 
-  ctx.strokeStyle = "rgba(245,241,232,0.08)";
-  ctx.lineWidth = Math.max(0.8, width * 0.00125);
-  const diagonalGap = Math.max(22, width * 0.02);
-  for (let start = gx - gh; start < gx + gw; start += diagonalGap) {
-    ctx.beginPath();
-    ctx.moveTo(start, gy + gh);
-    ctx.lineTo(start + gh, gy);
-    ctx.stroke();
-  }
   ctx.globalAlpha = 1;
   ctx.restore();
   ctx.restore();
 }
 
-function drawAdvertisingBoard(ctx, image, x, y, width, height) {
+function drawAdvertisingBoard(ctx, image, x, y, width, height, visuals = MATCH_RESULT_EXPORT_VISUALS.fallback) {
   ctx.save();
   ctx.fillStyle = "#072D1D";
   ctx.fillRect(x, y, width, height);
@@ -774,37 +785,19 @@ function drawAdvertisingBoard(ctx, image, x, y, width, height) {
   ctx.lineTo(x + width, y + height - 1);
   ctx.stroke();
   if (image) {
-    const logoW = width * 0.671;
-    const logoH = height * 0.759;
+    const adBoard = visuals?.adBoard || {};
+    const logoW = width * (adBoard.logoWidthRatio ?? 0.671);
+    const logoH = height * (adBoard.logoHeightRatio ?? 0.759);
     const cx = x + width / 2;
     const cy = y + height / 2;
 
-    // Soft selection-screen style glow. Avoid drop-shadow because Safari/canvas
-    // renders it as a hard outline around the lettering rather than a radiating glow.
-    const outerGlow = ctx.createRadialGradient(cx, cy, logoW * 0.04, cx, cy, logoW * 1.35);
-    outerGlow.addColorStop(0, "rgba(245,241,232,0.075)");
-    outerGlow.addColorStop(0.42, "rgba(245,241,232,0.034)");
-    outerGlow.addColorStop(0.82, "rgba(245,241,232,0.008)");
-    outerGlow.addColorStop(1, "rgba(245,241,232,0)");
-    ctx.fillStyle = outerGlow;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, logoW * 1.14, logoH * 1.08, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    const yellowGlow = ctx.createRadialGradient(cx + logoW * 0.1, cy, 0, cx + logoW * 0.1, cy, logoW * 0.94);
-    yellowGlow.addColorStop(0, "rgba(247,209,23,0.036)");
-    yellowGlow.addColorStop(0.65, "rgba(247,209,23,0.010)");
-    yellowGlow.addColorStop(1, "rgba(247,209,23,0)");
-    ctx.fillStyle = yellowGlow;
-    ctx.beginPath();
-    ctx.ellipse(cx + logoW * 0.1, cy, logoW * 0.74, logoH * 0.68, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.globalAlpha = 0.79;
-    ctx.filter = "brightness(0.94)";
+    ctx.save();
+    ctx.globalAlpha = adBoard.logoOpacity ?? 0.84;
+    ctx.filter = adBoard.logoFilter || "brightness(0.94)";
+    ctx.shadowColor = adBoard.shadowColor || "rgba(245,241,232,0.20)";
+    ctx.shadowBlur = adBoard.shadowBlur ?? 9;
     drawImageContain(ctx, image, cx, cy, logoW, logoH);
-    ctx.filter = "none";
-    ctx.globalAlpha = 1;
+    ctx.restore();
   }
   ctx.restore();
 }
@@ -820,22 +813,33 @@ function drawBadgeOverlay(ctx, badgeMode, assets, x, y, width, height, d) {
     runnerUp: { image: assets.runnerUp, w: width * 0.898425, h: height * 0.669735, top: 0.39, glow: IVORY, glowOuter: "rgba(245,241,232,0.16)", glowMid: "rgba(216,216,216,0.07)" },
     third: { image: assets.third, w: width * 0.898425, h: height * 0.669735, top: 0.39, glow: "#C8863A", glowOuter: "rgba(200,134,58,0.18)", glowMid: "rgba(200,134,58,0.075)" },
   };
-  const badge = badgeMap[badgeMode] || badgeMap.monday;
+  const resolvedBadgeMode = badgeMode === "mondayCup" ? "monday" : badgeMode;
+  const badge = badgeMap[resolvedBadgeMode] || badgeMap.monday;
   const cx = x + width / 2 + offsetX;
   const cy = y + height * badge.top + offsetY;
   const boxW = badge.w * scale;
   const boxH = badge.h * scale;
 
   ctx.save();
-  if (badgeMode === "monday") {
-    const glow = ctx.createRadialGradient(cx, cy + boxH * 0.18, 0, cx, cy + boxH * 0.18, boxW * 0.54);
-    glow.addColorStop(0, "rgba(247,209,23,0.16)");
-    glow.addColorStop(0.62, "rgba(245,241,232,0.075)");
-    glow.addColorStop(1, "rgba(247,209,23,0)");
-    ctx.fillStyle = glow;
+  if (resolvedBadgeMode === "monday") {
+    const mondayShield = getMondayCupShieldVisuals();
+    const outerGlow = ctx.createRadialGradient(cx, cy + boxH * 0.08, 0, cx, cy + boxH * 0.08, boxW * 0.5);
+    outerGlow.addColorStop(0, mondayShield.glowOuter);
+    outerGlow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = outerGlow;
     ctx.beginPath();
-    ctx.ellipse(cx, cy + boxH * 0.2, boxW * 0.36, boxH * 0.26, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy + boxH * 0.08, boxW * 0.34, boxH * 0.28, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    const innerGlow = ctx.createRadialGradient(cx, cy + boxH * 0.08, 0, cx, cy + boxH * 0.08, boxW * 0.32);
+    innerGlow.addColorStop(0, mondayShield.glowInner);
+    innerGlow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = innerGlow;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + boxH * 0.08, boxW * 0.24, boxH * 0.18, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.filter = mondayShield.shadow;
   } else if (badge.glow) {
     const glow = ctx.createRadialGradient(cx, cy + boxH * 0.06, 0, cx, cy + boxH * 0.06, boxW * 0.5);
     glow.addColorStop(0, badge.glowOuter || "rgba(247,209,23,0.18)");
@@ -846,7 +850,9 @@ function drawBadgeOverlay(ctx, badgeMode, assets, x, y, width, height, d) {
     ctx.ellipse(cx, cy + boxH * 0.08, boxW * 0.34, boxH * 0.28, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-  ctx.filter = badgeMode === "monday" ? "none" : "drop-shadow(0 18px 24px rgba(0,0,0,0.30))";
+  if (resolvedBadgeMode !== "monday") {
+    ctx.filter = "drop-shadow(0 18px 24px rgba(0,0,0,0.30))";
+  }
   drawImageContain(ctx, badge.image, cx, cy, boxW, boxH);
   ctx.filter = "none";
   ctx.restore();
@@ -900,6 +906,7 @@ function drawActors(ctx, props, assets, x, y, width, height, d) {
 
 function drawPitchArea(ctx, props, assets, y, width, height) {
   const d = { ...DEFAULT_DESIGN, ...(props.matchDesign || {}) };
+  const exportVisuals = resolveFallbackExportVisuals(MATCH_RESULT_EXPORT_VISUALS);
   ctx.save();
   ctx.beginPath();
   ctx.rect(0, y, width, height);
@@ -914,10 +921,10 @@ function drawPitchArea(ctx, props, assets, y, width, height) {
   const boardH = virtualHeight * (8 / 100);
   const mowY = y + virtualHeight * (goalLine / 100);
 
-  drawCrowd(ctx, 0, y, width, crowdHeight);
-  drawAdvertisingBoard(ctx, assets.adBoard, 0, boardY, width, boardH);
+  drawCrowd(ctx, 0, y, width, crowdHeight, exportVisuals);
+  drawAdvertisingBoard(ctx, assets.adBoard, 0, boardY, width, boardH, exportVisuals);
   drawPitchMow(ctx, 0, mowY, width, virtualHeight - (mowY - y));
-  drawGoal(ctx, 0, y, width, height);
+  drawGoal(ctx, 0, y, width, height, exportVisuals);
   drawBadgeOverlay(ctx, props.badgeMode, assets, 0, y, width, height, d);
   drawActors(ctx, props, assets, 0, y, width, height, d);
   ctx.restore();
@@ -945,12 +952,83 @@ async function captureScoreboardImageFromDom(sourceElement, exportSize) {
   if (document?.fonts?.ready) await document.fonts.ready.catch(() => null);
   await preloadImagesInElement(scoreboard);
 
-  const hiddenFlagNodes = Array.from(scoreboard.querySelectorAll?.('img[alt$=" flag"], img[alt*=" flag"]') || []);
-  const hiddenFlagStyles = hiddenFlagNodes.map((node) => ({ node, opacity: node.style.opacity, visibility: node.style.visibility }));
-  hiddenFlagNodes.forEach((node) => {
-    node.style.opacity = "0";
-    node.style.visibility = "hidden";
+  const captureFlagNodes = Array.from(
+    scoreboard.querySelectorAll?.('[data-share-flag="true"], img[alt$=" flag"], img[alt*=" flag"]') || []
+  );
+  const captureFlagStyles = captureFlagNodes.map((node) => ({
+    node,
+    border: node.style.border,
+    outline: node.style.outline,
+    background: node.style.background,
+    backgroundColor: node.style.backgroundColor,
+    boxShadow: node.style.boxShadow,
+    filter: node.style.filter,
+  }));
+  captureFlagNodes.forEach((node) => {
+    // Keep the real flag image visible in the preview capture, but strip the
+    // decorative frame/backing so the export uses the correct flag artwork only.
+    node.style.border = "none";
+    node.style.outline = "none";
+    node.style.background = "transparent";
+    node.style.backgroundColor = "transparent";
+    node.style.boxShadow = "none";
+    node.style.filter = "none";
   });
+
+  const markerGroups = Array.from(new Set(
+    Array.from(scoreboard.querySelectorAll?.('[data-share-marker-dot="true"]') || [])
+      .map((node) => node.parentElement)
+      .filter(Boolean)
+  ));
+  const hiddenMarkerStyles = [];
+  markerGroups.forEach((group) => {
+    const dots = Array.from(group.querySelectorAll?.('[data-share-marker-dot="true"]') || []);
+    if (dots.length <= EXPORT_PEN_MARKER_CAP) return;
+    dots.slice(0, dots.length - EXPORT_PEN_MARKER_CAP).forEach((node) => {
+      hiddenMarkerStyles.push({
+        node,
+        display: node.style.display,
+        ignore: node.dataset.shareExportIgnore,
+      });
+      node.style.display = "none";
+      node.dataset.shareExportIgnore = "true";
+    });
+  });
+  await new Promise((resolve) => {
+    if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => resolve());
+    else setTimeout(resolve, 0);
+  });
+
+  const glowNodes = Array.from(scoreboard.querySelectorAll?.(".led-text-glow") || []);
+  const glowStyles = glowNodes.map((node) => ({
+    node,
+    textShadow: node.style.textShadow,
+    filter: node.style.filter,
+  }));
+  glowNodes.forEach((node) => {
+    node.style.textShadow = "none";
+    node.style.filter = "none";
+  });
+
+  const restoreCaptureStyles = () => {
+    captureFlagStyles.forEach(({ node, border, outline, background, backgroundColor, boxShadow, filter }) => {
+      node.style.border = border;
+      node.style.outline = outline;
+      node.style.background = background;
+      node.style.backgroundColor = backgroundColor;
+      node.style.boxShadow = boxShadow;
+      node.style.filter = filter;
+    });
+    hiddenMarkerStyles.forEach(({ node, display, ignore }) => {
+      node.style.display = display;
+      if (ignore === undefined) delete node.dataset.shareExportIgnore;
+      else node.dataset.shareExportIgnore = ignore;
+    });
+    glowStyles.forEach(({ node, textShadow, filter }) => {
+      node.style.textShadow = textShadow;
+      node.style.filter = filter;
+    });
+  };
 
   const rootRect = root.getBoundingClientRect?.();
   const boardRect = scoreboard.getBoundingClientRect?.();
@@ -976,21 +1054,50 @@ async function captureScoreboardImageFromDom(sourceElement, exportSize) {
       },
     });
     const image = await loadCanvasImage(dataUrl);
-    hiddenFlagStyles.forEach(({ node, opacity, visibility }) => {
-      node.style.opacity = opacity;
-      node.style.visibility = visibility;
-    });
+    restoreCaptureStyles();
     if (!image) return null;
     return { image, height: scaledHeight };
   } catch (error) {
-    hiddenFlagStyles.forEach(({ node, opacity, visibility }) => {
-      node.style.opacity = opacity;
-      node.style.visibility = visibility;
-    });
+    restoreCaptureStyles();
     console.warn("Match scoreboard DOM capture failed; falling back to canvas scoreboard", error);
     return null;
   }
 }
+
+async function capturePitchImageFromDom(sourceElement, exportSize, exportPitchHeight) {
+  const root = sourceElement || null;
+  const pitch = root?.querySelector?.('[data-share-pitch-frame="true"]') || root?.querySelector?.('[data-share-export-pitch="true"]');
+  if (!root || !pitch) return null;
+  if (document?.fonts?.ready) await document.fonts.ready.catch(() => null);
+  await preloadImagesInElement(pitch);
+
+  const pitchRect = pitch.getBoundingClientRect?.();
+  const pitchWidth = Math.max(1, pitchRect?.width || root.getBoundingClientRect?.()?.width || 0);
+  const pitchHeight = Math.max(1, pitchRect?.height || 0);
+  const targetHeight = Math.max(1, Math.round(exportPitchHeight || exportSize));
+
+  try {
+    const { toPng } = await import("html-to-image");
+    const dataUrl = await toPng(pitch, {
+      cacheBust: true,
+      width: Math.round(pitchWidth),
+      height: Math.round(pitchHeight),
+      pixelRatio: Math.max(2, exportSize / pitchWidth),
+      backgroundColor: "#0d6c3d",
+      filter: (node) => !node?.dataset?.shareExportIgnore,
+      style: {
+        animation: "none",
+        transition: "none",
+      },
+    });
+    const image = await loadCanvasImage(dataUrl);
+    return { image, width: exportSize, height: targetHeight };
+  } catch (error) {
+    console.warn("Match pitch DOM capture failed; falling back to canvas pitch", error);
+    return null;
+  }
+}
+
 
 async function loadAssets(userTeam, opponentTeam) {
   const [flagA, flagB, adBoard, mondayLogo, champion, runnerUp, third, goalkeeper, ball] = await Promise.all([
@@ -1036,11 +1143,16 @@ export async function createMatchShareBlob(props = {}, options = {}) {
     ctx.filter = `blur(${Math.max(2.4, size * 0.0032)}px)`;
     ctx.drawImage(capturedScoreboard.image, 0, -scoreboardUpShift, size, capturedScoreboard.height);
     ctx.restore();
-    drawCapturedScoreboardFlagOverlays(ctx, normalisedProps, assets, size, -scoreboardUpShift);
+    // Use the cleaned DOM-captured flags directly; do not redraw canvas flag overlays.
   } else {
     boardH = drawScoreboard(ctx, normalisedProps, assets, size);
   }
-  drawPitchArea(ctx, normalisedProps, assets, boardH, size, size - boardH);
+  const capturedPitch = await capturePitchImageFromDom(options.sourceElement, size, size - boardH);
+  if (capturedPitch?.image) {
+    ctx.drawImage(capturedPitch.image, 0, boardH, size, size - boardH);
+  } else {
+    drawPitchArea(ctx, normalisedProps, assets, boardH, size, size - boardH);
+  }
 
   if (props.borderEnabled) {
     ctx.save();

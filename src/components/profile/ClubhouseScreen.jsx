@@ -440,7 +440,7 @@ function CampaignOverviewCard({
 function StatusPill({ children, active = false, className = "" }) {
   return (
     <span
-      className={`inline-flex min-h-[19px] items-center justify-center rounded-full px-2.5 home-copy-bold text-[8.5px] uppercase leading-none tracking-[0.08em] ${active ? "bg-[#052D1D] text-[#F7D117]" : "bg-[#052D1D]/88 text-[#F7D117]"} ${className}`}
+      className={`inline-flex min-h-[19px] items-center justify-center rounded-full px-2.5 home-copy-bold text-[8.5px] uppercase leading-none tracking-[0.08em] ${active ? "bg-[#F7D117] text-[#031B12] shadow-[0_0_8px_rgba(247,209,23,0.18)]" : "bg-[#052D1D]/88 text-[#F7D117] ring-1 ring-[#F7D117]/18"} ${className}`}
     >
       {children}
     </span>
@@ -468,12 +468,15 @@ function CosmeticUpgradeCard({
   const isOwned = isTicket ? ticketQty > 0 : Boolean(owned);
   const isMaxTicket = isTicket && ticketQty >= 99;
   const isActive = Boolean(!isTicket && isOwned && active);
+  const alignOwnedUpgradeContent = Boolean(!isTicket && isOwned);
+  const shouldHideOwnedDescription = Boolean(!isTicket && isOwned);
   const titleTone = isActive
     ? "text-[#F7D117]"
     : isOwned
       ? "text-[#F5F1E8]"
       : "text-[#F7D117]";
   const subtitleTone = "text-[#F5F1E8]/72";
+  const ticketStatusTone = isTicket && isOwned ? "text-[#F7D117]" : titleTone;
   const cardTone = isActive
     ? "border-[#F7D117]/72 bg-[#052D1D]/84 text-[#F5F1E8] ring-1 ring-[#F7D117]/30 shadow-[0_0_12px_rgba(247,209,23,0.12),inset_0_1px_0_rgba(245,241,232,0.08)]"
     : isOwned
@@ -481,9 +484,11 @@ function CosmeticUpgradeCard({
       : "border-[#F7D117]/42 bg-[#031B12]/42 text-[#F5F1E8] ring-1 ring-[#F7D117]/18";
 
   const status = isTicket
-    ? ticketQty > 0
-      ? `${ticketQty}/99`
-      : price
+    ? isMaxTicket
+      ? "MAX"
+      : ticketQty > 0
+        ? `${ticketQty}/99`
+        : price
     : isOwned
       ? isActive
         ? "EQUIPPED"
@@ -514,7 +519,7 @@ function CosmeticUpgradeCard({
       className={`group relative min-h-[108px] overflow-hidden rounded-[1.1rem] border p-2 text-center shadow-[0_8px_16px_rgba(0,0,0,0.14),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all disabled:cursor-default disabled:opacity-70 ${cardTone}`}
     >
       <div className="flex h-full min-h-[92px] flex-col items-center justify-center">
-        <div className="mb-2 grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#F5F1E8]/12 bg-[#072D1D]/92">
+        <div className={`mb-2 grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#F5F1E8]/12 bg-[#072D1D]/92 ${alignOwnedUpgradeContent ? "translate-y-[6px]" : ""}`}>
           {assetSrc ? (
             <img
               src={assetSrc}
@@ -528,14 +533,15 @@ function CosmeticUpgradeCard({
             </span>
           )}
         </div>
-        <div className="flex flex-col items-center gap-0">
+        <div className={`flex flex-col items-center gap-0 ${alignOwnedUpgradeContent ? "translate-y-[6px]" : ""}`}>
           <div
             className={`home-copy-bold min-h-[12px] text-[10px] uppercase leading-none tracking-[0.075em] ${titleTone}`}
           >
             {title}
           </div>
           <div
-            className={`home-copy-regular mt-[-1px] text-[6.5px] uppercase leading-none tracking-[0.10em] ${subtitleTone}`}
+            className={`home-copy-regular mt-[-1px] text-[6.5px] uppercase leading-none tracking-[0.10em] ${subtitleTone} ${shouldHideOwnedDescription ? "invisible" : ""}`}
+            aria-hidden={shouldHideOwnedDescription ? "true" : undefined}
           >
             {subtitle}
           </div>
@@ -543,7 +549,7 @@ function CosmeticUpgradeCard({
         <div className="mt-2 flex items-center justify-center gap-1.5">
           {isTicket ? (
             <span
-              className={`home-copy-bold text-[11px] uppercase leading-none tracking-[0.06em] ${titleTone}`}
+              className={`home-copy-bold text-[11px] uppercase leading-none tracking-[0.06em] ${ticketStatusTone}`}
             >
               {status}
             </span>
@@ -678,11 +684,15 @@ function GoldenKitbagBundleCard({ onOpenShop, active = false, inactive = false }
         </span>
       </span>
       <span className="ml-auto grid min-w-[64px] shrink-0 place-items-center text-center">
-        {!active && !inactive ? (
+        {active ? (
+          <StatusPill active className="min-h-[28px] min-w-[74px] px-4 text-[10px] tracking-[0.09em]">ACTIVE</StatusPill>
+        ) : inactive ? (
+          <StatusPill className="min-h-[28px] min-w-[74px] px-4 text-[10px] tracking-[0.09em]">INACTIVE</StatusPill>
+        ) : (
           <span className="home-copy-bold text-[18px] uppercase leading-none tracking-[0.07em] text-[#F7D117]">
             £4.99
           </span>
-        ) : null}
+        )}
       </span>
     </button>
   );
@@ -698,18 +708,10 @@ function TicketOfficeModal({ open, quantity = 0, onUse, onBuyMore, onClose }) {
       <div className="relative w-full max-w-[348px] overflow-hidden rounded-[1.35rem] border border-[#F7D117]/58 bg-[#031B12] p-3 text-center text-[#F5F1E8] shadow-[0_22px_42px_rgba(0,0,0,0.46),0_0_28px_rgba(247,209,23,0.16),inset_0_1px_0_rgba(245,241,232,0.10)] ring-1 ring-[#F7D117]/24">
         <div className="pointer-events-none absolute inset-0 opacity-70 [background:radial-gradient(circle_at_50%_0%,rgba(247,209,23,0.22),transparent_42%),linear-gradient(135deg,rgba(247,209,23,0.10),transparent_34%,rgba(245,241,232,0.04)_52%,transparent_68%)]" />
         <div className="relative overflow-hidden rounded-[1.05rem] border border-[#F7D117]/44 bg-[#062817]/90 shadow-[inset_0_1px_0_rgba(245,241,232,0.10)]">
-          <div className="flex min-h-[44px] items-center justify-between border-b border-[#F7D117]/30 bg-[#F7D117]/12 px-3 py-2">
-            <span className="rounded-full border border-[#F7D117]/60 bg-[#F7D117] px-3 py-1.5 home-copy-bold text-[7px] uppercase leading-none tracking-[0.12em] text-[#052D1D] shadow-[0_0_10px_rgba(247,209,23,0.22)]">
-              Golden Ticket
-            </span>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close Golden Ticket panel"
-              className="grid h-9 w-9 place-items-center home-copy-bold text-[26px] leading-none text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.35)]"
-            >
-              ×
-            </button>
+          <div className="flex min-h-[44px] items-center justify-center border-b border-[#F7D117]/30 bg-[#F7D117]/12 px-3 py-2">
+            <div className="home-copy-bold text-[19px] uppercase leading-none tracking-[0.12em] text-[#F5F1E8] drop-shadow-[0_2px_0_rgba(0,0,0,0.26)]">
+              Ticket Office
+            </div>
           </div>
 
           <div className="relative grid grid-cols-[74px_1fr] items-center gap-3 px-3 py-4 text-center">
@@ -725,8 +727,8 @@ function TicketOfficeModal({ open, quantity = 0, onUse, onBuyMore, onClose }) {
               </div>
             </div>
             <div className="flex min-w-0 flex-col items-center pl-1 text-center">
-              <div className="home-copy-bold text-[19px] uppercase leading-[0.92] tracking-[0.10em] text-[#F7D117] drop-shadow-[0_2px_0_rgba(0,0,0,0.26)]">
-                Ticket Office
+              <div className="inline-flex rounded-full border border-[#F7D117]/60 bg-[#F7D117] px-3 py-1.5 home-copy-bold text-[7px] uppercase leading-none tracking-[0.12em] text-[#052D1D] shadow-[0_0_10px_rgba(247,209,23,0.22)]">
+                Golden Ticket
               </div>
               <div className="home-copy-regular mt-2 text-center text-[9px] uppercase leading-snug tracking-[0.08em] text-[#F5F1E8]/78">
                 <span className="block">Use a Golden Ticket for the next campaign</span>
@@ -755,6 +757,13 @@ function TicketOfficeModal({ open, quantity = 0, onUse, onBuyMore, onClose }) {
             USE TICKET
           </button>
         </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="relative mx-auto mt-2 block home-copy-bold text-[8px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]/62"
+        >
+          CANCEL
+        </button>
       </div>
     </div>
   );
@@ -1360,9 +1369,9 @@ export function ClubhouseScreen({
               <div className="p-4 pt-2">
                 <GoldenKitbagBundleCard
                   onOpenShop={(id) => onOpenShop?.(id)}
-                  active={Boolean(ownedItems?.goldenKitbag)}
+                  active={Boolean(ownedItems?.goldenKitbag || ownedItems?.fullBundle)}
                   inactive={Boolean(
-                    !ownedItems?.goldenKitbag &&
+                    !(ownedItems?.goldenKitbag || ownedItems?.fullBundle) &&
                       (ownedItems?.allTeams ||
                         ownedItems?.goldenBoot ||
                         ownedItems?.goldenBall ||

@@ -23,14 +23,14 @@ function CloseIcon({ className = "h-6 w-6" }) {
 
 function ownedStateForItem(item, entitlements = {}) {
   if (!item) return false;
-  if (item.id === STORE_ITEM_IDS.fullBundle) return Boolean(entitlements.goldenKitbag);
+  if (item.id === STORE_ITEM_IDS.fullBundle) return Boolean(entitlements.goldenKitbag || entitlements.fullBundle);
   if (item.id === STORE_ITEM_IDS.allTeams) return Boolean(entitlements.allTeams);
   if (item.id === STORE_ITEM_IDS.goldenTicket) return normaliseTicketQuantity(entitlements.goldenTicketQty) >= STORE_ITEMS.goldenTicket.maxQuantity;
   return Boolean(entitlements[item.id]);
 }
 
 function bundleUnavailableReason(entitlements = {}) {
-  if (entitlements.goldenKitbag) return "OWNED";
+  if (entitlements.goldenKitbag || entitlements.fullBundle) return "OWNED";
   if (normaliseTicketQuantity(entitlements.goldenTicketQty) >= STORE_ITEMS.goldenTicket.maxQuantity) return "MAX";
   if (
     entitlements.allTeams ||
@@ -61,11 +61,15 @@ function StoreRow({
   const maxTicketsReached = isTicket && maxTicketPurchaseQty <= 0;
   const selectDisabled = disabled || owned || inactive || (isTicket && maxTicketsReached && !selected);
   const displayPrice = owned
-    ? item.id === STORE_ITEM_IDS.allTeams ? "UNLOCKED" : isBundle ? "" : isTicket ? "MAX" : "OWNED"
-    : maxTicketsReached || inactiveReason === "MAX"
+    ? isTicket
+      ? "MAX"
+      : "OWNED"
+    : maxTicketsReached
       ? "MAX"
       : inactive
-        ? isBundle ? "" : "INACTIVE"
+        ? isBundle
+          ? "SOLD OUT"
+          : "INACTIVE"
         : item.priceLabel;
 
   return (
@@ -80,7 +84,7 @@ function StoreRow({
         <span className="home-copy-bold text-[14px] leading-none">{selected ? "✓" : ""}</span>
       </button>
 
-      <div className="grid h-11 w-11 place-items-center rounded-full border border-[#F5F1E8]/12 bg-[#072D1D]/92">
+      <div className="grid h-11 w-11 shrink-0 aspect-square place-items-center rounded-full border border-[#F5F1E8]/12 bg-[#072D1D]/92">
         {item.assetSrc ? <img src={item.assetSrc} alt="" className="h-9 w-9 object-contain drop-shadow-[0_4px_7px_rgba(0,0,0,0.28)]" draggable={false} /> : null}
       </div>
 
@@ -93,7 +97,7 @@ function StoreRow({
             {BUNDLE_TRIGGER_ITEM_IDS.map((bundleItemId) => {
               const bundleItem = STORE_ITEMS[bundleItemId] || STORE_BUNDLES[bundleItemId];
               return bundleItem?.assetSrc ? (
-                <span key={bundleItemId} className="grid h-5 w-5 place-items-center rounded-full border border-[#F5F1E8]/14 bg-[#031B12]/54">
+                <span key={bundleItemId} className="grid h-5 w-5 min-h-5 min-w-5 shrink-0 aspect-square place-items-center rounded-full border border-[#F5F1E8]/14 bg-[#031B12]/54">
                   <img src={bundleItem.assetSrc} alt="" className="h-4 w-4 object-contain" draggable={false} />
                 </span>
               ) : null;

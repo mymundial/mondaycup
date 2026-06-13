@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ASSETS } from "../../data/assets.js";
 import { Flag } from "../shared.jsx";
-import { PODIUM_BADGE_MODE, RESULT_STATUS, normalizeResultStatus } from "../../logic/resultStatus.js";
+import { PITCH_BADGE_MODE, PODIUM_BADGE_MODE, RESULT_STATUS, normalizeResultStatus } from "../../logic/resultStatus.js";
 import { ShareMatchPreview } from "../share/ShareScreen.jsx";
 import {
   modalButton,
@@ -9,6 +9,7 @@ import {
   teamToGameTeam,
 } from "../../logic/matchPresentation.js";
 import {
+  getLiveMatchPitchBadgeMode,
   getPodiumBadgeMode,
   isTerminalShareResult,
 } from "../../logic/podium.js";
@@ -308,19 +309,20 @@ function cupRunConnectorOutcome({ index, currentMatch = 1, result = {}, runForm 
   const groupQualified = isTeamQualified(qualifiedTeams, userTeam);
   const followingMatchCompleted = Boolean(runForm[index + 1]);
 
-  // Semi-final route is known immediately after match 7:
-  // win = green connector to the final, loss = yellow connector to the third-place play-off.
-  // Keep that route colour when the final/third-place play-off result is shown as match 8.
+  // A connector only represents confirmed progress once the following match node exists.
+  // Example: after match 1, node 1 is coloured but connector 1→2 stays muted until match 2 is completed.
+  // This also applies to the semi-final route: connector 7→8 stays muted until
+  // the final or third-place play-off has been completed.
+  if (!followingMatchCompleted) return "";
+
+  // Once match 8 is complete, keep the semi-final route meaning:
+  // win = green connector to the final, loss/draw = yellow connector to the third-place play-off.
   if (stepNumber === 7) {
     const semiOutcome = runForm[index] || (currentMatch === 7 && matchNo >= 101 && matchNo <= 102 ? currentOutcome : "");
     if (semiOutcome === "W") return "W";
     if (semiOutcome === "L" || semiOutcome === "D") return "D";
     return "";
   }
-
-  // A connector only represents confirmed progress once the following match node exists.
-  // Example: after match 1, node 1 is coloured but connector 1→2 stays muted until match 2 is completed.
-  if (!followingMatchCompleted) return "";
 
   // Group-stage matches 1 and 2 connect forward in yellow once the next group match has been completed.
   if (stepNumber <= 2) return "D";
@@ -633,6 +635,12 @@ function exportFlashCopy({ result, userTeamName, opponentTeamName, userForm = []
   return won ? pickShareCopy(["DREAM START", "OFF TO A FLYER", "THE JOURNEY BEGINS"], seed) : pickShareCopy(["NOT THE BEST START", "WORK TO DO", "ALREADY UNDER PRESSURE"], seed);
 }
 
+function shareBadgeModeForResult({ result, fixture = null, podium = null, userTeam, stageLabel = "" }) {
+  const mode = getLiveMatchPitchBadgeMode({ result, fixture, stageLabel, podium, team: userTeam });
+  if (mode === PITCH_BADGE_MODE.MONDAY_CUP) return "monday";
+  return mode || "none";
+}
+
 function getResultShareState({ result, fixture = null, podium = null, userTeam, stageLabel, userForm = [], groupRows = [], qualifiedTeams = new Set(), username = "" }) {
   const home = result?.home || userTeam || "Team A";
   const away = result?.away || "Team B";
@@ -669,7 +677,7 @@ function getResultShareState({ result, fixture = null, podium = null, userTeam, 
     teamAMarkers,
     teamBMarkers,
     totalMarkerSlots,
-    badgeMode: getPodiumBadgeMode({ result, fixture, stageLabel, podium, team: userTeam }) || "none",
+    badgeMode: shareBadgeModeForResult({ result, fixture, stageLabel, podium, userTeam }),
     showGoalkeeper: false,
     goalkeeperPosition: "CM",
     showBall: false,
@@ -912,6 +920,29 @@ function EndMatchModal({ result, fixture, onNext, onChangeTeams, onDismiss, onOp
   const phaseTitle = "FULL TIME";
   const campaignPointsTotal = getCampaignPointsTotal({ result, groupRows, userTeam, userForm });
   const activeBadgeMode = getPodiumBadgeMode({ result, fixture, stageLabel, podium, team: userTeam });
+  const resultStatus = normalizeResultStatus(result?.status);
+  const resultHomeGoals = Number(result?.homeGoals ?? result?.homeScore ?? result?.score?.home);
+  const resultAwayGoals = Number(result?.awayGoals ?? result?.awayScore ?? result?.score?.away);
+  const hasComparableScore = Number.isFinite(resultHomeGoals) && Number.isFinite(resultAwayGoals);
+  const resultIsDraw = Boolean(result?.isDraw) || (hasComparableScore && resultHomeGoals === resultAwayGoals);
+  const twoPlayerHasWinner = Boolean(
+    twoPlayerMode
+    && result
+    && !resultIsDraw
+    && (
+      result?.userWon === true
+      || result?.userWon === false
+      || result?.won === true
+      || result?.lost === true
+      || (hasComparableScore && resultHomeGoals !== resultAwayGoals)
+    )
+  );
+  const campaignChampionFireworks = Boolean(
+    !twoPlayerMode
+    && fixtureMatchNo === 104
+    && activeBadgeMode === PODIUM_BADGE_MODE.CHAMPION
+    && (result?.userWon === true || result?.won === true || resultStatus === RESULT_STATUS.CHAMPION)
+  );
   const championFireworkTeam = teamToGameTeam(userTeam || result?.home || result?.away || "");
   const championFireworkColour = championFireworkTeam?.primaryColour || "#0B7A3B";
   const resultShareState = useMemo(() => getResultShareState({ result, fixture, podium, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username }), [result, fixture, podium, userTeam, stageLabel, userForm, groupRows, qualifiedTeams, username]);
@@ -1101,7 +1132,7 @@ function EndMatchModal({ result, fixture, onNext, onChangeTeams, onDismiss, onOp
 
   return (
     <div className="fixed inset-0 isolate flex items-center justify-center overflow-y-auto bg-[#031B12]/45 px-3 py-[max(14px,env(safe-area-inset-top))] backdrop-blur-[4px]" style={{ zIndex: 2147483647 }}>
-      {activeBadgeMode === PODIUM_BADGE_MODE.CHAMPION && (
+      {(campaignChampionFireworks || twoPlayerHasWinner) && (
         <>
           <ChampionConfetti />
           <ChampionFireworks teamColour={championFireworkColour} />

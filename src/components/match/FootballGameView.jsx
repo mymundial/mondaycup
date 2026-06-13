@@ -13,6 +13,7 @@ import {
 } from "../../logic/penaltyEngine.js";
 import { PHASE_ACCURACY } from "../../logic/shotMeter.js";
 import { getPodiumBadgeVisuals } from "../../logic/matchVisuals.js";
+import { resolveRenderedExportVisuals } from "../../logic/exportVisuals.js";
 import { PODIUM_BADGE_MODE } from "../../logic/resultStatus.js";
 import SharedCrowdBackdrop from "../crowd/SharedCrowdBackdrop.jsx";
 
@@ -67,30 +68,47 @@ function AccuracyMeter({ value, ideal, running = false, fillRef = null }) {
 }
 
 
-function CrowdBackdrop() {
+function CrowdBackdrop({ visuals = null } = {}) {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = 8;
   const boardTop = goalLine - boardHeight;
+  const crowd = visuals?.crowd || {};
   return (
     <SharedCrowdBackdrop
-      density={1}
-      rowCount={16}
+      density={crowd.density ?? 1}
+      rowCount={crowd.rowCount ?? 16}
       className="pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden"
       style={{ height: `${boardTop}%` }}
+      personOpacityScale={crowd.personOpacityScale ?? 1}
     />
   );
 }
 
-function LedAdvertisingHoard() {
+function LedAdvertisingHoard({ visuals = null } = {}) {
   const goalLine = GAME.goal.top + GAME.goal.height;
   const boardHeight = 8;
+  const adBoard = visuals?.adBoard || {};
+  const glow = adBoard.glow || {};
+  const showGlow = Boolean(glow.enabled);
   return (
     <div className="pointer-events-none absolute inset-x-0 z-[2] overflow-hidden border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)]" style={{ bottom: `${100 - goalLine}%`, height: `${boardHeight}%` }}>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
       <div className="absolute inset-x-0 top-0 h-px bg-[#F5F1E8]/10" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-black/25" />
-      <div className="relative mx-auto flex h-full max-w-[61%] items-center justify-center">
-        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] h-[69%] w-full object-contain" style={{ opacity: 0.84, filter: "brightness(0.94) drop-shadow(0 0 9px rgba(245,241,232,0.20))" }} draggable={false} crossOrigin="anonymous" />
+      <div className="relative mx-auto flex h-full items-center justify-center" style={{ maxWidth: `${adBoard.maxWidthPercent ?? 61}%` }}>
+        {showGlow && (
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5F1E8]"
+            style={{
+              width: `${glow.widthPercent ?? 112}%`,
+              height: `${glow.heightPercent ?? 82}%`,
+              opacity: glow.opacity ?? 0.055,
+              filter: `blur(${glow.blurPx ?? 10}px)`,
+            }}
+            aria-hidden="true"
+          />
+        )}
+        <img src={MONDAY_CUP_AD_SRC} alt="Monday Cup" className="relative z-[1] w-full object-contain" style={{ height: `${adBoard.logoHeightPercent ?? 69}%`, opacity: adBoard.logoOpacity ?? 0.84, filter: adBoard.logoFilter || "brightness(0.94) drop-shadow(0 0 9px rgba(245,241,232,0.20))" }} draggable={false} crossOrigin="anonymous" />
       </div>
     </div>
   );
@@ -133,11 +151,11 @@ function pitchMowStyleForVariant(goalLine, variant = "game") {
   };
 }
 
-function GoalFrame({ showAim, aimDirection }) {
+function GoalFrame({ showAim, aimDirection, netOpacity = 0.55 }) {
   const goal = GAME.goal;
   return (
     <div className="absolute z-[3] overflow-hidden border-[clamp(5px,1.55vw,8px)] border-b-0 border-[#f5f1e8] bg-[#0d6c3d]/30" style={{ left: `${goal.left}%`, top: `${goal.top}%`, width: `${goal.width}%`, height: `${goal.height}%` }}>
-      <div className="absolute inset-0 opacity-55" style={{ backgroundImage: "repeating-linear-gradient(90deg, transparent 0%, transparent 1.8%, rgba(245,241,232,0.18) 2.0%, transparent 2.2%), repeating-linear-gradient(180deg, transparent 0%, transparent 2.6%, rgba(245,241,232,0.16) 2.8%, transparent 3.1%), linear-gradient(135deg, transparent 0%, transparent 49%, rgba(245,241,232,0.08) 49.4%, transparent 50%)", backgroundSize: "100% 100%, 100% 100%, 8px 8px" }} />
+      <div className="absolute inset-0" style={{ opacity: netOpacity, backgroundImage: "repeating-linear-gradient(90deg, transparent 0%, transparent 1.8%, rgba(245,241,232,0.18) 2.0%, transparent 2.2%), repeating-linear-gradient(180deg, transparent 0%, transparent 2.6%, rgba(245,241,232,0.16) 2.8%, transparent 3.1%), linear-gradient(135deg, transparent 0%, transparent 49%, rgba(245,241,232,0.08) 49.4%, transparent 50%)", backgroundSize: "100% 100%, 100% 100%, 8px 8px" }} />
       {showAim && (
         <div className="absolute h-[clamp(30px,9vw,40px)] w-[clamp(30px,9vw,40px)] -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full border-[3px] border-[#F7D117] bg-[#F7D117]/14 shadow-[0_0_10px_rgba(247,209,23,0.52),0_0_22px_rgba(247,209,23,0.22)]" style={{ left: `${((aimDirection.col + 0.5) / 3) * 100}%`, top: `${((aimDirection.row + 0.5) / 3) * 100}%`, animationDuration: "1.1s" }}>
           <div className="absolute inset-[-18%] animate-ping rounded-full border-2 border-[#F7D117]/70" style={{ animationDuration: "1.35s" }} />
@@ -148,36 +166,46 @@ function GoalFrame({ showAim, aimDirection }) {
   );
 }
 
-export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderTeam, showAim, aimDirection, assets, stageLabel = "GROUP STAGE", showChampionsBadge = false, podiumBadgeMode = null, hideMatchActors = false, pitchMowVariant = "game", showAdBoard = true, showPitchMarkings = true, twoPlayerMode = false }) {
+export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderTeam, showAim, aimDirection, assets, stageLabel = "GROUP STAGE", showChampionsBadge = false, podiumBadgeMode = null, badgeTransform = null, hideMatchActors = false, pitchMowVariant = "game", showAdBoard = true, showPitchMarkings = true, twoPlayerMode = false, exportVisualTuning = false }) {
+  const exportVisuals = resolveRenderedExportVisuals(exportVisualTuning);
   const goalLine = GAME.goal.top + GAME.goal.height;
   const activeBadgeMode = podiumBadgeMode || (showChampionsBadge ? PODIUM_BADGE_MODE.CHAMPION : null);
   const podiumBadge = getPodiumBadgeVisuals(activeBadgeMode, { useShieldBadge: twoPlayerMode });
   const showPodiumBadge = Boolean(podiumBadge);
+  const badgeOffsetX = Number(badgeTransform?.x || 0);
+  const badgeOffsetY = Number(badgeTransform?.y || 0);
+  const badgeScale = Number(badgeTransform?.scale || 1) || 1;
+  const badgeGlowOpacityScale = Math.max(0, Math.min(1, Number(exportVisuals?.badge?.glowOpacityScale ?? 1)));
+  const badgeEditorTransform = badgeTransform
+    ? `translate(${badgeOffsetX}px, ${badgeOffsetY}px) scale(${badgeScale})`
+    : undefined;
   return (
     <section className={`relative h-full flex-1 shrink overflow-hidden ${pitchMowVariant === "none" ? "bg-transparent" : "bg-[#0d6c3d]"}`}>
-      <CrowdBackdrop />
-      {showAdBoard && <LedAdvertisingHoard />}
+      <CrowdBackdrop visuals={exportVisuals} />
+      {showAdBoard && <LedAdvertisingHoard visuals={exportVisuals} />}
       {showPodiumBadge && (
         <div
           className="pointer-events-none absolute left-1/2 z-[7] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
           style={{ top: `${(goalLine - 8) / 2}%`, width: "99.825%", height: "74.415%" }}
           aria-hidden="true"
         >
-          <div
-            className="absolute left-1/2 top-[54%] h-[56%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
-            style={{ background: podiumBadge.glowOuter }}
-          />
-          <div
-            className="absolute left-1/2 top-[54%] h-[38%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
-            style={{ background: podiumBadge.glowInner }}
-          />
-          <img
-            src={podiumBadge.src}
-            alt={podiumBadge.alt}
-            className="relative z-[1] h-full w-full object-contain"
-            style={{ filter: podiumBadge.shadow, transform: `scale(${podiumBadge.pitchScale || 1})` }}
-            draggable={false}
-          />
+          <div className="absolute inset-0" style={{ transform: badgeEditorTransform, transformOrigin: "center" }}>
+            <div
+              className="absolute left-1/2 top-[54%] h-[56%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+              style={{ background: podiumBadge.glowOuter, opacity: badgeGlowOpacityScale }}
+            />
+            <div
+              className="absolute left-1/2 top-[54%] h-[38%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
+              style={{ background: podiumBadge.glowInner, opacity: badgeGlowOpacityScale }}
+            />
+            <img
+              src={podiumBadge.src}
+              alt={podiumBadge.alt}
+              className="relative z-[1] h-full w-full object-contain"
+              style={{ filter: podiumBadge.shadow, transform: `scale(${podiumBadge.pitchScale || 1})` }}
+              draggable={false}
+            />
+          </div>
         </div>
       )}
       <div {...(pitchMowVariant === "none" ? {} : { "data-share-force-pitch": "true" })} className="absolute bottom-0 left-0 right-0" style={pitchMowStyleForVariant(goalLine, pitchMowVariant)} />
@@ -190,7 +218,7 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
           />
         </>
       )}
-      <GoalFrame showAim={showAim} aimDirection={aimDirection} />
+      <GoalFrame showAim={showAim} aimDirection={aimDirection} netOpacity={exportVisuals?.goal?.netOpacity ?? 0.55} />
       {showPitchMarkings && <div className="absolute h-[clamp(8px,2.4vw,12px)] w-[clamp(8px,2.4vw,12px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f1e8]" style={{ left: `${GAME.spot.x}%`, top: `${GAME.spot.y}%` }} />}
       {!hideMatchActors && !showPodiumBadge && (
         <div className="absolute z-[4] grid h-[clamp(38px,10.8vw,48px)] w-[clamp(38px,10.8vw,48px)] place-items-center rounded-full border-2 will-change-transform" style={{ left: `${keeperPoint.x}%`, top: `${keeperPoint.y}%`, background: defenderTeam.primaryColour, borderColor: defenderTeam.textColour, transform: keeperTransform(shot?.keeperDirection ?? getDirection("CM"), shotActive), transitionProperty: "left, top, transform", transitionDuration: `${keeperTravelMs(shot)}ms`, transitionTimingFunction: shotActive ? "cubic-bezier(0.18, 0.82, 0.24, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)" }}>
@@ -207,7 +235,7 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
 }
 
 
-export function MatchPitchPreview({ userTeam, opponentTeam, stageLabel = "FINAL", assets = {}, showActors = false, pitchMowVariant = "game", showAdBoard = true, showPitchMarkings = true }) {
+export function MatchPitchPreview({ userTeam, opponentTeam, stageLabel = "FINAL", assets = {}, showActors = false, pitchMowVariant = "game", showAdBoard = true, showPitchMarkings = true, exportVisualTuning = false, podiumBadgeMode = null, badgeTransform = null }) {
   const user = normaliseTeam(userTeam, "Team A");
   const opponent = normaliseTeam(opponentTeam, "Team B");
   const mergedAssets = {
@@ -231,6 +259,9 @@ export function MatchPitchPreview({ userTeam, opponentTeam, stageLabel = "FINAL"
       pitchMowVariant={pitchMowVariant}
       showAdBoard={showAdBoard}
       showPitchMarkings={showPitchMarkings}
+      podiumBadgeMode={podiumBadgeMode}
+      badgeTransform={badgeTransform}
+      exportVisualTuning={exportVisualTuning}
     />
   );
 }

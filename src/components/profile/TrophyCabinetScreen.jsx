@@ -467,15 +467,39 @@ function trophyNumber(value = 0) {
 }
 
 function unlockedNationCupCount(nationCupWins = {}) {
-  return ALL_NATIONS.reduce((total, team) => total + (nationCupWins?.[team]?.unlocked ? 1 : 0), 0);
+  return ALL_NATIONS.reduce((total, team) => {
+    const record = nationCupWins?.[team] || {};
+    return total + (record?.unlocked || record?.cupWon || record?.champions || record?.liftTheCup ? 1 : 0);
+  }, 0);
+}
+
+function flattenAchievementState(achievements = {}) {
+  const source = achievements && typeof achievements === "object" ? achievements : {};
+  const flat = {
+    ...(source.careerHighlights || {}),
+    ...(source.matchesPlayed || {}),
+    ...(source.matchesWon || {}),
+    ...(source.goalsScored || {}),
+    ...(source.podiumBadges || {}),
+    ...source,
+  };
+
+  return {
+    ...flat,
+    targetMan: Boolean(flat.targetMan || flat.rememberTheName),
+    championFinish: Boolean(flat.championFinish || flat.nationalPride || flat.champions || flat.champion || flat.trophy5),
+    globalIcon: Boolean(flat.globalIcon || flat.goat),
+  };
 }
 
 function buildCareerHighlightPage(careerStats = {}, achievements = {}, nationCupWins = {}) {
+  const flatAchievements = flattenAchievementState(achievements);
   const matchesPlayed = trophyNumber(careerStats.matchesPlayed ?? careerStats.allTimeMatchesPlayed);
   const matchesWon = trophyNumber(careerStats.matchesWon ?? careerStats.allTimeMatchesWon);
   const goalsScored = trophyNumber(careerStats.goalsScored ?? careerStats.totalGoals ?? careerStats.allTimeGoals);
-  const cupWins = trophyNumber(careerStats.cupWins ?? careerStats.cupsWon ?? careerStats.mondayCupWins);
+  const cupWins = trophyNumber(careerStats.cupWins ?? careerStats.cupsWon ?? careerStats.mondayCupsWon ?? careerStats.mondayCupWins);
   const nationWins = unlockedNationCupCount(nationCupWins);
+  const nationalPrideUnlocked = Boolean(flatAchievements.championFinish || flatAchievements.nationalPride || cupWins >= 1 || nationWins >= 1);
 
   const rows = [
     {
@@ -483,15 +507,15 @@ function buildCareerHighlightPage(careerStats = {}, achievements = {}, nationCup
       title: "Remember the name",
       description: "Score on your debut",
       target: 1,
-      currentValue: achievements.targetMan || goalsScored >= 1 ? 1 : 0,
-      failedPermanently: debutGoalFailed(careerStats, achievements),
+      currentValue: flatAchievements.targetMan || flatAchievements.rememberTheName || goalsScored >= 1 ? 1 : 0,
+      failedPermanently: debutGoalFailed(careerStats, flatAchievements),
     },
     {
       key: "careerNationalPride",
       title: "National pride",
       description: "Win the Monday Cup",
       target: 1,
-      currentValue: achievements.championFinish || cupWins >= 1 ? 1 : 0,
+      currentValue: nationalPrideUnlocked ? 1 : 0,
     },
     {
       key: "careerGrizzledVeteran",
@@ -512,14 +536,14 @@ function buildCareerHighlightPage(careerStats = {}, achievements = {}, nationCup
       title: "SIUUU!",
       description: "Score 1000 goals",
       target: 1000,
-      currentValue: achievements.siuuu || goalsScored >= 1000 ? 1000 : goalsScored,
+      currentValue: flatAchievements.siuuu || goalsScored >= 1000 ? 1000 : goalsScored,
     },
     {
       key: "careerGoat",
       title: "G.O.A.T.",
       description: "Win with all 48 teams",
       target: 48,
-      currentValue: achievements.goat || achievements.globalIcon || nationWins >= 48 ? 48 : nationWins,
+      currentValue: flatAchievements.goat || flatAchievements.globalIcon || nationWins >= 48 ? 48 : nationWins,
     },
   ];
 
@@ -1169,9 +1193,10 @@ export function TrophyCabinetScreen({ menuProps, achievements = {}, nationCupWin
   const [teamIndex, setTeamIndex] = useState(defaultTeamIndex);
   const [groupIndex, setGroupIndex] = useState(() => groupIndexForTeam(defaultTeam));
 
+  const safeAchievements = flattenAchievementState(achievements);
   const playerAchievementPages = [
-    buildCareerHighlightPage(careerStats, achievements, nationCupWins),
-    ...buildPlayerAchievementPages(careerStats, achievements),
+    buildCareerHighlightPage(careerStats, safeAchievements, nationCupWins),
+    ...buildPlayerAchievementPages(careerStats, safeAchievements),
   ];
   const safeAchievementPageCount = Math.max(1, playerAchievementPages.length || ACHIEVEMENT_PAGE_COUNT);
   const activeAchievementPage = playerAchievementPages[achievementPage % safeAchievementPageCount] || playerAchievementPages[0];

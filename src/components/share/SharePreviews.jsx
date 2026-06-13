@@ -3,6 +3,8 @@ import { teamToGameTeam } from "../../logic/matchPresentation.js";
 import { GAME, getDirection, keeperTransform } from "../../logic/penaltyEngine.js";
 import { ASSETS } from "../../data/assets.js";
 import { getTeamTheme } from "../../data/teams.js";
+import { getMondayCupShieldVisuals } from "../../logic/matchVisuals.js";
+import { EXPORT_PITCH_CROP_RATIO, MATCH_RESULT_EXPORT_VISUALS } from "../../logic/exportVisuals.js";
 import {
   DARK_GREEN,
   IVORY,
@@ -10,7 +12,6 @@ import {
   PITCH_MOW_BACKGROUND_STYLE,
 } from "./shareConstants.js";
 import {
-  TeamFlag,
   MarkerDots,
   clampNumber,
   editorTransform,
@@ -22,8 +23,6 @@ import {
   fontFamilyFor,
   padArray,
 } from "./shareUtils.jsx";
-
-const EXPORT_PITCH_CROP_RATIO = 100 / 38;
 
 function colourChannels(value) {
   const raw = String(value || "").trim();
@@ -55,8 +54,16 @@ function needsDarkBrothersLogo(background) {
 
 
 function ExportCroppedPitch({ userTeam, opponentTeam, crowdStage, badgeMode, matchDesign = {}, showGoalkeeper, goalkeeperPosition, showBall, ballPosition }) {
+  const resolvedBadgeMode = badgeMode === "monday" ? "mondayCup" : badgeMode;
+  const badgeVisuals = MATCH_RESULT_EXPORT_VISUALS.rendered?.badge || {};
+  const badgeScaleMultiplier = Number(badgeVisuals.scaleMultiplier || 1) || 1;
+  const badgeTransform = {
+    x: Number(matchDesign.badgeX || 0),
+    y: Number(matchDesign.badgeY || 0),
+    scale: (Number(matchDesign.badgeScale || 1) || 1) * badgeScaleMultiplier,
+  };
   return (
-    <div className="absolute inset-0 z-[1] overflow-hidden bg-[#0d6c3d]">
+    <div data-share-export-pitch="true" className="absolute inset-0 z-[1] overflow-hidden bg-[#0d6c3d]">
       <div
         className="absolute inset-x-0 top-0"
         style={{ height: `${EXPORT_PITCH_CROP_RATIO * 100}%` }}
@@ -69,9 +76,11 @@ function ExportCroppedPitch({ userTeam, opponentTeam, crowdStage, badgeMode, mat
           pitchMowVariant="export"
           showAdBoard={true}
           showPitchMarkings={false}
+          podiumBadgeMode={resolvedBadgeMode}
+          badgeTransform={badgeTransform}
+          exportVisualTuning={MATCH_RESULT_EXPORT_VISUALS}
         />
       </div>
-      <ShareBadgeOverlay mode={badgeMode} scale={matchDesign.badgeScale} x={matchDesign.badgeX} y={matchDesign.badgeY} />
       <MatchActorLayer
         userTeam={userTeam}
         opponentTeam={opponentTeam}
@@ -83,6 +92,44 @@ function ExportCroppedPitch({ userTeam, opponentTeam, crowdStage, badgeMode, mat
         ballScale={matchDesign.ballScale}
       />
     </div>
+  );
+}
+
+const SCOREBOARD_LABEL_TRACKING = "0.11em";
+const SCOREBOARD_LABEL_LEFT_BALANCE = `${0.11 + ((322 - 29) / 2048)}em`;
+const SCOREBOARD_MARKER_LABEL_TRACKING = "0.12em";
+
+function DotMatrixLabelText({ children }) {
+  const text = String(children || "");
+  return (
+    <span className="inline-flex items-center justify-center whitespace-nowrap leading-none">
+      <span aria-hidden="true" className="inline-block shrink-0" style={{ width: SCOREBOARD_LABEL_LEFT_BALANCE }} />
+      <span className="inline-block whitespace-nowrap leading-none" style={{ letterSpacing: SCOREBOARD_LABEL_TRACKING }}>
+        {text}
+      </span>
+    </span>
+  );
+}
+
+function PreviewScoreboardFlag({ team, style = null }) {
+  if (!team?.flag) return null;
+  return (
+    <span
+      className="relative block h-[14px] w-[20px] overflow-hidden rounded-[4px] border border-[#F7D117]/82 bg-[#F5F1E8] shadow-none drop-shadow-none outline outline-1 outline-[#F7D117]/85 outline-offset-0"
+      style={{
+        boxShadow: "0 0 1.5px rgba(247,209,23,0.10), inset 0 0 0 0.7px rgba(3,27,18,0.24)",
+        ...(style || {}),
+      }}
+    >
+      <img
+        src={team.flag}
+        alt={`${team.name} flag`}
+        className="absolute inset-0 h-full w-full object-cover"
+        style={{ transform: "scale(1)", transformOrigin: "center center" }}
+        draggable={false}
+        crossOrigin="anonymous"
+      />
+    </span>
   );
 }
 
@@ -121,9 +168,9 @@ function ShareScoreboard({
     flagBY: 0,
     showTeamCodes: true,
     teamScale: 1,
-    teamAX: 0,
+    teamAX: -18,
     teamAY: 0,
-    teamBX: 0,
+    teamBX: 18,
     teamBY: 0,
     showScore: true,
     scoreDisplayMode: "score",
@@ -153,7 +200,9 @@ function ShareScoreboard({
     color: d.textColour,
     fontFamily: fontFamilyFor(d.fontType),
     WebkitTextStroke: textStroke(d.outlineWeight, d.outlineColour),
-    textShadow: "0 0 0.35px rgba(247,209,23,0.10)",
+    textShadow: "0 0 0.25px rgba(247,209,23,0.20), 0 0 2px rgba(247,209,23,0.10)",
+    WebkitFontSmoothing: "antialiased",
+    filter: "none",
   };
   const scoreTextStyle = {
     ...boardTextStyle,
@@ -169,6 +218,25 @@ function ShareScoreboard({
     transform: editorTransform({ x: side === "A" ? d.teamAX : d.teamBX, y: side === "A" ? d.teamAY : d.teamBY, scale: d.teamScale }),
   });
   const markerShell = "inline-flex max-w-full items-center justify-center px-1 py-0";
+  const labelTextCenterStyle = {};
+  const markerLabelTextCenterStyle = { letterSpacing: SCOREBOARD_MARKER_LABEL_TRACKING };
+  const markerTransformFor = (side) => {
+    const teamX = Number(side === "A" ? d.teamAX : d.teamBX) || 0;
+    const markerX = Number(side === "A" ? d.markerAX : d.markerBX) || 0;
+    const markerY = Number(side === "A" ? d.markerAY : d.markerBY) || 0;
+    return editorTransform({ x: teamX + markerX, y: markerY, scale: d.markerScale });
+  };
+  const previewFlagScale = (Number(d.flagScale) || 1) * 0.9;
+  const previewFlagTransformFor = (side) => {
+    const baseX = Number(side === "A" ? d.flagAX : d.flagBX) || 0;
+    const y = Number(side === "A" ? d.flagAY : d.flagBY) || 0;
+    const frameToTeamMidpointNudge = 12;
+    return editorTransform({
+      x: baseX + (side === "A" ? -frameToTeamMidpointNudge : frameToTeamMidpointNudge),
+      y,
+      scale: previewFlagScale,
+    });
+  };
   const flashCopy = String(flashText || "SHARE YOUR RESULT").replace(/\s+/g, " ").trim();
   const flashFontSize = "16px";
 
@@ -182,43 +250,43 @@ function ShareScoreboard({
         <div
           className="pointer-events-none absolute left-[2px] right-[2px] top-[2px] bottom-[2px] opacity-50"
           style={{
-            backgroundImage: "radial-gradient(circle at center, rgba(247,209,23,0.24) 0.72px, transparent 1.44px)",
+            backgroundImage: "radial-gradient(circle at center, rgba(247,209,23,0.14) 0.72px, transparent 1.44px)",
             backgroundSize: "6px calc(100% / 12)",
             backgroundPosition: "center top",
             backgroundRepeat: "repeat",
           }}
         />
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(11,95,53,0.035),rgba(11,95,53,0.10))]" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
 
-        <div className="relative z-[1] flex h-full items-center px-0 py-0">
+        <div className="relative z-[1] flex h-full items-center px-[clamp(10px,4.2%,22px)] py-0">
           <div
             className="grid h-[88%] w-full items-center justify-items-center"
             style={{
-              gridTemplateColumns: "10% minmax(0,27%) 10.5% 5% 10.5% minmax(0,27%) 10%",
+              gridTemplateColumns: "34px minmax(0,1fr) clamp(34px,10cqw,48px) clamp(34px,9cqw,46px) clamp(34px,10cqw,48px) minmax(0,1fr) 34px",
               gridTemplateRows: "30% 45% 25%",
             }}
           >
             {d.showStage && (
               <div data-normalise-stage-label="true" className="col-start-2 col-end-7 row-start-1 flex items-center justify-center">
                 <div className={`${d.stageBox ? "rounded-[6px] border border-[#F5F1E8]/22 bg-[#050505] px-3 py-0 shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]" : "px-1 py-0"} inline-flex min-h-[20px] max-w-full items-center justify-center`} style={{ transform: editorTransform({ x: d.stageX, y: d.stageY, scale: d.stageScale }) }}>
-                  <div className="led-text-glow font-led flex h-full items-center justify-center whitespace-nowrap text-center text-[10px] font-black uppercase leading-none tracking-[0.11em]" style={{ ...boardTextStyle, fontWeight: 900 }}>
-                    {stageTitle || "FINAL"}
+                  <div className="led-text-glow font-led flex h-full items-center justify-center whitespace-nowrap text-center text-[10px] font-black uppercase leading-none" style={{ ...boardTextStyle, ...labelTextCenterStyle, fontWeight: 900 }}>
+                    <DotMatrixLabelText>{stageTitle || "FINAL"}</DotMatrixLabelText>
                   </div>
                 </div>
               </div>
             )}
 
             <div className="col-start-1 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
-              {d.showFlags && <TeamFlag team={userTeam} className="h-[17px] w-[25px] border border-[#F7D117]/88 bg-[#F5F1E8] shadow-none drop-shadow-none" style={{ transform: editorTransform({ x: Number(d.flagAX || 0) + 7, y: d.flagAY, scale: d.flagScale }) }} />}
+              {d.showFlags && <PreviewScoreboardFlag team={userTeam} style={{ transform: previewFlagTransformFor("A") }} />}
             </div>
             <div className="col-start-2 row-start-2 row-end-4 grid h-full min-w-0 overflow-visible px-0" style={{ gridTemplateRows: "45fr 25fr" }}>
               <div className="row-start-1 flex h-full min-w-0 items-center justify-center overflow-visible">
                 {d.showTeamCodes && <div data-share-team-code="A" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-black leading-none" style={codeTextStyle("A")}>{userTeam.code}</div>}
               </div>
               {showMarkers && (
-                <div className="relative z-[1] row-start-2 flex h-full min-w-0 items-center justify-center overflow-hidden">
-                  <div className={markerShell} style={{ transform: editorTransform({ x: d.markerAX, y: d.markerAY, scale: d.markerScale }) }}>
+                <div className="relative z-[1] row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible">
+                  <div className={markerShell} style={{ transform: markerTransformFor("A") }}>
                     <span className="flex min-h-[16px] items-center justify-center leading-none"><MarkerDots markers={teamAMarkers} totalSlots={totalMarkerSlots} /></span>
                   </div>
                 </div>
@@ -246,26 +314,26 @@ function ShareScoreboard({
                 {d.showTeamCodes && <div data-share-team-code="B" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-black leading-none" style={codeTextStyle("B")}>{opponentTeam.code}</div>}
               </div>
               {showMarkers && (
-                <div className="relative z-[1] row-start-2 flex h-full min-w-0 items-center justify-center overflow-hidden">
-                  <div className={markerShell} style={{ transform: editorTransform({ x: d.markerBX, y: d.markerBY, scale: d.markerScale }) }}>
+                <div className="relative z-[1] row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible">
+                  <div className={markerShell} style={{ transform: markerTransformFor("B") }}>
                     <span className="flex min-h-[16px] items-center justify-center leading-none"><MarkerDots markers={teamBMarkers} totalSlots={totalMarkerSlots} /></span>
                   </div>
                 </div>
               )}
             </div>
             <div className="col-start-7 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
-              {d.showFlags && <TeamFlag team={opponentTeam} className="h-[17px] w-[25px] border border-[#F7D117]/88 bg-[#F5F1E8] shadow-none drop-shadow-none" style={{ transform: editorTransform({ x: Number(d.flagBX || 0) - 7, y: d.flagBY, scale: d.flagScale }) }} />}
+              {d.showFlags && <PreviewScoreboardFlag team={opponentTeam} style={{ transform: previewFlagTransformFor("B") }} />}
             </div>
 
             {showMarkers ? (
               <div data-share-username-slot="true" className="relative z-[3] col-start-3 col-end-6 row-start-3 flex h-full items-center justify-center px-1">
-                <div className={`${usernameEnabled ? "visible" : "invisible"} led-text-glow font-led inline-flex min-h-[20px] max-w-full items-center justify-center truncate whitespace-nowrap rounded-[6px] border border-[#F5F1E8]/22 bg-[#050505] px-3 text-center text-[9px] font-black uppercase leading-none tracking-[0.11em] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]`} style={{ ...boardTextStyle, transform: editorTransform({ x: d.usernameX, y: d.usernameY, scale: d.usernameScale }) }}>
-                  {(String(username || "").replace(/\s+/g, " ").trim().toUpperCase()) || "GUEST"}
+                <div className={`${usernameEnabled ? "visible" : "invisible"} led-text-glow font-led inline-flex min-h-[20px] max-w-full items-center justify-center truncate whitespace-nowrap rounded-[6px] border border-[#F5F1E8]/22 bg-[#050505] px-3 text-center text-[9px] font-black uppercase leading-none shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]`} style={{ ...boardTextStyle, ...labelTextCenterStyle, transform: editorTransform({ x: d.usernameX, y: d.usernameY, scale: d.usernameScale }) }}>
+                  <DotMatrixLabelText>{(String(username || "").replace(/\s+/g, " ").trim().toUpperCase()) || "GUEST"}</DotMatrixLabelText>
                 </div>
               </div>
             ) : (
               <div className="col-start-2 col-end-7 row-start-3 flex h-full items-center justify-center">
-                <div className="led-text-glow font-led inline-flex min-h-[18px] max-w-full items-center justify-center truncate rounded-[6px] border border-[#F5F1E8]/22 px-3 text-center text-[10px] font-black uppercase leading-none tracking-[0.12em] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]" style={{ ...boardTextStyle, background: d.markerBox ? "#050505" : "transparent", borderColor: d.markerBox ? "rgba(245,241,232,0.22)" : "transparent", transform: editorTransform({ x: d.markerAX, y: d.markerAY, scale: d.markerScale }) }}>
+                <div className="led-text-glow font-led inline-flex min-h-[18px] max-w-full items-center justify-center truncate rounded-[6px] border border-[#F5F1E8]/22 px-3 text-center text-[10px] font-black uppercase leading-none shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]" style={{ ...boardTextStyle, ...markerLabelTextCenterStyle, background: d.markerBox ? "#050505" : "transparent", borderColor: d.markerBox ? "rgba(245,241,232,0.22)" : "transparent", transform: editorTransform({ x: d.markerAX, y: d.markerAY, scale: d.markerScale }) }}>
                   {markerText || "PENALTIES"}
                 </div>
               </div>
@@ -316,32 +384,32 @@ function positionPoint(value) {
 
 function ShareBadgeOverlay({ mode, scale = 1, x = 0, y = 0 }) {
   if (!mode || mode === "none") return null;
+  const resolvedMode = mode === "mondayCup" ? "monday" : mode;
+  const mondayVisuals = getMondayCupShieldVisuals();
   const badgeMap = {
     monday: {
       src: ASSETS.branding.mondayLogo,
       alt: "Monday Cup",
       width: "99.825%",
       height: "74.415%",
-      glow: null,
-      shadow: "drop-shadow(0 10px 24px rgba(0,0,0,0.44))",
+      glowOuter: mondayVisuals.glowOuter,
+      glowInner: mondayVisuals.glowInner,
+      shadow: mondayVisuals.shadow,
     },
-    champion: { src: ASSETS.badges.champion, alt: "Champion", width: "89.8425%", height: "66.9735%", glow: LED_YELLOW, glowOuter: "2E", glowInner: "20", shadow: "drop-shadow(0 18px 24px rgba(0,0,0,0.30))" },
-    runnerUp: { src: ASSETS.badges.runnerUp, alt: "Runner-up", width: "89.8425%", height: "66.9735%", glow: IVORY, glowOuter: "29", glowInner: "1C", shadow: "drop-shadow(0 18px 24px rgba(0,0,0,0.30))" },
-    third: { src: ASSETS.badges.third, alt: "Third place", width: "89.8425%", height: "66.9735%", glow: "#C8863A", glowOuter: "2E", glowInner: "20", shadow: "drop-shadow(0 18px 24px rgba(0,0,0,0.30))" },
+    champion: { src: ASSETS.badges.champion, alt: "Champion", width: "89.8425%", height: "66.9735%", glowOuter: mondayVisuals.glowOuter, glowInner: mondayVisuals.glowInner, shadow: mondayVisuals.shadow },
+    runnerUp: { src: ASSETS.badges.runnerUp, alt: "Runner-up", width: "89.8425%", height: "66.9735%", glowOuter: mondayVisuals.glowOuter, glowInner: mondayVisuals.glowInner, shadow: mondayVisuals.shadow },
+    third: { src: ASSETS.badges.third, alt: "Third place", width: "89.8425%", height: "66.9735%", glowOuter: mondayVisuals.glowOuter, glowInner: mondayVisuals.glowInner, shadow: mondayVisuals.shadow },
   };
-  const badge = badgeMap[mode] || badgeMap.monday;
-  const hasGlow = Boolean(badge.glow);
+  const badge = badgeMap[resolvedMode] || badgeMap.monday;
   return (
     <div
       className="pointer-events-none absolute left-1/2 z-[30] flex items-center justify-center"
       style={{ top: "39%", width: badge.width, height: badge.height, transform: mergeTransforms("translate(-50%, -50%)", editorTransform({ x, y, scale })) }}
       aria-hidden="true"
     >
-      {mode === "monday" && <div className="absolute inset-x-[10%] bottom-[2%] h-[42%] rounded-full bg-[#F7D117]/28 blur-3xl" />}
-      {mode === "monday" && <div className="absolute inset-x-[14%] bottom-[3%] h-[36%] rounded-full bg-[#F5F1E8]/24 blur-2xl" />}
-      {hasGlow && <div className="absolute left-1/2 top-[54%] h-[56%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl" style={{ background: `${badge.glow}${badge.glowOuter || "2E"}` }} />}
-      {hasGlow && <div className="absolute left-1/2 top-[54%] h-[38%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl" style={{ background: `${badge.glow}${badge.glowInner || "20"}` }} />}
-      <img src={badge.src} alt={badge.alt} className="relative z-[1] h-full w-full object-contain" style={{ filter: badge.shadow || "drop-shadow(0 16px 22px rgba(0,0,0,0.26))" }} draggable={false} crossOrigin="anonymous" />
+      <div className="absolute left-1/2 top-[54%] h-[56%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl" style={{ background: badge.glowOuter }} />
+      <div className="absolute left-1/2 top-[54%] h-[38%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl" style={{ background: badge.glowInner }} />
+      <img src={badge.src} alt={badge.alt} className="relative z-[1] h-full w-full object-contain" style={{ filter: badge.shadow }} draggable={false} crossOrigin="anonymous" />
     </div>
   );
 }
@@ -418,7 +486,7 @@ export function ShareMatchPreview({
         totalMarkerSlots={totalMarkerSlots}
         design={matchDesign}
       />
-      <div className="relative min-h-0 flex-1 overflow-hidden bg-[#0d6c3d]">
+      <div data-share-pitch-frame="true" className="relative min-h-0 flex-1 overflow-hidden bg-[#0d6c3d]">
         <ExportCroppedPitch
           userTeam={userTeam}
           opponentTeam={opponentTeam}

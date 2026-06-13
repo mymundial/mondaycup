@@ -10,7 +10,13 @@ function AuthAutofillFix() {
       .mc-auth-input-field:-webkit-autofill:hover,
       .mc-auth-input-field:-webkit-autofill:focus,
       .mc-auth-input-field:-webkit-autofill:active {
-        -webkit-box-shadow: 0 0 0 1000px rgba(5,45,29,0.62) inset !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+        box-shadow: 0 0 0 1000px transparent inset !important;
         -webkit-text-fill-color: ${MC_COLORS.ivory} !important;
         caret-color: ${MC_COLORS.ivory} !important;
         transition: background-color 99999s ease-in-out 0s !important;

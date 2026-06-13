@@ -4,7 +4,6 @@ import { FullPitchExtensionBackground, Shell } from "../layout/Layout.jsx";
 import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
 import FootballGame from "./FootballGame.jsx";
 import EndMatchModal from "./EndMatchModal.jsx";
-import { getResultBadge, ResultBadgeShareOverlay } from "./ResultBadge.jsx";
 import {
   createFallbackFixture,
   modalButton,
@@ -14,7 +13,7 @@ import {
 import { PODIUM_BADGE_MODE } from "../../logic/resultStatus.js";
 import { MC_SELECTION_LAYOUT } from "../../styles/theme.js";
 import {
-  getPodiumBadgeMode,
+  getLiveMatchPitchBadgeMode,
   isTerminalShareResult,
 } from "../../logic/podium.js";
 
@@ -62,10 +61,8 @@ export function MatchScreen({
   const opponentTeam = teamToGameTeam(opponent || "Team B");
   const fallbackFixture = fixture || createFallbackFixture({ team, opponent });
   const completedResult = toCompletedGameResult(matchResult, fallbackFixture);
-  const activeBadgeMode = getPodiumBadgeMode({ result: matchResult, fixture, stageLabel, podium, team });
+  const activeBadgeMode = getLiveMatchPitchBadgeMode({ result: matchResult, fixture: fallbackFixture, stageLabel, podium, team });
   const showChampionsBadge = activeBadgeMode === PODIUM_BADGE_MODE.CHAMPION;
-  const resultBadge = getResultBadge({ result: matchResult, fixture: fallbackFixture, stageLabel });
-  const showSharedResultBadge = Boolean(matchResult && !activeBadgeMode && resultBadge);
 
   return (
     <Shell>
@@ -97,7 +94,6 @@ export function MatchScreen({
             activeMatchSnapshot={activeMatchSnapshot}
             onActiveMatchSnapshot={onActiveMatchSnapshot}
           />
-          {showSharedResultBadge && <ResultBadgeShareOverlay badge={resultBadge} />}
         </div>
 
         {matchResult && !modalDismissed && (

@@ -1,4 +1,5 @@
 import {
+  PITCH_BADGE_MODE,
   PODIUM_BADGE_MODE,
   RESULT_STATUS,
   isThirdPlaceResultStatus,
@@ -92,6 +93,40 @@ export function getUserFinishStatus({ result = null, fixture = null, stageLabel 
   return status || RESULT_STATUS.ELIMINATED;
 }
 
+
+function isGroupStageResult({ result = null, fixture = null } = {}) {
+  const week = Number(result?.week ?? fixture?.week ?? 0);
+  const status = normalizeResultStatus(result?.status);
+  return (week >= 1 && week <= 3)
+    || status === RESULT_STATUS.GROUP_WIN
+    || status === RESULT_STATUS.GROUP_DRAW
+    || status === RESULT_STATUS.GROUP_LOSS
+    || status === RESULT_STATUS.QUALIFIED
+    || (!Number(result?.matchNo ?? fixture?.matchNo) && status === RESULT_STATUS.ELIMINATED);
+}
+
+function isKnockoutBeforePlacement(matchNo) {
+  return matchNo >= 73 && matchNo <= 102;
+}
+
+function shouldShowMondayCupPitchBadge({ result = null, fixture = null } = {}) {
+  if (!result) return false;
+
+  const matchNo = Number(getFixtureMatchNo(fixture, result));
+  const status = normalizeResultStatus(result?.status);
+  const didWin = userWonResult(result);
+
+  if (isGroupStageResult({ result, fixture })) return true;
+  if (isKnockoutBeforePlacement(matchNo)) return true;
+  if (status === RESULT_STATUS.THIRD_PLACE_PENDING) return true;
+  if (status === RESULT_STATUS.KNOCKOUT_WIN) return true;
+  if (status === RESULT_STATUS.ELIMINATED && matchNo >= 73 && matchNo <= 102) return true;
+  if (matchNo === 103 && (status === RESULT_STATUS.FOURTH_PLACE || didWin === false)) return true;
+  if (status === RESULT_STATUS.FOURTH_PLACE) return true;
+
+  return false;
+}
+
 export function getPodiumBadgeMode({ result = null, fixture = null, stageLabel = "", podium = null, team = null } = {}) {
   if (!result) return null;
   const matchNo = Number(getFixtureMatchNo(fixture, result));
@@ -113,6 +148,15 @@ export function getPodiumBadgeMode({ result = null, fixture = null, stageLabel =
     return PODIUM_BADGE_MODE.THIRD;
   }
 
+  return null;
+}
+
+export function getLiveMatchPitchBadgeMode({ result = null, fixture = null, stageLabel = "", podium = null, team = null } = {}) {
+  const podiumMode = getPodiumBadgeMode({ result, fixture, stageLabel, podium, team });
+  if (podiumMode) return podiumMode;
+  if (shouldShowMondayCupPitchBadge({ result, fixture, stageLabel, podium, team })) {
+    return PITCH_BADGE_MODE.MONDAY_CUP;
+  }
   return null;
 }
 

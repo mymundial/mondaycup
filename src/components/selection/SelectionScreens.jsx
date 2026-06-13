@@ -6,7 +6,6 @@ import { ASSETS } from "../../data/assets.js";
 import { Flag } from "../shared.jsx";
 import { ensureUserDocument } from "../../lib/firebaseUser.js";
 import { FullPitchExtensionBackground, GreenCard, SelectionLayout, Shell } from "../layout/Layout.jsx";
-import AppFooter from "../ui/AppFooter.jsx";
 import { ScreenTopBar } from "../layout/ScreenTopBar.jsx";
 import SharedCrowdBackdrop from "../crowd/SharedCrowdBackdrop.jsx";
 import { AuthEmailCommsCheckbox, AuthForgotPasswordButton, AuthPrimaryButton, AuthTabs, AuthTextInput, PasswordVisibilityButton } from "../auth/AuthFormParts.jsx";
@@ -33,7 +32,21 @@ const FLOATING_HOME_LOGO_SRC = ASSETS.branding.mondayLogo;
 const SCOREBOARD_STAGE_TEXT = "font-led text-[clamp(9px,1.35vh,16px)] font-black uppercase leading-none tracking-[0.14em] text-[#F7D117]";
 const SCOREBOARD_MAIN_TEXT = "font-led text-[clamp(17px,3.05vh,34px)] font-black uppercase leading-none tracking-normal text-[#F7D117]";
 const SCOREBOARD_MARKER_TEXT = "font-led text-[clamp(6px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.12em] text-[#F7D117]";
+const SCOREBOARD_LABEL_TRACKING = "0.11em";
+const SCOREBOARD_LABEL_LEFT_BALANCE = `${0.11 + ((322 - 29) / 2048)}em`;
 const SCOREBOARD_LABEL_BOX_WIDTH = "clamp(272px,68vw,342px)";
+
+function DotMatrixScoreboardLabel({ children }) {
+  const text = String(children || "");
+  return (
+    <span className="inline-flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center whitespace-nowrap leading-none">
+      <span aria-hidden="true" className="inline-block shrink-0" style={{ width: SCOREBOARD_LABEL_LEFT_BALANCE }} />
+      <span className="inline-block whitespace-nowrap leading-none" style={{ letterSpacing: SCOREBOARD_LABEL_TRACKING }}>
+        {text}
+      </span>
+    </span>
+  );
+}
 const MENU_TITLE_CLASS = "home-copy-bold text-[28px] uppercase leading-none tracking-[0.07em] text-[#F5F1E8]";
 const HOME_MAIN_HEIGHT = `calc(100dvh - (${MATCH_TOP_BAR_HEIGHT_PX}px + ((100dvh - ${MATCH_TOP_BAR_HEIGHT_PX}px) * ${MATCH_SCOREBOARD_RATIO})))`;
 const HOME_LOGO_TOP_RATIO = 0;
@@ -332,16 +345,16 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, stati
           <div className="flex h-[86%] w-full items-center justify-center px-[3.5%] py-0">
             <div className="grid h-full w-full grid-cols-1 grid-rows-[25%_50%_25%] items-center">
               <div className="row-start-1 flex h-full items-center justify-center py-0">
-                <div className="led-text-glow font-led inline-flex max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(12px,3.2vw,22px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
-                  <span className="flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center leading-none">WELCOME TO</span>
+                <div className="led-text-glow font-led inline-flex max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(12px,3.2vw,22px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+                  <DotMatrixScoreboardLabel>WELCOME TO</DotMatrixScoreboardLabel>
                 </div>
               </div>
               <div className="row-start-2 flex h-full min-w-0 items-center justify-center px-[2%] py-0">
                 <div className="led-text-glow font-led flex h-full w-full items-center justify-center whitespace-nowrap text-center text-[clamp(17px,3.1vh,34px)] font-black leading-none tracking-tight text-[#F7D117]">MONDAY CUP</div>
               </div>
               <div className="row-start-3 flex h-full items-center justify-center py-0">
-                <div className="led-text-glow font-led inline-flex max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(14px,3.8vw,26px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.11em] text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
-                  <span className="flex min-h-[clamp(13px,1.8vh,18px)] items-center justify-center leading-none">INTERNATIONAL SOCCER SHOOTOUT</span>
+                <div className="led-text-glow font-led inline-flex max-w-full items-center justify-center whitespace-nowrap rounded-[0.32rem] border border-[#F5F1E8]/22 bg-[#050505] px-[clamp(14px,3.8vw,26px)] py-0 text-center text-[clamp(5.8px,0.95vh,10px)] font-black uppercase leading-none text-[#F7D117] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+                  <DotMatrixScoreboardLabel>INTERNATIONAL SOCCER SHOOTOUT</DotMatrixScoreboardLabel>
                 </div>
               </div>
             </div>
@@ -349,6 +362,22 @@ function ScoreboardPlaceholder({ allTeamsUnlocked = false, menuProps = {}, stati
         </div>
       </div>
       <HomeFlashTeamTicker scoreboardHeight={scoreboardHeight} tickerHeight={flashTickerHeight} />
+    </div>
+  );
+}
+
+function SelectionBottomBrand() {
+  return (
+    <div
+      className="pointer-events-none fixed bottom-0 left-1/2 z-[2147483000] flex h-[52px] w-full max-w-md -translate-x-1/2 items-center justify-center pb-[env(safe-area-inset-bottom)]"
+      aria-label="Brothers footer logo"
+    >
+      <img
+        src={ASSETS.branding.myMundialLogo}
+        alt="Brothers!"
+        className="h-[20px] w-auto max-w-[112px] object-contain opacity-82 drop-shadow-[0_2px_5px_rgba(0,0,0,0.24)]"
+        draggable={false}
+      />
     </div>
   );
 }
@@ -370,7 +399,7 @@ function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {}, static
             </div>
           </div>
         </main>
-        <AppFooter fixed onFeedback={onOpenFeedback} shadowMode="selection" />
+        <SelectionBottomBrand />
       </div>
     </Shell>
   );
@@ -514,6 +543,14 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
     setAuthError("");
     setAuthSuccess("");
   };
+
+  useEffect(() => {
+    if (!forgotPassword || (!authError && !authSuccess)) return undefined;
+    const timer = window.setTimeout(() => {
+      resetMessages();
+    }, 3600);
+    return () => window.clearTimeout(timer);
+  }, [forgotPassword, authError, authSuccess]);
 
   const authActionSettings = () => {
     if (typeof window === "undefined") return undefined;
@@ -687,7 +724,7 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
       setAuthLoading(true);
       resetMessages();
       await sendPasswordResetEmail(auth, trimmedEmail, authActionSettings());
-      setAuthSuccess("If that email is registered, a password reset link has been sent");
+      setAuthSuccess("A password reset has been sent");
     } catch (error) {
       const code = String(error?.code || "");
       if (code.includes("invalid-email")) setAuthError("Please enter a valid email address");
@@ -726,9 +763,11 @@ function AuthPanel({ mode, setMode, onBack, onAuthComplete, onSignedIn }) {
         </div>
         <form className="mt-3 space-y-2" onSubmit={handleForgotPassword}>
           <AuthInput icon={<AtIcon className="h-5 w-5" />} placeholder="Confirm email address" type="text" inputMode="email" value={email} onChange={(event) => { resetMessages(); setEmail(event.target.value); }} />
-          {authError && <div className="home-copy-regular rounded-[0.8rem] bg-red-500/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-red-100">{authError}</div>}
-          {authSuccess && <div className="home-copy-regular rounded-[0.8rem] bg-[#B7FF3C]/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-[#B7FF3C]">{authSuccess}</div>}
-          <AuthPrimaryButton type="submit" loading={authLoading}>{authLoading ? "SENDING..." : "SEND RESET LINK"}</AuthPrimaryButton>
+          <AuthPrimaryButton type="submit" loading={authLoading}>
+            <span className={`block text-center`}>
+              {authLoading ? "SENDING..." : (authError || authSuccess || "SEND RESET LINK")}
+            </span>
+          </AuthPrimaryButton>
         </form>
       </HomeMenuShell>
     </div>;

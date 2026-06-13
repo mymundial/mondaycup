@@ -15,6 +15,7 @@ import {
   completeKnockoutRound,
   knockoutStageLabel,
   simulateGoldenTicketFinalRun,
+  simulateSemiFinalRun,
   simulateRemainingKnockoutTournament,
   runSelfTests,
 } from "./logic/tournament.js";
@@ -119,14 +120,16 @@ const FEEDBACK_KEY = "mondayCup.feedback";
 
 const createFeedbackState = (source = {}) => {
   const ratings = Array.isArray(source?.ratings) ? source.ratings : [];
+  const latestRating = source?.latestRating || source?.feedbackLatest || ratings[ratings.length - 1] || null;
   return {
     prompt1Shown: Boolean(source?.prompt1Shown),
     prompt2Shown: Boolean(source?.prompt2Shown),
-    hasSubmitted: Boolean(source?.hasSubmitted || ratings.length),
+    hasSubmitted: Boolean(source?.hasSubmitted || latestRating || ratings.length),
+    latestRating,
     ratings,
-    lastPromptType: source?.lastPromptType || null,
+    lastPromptType: source?.lastPromptType || latestRating?.promptType || null,
     lastPromptedAt: Number(source?.lastPromptedAt || 0),
-    lastSubmittedAt: Number(source?.lastSubmittedAt || 0),
+    lastSubmittedAt: Number(source?.lastSubmittedAt || latestRating?.createdAt || 0),
   };
 };
 
@@ -141,6 +144,7 @@ const buildFeedbackPromptType = ({ feedback, campaignsCompleted, cupsWon }) => {
 };
 
 const GOLDEN_TICKET_NEXT_CAMPAIGN_KEY = "mondayCup.goldenTicketNextCampaign";
+const DEV_SEMI_FINAL_EMAIL = "alexjashworth@gmail.com";
 
 const readGoldenTicketNextCampaignIntent = () => {
   try {
@@ -163,6 +167,7 @@ export default function App() {
   const [screen, setScreen] = useState("home");
   const [twoPlayerMode, setTwoPlayerMode] = useState(false);
   const twoPlayerThrowawayRef = useRef(false);
+  const cloudProfileSaveVersionRef = useRef(0);
   const [twoPlayerSetup, setTwoPlayerSetup] = useState(null);
   const [currentUser, setCurrentUser] = useState(() => auth.currentUser);
   const [shirtShareOpen, setShirtShareOpen] = useState(false);
@@ -376,7 +381,14 @@ export default function App() {
           }
           if (profile?.careerStats || profile?.stats) {
             const stats = profile.careerStats || profile.stats || {};
-            setMondayCupsWon(Number(stats.cupsWon ?? stats.mondayCupsWon ?? 0));
+            const cloudNationCupWins = Object.values(profile?.nationCupWins || {}).filter((record) =>
+              Boolean(record?.unlocked || record?.cupWon || record?.champions || record?.liftTheCup),
+            ).length;
+            const cloudCupWins = Math.max(
+              Number(stats.cupsWon ?? stats.cupWins ?? stats.mondayCupsWon ?? stats.mondayCupWins ?? 0),
+              cloudNationCupWins,
+            );
+            setMondayCupsWon(cloudCupWins);
             setAllTimeCampaignsCompleted(Number(stats.campaignsCompleted ?? stats.tournamentsCompleted ?? 0));
             setAllTimeGoals(Number(stats.goalsScored ?? stats.totalGoalsScored ?? 0));
             setAllTimeShots(Number(stats.totalShots ?? stats.totalShotsTaken ?? 0));
@@ -385,8 +397,10 @@ export default function App() {
             setAllTimeMatchesDrawn(Number(stats.matchesDrawn ?? stats.totalMatchesDrawn ?? 0));
             setAllTimeMatchesLost(Number(stats.matchesLost ?? stats.totalMatchesLost ?? 0));
           }
-          if (profile?.trophies || profile?.achievements) {
-            const trophyState = profile.trophies || profile.achievements || {};
+          if (profile?.achievements || profile?.trophies) {
+            // loadUserProfile exposes `achievements` as the flat UI-ready trophy map.
+            // `trophies` is the nested Firestore canonical shape, so prefer the UI alias here.
+            const trophyState = profile.achievements || profile.trophies || {};
             setAchievements(trophyState);
             safeWriteJson(ACHIEVEMENTS_KEY, trophyState);
           }
@@ -399,8 +413,11 @@ export default function App() {
             setNationStickerProgress(stickerState);
             safeWriteJson(NATION_STICKER_PROGRESS_KEY, stickerState);
           }
-          if (profile?.feedback) {
-            const nextFeedback = createFeedbackState(profile.feedback);
+          if (profile?.feedback || profile?.feedbackLatest) {
+            const nextFeedback = createFeedbackState({
+              ...(profile?.feedback || {}),
+              feedbackLatest: profile?.feedbackLatest,
+            });
             setFeedbackState(nextFeedback);
             safeWriteJson(FEEDBACK_KEY, nextFeedback);
           }
@@ -1090,6 +1107,40 @@ export default function App() {
     twoPlayerThrowawayRef.current = false;
   };
 
+  const clearedCurrentCampaignForUi = (reason = "cleared") => ({
+    exists: false,
+    active: false,
+    status: String(reason || "cleared").toUpperCase(),
+    teamName: null,
+    team: null,
+    opponent: null,
+    phase: "Not Started",
+    round: "Not Started",
+    gameScore: 0,
+    cupRun: [],
+    score: [0, 0],
+    usedGoldenUpgrade: false,
+    usedGoldenTicket: false,
+    matchResult: null,
+    runtimeSnapshot: null,
+    updatedAt: Date.now(),
+  });
+
+  const clearLocalCurrentCampaignState = (reason = "cleared") => {
+    setFirebaseProfile((profile) => {
+      if (!profile) return profile;
+      return {
+        ...profile,
+        currentCampaign: clearedCurrentCampaignForUi(reason),
+        currentProgress: null,
+        savedGames: {
+          ...(profile.savedGames || {}),
+          current: null,
+        },
+      };
+    });
+  };
+
   const buildGameSnapshot = () => {
     if (isCampaignSaveBlocked()) return null;
 
@@ -1345,7 +1396,9 @@ export default function App() {
       },
     };
 
+    const saveVersion = cloudProfileSaveVersionRef.current;
     const timeout = window.setTimeout(() => {
+      if (saveVersion !== cloudProfileSaveVersionRef.current) return;
       saveUserProfile(currentUser.uid, payload).catch((error) => {
         console.warn("Cloud profile save failed", error);
       });
@@ -1625,6 +1678,10 @@ export default function App() {
   };
   const resetTournament = (nextScreen = "home") => {
     const shouldClearCloudCampaign = Boolean(hasCloudUser && !isCampaignSaveBlocked());
+    if (shouldClearCloudCampaign) {
+      cloudProfileSaveVersionRef.current += 1;
+      clearLocalCurrentCampaignState("play_again");
+    }
     releaseTwoPlayerThrowawayForCampaign();
     setTwoPlayerMode(false);
     setTwoPlayerSetup(null);
@@ -1660,9 +1717,15 @@ export default function App() {
     });
     setPendingFeedbackCheck(true);
     if (shouldClearCloudCampaign) {
-      clearCurrentProgress(currentUser.uid, "reset").catch((error) => {
+      const uid = currentUser.uid;
+      clearCurrentProgress(uid, "play_again").catch((error) => {
         console.warn("Could not clear current campaign", error);
       });
+      window.setTimeout(() => {
+        clearCurrentProgress(uid, "play_again_confirmed").catch((error) => {
+          console.warn("Could not confirm current campaign clear", error);
+        });
+      }, 900);
     }
   };
 
@@ -1704,6 +1767,7 @@ export default function App() {
   };
 
   const openManualFeedbackModal = () => {
+    if (!hasCloudUser) return;
     setPendingFeedbackCheck(false);
     setFeedbackPromptType("prompt1");
   };
@@ -1751,6 +1815,8 @@ export default function App() {
     const restored = restoreGameSnapshot(snapshot);
     if (!restored) {
       if (hasCloudUser && shouldClearRejectedCampaignSnapshot(snapshot)) {
+        cloudProfileSaveVersionRef.current += 1;
+        clearLocalCurrentCampaignState("rejected-two-player-snapshot");
         clearCurrentProgress(currentUser.uid, "rejected-two-player-snapshot").catch((error) => {
           console.warn("Could not clear rejected current campaign", error);
         });
@@ -1794,6 +1860,8 @@ export default function App() {
         return;
       }
       if (hasCloudUser && shouldClearRejectedCampaignSnapshot(savedProgress)) {
+        cloudProfileSaveVersionRef.current += 1;
+        clearLocalCurrentCampaignState("rejected-two-player-snapshot");
         clearCurrentProgress(currentUser.uid, "rejected-two-player-snapshot").catch((error) => {
           console.warn("Could not clear rejected current campaign", error);
         });
@@ -2118,7 +2186,8 @@ export default function App() {
 
     if (!twoPlayerSetup || twoPlayerSetup.step === "p1") {
       setTwoPlayerSetup({ step: "p2", p1Team: name, p1Group: groupOverride });
-      setSelectedGroup(groupOverride || "A");
+      setSelectedGroup("A");
+      setScreen("hosts");
       return;
     }
 
@@ -2218,6 +2287,58 @@ export default function App() {
     setStandingsView("group");
     setMatchStage("GROUP STAGE");
     setScreen("home");
+  };
+
+
+  const startDevSemiFinalCampaign = () => {
+    const email = String(auth.currentUser?.email || currentUser?.email || "").toLowerCase();
+    if (email !== DEV_SEMI_FINAL_EMAIL) return;
+
+    const allTeams = GROUP_LETTERS.flatMap((group) => GROUPS[group] || []);
+    const randomTeam = allTeams[Math.floor(Math.random() * allTeams.length)] || "Mexico";
+    const randomGroup = GROUP_LETTERS.find((group) => GROUPS[group]?.includes(randomTeam)) || "A";
+    const semiRun = simulateSemiFinalRun(randomTeam, randomGroup);
+    const semiFixture = semiRun?.currentSemiFinalFixture;
+    if (!semiFixture) return;
+
+    releaseTwoPlayerThrowawayForCampaign();
+    setTwoPlayerMode(false);
+    setTwoPlayerSetup(null);
+    setSelectedGroup(semiRun.selectedGroup || randomGroup);
+    setTeam(randomTeam);
+    setOpponent(semiRun.opponent || getFixtureOpponent(randomTeam, semiFixture));
+    setSchedule(semiRun.schedule || buildSchedule());
+    setTable(semiRun.table || blankTable());
+    setKnockoutFixtures(semiRun.knockoutFixtures || []);
+    setCurrentKnockoutMatch(semiFixture);
+    setPodium({});
+    setScreen("match");
+    setDrawer(null);
+    setMenuOpen(false);
+    setScore([0, 0]);
+    setMatchStage(knockoutStageLabel(semiFixture.matchNo));
+    setMatchResult(null);
+    clearActiveMatchSnapshot();
+    setModalDismissed(false);
+    setAwardedTrophyMatchKey(null);
+    setUserForm(Array.isArray(semiRun.userForm) ? semiRun.userForm : ["W", "W", "W", "W", "W", "W"]);
+    setScoringState(() => {
+      const seedResults = [
+        { userWon: true, won: true, status: RESULT_STATUS.GROUP_WIN },
+        { userWon: true, won: true, status: RESULT_STATUS.GROUP_WIN },
+        { userWon: true, won: true, status: RESULT_STATUS.QUALIFIED },
+        { userWon: true, won: true, status: RESULT_STATUS.KNOCKOUT_WIN, matchNo: 73 },
+        { userWon: true, won: true, status: RESULT_STATUS.KNOCKOUT_WIN, matchNo: 89 },
+        { userWon: true, won: true, status: RESULT_STATUS.KNOCKOUT_WIN, matchNo: 97 },
+      ];
+      return seedResults.reduce(
+        (state, result) => applyCompletedMatchScore({ scoringState: state, result, userShotEvents: [] }),
+        createScoringState(),
+      );
+    });
+    setCampaignCosmeticsUsed(cosmeticUsageFromActive(activeCosmetics));
+    setFixtureView("knockout");
+    setStandingsView("knockout");
   };
 
   const startTeam = (name, groupOverride = selectedGroup) => {
@@ -2893,6 +3014,11 @@ export default function App() {
           matchesPlayed: allTimeMatchesPlayed,
           matchesWon: allTimeMatchesWon,
           goalsScored: allTimeGoals,
+          campaignsCompleted: allTimeCampaignsCompleted,
+          cupsWon: mondayCupsWon,
+          cupWins: mondayCupsWon,
+          mondayCupsWon,
+          mondayCupWins: mondayCupsWon,
         },
         allTeamsUnlocked,
         onOpenNationSticker: markNationStickerOpened,
@@ -2931,12 +3057,18 @@ export default function App() {
 
   const feedbackModalElement = (
     <FeedbackModal
-      open={Boolean(feedbackPromptType) && screen === "home"}
+      open={Boolean(feedbackPromptType)}
       promptType={feedbackPromptType || "prompt1"}
       onSubmit={submitFeedback}
       onDismiss={closeFeedbackModal}
     />
   );
+
+  const footerFeedbackProps = {
+    onFeedback: openManualFeedbackModal,
+    feedbackEnabled: hasCloudUser,
+    feedbackSubmitted: Boolean(feedbackState?.hasSubmitted),
+  };
 
   const withShop = (content) => (
     <>
@@ -2948,7 +3080,7 @@ export default function App() {
   );
 
   if (["home", "hosts", "teams"].includes(screen)) {
-    if (drawerElement) return withNonMatchFooter(withShop(drawerElement));
+    if (drawerElement) return withNonMatchFooter(withShop(drawerElement), footerFeedbackProps);
 
     if (screen === "home") {
       return withShop(
@@ -2972,6 +3104,8 @@ export default function App() {
             firebaseProfile?.savedGames?.current?.active,
           )}
           onOpenFeedback={openManualFeedbackModal}
+          showSemiFinalDevButton={String(currentUser?.email || "").toLowerCase() === DEV_SEMI_FINAL_EMAIL}
+          onStartAtSemiFinalDev={startDevSemiFinalCampaign}
         />,
       );
     }
@@ -3064,12 +3198,13 @@ export default function App() {
             {drawerElement}
           </>,
         ),
+        footerFeedbackProps,
       );
     }
 
     return withShop(matchScreen);
   }
 
-  if (drawerElement) return withNonMatchFooter(withShop(drawerElement));
+  if (drawerElement) return withNonMatchFooter(withShop(drawerElement), footerFeedbackProps);
   return matchScreen;
 }

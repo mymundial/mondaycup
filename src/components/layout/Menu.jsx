@@ -6,10 +6,11 @@ import {
   updateProfile,
   sendPasswordResetEmail,
   sendEmailVerification,
+  deleteUser,
 } from "firebase/auth";
 import { ASSETS } from "../../data/assets.js";
 import { auth } from "../../firebase";
-import { ensureUserDocument } from "../../lib/firebaseUser";
+import { ensureUserDocument, isNicknameTaken, reserveUsername } from "../../lib/firebaseUser";
 import { MC_COLORS, MC_SIZES, MC_TYPE } from "../../styles/theme.js";
 import { AuthEmailCommsCheckbox, AuthForgotPasswordButton, AuthPrimaryButton, AuthTabs, AuthTextInput, PasswordVisibilityButton } from "../auth/AuthFormParts.jsx";
 
@@ -325,6 +326,14 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
     setSuccess("");
   };
 
+  useEffect(() => {
+    if (!forgotPassword || (!error && !success)) return undefined;
+    const timer = window.setTimeout(() => {
+      resetMessages();
+    }, 3600);
+    return () => window.clearTimeout(timer);
+  }, [forgotPassword, error, success]);
+
   const showVerificationNotice = (message, nextButtonText = "RESEND VERIFICATION EMAIL", immediateButtonText = "PLEASE CHECK YOUR INBOX") => {
     if (verifyNoticeTimerRef.current) window.clearTimeout(verifyNoticeTimerRef.current);
     setError("");
@@ -392,11 +401,28 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
 
     try {
       setLoading(true);
+
+      if (isSignup) {
+        const taken = await isNicknameTaken(cleanNickname);
+        if (taken) {
+          setError("Username already taken");
+          return;
+        }
+      }
+
       const cred = isSignup
         ? await createUserWithEmailAndPassword(auth, cleanEmail, password)
         : await signInWithEmailAndPassword(auth, cleanEmail, password);
 
       if (isSignup) {
+        try {
+          await reserveUsername(cred.user.uid, cleanNickname);
+        } catch (reservationError) {
+          await deleteUser(cred.user).catch(() => {});
+          setError(reservationError?.message || "Username already taken");
+          return;
+        }
+
         await updateProfile(cred.user, { displayName: cleanNickname });
         const profile = {
           username: cleanNickname,
@@ -490,7 +516,7 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
     try {
       setLoading(true);
       await sendPasswordResetEmail(auth, cleanEmail, authActionSettings());
-      setSuccess("If that email is registered, a password reset link has been sent");
+      setSuccess("A password reset has been sent");
     } catch (err) {
       const code = String(err?.code || "");
       if (code.includes("invalid-email")) setError("Please enter a valid email address");
@@ -536,10 +562,10 @@ export function AuthMenuPanel({ onClose, onBack, onAuthComplete, initialMode = "
             inputMode="email"
             autoComplete="email"
           />
-          {error && <div className="home-copy-regular rounded-[0.8rem] bg-red-500/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-red-100">{error}</div>}
-          {success && <div className="home-copy-regular rounded-[0.8rem] bg-[#B7FF3C]/14 px-3 py-2 text-center text-[10px] uppercase tracking-[0.08em] text-[#B7FF3C]">{success}</div>}
           <AuthPrimaryButton type="submit" loading={loading}>
-            {loading ? "SENDING..." : "SEND RESET LINK"}
+            <span className={`block text-center`}>
+              {loading ? "SENDING..." : (error || success || "SEND RESET LINK")}
+            </span>
           </AuthPrimaryButton>
         </form>
       </>

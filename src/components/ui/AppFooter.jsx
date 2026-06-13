@@ -48,7 +48,7 @@ const FOOTER_SHADOWS = {
   },
 };
 
-export default function AppFooter({ fixed = false, className = '', onFeedback = null, shadowMode = 'standard' }) {
+export default function AppFooter({ fixed = false, className = '', onFeedback = null, feedbackEnabled = false, feedbackSubmitted = false, shadowMode = 'standard' }) {
   const footerShadow = FOOTER_SHADOWS[shadowMode] || FOOTER_SHADOWS.standard;
   const shellClass = fixed
     ? 'pointer-events-none fixed bottom-0 left-1/2 z-[2147483000] w-full max-w-md -translate-x-1/2'
@@ -102,12 +102,12 @@ export default function AppFooter({ fixed = false, className = '', onFeedback = 
               className="h-[20px] w-auto max-w-[112px] object-contain opacity-82 drop-shadow-[0_2px_5px_rgba(0,0,0,0.24)]"
               draggable={false}
             />
-            {typeof onFeedback === 'function' ? (
+            {typeof onFeedback === 'function' && feedbackEnabled ? (
               <button
                 type="button"
                 onClick={onFeedback}
-                className="pointer-events-auto absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.24)] transition hover:text-[#F7D117] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F7D117]/70"
-                aria-label="Open feedback"
+                className={`pointer-events-auto absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center drop-shadow-[0_2px_5px_rgba(0,0,0,0.24)] transition hover:text-[#F7D117] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F7D117]/70 ${feedbackSubmitted ? "text-[#F7D117]" : "text-[#F5F1E8]"}`}
+                aria-label={feedbackSubmitted ? "Open feedback - submitted" : "Open feedback"}
               >
                 <span className="home-copy-bold text-[24px] leading-none" aria-hidden="true">★</span>
               </button>

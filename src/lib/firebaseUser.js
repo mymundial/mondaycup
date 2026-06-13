@@ -8,6 +8,7 @@ import {
   limit,
   orderBy,
   query,
+  runTransaction,
   serverTimestamp,
   setDoc,
   updateDoc,
@@ -40,6 +41,16 @@ const number = (value, fallback = 0) => {
 
 const cleanUsername = (value, fallback = "Player") =>
   String(value || fallback).trim().slice(0, 10) || fallback;
+
+const usernameKey = (value) =>
+  String(value || "")
+    .trim()
+    .replace(/[^a-z0-9]/gi, "")
+    .slice(0, 10)
+    .toLowerCase();
+
+const displayUsername = (value, fallback = "Player") =>
+  (usernameKey(value) || usernameKey(fallback) || "player").toUpperCase();
 
 export const normaliseFormGuide = (cupRun = []) => {
   const source = Array.isArray(cupRun) ? cupRun : [];
@@ -602,7 +613,8 @@ const getCupRunSource = (...values) => values.find((value) => Array.isArray(valu
 const normalisePodiumValue = (...values) => {
   for (const value of values) {
     const text = String(value || "").trim().toLowerCase();
-    if (!text || ["none", "null", "false", "no", "na", "n/a", "inprogress", "in progress"].includes(text)) continue;
+    if (!text || ["none", "null", "false", "no", "na", "n/a", "inprogress", "in progress", "completed"].includes(text)) continue;
+    if (text.includes("fourth") || text === "4" || text === "fourthplace" || text === "fourth-place") return "none";
     if (text.includes("champion") || text === "winner" || text === "won" || text === "1" || text === "first") return "champion";
     if (text.includes("runner") || text.includes("second") || text === "runnerup" || text === "runner-up" || text === "2" || text === "silver") return "runner-up";
     if (text.includes("third") || text.includes("bronze") || text === "thirdplace" || text === "third-place" || text === "3") return "third-place";
@@ -618,6 +630,18 @@ const leaderboardPodiumFromCanonical = (value = "") => {
   if (podium === "third-place") return "thirdPlace";
   if (podium === "champion") return "champion";
   return null;
+};
+
+const leaderboardCompletedCupRun = (cupRun = []) =>
+  (Array.isArray(cupRun) ? cupRun : [])
+    .map((value) => String(value || "").trim().toUpperCase())
+    .filter((value) => ["W", "D", "L"].includes(value));
+
+const leaderboardLooksFourthPlaceRun = (cupRun = []) => {
+  const completed = leaderboardCompletedCupRun(cupRun);
+  if (completed.length < 8) return false;
+  const lastTwo = completed.slice(-2);
+  return lastTwo[0] === "L" && lastTwo[1] === "L";
 };
 
 const compactMatchRow = (match = {}) => {
@@ -1212,7 +1236,8 @@ export async function ensureUserDocument(user, username = "Player", extra = {}) 
 
   const existing = snap.data() || {};
   const canonical = canonicalFromFirestore(user.uid, { ...existing, ...extra, profile: { ...(existing.profile || {}), email: user.email || existing.profile?.email || existing.email || "", emailVerified: user.emailVerified ?? existing.profile?.emailVerified } });
-  canonical.profile.username = cleanUsername(displayName || canonical.profile.username);
+  const existingUsername = existing.profile?.username || existing.username || existing.nickname || canonical.profile.username;
+  canonical.profile.username = displayUsername(existingUsername || displayName || canonical.profile.username);
   await repairUserDocument(user.uid, canonical);
   return { id: user.uid, ...canonical, ...buildUiProfileAliases(canonical) };
 }
@@ -1417,7 +1442,8 @@ function normaliseLeaderboardEntry(uid, entry = {}) {
   if (!uid || gameScore <= 0 || (!isTerminalResultStatus(finish) && !hasCompletionEvidence)) return null;
 
   const storedFinish = isTerminalResultStatus(finish) ? finish : "completed";
-  const podiumCanonical = podiumFromResultFields(entry.podium, bestCampaign.podium, storedFinish, rawBestCampaign.phase, rawBestCampaign.round);
+  const rawPodiumCanonical = podiumFromResultFields(entry.podium, bestCampaign.podium, storedFinish);
+  const podiumCanonical = leaderboardLooksFourthPlaceRun(cupRun) ? "none" : rawPodiumCanonical;
   const podium = leaderboardPodiumFromCanonical(podiumCanonical);
   const hasNestedBestCampaign = Boolean(entry.bestCampaign && typeof entry.bestCampaign === "object");
   const upgradeSources = hasNestedBestCampaign
@@ -1506,7 +1532,7 @@ export async function saveLeaderboardHighScore(uid, entry = {}) {
   if (bestRow !== row) return;
 
   const completedAt = row.completedAt || serverTimestamp();
-  const podiumCanonical = podiumFromResultFields(row.podium, row.finish, row.phase, row.round);
+  const podiumCanonical = podiumFromResultFields(row.podium, row.finish);
 
   await setDoc(leaderboardRef, {
     uid,
@@ -1596,7 +1622,8 @@ function buildLeaderboardRowFromData(id, data = {}, source = "leaderboard") {
 
   const profile = data.profile || {};
   const teamName = data.teamName || data.team || data.teamFlag || bestCampaign.teamName || data.bestCampaign?.team || "";
-  const podiumCanonical = podiumFromResultFields(data.podium, bestCampaign.podium, finish, data.phase, data.round, data.bestCampaign?.phase, data.bestCampaign?.round);
+  const rawPodiumCanonical = podiumFromResultFields(data.podium, bestCampaign.podium, finish);
+  const podiumCanonical = leaderboardLooksFourthPlaceRun(cupRun) ? "none" : rawPodiumCanonical;
   const podium = leaderboardPodiumFromCanonical(podiumCanonical);
   const username = cleanUsername(data.username || profile.username || data.nickname || "PLAYER").toUpperCase();
   const dataBestCampaign = data.bestCampaign && typeof data.bestCampaign === "object" ? data.bestCampaign : {};
@@ -1803,34 +1830,50 @@ export async function loadLeaderboardRows(limitCount = 50) {
 }
 
 export async function isNicknameTaken(nickname, uidToIgnore = null) {
-  const clean = String(nickname || "").trim().toLowerCase();
-  if (!clean || !db) return false;
-  const reservedSnap = await getDoc(doc(db, "usernames", clean)).catch(() => null);
+  const key = usernameKey(nickname);
+  if (!key || !db) return false;
+  const reservedSnap = await getDoc(doc(db, "usernames", key)).catch(() => null);
   if (reservedSnap?.exists()) return reservedSnap.data()?.uid !== uidToIgnore;
   const snap = await getDocs(query(collection(db, "users"), limit(250))).catch(() => null);
-  return Boolean(snap?.docs?.some((item) => item.id !== uidToIgnore && String(item.data()?.profile?.username || "").trim().toLowerCase() === clean));
+  return Boolean(snap?.docs?.some((item) => item.id !== uidToIgnore && usernameKey(item.data()?.profile?.username) === key));
+}
+
+async function reserveUsernameForUid(uid, username) {
+  const key = usernameKey(username);
+  const clean = displayUsername(username);
+  if (!uid || !key || !db) throw new Error("Invalid username.");
+
+  const usernameRef = doc(db, "usernames", key);
+  await runTransaction(db, async (transaction) => {
+    const snap = await transaction.get(usernameRef);
+    if (snap.exists() && snap.data()?.uid !== uid) {
+      throw new Error("Username already taken.");
+    }
+
+    transaction.set(usernameRef, {
+      uid,
+      username: clean,
+      createdAt: snap.exists() ? snap.data()?.createdAt || serverTimestamp() : serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+  });
+
+  return clean;
 }
 
 export async function saveUserNickname(uid, username) {
-  const clean = cleanUsername(username).toUpperCase();
-  if (!uid || !clean || !db) return;
+  const clean = await reserveUsernameForUid(uid, username);
   await setDoc(doc(db, "users", uid), {
     "profile.username": clean,
     "profile.updatedAt": serverTimestamp(),
     updatedAt: serverTimestamp(),
   }, { merge: true });
   await updateDoc(doc(db, "users", uid), { username: deleteField(), usernameLower: deleteField(), nickname: deleteField(), nicknameLower: deleteField() }).catch(() => {});
-  await setDoc(doc(db, "leaderboard", uid), { username: clean, updatedAt: serverTimestamp() }, { merge: true });
+  await setDoc(doc(db, "leaderboard", uid), { uid, username: clean, updatedAt: serverTimestamp() }, { merge: true });
 }
 
 export async function reserveUsername(uid, username) {
-  const clean = cleanUsername(username).toLowerCase();
-  if (!uid || !clean || !db) return;
-  await setDoc(doc(db, "usernames", clean), {
-    uid,
-    username: clean.toUpperCase(),
-    createdAt: serverTimestamp(),
-  }, { merge: true });
+  return reserveUsernameForUid(uid, username);
 }
 
 export async function saveUserFeedback(uid, feedback = {}, latestRating = null) {

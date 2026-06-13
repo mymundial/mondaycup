@@ -1,14 +1,25 @@
 import AppFooter from "../../components/ui/AppFooter.jsx";
 
-function NonMatchFooter() {
-  return <AppFooter fixed />;
+function NonMatchFooter({ onFeedback = null, feedbackEnabled = false, feedbackSubmitted = false }) {
+  return (
+    <AppFooter
+      fixed
+      onFeedback={onFeedback}
+      feedbackEnabled={feedbackEnabled}
+      feedbackSubmitted={feedbackSubmitted}
+    />
+  );
 }
 
-export function withNonMatchFooter(content) {
+export function withNonMatchFooter(content, { onFeedback = null, feedbackEnabled = false, feedbackSubmitted = false } = {}) {
   return (
     <>
       {content}
-      <NonMatchFooter />
+      <NonMatchFooter
+        onFeedback={onFeedback}
+        feedbackEnabled={feedbackEnabled}
+        feedbackSubmitted={feedbackSubmitted}
+      />
     </>
   );
 }

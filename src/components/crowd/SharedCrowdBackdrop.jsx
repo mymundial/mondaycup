@@ -6,15 +6,16 @@ export const DEFAULT_CROWD_COLOURS = [
   "#E10600", "#1A22C9", "#9B003F", "#D50000", "#FF3B30", "#3131E8",
 ];
 
-const DEFAULT_SKIN_TONES = ["#c98f65", "#8f5f3f", "#e0b184", "#6f4632"];
+export const DEFAULT_SKIN_TONES = ["#c98f65", "#8f5f3f", "#e0b184", "#6f4632"];
 
-function CrowdPerson({ x, y, scale = 1, shirt = "#0d6c3d", skin = "#c98f65", pose = "down", opacity = 1 }) {
+function CrowdPerson({ x, y, scale = 1, shirt = "#0d6c3d", skin = "#c98f65", pose = "down", opacity = 1, opacityScale = 1 }) {
+  const resolvedOpacity = Math.max(0, Math.min(1, Number(opacity || 0) * Number(opacityScale || 1)));
   const armLeft = pose === "up" ? "M5 13 L1 6" : "M5 13 L2 20";
   const armRight = pose === "up" ? "M13 13 L17 6" : "M13 13 L16 20";
   return (
     <svg
       className="absolute overflow-visible"
-      style={{ left: `${x}%`, top: `${y}%`, width: `${18 * scale}px`, height: `${30 * scale}px`, opacity, transform: "translate(-50%, -50%)" }}
+      style={{ left: `${x}%`, top: `${y}%`, width: `${18 * scale}px`, height: `${30 * scale}px`, opacity: resolvedOpacity, transform: "translate(-50%, -50%)" }}
       viewBox="0 0 18 30"
       aria-hidden="true"
     >
@@ -28,8 +29,8 @@ function CrowdPerson({ x, y, scale = 1, shirt = "#0d6c3d", skin = "#c98f65", pos
   );
 }
 
-function buildCrowdRows({ crowdColours = DEFAULT_CROWD_COLOURS, density = 1, rowCount = 16 }) {
-  const safeDensity = Math.max(0.35, Math.min(1, Number(density || 1)));
+export function buildCrowdRows({ crowdColours = DEFAULT_CROWD_COLOURS, density = 1, rowCount = 16 }) {
+  const safeDensity = Math.max(0.35, Math.min(1.18, Number(density || 1)));
   const rows = Array.from({ length: rowCount }, (_, index) => {
     const t = rowCount <= 1 ? 1 : index / (rowCount - 1);
     const y = 2.5 + 94 * Math.pow(t, 1.24);
@@ -57,6 +58,7 @@ export default function SharedCrowdBackdrop({
   rowCount = 16,
   className = "pointer-events-none absolute inset-x-0 top-0 z-0 overflow-hidden",
   style,
+  personOpacityScale = 1,
 }) {
   const colourKey = (crowdColours?.length ? crowdColours : DEFAULT_CROWD_COLOURS).join("|");
   const crowdRows = useMemo(() => buildCrowdRows({ crowdColours: crowdColours?.length ? crowdColours : DEFAULT_CROWD_COLOURS, density, rowCount }), [colourKey, density, rowCount]);
@@ -78,7 +80,7 @@ export default function SharedCrowdBackdrop({
       <div className="absolute inset-x-0 top-[55%] h-[10%] bg-[#0b2d1d]/10" />
       <div className="absolute inset-x-0 top-[70%] h-[11%] bg-[#0b2d1d]/8" />
       <div className="absolute inset-x-0 top-[85%] h-[10%] bg-[#0b2d1d]/10" />
-      {crowdRows.map((person, index) => <CrowdPerson key={index} {...person} />)}
+      {crowdRows.map((person, index) => <CrowdPerson key={index} {...person} opacityScale={personOpacityScale} />)}
     </div>
   );
 }
