@@ -168,6 +168,7 @@ export default function App() {
   const [twoPlayerMode, setTwoPlayerMode] = useState(false);
   const twoPlayerThrowawayRef = useRef(false);
   const cloudProfileSaveVersionRef = useRef(0);
+  const accountSessionUidRef = useRef(auth.currentUser?.uid || null);
   const [twoPlayerSetup, setTwoPlayerSetup] = useState(null);
   const [currentUser, setCurrentUser] = useState(() => auth.currentUser);
   const [shirtShareOpen, setShirtShareOpen] = useState(false);
@@ -271,6 +272,12 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      const nextUid = user?.uid || null;
+      const previousUid = accountSessionUidRef.current;
+      if (previousUid && previousUid !== nextUid) {
+        clearAccountSessionState();
+      }
+      accountSessionUidRef.current = nextUid;
       setCurrentUser(user || null);
       setAuthReady(true);
 
@@ -282,6 +289,10 @@ export default function App() {
         }
 
         const freshUser = auth.currentUser || user;
+        if (accountSessionUidRef.current !== freshUser.uid) {
+          clearAccountSessionState();
+          accountSessionUidRef.current = freshUser.uid;
+        }
         setCurrentUser(freshUser);
 
         if (!freshUser.emailVerified) {
@@ -427,6 +438,7 @@ export default function App() {
       } else {
         setFirebaseProfile(null);
         setUserShirtProfile(null);
+        accountSessionUidRef.current = null;
       }
     });
 
@@ -2862,6 +2874,8 @@ export default function App() {
   };
 
   const clearAccountSessionState = () => {
+    // Cancels any pending debounced cloud save from the previous account.
+    cloudProfileSaveVersionRef.current += 1;
     setFirebaseProfile(null);
     setUserShirtProfile(null);
     setAllTeamsUnlocked(false);
@@ -2889,6 +2903,16 @@ export default function App() {
     setAllTimeMatchesWon(0);
     setAllTimeMatchesDrawn(0);
     setAllTimeMatchesLost(0);
+    setAllTimeCampaignsCompleted(0);
+    setAchievements({});
+    setNationCupWins({});
+    setNationStickerProgress({});
+    setLeaderboardRows((rows) =>
+      (Array.isArray(rows) ? rows : []).filter((row) => {
+        const rowId = String(row?.userId || row?.uid || row?.id || "");
+        return rowId && rowId !== "guest-local" && rowId !== "guest-preview" && !row?.localOnly && !row?.isUserPreview;
+      }),
+    );
     safeWriteNumber(ALL_TIME_MATCHES_PLAYED_KEY, 0);
     safeWriteNumber(ALL_TIME_MATCHES_WON_KEY, 0);
     safeWriteNumber(ALL_TIME_MATCHES_DRAWN_KEY, 0);
@@ -2901,6 +2925,14 @@ export default function App() {
       window.localStorage.removeItem(MONDAY_CUPS_WON_KEY);
       window.localStorage.removeItem(ALL_TIME_GOALS_KEY);
       window.localStorage.removeItem(ALL_TIME_SHOTS_KEY);
+      window.localStorage.removeItem(ALL_TIME_CAMPAIGNS_COMPLETED_KEY);
+      window.localStorage.removeItem(ALL_TIME_MATCHES_PLAYED_KEY);
+      window.localStorage.removeItem(ALL_TIME_MATCHES_WON_KEY);
+      window.localStorage.removeItem(ALL_TIME_MATCHES_DRAWN_KEY);
+      window.localStorage.removeItem(ALL_TIME_MATCHES_LOST_KEY);
+      window.localStorage.removeItem(ACHIEVEMENTS_KEY);
+      window.localStorage.removeItem(NATION_CUP_WINS_KEY);
+      window.localStorage.removeItem(NATION_STICKER_PROGRESS_KEY);
       window.localStorage.removeItem(COSMETICS_KEY);
       window.localStorage.removeItem(ALL_TEAMS_UNLOCKED_KEY);
       window.localStorage.removeItem("mondayCup.localLeaderboardRows");
@@ -2911,6 +2943,7 @@ export default function App() {
 
   const handleSignOut = async () => {
     closeMenu();
+    const signingOutUid = currentUser?.uid || null;
 
     if (hasCloudUser && !isCampaignSaveBlocked()) {
       const snapshot = buildGameSnapshot();
@@ -2926,7 +2959,11 @@ export default function App() {
       }
     }
 
+    clearAccountSessionState();
+    accountSessionUidRef.current = null;
+
     await signOut(auth);
+    if (accountSessionUidRef.current === signingOutUid) accountSessionUidRef.current = null;
     setCurrentUser(null);
     clearAccountSessionState();
     setDrawer(null);

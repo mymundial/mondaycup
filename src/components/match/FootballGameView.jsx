@@ -166,6 +166,17 @@ function GoalFrame({ showAim, aimDirection, netOpacity = 0.55 }) {
   );
 }
 
+function actorLayerTransform(point) {
+  return `translate3d(${Number(point?.x || 0)}%, ${Number(point?.y || 0)}%, 0)`;
+}
+
+function ballResultAnimationClass(shot, shotActive) {
+  if (!shotActive) return "";
+  if (shot?.goal) return "mc-ball-result-goal";
+  const savedByKeeper = shot?.keeperDirection?.id && shot?.chosenDirection?.id && shot.keeperDirection.id === shot.chosenDirection.id;
+  return savedByKeeper ? "mc-ball-result-save" : "mc-ball-result-miss";
+}
+
 export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, defenderTeam, showAim, aimDirection, assets, stageLabel = "GROUP STAGE", showChampionsBadge = false, podiumBadgeMode = null, badgeTransform = null, hideMatchActors = false, pitchMowVariant = "game", showAdBoard = true, showPitchMarkings = true, twoPlayerMode = false, exportVisualTuning = false }) {
   const exportVisuals = resolveRenderedExportVisuals(exportVisualTuning);
   const goalLine = GAME.goal.top + GAME.goal.height;
@@ -179,8 +190,44 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
   const badgeEditorTransform = badgeTransform
     ? `translate(${badgeOffsetX}px, ${badgeOffsetY}px) scale(${badgeScale})`
     : undefined;
+  const keeperAnimationClass = shotActive ? (shot?.goal ? "mc-keeper-result-dive" : "mc-keeper-result-save") : "";
+  const ballAnimationClass = ballResultAnimationClass(shot, shotActive);
+  const keeperMs = keeperTravelMs(shot);
+  const ballMs = shotTravelMs(shot);
   return (
     <section className={`relative h-full flex-1 shrink overflow-hidden ${pitchMowVariant === "none" ? "bg-transparent" : "bg-[#0d6c3d]"}`}>
+      <style>{`
+        @keyframes mcKeeperSaveResult {
+          0% { transform: translate3d(0,0,0) scale(1); }
+          56% { transform: translate3d(0,-2px,0) scale(1.10); }
+          100% { transform: translate3d(0,0,0) scale(1); }
+        }
+        @keyframes mcKeeperDiveResult {
+          0% { transform: translate3d(0,0,0) scale(1); }
+          62% { transform: translate3d(0,-2px,0) scale(1.08); }
+          100% { transform: translate3d(0,0,0) scale(1); }
+        }
+        @keyframes mcBallGoalResult {
+          0% { transform: translate3d(0,0,0) rotate(0deg) scale(1); opacity: 1; }
+          70% { transform: translate3d(0,0,0) rotate(42deg) scale(1.02); opacity: 1; }
+          100% { transform: translate3d(0,0,0) rotate(58deg) scale(0.94); opacity: 0.92; }
+        }
+        @keyframes mcBallSaveResult {
+          0% { transform: translate3d(0,0,0) scale(1); }
+          58% { transform: translate3d(0,-1px,0) scale(0.90); }
+          100% { transform: translate3d(0,0,0) scale(0.96); }
+        }
+        @keyframes mcBallMissResult {
+          0% { transform: translate3d(0,0,0) rotate(0deg) scale(1); opacity: 1; }
+          72% { transform: translate3d(0,0,0) rotate(38deg) scale(0.96); opacity: 0.96; }
+          100% { transform: translate3d(0,0,0) rotate(48deg) scale(0.88); opacity: 0.86; }
+        }
+        .mc-keeper-result-save { animation: mcKeeperSaveResult 460ms cubic-bezier(0.18,0.82,0.24,1) both; will-change: transform; }
+        .mc-keeper-result-dive { animation: mcKeeperDiveResult 520ms cubic-bezier(0.18,0.82,0.24,1) both; will-change: transform; }
+        .mc-ball-result-goal { animation: mcBallGoalResult 620ms cubic-bezier(0.08,0.78,0.16,1) both; will-change: transform, opacity; }
+        .mc-ball-result-save { animation: mcBallSaveResult 480ms cubic-bezier(0.18,0.82,0.24,1) both; will-change: transform; }
+        .mc-ball-result-miss { animation: mcBallMissResult 620ms cubic-bezier(0.08,0.78,0.16,1) both; will-change: transform, opacity; }
+      `}</style>
       <CrowdBackdrop visuals={exportVisuals} />
       {showAdBoard && <LedAdvertisingHoard visuals={exportVisuals} />}
       {showPodiumBadge && (
@@ -221,13 +268,59 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
       <GoalFrame showAim={showAim} aimDirection={aimDirection} netOpacity={exportVisuals?.goal?.netOpacity ?? 0.55} />
       {showPitchMarkings && <div className="absolute h-[clamp(8px,2.4vw,12px)] w-[clamp(8px,2.4vw,12px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f1e8]" style={{ left: `${GAME.spot.x}%`, top: `${GAME.spot.y}%` }} />}
       {!hideMatchActors && !showPodiumBadge && (
-        <div className="absolute z-[4] grid h-[clamp(38px,10.8vw,48px)] w-[clamp(38px,10.8vw,48px)] place-items-center rounded-full border-2 will-change-transform" style={{ left: `${keeperPoint.x}%`, top: `${keeperPoint.y}%`, background: defenderTeam.primaryColour, borderColor: defenderTeam.textColour, transform: keeperTransform(shot?.keeperDirection ?? getDirection("CM"), shotActive), transitionProperty: "left, top, transform", transitionDuration: `${keeperTravelMs(shot)}ms`, transitionTimingFunction: shotActive ? "cubic-bezier(0.18, 0.82, 0.24, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)" }}>
-          <img src={assets.goalkeeper} alt="Goalkeeper" className="h-[clamp(1.72rem,7.2vw,2.1rem)] w-[clamp(1.72rem,7.2vw,2.1rem)] object-contain" draggable={false} />
+        <div
+          className="pointer-events-none absolute inset-0 z-[4] will-change-transform"
+          style={{
+            transform: actorLayerTransform(keeperPoint),
+            transitionProperty: "transform",
+            transitionDuration: `${keeperMs}ms`,
+            transitionTimingFunction: shotActive ? "cubic-bezier(0.18, 0.82, 0.24, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)",
+            overflow: "visible",
+            backfaceVisibility: "hidden",
+          }}
+        >
+          <div
+            className="absolute left-0 top-0 grid h-[clamp(38px,10.8vw,48px)] w-[clamp(38px,10.8vw,48px)] place-items-center rounded-full border-2 will-change-transform"
+            style={{
+              background: defenderTeam.primaryColour,
+              borderColor: defenderTeam.textColour,
+              transform: keeperTransform(shot?.keeperDirection ?? getDirection("CM"), shotActive),
+              transformOrigin: "center",
+              overflow: "visible",
+              contain: "layout style",
+              backfaceVisibility: "hidden",
+            }}
+          >
+            <img src={assets.goalkeeper} alt="Goalkeeper" className={`h-[clamp(1.72rem,7.2vw,2.1rem)] w-[clamp(1.72rem,7.2vw,2.1rem)] object-contain ${keeperAnimationClass}`} draggable={false} />
+          </div>
         </div>
       )}
       {!hideMatchActors && !showPodiumBadge && (
-        <div className="absolute z-[5] grid h-[clamp(32px,9.2vw,40px)] w-[clamp(32px,9.2vw,40px)] place-items-center rounded-full border-2 will-change-transform" style={{ left: `${ballPoint.x}%`, top: `${ballPoint.y}%`, background: activeTeam.primaryColour, borderColor: activeTeam.textColour, transform: ballTransform(shotActive), transitionProperty: "left, top, transform", transitionDuration: `${shotTravelMs(shot)}ms`, transitionTimingFunction: shotActive ? "cubic-bezier(0.08, 0.78, 0.16, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)" }}>
-          <img src={assets.ball} alt="Ball" className="h-[clamp(22px,6.3vw,28px)] w-[clamp(22px,6.3vw,28px)] object-contain" draggable={false} />
+        <div
+          className="pointer-events-none absolute inset-0 z-[5] will-change-transform"
+          style={{
+            transform: actorLayerTransform(ballPoint),
+            transitionProperty: "transform",
+            transitionDuration: `${ballMs}ms`,
+            transitionTimingFunction: shotActive ? "cubic-bezier(0.08, 0.78, 0.16, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)",
+            overflow: "visible",
+            backfaceVisibility: "hidden",
+          }}
+        >
+          <div
+            className="absolute left-0 top-0 grid h-[clamp(32px,9.2vw,40px)] w-[clamp(32px,9.2vw,40px)] place-items-center rounded-full border-2 will-change-transform"
+            style={{
+              background: activeTeam.primaryColour,
+              borderColor: activeTeam.textColour,
+              transform: ballTransform(shotActive),
+              transformOrigin: "center",
+              overflow: "visible",
+              contain: "layout style",
+              backfaceVisibility: "hidden",
+            }}
+          >
+            <img src={assets.ball} alt="Ball" className={`h-[clamp(22px,6.3vw,28px)] w-[clamp(22px,6.3vw,28px)] object-contain ${ballAnimationClass}`} draggable={false} />
+          </div>
         </div>
       )}
     </section>
