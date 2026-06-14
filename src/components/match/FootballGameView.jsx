@@ -199,12 +199,14 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
       <style>{`
         @keyframes mcKeeperSaveResult {
           0% { transform: translate3d(0,0,0) scale(1); }
-          56% { transform: translate3d(0,-2px,0) scale(1.10); }
+          42% { transform: translate3d(0,-1.5px,0) scale(1.08); }
+          78% { transform: translate3d(0,-0.5px,0) scale(1.025); }
           100% { transform: translate3d(0,0,0) scale(1); }
         }
         @keyframes mcKeeperDiveResult {
           0% { transform: translate3d(0,0,0) scale(1); }
-          62% { transform: translate3d(0,-2px,0) scale(1.08); }
+          46% { transform: translate3d(0,-1.5px,0) scale(1.065); }
+          80% { transform: translate3d(0,-0.5px,0) scale(1.018); }
           100% { transform: translate3d(0,0,0) scale(1); }
         }
         @keyframes mcBallGoalResult {
@@ -219,8 +221,8 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
           0% { transform: translate3d(0,0,0) rotate(0deg) scale(1); opacity: 1; }
           100% { transform: translate3d(0,0,0) rotate(48deg) scale(0.88); opacity: 0.86; }
         }
-        .mc-keeper-result-save { animation: mcKeeperSaveResult 460ms cubic-bezier(0.18,0.82,0.24,1) both; will-change: transform; }
-        .mc-keeper-result-dive { animation: mcKeeperDiveResult 520ms cubic-bezier(0.18,0.82,0.24,1) both; will-change: transform; }
+        .mc-keeper-result-save { animation: mcKeeperSaveResult var(--mc-keeper-travel-ms, 520ms) cubic-bezier(0.22,1,0.36,1) both; will-change: transform; }
+        .mc-keeper-result-dive { animation: mcKeeperDiveResult var(--mc-keeper-travel-ms, 560ms) cubic-bezier(0.22,1,0.36,1) both; will-change: transform; }
         .mc-ball-result-goal { animation: mcBallGoalResult var(--mc-ball-travel-ms, 620ms) cubic-bezier(0.08,0.78,0.16,1) both; will-change: transform, opacity; }
         .mc-ball-result-save { animation: mcBallSaveResult var(--mc-ball-travel-ms, 480ms) cubic-bezier(0.08,0.78,0.16,1) both; will-change: transform; }
         .mc-ball-result-miss { animation: mcBallMissResult var(--mc-ball-travel-ms, 620ms) cubic-bezier(0.08,0.78,0.16,1) both; will-change: transform, opacity; }
@@ -285,10 +287,19 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
               transformOrigin: "center",
               overflow: "visible",
               contain: "layout style",
+              transitionProperty: "transform",
+              transitionDuration: `${keeperMs}ms`,
+              transitionTimingFunction: shotActive ? "cubic-bezier(0.22, 1, 0.36, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)",
               backfaceVisibility: "hidden",
             }}
           >
-            <img src={assets.goalkeeper} alt="Goalkeeper" className={`h-[clamp(1.72rem,7.2vw,2.1rem)] w-[clamp(1.72rem,7.2vw,2.1rem)] object-contain ${keeperAnimationClass}`} draggable={false} />
+            <img
+              src={assets.goalkeeper}
+              alt="Goalkeeper"
+              className={`h-[clamp(1.72rem,7.2vw,2.1rem)] w-[clamp(1.72rem,7.2vw,2.1rem)] object-contain ${keeperAnimationClass}`}
+              style={{ "--mc-keeper-travel-ms": `${keeperMs}ms` }}
+              draggable={false}
+            />
           </div>
         </div>
       )}

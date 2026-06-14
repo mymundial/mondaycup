@@ -135,10 +135,9 @@ export function directionVector(direction) {
 
 export function keeperTransform(direction, active) {
   const vector = directionVector(direction);
-  const rotation = vector.x === 0 ? 0 : vector.x > 0 ? 18 : -18;
-  const scale = active ? 1.08 : 1;
+  const rotation = active && vector.x !== 0 ? (vector.x > 0 ? 18 : -18) : 0;
   const lift = active && vector.y !== 0 ? -1 : 0;
-  return `translate(-50%, -50%) translateY(${lift}px) rotate(${rotation}deg) scale(${scale})`;
+  return `translate(-50%, -50%) translateY(${lift}px) rotate(${rotation}deg) scale(1)`;
 }
 
 export function ballTransform(active) {

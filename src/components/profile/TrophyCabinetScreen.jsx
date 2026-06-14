@@ -405,11 +405,8 @@ function AchievementRatingPanel({ careerStats = {} }) {
 
   return (
     <div>
-      <TrophySection title="PLAYER RATING" compactTitle compactBody>
-        <div className="flex flex-col items-center justify-center gap-1 py-0 text-center">
-          <div className="home-copy-bold text-[11px] uppercase leading-none tracking-[0.16em] text-[#F5F1E8]/76">
-            {ratingLabel}
-          </div>
+      <TrophySection title={ratingLabel} compactTitle compactBody>
+        <div className="flex flex-col items-center justify-center py-0 text-center">
           <div className="flex items-center justify-center gap-2 text-[#F7D117] drop-shadow-[0_0_10px_rgba(247,209,23,0.22)]" aria-label={`${ratingLabel} player rating`}>
             {stars.map((star, index) => (
               <svg key={star.label || index} viewBox="0 0 24 24" className={`h-[27px] w-[27px] ${star.achieved ? "opacity-100" : "opacity-24"}`} fill="currentColor" aria-hidden="true">
