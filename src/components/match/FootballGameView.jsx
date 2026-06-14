@@ -221,8 +221,8 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
           0% { transform: translate3d(0,0,0) rotate(0deg) scale(1); opacity: 1; }
           100% { transform: translate3d(0,0,0) rotate(48deg) scale(0.88); opacity: 0.86; }
         }
-        .mc-keeper-result-save { animation: mcKeeperSaveResult var(--mc-keeper-travel-ms, 520ms) cubic-bezier(0.22,1,0.36,1) both; will-change: transform; }
-        .mc-keeper-result-dive { animation: mcKeeperDiveResult var(--mc-keeper-travel-ms, 560ms) cubic-bezier(0.22,1,0.36,1) both; will-change: transform; }
+        .mc-keeper-result-save { animation: mcKeeperSaveResult var(--mc-keeper-travel-ms, 520ms) cubic-bezier(0.22,1,0.36,1) both; }
+        .mc-keeper-result-dive { animation: mcKeeperDiveResult var(--mc-keeper-travel-ms, 560ms) cubic-bezier(0.22,1,0.36,1) both; }
         .mc-ball-result-goal { animation: mcBallGoalResult var(--mc-ball-travel-ms, 620ms) cubic-bezier(0.08,0.78,0.16,1) both; will-change: transform, opacity; }
         .mc-ball-result-save { animation: mcBallSaveResult var(--mc-ball-travel-ms, 480ms) cubic-bezier(0.08,0.78,0.16,1) both; will-change: transform; }
         .mc-ball-result-miss { animation: mcBallMissResult var(--mc-ball-travel-ms, 620ms) cubic-bezier(0.08,0.78,0.16,1) both; will-change: transform, opacity; }
@@ -268,29 +268,26 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
       {showPitchMarkings && <div className="absolute h-[clamp(8px,2.4vw,12px)] w-[clamp(8px,2.4vw,12px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f1e8]" style={{ left: `${GAME.spot.x}%`, top: `${GAME.spot.y}%` }} />}
       {!hideMatchActors && !showPodiumBadge && (
         <div
-          className="pointer-events-none absolute inset-0 z-[4] will-change-transform"
+          className="pointer-events-none absolute inset-0 z-[4]"
           style={{
             transform: actorLayerTransform(keeperPoint),
             transitionProperty: "transform",
             transitionDuration: `${keeperMs}ms`,
             transitionTimingFunction: shotActive ? "cubic-bezier(0.18, 0.82, 0.24, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)",
             overflow: "visible",
-            backfaceVisibility: "hidden",
           }}
         >
           <div
-            className="absolute left-0 top-0 grid h-[clamp(38px,10.8vw,48px)] w-[clamp(38px,10.8vw,48px)] place-items-center rounded-full border-2 will-change-transform"
+            className="absolute left-0 top-0 grid h-[clamp(38px,10.8vw,48px)] w-[clamp(38px,10.8vw,48px)] place-items-center rounded-full border-2"
             style={{
               background: defenderTeam.primaryColour,
               borderColor: defenderTeam.textColour,
               transform: keeperTransform(shot?.keeperDirection ?? getDirection("CM"), shotActive),
               transformOrigin: "center",
               overflow: "visible",
-              contain: "layout style",
               transitionProperty: "transform",
               transitionDuration: `${keeperMs}ms`,
               transitionTimingFunction: shotActive ? "cubic-bezier(0.22, 1, 0.36, 1)" : "cubic-bezier(0.22, 1, 0.36, 1)",
-              backfaceVisibility: "hidden",
             }}
           >
             <img
