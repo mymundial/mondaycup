@@ -4,11 +4,11 @@ const branding = {
   mondayLogo: "/assets/branding/monday-cup.webp",
   mondayCupAd: "/assets/branding/mc-ad-board.webp",
   mondayFlat: "/assets/branding/mc-flat.webp",
-  logo2: "/assets/branding/mmLOGO.webp",
+  logo2: "/assets/branding/LOGO2.png",
   myMundialLogo: "/assets/branding/brothers.webp",
   brothersDark: "/assets/branding/brothers2.webp",
-  trophyAd: "/assets/branding/monday-cup-ad.webp",
-  trophyPixel: "/assets/stickers/mc-trophy.webp",
+  trophyAd: "/assets/branding/trophy-ad.png",
+  trophyPixel: "/assets/branding/trophy_pixel.png",
 };
 
 const badges = {

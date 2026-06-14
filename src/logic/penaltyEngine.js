@@ -142,7 +142,9 @@ export function keeperTransform(direction, active) {
 }
 
 export function ballTransform(active) {
-  return `translate(-50%, -50%) scale(${active ? 0.8 : 1}) rotate(${active ? 42 : 0}deg)`;
+  // Keep the wrapper anchored/scaled only. Ball spin is animated on the image itself
+  // so the rotation can start with the kick and finish with the travel transition.
+  return `translate(-50%, -50%) scale(${active ? 0.8 : 1})`;
 }
 
 export function shotTravelMs(shot) {
