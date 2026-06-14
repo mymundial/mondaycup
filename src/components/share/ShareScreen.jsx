@@ -124,9 +124,9 @@ export function ShareScreen({
   const [matchFlagBY, setMatchFlagBY] = useState(0);
   const [matchShowTeamCodes, setMatchShowTeamCodes] = useState(true);
   const [matchTeamScale, setMatchTeamScale] = useState(1);
-  const [matchTeamAX, setMatchTeamAX] = useState(0);
+  const [matchTeamAX, setMatchTeamAX] = useState(-16);
   const [matchTeamAY, setMatchTeamAY] = useState(0);
-  const [matchTeamBX, setMatchTeamBX] = useState(0);
+  const [matchTeamBX, setMatchTeamBX] = useState(16);
   const [matchTeamBY, setMatchTeamBY] = useState(0);
   const [matchShowScore, setMatchShowScore] = useState(true);
   const [matchScoreDisplayMode, setMatchScoreDisplayMode] = useState("score");

@@ -1,5 +1,6 @@
-import { GAME } from "../../logic/penaltyEngine.js";
-import { LED_YELLOW } from "./shareConstants.js";
+import { GAME } from "/src/logic/penaltyEngine.js";
+
+const LED_YELLOW = "#F7D117";
 
 export function scoreFromProps({ team, opponent, score, matchResult }) {
   if (matchResult?.home && matchResult?.away) {
@@ -98,17 +99,45 @@ export function mergeTransforms(...parts) {
   return parts.filter(Boolean).join(" ");
 }
 
-export function MarkerDots({ markers = [], totalSlots = GAME.regulationPens }) {
-  const MAX_VISIBLE_MARKERS = 10;
-  const displaySlots = Math.min(totalSlots, MAX_VISIBLE_MARKERS);
-  const sourceMarkers = Array.isArray(markers) ? markers : [];
-  const startIndex = totalSlots > MAX_VISIBLE_MARKERS ? Math.max(0, sourceMarkers.length - MAX_VISIBLE_MARKERS) : 0;
-  const visible = padMarkers(sourceMarkers.slice(startIndex, startIndex + displaySlots), displaySlots);
+const SHARE_MARKER_MIN_VISIBLE = GAME.regulationPens;
+const SHARE_MARKER_MAX_VISIBLE = 11;
+
+function visiblePenaltySlotCount(markers = [], totalSlots = GAME.regulationPens) {
+  const sourceCount = Array.isArray(markers) ? markers.map(markerForAttempt).filter(Boolean).length : 0;
+  const requestedSlots = Math.max(SHARE_MARKER_MIN_VISIBLE, Number(totalSlots) || 0, sourceCount);
+  return Math.min(SHARE_MARKER_MAX_VISIBLE, requestedSlots);
+}
+
+export function buildSharePenaltyMarkers(markers = [], totalSlots = GAME.regulationPens, goals = 0) {
+  const mapped = Array.isArray(markers) ? markers.map(markerForAttempt).filter(Boolean) : [];
+  const visibleSlots = visiblePenaltySlotCount(mapped, totalSlots);
+
+  if (mapped.length > visibleSlots) {
+    return mapped.slice(-visibleSlots);
+  }
+
+  const visible = mapped.slice(0, visibleSlots);
+  const missing = visibleSlots - visible.length;
+  if (missing <= 0) return visible;
+
+  const targetGoals = clampNumber(goals, 0, visibleSlots, 0);
+  const goalsAlreadyVisible = visible.filter((marker) => marker === "G").length;
+  const goalsToAdd = clampNumber(targetGoals - goalsAlreadyVisible, 0, missing, 0);
+
+  return [
+    ...visible,
+    ...Array.from({ length: goalsToAdd }, () => "G"),
+    ...Array.from({ length: missing - goalsToAdd }, () => "S"),
+  ];
+}
+
+export function MarkerDots({ markers = [], totalSlots = GAME.regulationPens, goals = 0 }) {
+  const visible = buildSharePenaltyMarkers(markers, totalSlots, goals);
   return (
-    <div className="inline-flex min-w-0 justify-center gap-[3px]">
+    <div className="inline-flex flex-none items-center justify-center gap-[2.5px] overflow-visible whitespace-nowrap" style={{ flex: "0 0 auto" }}>
       {visible.map((marker, index) => {
-        const colour = marker === "G" ? "bg-green-500" : marker === "S" ? "bg-red-500" : "bg-[#F7D117]";
-        return <span key={`${marker}-${index}`} data-share-marker-dot="true" className={`shrink-0 rounded-full ${colour}`} style={{ width: 6, height: 6, flex: "0 0 6px", boxShadow: "0 0 2.5px rgba(247,209,23,0.13)", filter: "none" }} />;
+        const colour = marker === "G" ? "bg-green-500" : "bg-red-500";
+        return <span key={`${marker}-${index}`} data-share-marker-dot="true" className={`block shrink-0 rounded-full ${colour}`} style={{ width: 5.25, height: 5.25, flex: "0 0 5.25px", boxShadow: "0 0 2px rgba(247,209,23,0.10)", filter: "none" }} />;
       })}
     </div>
   );

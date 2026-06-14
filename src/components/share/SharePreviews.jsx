@@ -147,9 +147,9 @@ function ShareScoreboard({
     flagBY: 0,
     showTeamCodes: true,
     teamScale: 1,
-    teamAX: 0,
+    teamAX: -16,
     teamAY: 0,
-    teamBX: 0,
+    teamBX: 16,
     teamBY: 0,
     showScore: true,
     scoreDisplayMode: "score",
@@ -190,11 +190,11 @@ function ShareScoreboard({
   const codeTextStyle = (side) => ({
     ...boardTextStyle,
     fontSize: `clamp(17px, ${6.15 * Number(d.teamScale || 1)}cqw, ${34 * Number(d.teamScale || 1)}px)`,
-    fontWeight: 900,
-    letterSpacing: "0em",
+    fontWeight: 400,
+    letterSpacing: "-0.025em",
     transform: editorTransform({ x: side === "A" ? d.teamAX : d.teamBX, y: side === "A" ? d.teamAY : d.teamBY, scale: d.teamScale }),
   });
-  const markerShell = "inline-flex max-w-full items-center justify-center px-1 py-0";
+  const markerShell = "inline-flex flex-none items-center justify-center overflow-visible px-0 py-0";
   const labelTextCenterStyle = {};
   const markerLabelTextCenterStyle = { letterSpacing: SCOREBOARD_MARKER_LABEL_TRACKING };
   const markerTransformFor = (side) => {
@@ -244,16 +244,16 @@ function ShareScoreboard({
             )}
 
             <div data-share-export-flag="A" className="col-start-1 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
-              {d.showFlags && <TeamFlag team={userTeam} className="h-[17px] w-[25px] border border-[#F7D117]/88 bg-[#F5F1E8] shadow-none drop-shadow-none" style={{ transform: editorTransform({ x: Number(d.flagAX || 0) + 7, y: d.flagAY, scale: d.flagScale }) }} />}
+              {d.showFlags && <TeamFlag team={userTeam} className="h-[15px] w-[22px] border border-[#F7D117]/88 bg-[#F5F1E8] shadow-none drop-shadow-none" style={{ transform: editorTransform({ x: d.flagAX, y: d.flagAY, scale: (Number(d.flagScale) || 1) * 0.85 }) }} />}
             </div>
             <div className="col-start-2 row-start-2 row-end-4 grid h-full min-w-0 overflow-visible px-0" style={{ gridTemplateRows: "45fr 25fr" }}>
               <div className="row-start-1 flex h-full min-w-0 items-center justify-center overflow-visible">
-                {d.showTeamCodes && <div data-share-team-code="A" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-black leading-none" style={codeTextStyle("A")}>{userTeam.code}</div>}
+                {d.showTeamCodes && <div data-share-team-code="A" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-normal leading-none" style={codeTextStyle("A")}>{userTeam.code}</div>}
               </div>
               {showMarkers && (
-                <div className="relative z-[1] row-start-2 flex h-full min-w-0 items-center justify-center overflow-hidden">
+                <div className="relative z-[1] row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible">
                   <div className={markerShell} style={{ transform: markerTransformFor("A") }}>
-                    <span className="flex min-h-[16px] items-center justify-center leading-none"><MarkerDots markers={teamAMarkers} totalSlots={totalMarkerSlots} /></span>
+                    <span className="flex min-h-[16px] flex-none items-center justify-center overflow-visible leading-none"><MarkerDots markers={teamAMarkers} totalSlots={totalMarkerSlots} goals={score?.user} /></span>
                   </div>
                 </div>
               )}
@@ -277,18 +277,18 @@ function ShareScoreboard({
             )}
             <div className="col-start-6 row-start-2 row-end-4 grid h-full min-w-0 overflow-visible px-0" style={{ gridTemplateRows: "45fr 25fr" }}>
               <div className="row-start-1 flex h-full min-w-0 items-center justify-center overflow-visible">
-                {d.showTeamCodes && <div data-share-team-code="B" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-black leading-none" style={codeTextStyle("B")}>{opponentTeam.code}</div>}
+                {d.showTeamCodes && <div data-share-team-code="B" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-normal leading-none" style={codeTextStyle("B")}>{opponentTeam.code}</div>}
               </div>
               {showMarkers && (
-                <div className="relative z-[1] row-start-2 flex h-full min-w-0 items-center justify-center overflow-hidden">
+                <div className="relative z-[1] row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible">
                   <div className={markerShell} style={{ transform: markerTransformFor("B") }}>
-                    <span className="flex min-h-[16px] items-center justify-center leading-none"><MarkerDots markers={teamBMarkers} totalSlots={totalMarkerSlots} /></span>
+                    <span className="flex min-h-[16px] flex-none items-center justify-center overflow-visible leading-none"><MarkerDots markers={teamBMarkers} totalSlots={totalMarkerSlots} goals={score?.opponent} /></span>
                   </div>
                 </div>
               )}
             </div>
             <div data-share-export-flag="B" className="col-start-7 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
-              {d.showFlags && <TeamFlag team={opponentTeam} className="h-[17px] w-[25px] border border-[#F7D117]/88 bg-[#F5F1E8] shadow-none drop-shadow-none" style={{ transform: editorTransform({ x: Number(d.flagBX || 0) - 7, y: d.flagBY, scale: d.flagScale }) }} />}
+              {d.showFlags && <TeamFlag team={opponentTeam} className="h-[15px] w-[22px] border border-[#F7D117]/88 bg-[#F5F1E8] shadow-none drop-shadow-none" style={{ transform: editorTransform({ x: d.flagBX, y: d.flagBY, scale: (Number(d.flagScale) || 1) * 0.85 }) }} />}
             </div>
 
             {showMarkers ? (

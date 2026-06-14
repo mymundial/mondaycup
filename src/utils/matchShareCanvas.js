@@ -7,6 +7,8 @@ import { EXPORT_PITCH_CROP_RATIO, MATCH_RESULT_EXPORT_VISUALS, resolveFallbackEx
 export const MATCH_SHARE_EXPORT_SIZE = 1600;
 
 const LED_YELLOW = "#F7D117";
+const SCOREBOARD_SUBTLE_GLOW = "rgba(247,209,23,0.14)";
+const SCOREBOARD_SUBTLE_GLOW_SOFT = "rgba(247,209,23,0.08)";
 const IVORY = "#F5F1E8";
 const DARK_GREEN = "#072D1D";
 const PITCH_GREEN = "#0d6c3d";
@@ -15,6 +17,15 @@ const MONDAY_CUP_PITCH_BADGE_SRC = "/assets/branding/monday-cup.webp";
 const CHAMPION_PITCH_BADGE_SRC = "/assets/badges/mc-champs2.webp";
 const RUNNER_UP_PITCH_BADGE_SRC = "/assets/badges/mc-runner-up.webp";
 const THIRD_PLACE_PITCH_BADGE_SRC = "/assets/badges/mc-third-place.webp";
+
+const SCOREBOARD_FLAG_BASE_WIDTH = 22;
+const SCOREBOARD_FLAG_BASE_HEIGHT = 15;
+const SCOREBOARD_FLAG_OUTER_OFFSET = 8;
+const SCOREBOARD_FLAG_EXPORT_SCALE = 0.86;
+const SCOREBOARD_EXPORT_TEAM_A_CENTER_X = 0.235;
+const SCOREBOARD_EXPORT_TEAM_B_CENTER_X = 0.765;
+const SCOREBOARD_EXPORT_LEFT_FLAG_CENTER_X = 0.05;
+const SCOREBOARD_EXPORT_RIGHT_FLAG_CENTER_X = 0.95;
 
 const DEFAULT_DESIGN = {
   scoreboardHeight: 34,
@@ -292,7 +303,17 @@ function drawCenteredText(ctx, text, x, y, options = {}) {
   ctx.save();
   ctx.textAlign = "center";
   ctx.textBaseline = baseline;
-  ctx.font = `${weight} ${size}px ${family}`;
+  let drawSize = size;
+  ctx.font = `${weight} ${drawSize}px ${family}`;
+  if (maxWidth && maxWidth > 0 && content) {
+    const measuredWidth = letterSpacing && content.length > 1
+      ? Array.from(content).reduce((sum, char) => sum + ctx.measureText(char).width, 0) + letterSpacing * (Array.from(content).length - 1)
+      : ctx.measureText(content).width;
+    if (measuredWidth > maxWidth) {
+      drawSize = Math.max(1, drawSize * (maxWidth / measuredWidth));
+      ctx.font = `${weight} ${drawSize}px ${family}`;
+    }
+  }
   ctx.lineJoin = "round";
   if (shadowColour) {
     ctx.shadowColor = shadowColour;
@@ -320,10 +341,10 @@ function drawCenteredText(ctx, text, x, y, options = {}) {
     if (strokeColour && strokeWidth > 0) {
       ctx.lineWidth = strokeWidth;
       ctx.strokeStyle = strokeColour;
-      ctx.strokeText(content, x, y, maxWidth);
+      ctx.strokeText(content, x, y);
     }
     ctx.fillStyle = colour;
-    ctx.fillText(content, x, y, maxWidth);
+    ctx.fillText(content, x, y);
   }
   ctx.restore();
 }
@@ -379,8 +400,8 @@ function drawFlag(ctx, image, x, y, width, height, options = {}) {
 
   const outline = options.outline || LED_YELLOW;
   ctx.save();
-  ctx.shadowColor = options.glow || "rgba(247,209,23,0.16)";
-  ctx.shadowBlur = options.glowBlur ?? Math.max(1.5, width * 0.035);
+  ctx.shadowColor = options.glow || SCOREBOARD_SUBTLE_GLOW;
+  ctx.shadowBlur = options.glowBlur ?? Math.max(1.5, width * 0.03);
   strokeRoundRect(ctx, x + outerStroke / 2, y + outerStroke / 2, width - outerStroke, height - outerStroke, radius, outline, outerStroke);
   ctx.restore();
 
@@ -409,13 +430,13 @@ function drawCapturedScoreboardFlagOverlays(ctx, props, assets, size, yOffset = 
   const total = fractions.reduce((sum, value) => sum + value, 0);
   const widths = fractions.map((value) => (value / total) * size);
   const centers = widths.map((width, index) => widths.slice(0, index).reduce((sum, value) => sum + value, 0) + width / 2);
-  const teamACenterX = centers[1];
-  const teamBCenterX = centers[5];
+  const teamACenterX = size * SCOREBOARD_EXPORT_TEAM_A_CENTER_X;
+  const teamBCenterX = size * SCOREBOARD_EXPORT_TEAM_B_CENTER_X;
   const unit = size / 400;
-  const flagW = 25 * unit * (Number(d.flagScale) || 1);
-  const flagH = 17 * unit * (Number(d.flagScale) || 1);
-  const leftX = centers[0] - flagW / 2 + ((Number(d.flagAX) || 0) + 7) * unit;
-  const rightX = centers[6] - flagW / 2 + ((Number(d.flagBX) || 0) - 7) * unit;
+  const flagW = SCOREBOARD_FLAG_BASE_WIDTH * unit * (Number(d.flagScale) || 1) * SCOREBOARD_FLAG_EXPORT_SCALE;
+  const flagH = SCOREBOARD_FLAG_BASE_HEIGHT * unit * (Number(d.flagScale) || 1) * SCOREBOARD_FLAG_EXPORT_SCALE;
+  const leftX = size * SCOREBOARD_EXPORT_LEFT_FLAG_CENTER_X - flagW / 2 + (Number(d.flagAX) || 0) * unit;
+  const rightX = size * SCOREBOARD_EXPORT_RIGHT_FLAG_CENTER_X - flagW / 2 + (Number(d.flagBX) || 0) * unit;
   const y = r2Y - flagH / 2;
 
   ctx.save();
@@ -427,29 +448,98 @@ function drawCapturedScoreboardFlagOverlays(ctx, props, assets, size, yOffset = 
   ctx.restore();
 }
 
-function drawMarkers(ctx, markers = [], totalSlots = 5, x, y, scale = 1) {
-  const MAX_VISIBLE_MARKERS = 10;
-  const displaySlots = Math.min(totalSlots, MAX_VISIBLE_MARKERS);
-  const sourceMarkers = Array.isArray(markers) ? markers : [];
-  const startIndex = totalSlots > MAX_VISIBLE_MARKERS ? Math.max(0, sourceMarkers.length - MAX_VISIBLE_MARKERS) : 0;
-  const slicedMarkers = sourceMarkers.slice(startIndex, startIndex + displaySlots);
-  const visible = Array.from({ length: displaySlots }).map((_, index) => slicedMarkers[index] || "");
-  const dot = 13 * scale;
-  const gap = 7 * scale;
+const SHARE_MARKER_MIN_VISIBLE = GAME.regulationPens;
+const SHARE_MARKER_MAX_VISIBLE = 11;
+
+function canvasMarkerForAttempt(attempt) {
+  if (typeof attempt === "string") {
+    const value = attempt.toUpperCase();
+    if (value === "G" || value === "GOAL") return "G";
+    if (value === "S" || value === "SAVE" || value === "SAVED") return "S";
+  }
+  if (attempt?.goal === true || attempt?.result === "goal" || attempt?.shotResult === "goal") return "G";
+  if (attempt?.goal === false || attempt?.result === "save" || attempt?.shotResult === "save") return "S";
+  return "";
+}
+
+function visibleCanvasMarkerSlotCount(markers = [], totalSlots = 5) {
+  const sourceCount = Array.isArray(markers) ? markers.map(canvasMarkerForAttempt).filter(Boolean).length : 0;
+  const requestedSlots = Math.max(SHARE_MARKER_MIN_VISIBLE, Number(totalSlots) || 0, sourceCount);
+  return Math.min(SHARE_MARKER_MAX_VISIBLE, requestedSlots);
+}
+
+function buildCanvasPenaltyMarkers(markers = [], totalSlots = 5, goals = 0) {
+  const mapped = Array.isArray(markers) ? markers.map(canvasMarkerForAttempt).filter(Boolean) : [];
+  const visibleSlots = visibleCanvasMarkerSlotCount(mapped, totalSlots);
+
+  if (mapped.length > visibleSlots) {
+    return mapped.slice(-visibleSlots);
+  }
+
+  const visible = mapped.slice(0, visibleSlots);
+  const missing = visibleSlots - visible.length;
+  if (missing <= 0) return visible;
+
+  const targetGoals = clamp(goals, 0, visibleSlots, 0);
+  const goalsAlreadyVisible = visible.filter((marker) => marker === "G").length;
+  const goalsToAdd = clamp(targetGoals - goalsAlreadyVisible, 0, missing, 0);
+
+  return [
+    ...visible,
+    ...Array.from({ length: goalsToAdd }, () => "G"),
+    ...Array.from({ length: missing - goalsToAdd }, () => "S"),
+  ];
+}
+
+function drawMarkers(ctx, markers = [], totalSlots = 5, x, y, scale = 1, goals = 0) {
+  const visible = buildCanvasPenaltyMarkers(markers, totalSlots, goals);
+  const unit = MATCH_SHARE_EXPORT_SIZE / 400;
+  const dot = 5.5 * unit * scale;
+  const gap = 2.75 * unit * scale;
+  const radius = dot / 2;
   const totalWidth = visible.length * dot + Math.max(0, visible.length - 1) * gap;
-  let cursor = x - totalWidth / 2 + dot / 2;
+  let cursor = x - totalWidth / 2 + radius;
+
   visible.forEach((marker) => {
-    const fill = marker === "G" ? "#22C55E" : marker === "S" ? "#EF4444" : LED_YELLOW;
     ctx.save();
-    ctx.shadowColor = fill;
-    ctx.shadowBlur = Math.max(1.2, dot * 0.22);
+    ctx.shadowColor = SCOREBOARD_SUBTLE_GLOW;
+    ctx.shadowBlur = Math.max(2, MATCH_SHARE_EXPORT_SIZE * 0.0025);
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.filter = "none";
     ctx.beginPath();
-    ctx.arc(cursor, y, dot / 2, 0, Math.PI * 2);
-    ctx.fillStyle = fill;
+    ctx.arc(cursor, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = marker === "G" ? "#22C55E" : "#EF4444";
     ctx.fill();
     ctx.restore();
     cursor += dot + gap;
   });
+}
+
+
+function drawCapturedScoreboardMarkerOverlays(ctx, props, size, yOffset = 0, usernameCenterYOverride = null, teamCenters = null) {
+  const { score, showMarkers, teamAMarkers, teamBMarkers, totalMarkerSlots, matchDesign } = props;
+  if (!showMarkers) return;
+
+  const d = { ...DEFAULT_DESIGN, ...(matchDesign || {}) };
+  const boardH = size * (clamp(d.scoreboardHeight, 24, 46, 34) / 100);
+  const mainH = boardH * 0.76;
+  const row1 = mainH * 0.30;
+  const row2 = mainH * 0.45;
+  const row3 = mainH - row1 - row2;
+  const r3Y = row1 + row2 + row3 / 2 + yOffset;
+  const fractions = [0.72, 1.1, 0.75, 0.3, 0.75, 1.1, 0.72];
+  const total = fractions.reduce((sum, value) => sum + value, 0);
+  const widths = fractions.map((value) => (value / total) * size);
+  const centers = widths.map((width, index) => widths.slice(0, index).reduce((sum, value) => sum + value, 0) + width / 2);
+  const unit = size / 400;
+  const teamAMarkerCenterX = Number.isFinite(teamCenters?.teamA) ? teamCenters.teamA : size * SCOREBOARD_EXPORT_TEAM_A_CENTER_X;
+  const teamBMarkerCenterX = Number.isFinite(teamCenters?.teamB) ? teamCenters.teamB : size * SCOREBOARD_EXPORT_TEAM_B_CENTER_X;
+  const calculatedUsernameCenterY = r3Y + (Number(d.usernameY) || 0) * unit;
+  const usernameCenterY = Number.isFinite(usernameCenterYOverride) ? usernameCenterYOverride : calculatedUsernameCenterY;
+
+  drawMarkers(ctx, teamAMarkers, totalMarkerSlots, teamAMarkerCenterX, usernameCenterY, Number(d.markerScale) || 1, score?.user);
+  drawMarkers(ctx, teamBMarkers, totalMarkerSlots, teamBMarkerCenterX, usernameCenterY, Number(d.markerScale) || 1, score?.opponent);
 }
 
 function flashFontSize(copy, baseScale, exportSize = MATCH_SHARE_EXPORT_SIZE) {
@@ -482,6 +572,7 @@ function drawScoreboard(ctx, props, assets, size) {
   const textColour = d.textColour || LED_YELLOW;
   const strokeWidth = clamp(d.outlineWeight, 0, 16, 0) * (size / 400);
   const strokeColour = strokeWidth > 0 ? d.outlineColour || DARK_GREEN : null;
+  const scoreFontWeight = 400;
 
   ctx.save();
   ctx.fillStyle = "#050505";
@@ -531,20 +622,22 @@ function drawScoreboard(ctx, props, assets, size) {
   const total = fractions.reduce((sum, value) => sum + value, 0);
   const widths = fractions.map((value) => (value / total) * size);
   const centers = widths.map((width, index) => widths.slice(0, index).reduce((sum, value) => sum + value, 0) + width / 2);
-  const teamACenterX = centers[1];
-  const teamBCenterX = centers[5];
+  const teamACenterX = size * SCOREBOARD_EXPORT_TEAM_A_CENTER_X;
+  const teamBCenterX = size * SCOREBOARD_EXPORT_TEAM_B_CENTER_X;
   const unit = size / 400;
 
   if (d.showFlags) {
-    const flagW = 25 * unit * (Number(d.flagScale) || 1);
-    const flagH = 17 * unit * (Number(d.flagScale) || 1);
-    drawFlag(ctx, assets.flagA, centers[0] - flagW / 2 + ((Number(d.flagAX) || 0) + 7) * unit, r2Y - flagH / 2 + (Number(d.flagAY) || 0) * unit, flagW, flagH);
-    drawFlag(ctx, assets.flagB, centers[6] - flagW / 2 + ((Number(d.flagBX) || 0) - 7) * unit, r2Y - flagH / 2 + (Number(d.flagBY) || 0) * unit, flagW, flagH);
+    const flagW = SCOREBOARD_FLAG_BASE_WIDTH * unit * (Number(d.flagScale) || 1) * SCOREBOARD_FLAG_EXPORT_SCALE;
+    const flagH = SCOREBOARD_FLAG_BASE_HEIGHT * unit * (Number(d.flagScale) || 1) * SCOREBOARD_FLAG_EXPORT_SCALE;
+    drawFlag(ctx, assets.flagA, size * SCOREBOARD_EXPORT_LEFT_FLAG_CENTER_X - flagW / 2 + (Number(d.flagAX) || 0) * unit, r2Y - flagH / 2 + (Number(d.flagAY) || 0) * unit, flagW, flagH);
+    drawFlag(ctx, assets.flagB, size * SCOREBOARD_EXPORT_RIGHT_FLAG_CENTER_X - flagW / 2 + (Number(d.flagBX) || 0) * unit, r2Y - flagH / 2 + (Number(d.flagBY) || 0) * unit, flagW, flagH);
   }
 
+  const teamATextCenterX = teamACenterX;
+  const teamBTextCenterX = teamBCenterX;
   const codeSize = size * 0.079 * (Number(d.teamScale) || 1);
   if (d.showTeamCodes) {
-    drawCenteredText(ctx, userTeam.code, teamACenterX + (Number(d.teamAX) || 0) * unit, r2Y + (Number(d.teamAY) || 0) * unit, {
+    drawCenteredText(ctx, userTeam.code, teamATextCenterX, r2Y + (Number(d.teamAY) || 0) * unit, {
       family,
       size: codeSize,
       weight: 900,
@@ -552,10 +645,10 @@ function drawScoreboard(ctx, props, assets, size) {
       maxWidth: widths[1] * 0.92,
       strokeColour,
       strokeWidth,
-      shadowColour: "rgba(247,209,23,0.18)",
-      shadowBlur: size * 0.004,
+      shadowColour: SCOREBOARD_SUBTLE_GLOW,
+      shadowBlur: size * 0.003,
     });
-    drawCenteredText(ctx, opponentTeam.code, teamBCenterX + (Number(d.teamBX) || 0) * unit, r2Y + (Number(d.teamBY) || 0) * unit, {
+    drawCenteredText(ctx, opponentTeam.code, teamBTextCenterX, r2Y + (Number(d.teamBY) || 0) * unit, {
       family,
       size: codeSize,
       weight: 900,
@@ -563,8 +656,8 @@ function drawScoreboard(ctx, props, assets, size) {
       maxWidth: widths[5] * 0.92,
       strokeColour,
       strokeWidth,
-      shadowColour: "rgba(247,209,23,0.18)",
-      shadowBlur: size * 0.004,
+      shadowColour: SCOREBOARD_SUBTLE_GLOW,
+      shadowBlur: size * 0.003,
     });
   }
 
@@ -574,26 +667,29 @@ function drawScoreboard(ctx, props, assets, size) {
       drawCenteredText(ctx, "VS", (centers[2] + centers[4]) / 2 + (Number(d.scoreX) || 0) * unit, r2Y + (Number(d.scoreY) || 0) * unit, {
         family,
         size: scoreSize,
-        weight: 900,
+        weight: scoreFontWeight,
         colour: textColour,
         maxWidth: widths[2] + widths[3] + widths[4],
         strokeColour,
         strokeWidth,
-        shadowColour: "rgba(247,209,23,0.18)",
-        shadowBlur: size * 0.004,
+        shadowColour: SCOREBOARD_SUBTLE_GLOW,
+        shadowBlur: size * 0.003,
       });
     } else {
       const sy = r2Y + (Number(d.scoreY) || 0) * unit;
       const sx = (Number(d.scoreX) || 0) * unit;
-      drawCenteredText(ctx, score?.user ?? 0, centers[2] + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: widths[2], strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
-      drawCenteredText(ctx, "-", centers[3] + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: widths[3], strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
-      drawCenteredText(ctx, score?.opponent ?? 0, centers[4] + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: widths[4], strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
+      drawCenteredText(ctx, score?.user ?? 0, centers[2] + sx, sy, { family, size: scoreSize, weight: scoreFontWeight, colour: textColour, maxWidth: widths[2], strokeColour, strokeWidth, shadowColour: SCOREBOARD_SUBTLE_GLOW, shadowBlur: size * 0.003 });
+      drawCenteredText(ctx, "-", centers[3] + sx, sy, { family, size: scoreSize, weight: scoreFontWeight, colour: textColour, maxWidth: widths[3], strokeColour, strokeWidth, shadowColour: SCOREBOARD_SUBTLE_GLOW, shadowBlur: size * 0.003 });
+      drawCenteredText(ctx, score?.opponent ?? 0, centers[4] + sx, sy, { family, size: scoreSize, weight: scoreFontWeight, colour: textColour, maxWidth: widths[4], strokeColour, strokeWidth, shadowColour: SCOREBOARD_SUBTLE_GLOW, shadowBlur: size * 0.003 });
     }
   }
 
   if (showMarkers) {
-    drawMarkers(ctx, teamAMarkers, totalMarkerSlots, teamACenterX + ((Number(d.teamAX) || 0) + (Number(d.markerAX) || 0)) * unit, r3Y + (Number(d.markerAY) || 0) * unit, Number(d.markerScale) || 1);
-    drawMarkers(ctx, teamBMarkers, totalMarkerSlots, teamBCenterX + ((Number(d.teamBX) || 0) + (Number(d.markerBX) || 0)) * unit, r3Y + (Number(d.markerBY) || 0) * unit, Number(d.markerScale) || 1);
+    const teamAMarkerCenterX = teamACenterX;
+    const teamBMarkerCenterX = teamBCenterX;
+    const usernameCenterY = r3Y + (Number(d.usernameY) || 0) * unit;
+    drawMarkers(ctx, teamAMarkers, totalMarkerSlots, teamAMarkerCenterX, usernameCenterY, Number(d.markerScale) || 1, score?.user);
+    drawMarkers(ctx, teamBMarkers, totalMarkerSlots, teamBMarkerCenterX, usernameCenterY, Number(d.markerScale) || 1, score?.opponent);
 
     const usernameBoxW = size * 0.29 * (Number(d.usernameScale) || 1);
     const usernameBoxH = Math.max(size * 0.039, row3 * 0.62) * (Number(d.usernameScale) || 1);
@@ -662,11 +758,13 @@ function drawScoreboard(ctx, props, assets, size) {
   return boardH;
 }
 
-function drawCrowdPerson(ctx, x, y, scale, shirt, skin, pose, opacity) {
+const CROWD_PERSON_MARGIN_UNITS = 3;
+const CROWD_PERSON_OVERSAMPLE = 2;
+let crowdPersonScratchCanvas = null;
+let crowdPersonScratchCtx = null;
+
+function drawCrowdPersonShape(ctx, shirt, skin, pose) {
   ctx.save();
-  ctx.globalAlpha = opacity;
-  ctx.translate(x - 9 * scale, y - 15 * scale);
-  ctx.scale(scale, scale);
   ctx.lineCap = "round";
   ctx.lineWidth = 3;
   ctx.strokeStyle = shirt;
@@ -695,6 +793,57 @@ function drawCrowdPerson(ctx, x, y, scale, shirt, skin, pose, opacity) {
   ctx.fill();
   drawRoundRect(ctx, 10, 22, 3, 8, 1.5);
   ctx.fill();
+  ctx.restore();
+}
+
+function getCrowdPersonScratch(width, height) {
+  if (!crowdPersonScratchCanvas) {
+    crowdPersonScratchCanvas = document.createElement("canvas");
+    crowdPersonScratchCtx = crowdPersonScratchCanvas.getContext("2d");
+  }
+  if (crowdPersonScratchCanvas.width !== width || crowdPersonScratchCanvas.height !== height) {
+    crowdPersonScratchCanvas.width = width;
+    crowdPersonScratchCanvas.height = height;
+  } else {
+    crowdPersonScratchCtx.clearRect(0, 0, width, height);
+  }
+  crowdPersonScratchCtx.imageSmoothingEnabled = true;
+  crowdPersonScratchCtx.imageSmoothingQuality = "high";
+  crowdPersonScratchCtx.setTransform(1, 0, 0, 1, 0, 0);
+  return { canvas: crowdPersonScratchCanvas, ctx: crowdPersonScratchCtx };
+}
+
+function drawCrowdPerson(ctx, x, y, scale, shirt, skin, pose, opacity) {
+  const alpha = Math.max(0, Math.min(1, Number(opacity || 0)));
+  if (alpha <= 0 || !Number.isFinite(scale) || scale <= 0) return;
+
+  // DOM preview applies opacity to each complete SVG crowd member as a group.
+  // The canvas export must do the same, but the previous sprite pass rasterised
+  // every person at 18x30 and scaled it up, which made the crowd look soft. This
+  // draws each member vector-style into an oversampled scratch canvas at its final
+  // export size, then applies opacity once to the complete figure.
+  const safePose = pose === "up" ? "up" : "down";
+  const margin = CROWD_PERSON_MARGIN_UNITS;
+  const oversample = CROWD_PERSON_OVERSAMPLE;
+  const drawScale = scale * oversample;
+  const spriteW = Math.ceil((18 + margin * 2) * drawScale);
+  const spriteH = Math.ceil((30 + margin * 2) * drawScale);
+  const { canvas, ctx: spriteCtx } = getCrowdPersonScratch(spriteW, spriteH);
+
+  spriteCtx.setTransform(drawScale, 0, 0, drawScale, margin * drawScale, margin * drawScale);
+  drawCrowdPersonShape(spriteCtx, shirt, skin, safePose);
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(
+    canvas,
+    x - (9 + margin) * scale,
+    y - (15 + margin) * scale,
+    spriteW / oversample,
+    spriteH / oversample,
+  );
   ctx.restore();
 }
 
@@ -1054,7 +1203,52 @@ async function captureScoreboardImageFromDom(sourceElement, exportSize) {
     node.style.filter = "none";
   });
 
+  // Export-only fix: keep IntoDotMatrix score glyphs crisp. The preview score
+  // uses a heavy/bold weight, which can make the dot cells merge or look
+  // compressed when html-to-image captures the scoreboard. Export the score at
+  // the font's native weight instead; team codes and labels are left unchanged.
+  const scoreTextNodes = Array.from(scoreboard.querySelectorAll?.('[data-share-score-text="true"]') || []);
+  const scoreTextStyles = scoreTextNodes.map((node) => ({
+    node,
+    fontWeight: node.style.fontWeight,
+  }));
+  scoreTextNodes.forEach((node) => {
+    node.style.fontWeight = "400";
+  });
+
+  // Export-only polish: add a very subtle yellow attention glow to the main
+  // scoreboard text in the captured DOM. Keep the blur tight so the dot-matrix
+  // cells stay crisp rather than soft or smeared.
+  const subtleGlowTextNodes = Array.from(scoreboard.querySelectorAll?.('[data-share-team-code="A"], [data-share-team-code="B"], [data-share-score-text="true"]') || []);
+  const subtleGlowTextStyles = subtleGlowTextNodes.map((node) => ({
+    node,
+    textShadow: node.style.textShadow,
+    filter: node.style.filter,
+  }));
+  subtleGlowTextNodes.forEach((node) => {
+    node.style.textShadow = `0 0 3px ${SCOREBOARD_SUBTLE_GLOW}, 0 0 7px ${SCOREBOARD_SUBTLE_GLOW_SOFT}`;
+    node.style.filter = "none";
+  });
+
+  // Export-only fix: do not let DOM/CSS penalty dots pass through html-to-image.
+  // Some mobile/browser capture paths stretch the marker boxes horizontally, which
+  // turns the circles into pills. The export redraws them later as native canvas arcs.
+  const markerNodes = Array.from(scoreboard.querySelectorAll?.('[data-share-marker-dot="true"], [data-share-marker-row="true"]') || []);
+  const markerStyles = markerNodes.map((node) => ({
+    node,
+    opacity: node.style.opacity,
+    visibility: node.style.visibility,
+  }));
+  markerNodes.forEach((node) => {
+    node.style.opacity = "0";
+    node.style.visibility = "hidden";
+  });
+
   const restoreCaptureStyles = () => {
+    subtleGlowTextStyles.forEach(({ node, textShadow, filter }) => {
+      node.style.textShadow = textShadow;
+      node.style.filter = filter;
+    });
     hiddenFlagStyles.forEach(({ node, opacity, visibility }) => {
       node.style.opacity = opacity;
       node.style.visibility = visibility;
@@ -1063,15 +1257,35 @@ async function captureScoreboardImageFromDom(sourceElement, exportSize) {
       node.style.textShadow = textShadow;
       node.style.filter = filter;
     });
+    scoreTextStyles.forEach(({ node, fontWeight }) => {
+      node.style.fontWeight = fontWeight;
+    });
+    markerStyles.forEach(({ node, opacity, visibility }) => {
+      node.style.opacity = opacity;
+      node.style.visibility = visibility;
+    });
   };
 
   const rootRect = root.getBoundingClientRect?.();
   const boardRect = scoreboard.getBoundingClientRect?.();
+  const usernameBox = scoreboard.querySelector?.('[data-share-username-slot="true"] > *');
+  const usernameRect = usernameBox?.getBoundingClientRect?.();
+  const teamACode = scoreboard.querySelector?.('[data-share-team-code="A"]');
+  const teamBCode = scoreboard.querySelector?.('[data-share-team-code="B"]');
+  const teamARect = teamACode?.getBoundingClientRect?.();
+  const teamBRect = teamBCode?.getBoundingClientRect?.();
   const rootWidth = Math.max(1, rootRect?.width || 0);
   const rootHeight = Math.max(1, rootRect?.height || 0);
   const boardWidth = Math.max(1, boardRect?.width || rootWidth);
   const boardHeight = Math.max(1, boardRect?.height || (rootHeight * 0.34));
   const scaledHeight = Math.max(1, Math.round((boardHeight / rootHeight) * exportSize));
+  const usernameCenterY = usernameRect && boardRect
+    ? ((usernameRect.top + usernameRect.height / 2 - boardRect.top) / boardHeight) * scaledHeight
+    : null;
+  const teamCenters = {
+    teamA: teamARect && boardRect ? ((teamARect.left + teamARect.width / 2 - boardRect.left) / boardWidth) * exportSize : null,
+    teamB: teamBRect && boardRect ? ((teamBRect.left + teamBRect.width / 2 - boardRect.left) / boardWidth) * exportSize : null,
+  };
 
   try {
     const { toPng } = await import("html-to-image");
@@ -1091,7 +1305,7 @@ async function captureScoreboardImageFromDom(sourceElement, exportSize) {
     const image = await loadCanvasImage(dataUrl);
     restoreCaptureStyles();
     if (!image) return null;
-    return { image, height: scaledHeight };
+    return { image, height: scaledHeight, usernameCenterY, teamCenters };
   } catch (error) {
     restoreCaptureStyles();
     console.warn("Match scoreboard DOM capture failed; falling back to canvas scoreboard", error);
@@ -1179,6 +1393,7 @@ export async function createMatchShareBlob(props = {}, options = {}) {
     ctx.drawImage(capturedScoreboard.image, 0, -scoreboardUpShift, size, capturedScoreboard.height);
     ctx.restore();
     drawCapturedScoreboardFlagOverlays(ctx, normalisedProps, assets, size, -scoreboardUpShift);
+    drawCapturedScoreboardMarkerOverlays(ctx, normalisedProps, size, -scoreboardUpShift, capturedScoreboard.usernameCenterY, capturedScoreboard.teamCenters);
   } else {
     boardH = drawScoreboard(ctx, normalisedProps, assets, size);
   }
