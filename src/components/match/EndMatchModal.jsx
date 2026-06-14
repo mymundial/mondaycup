@@ -1151,7 +1151,7 @@ function EndMatchModal({ result, fixture, onNext, onChangeTeams, onDismiss, onOp
           <div className="relative p-3">
             <div className="mb-0 grid h-[58px] grid-cols-[40px_minmax(0,1fr)_40px] items-center gap-2">
               {sharePreviewOpen ? (
-                <button type="button" onClick={() => setSharePreviewOpen(false)} aria-label="Back to result options" className="grid h-10 w-10 place-items-center justify-self-start rounded-[0.85rem] bg-[#031B12]/46 text-[#F5F1E8]">
+                <button type="button" onClick={() => setSharePreviewOpen(false)} aria-label="Back to result options" className="grid h-10 w-10 place-items-center justify-self-start text-[#F5F1E8] drop-shadow-[0_2px_5px_rgba(0,0,0,0.32)] active:scale-[0.96]">
                   <BackArrowIcon className="h-7 w-7" />
                 </button>
               ) : (
