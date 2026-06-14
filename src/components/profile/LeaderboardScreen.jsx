@@ -507,7 +507,17 @@ export function LeaderboardScreen({ menuProps, rows = [], currentCampaignScore =
   const topTenTitle = safeLeaderboardPage === 0 ? "TOP 10" : `RANK ${pageStartRank}-${pageEndRank}`;
   const previousLeaderboardPage = () => setLeaderboardPage((page) => (page <= 0 ? totalLeaderboardPages - 1 : page - 1));
   const nextLeaderboardPage = () => setLeaderboardPage((page) => (page >= totalLeaderboardPages - 1 ? 0 : page + 1));
-  const myRankRow = leaderboardSourceRows.find((row) => row.isUserPreview || (currentUser?.uid && row.userId === currentUser.uid)) || {
+  const isGuestLeaderboardRow = (row = {}) => {
+    if (currentUser?.uid) return false;
+    const rowId = String(row?.userId || row?.uid || row?.id || "");
+    return Boolean(row?.localOnly || row?.isUserPreview || rowId === "guest-local" || rowId === "guest-preview");
+  };
+
+  const myRankRow = leaderboardSourceRows.find((row) =>
+    currentUser?.uid
+      ? row.userId === currentUser.uid
+      : isGuestLeaderboardRow(row),
+  ) || {
     id: "my-rank-empty",
     rank: "--",
     username: currentUser?.displayName || currentUser?.email?.split("@")[0] || "GUEST",
