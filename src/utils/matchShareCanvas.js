@@ -11,6 +11,10 @@ const IVORY = "#F5F1E8";
 const DARK_GREEN = "#072D1D";
 const PITCH_GREEN = "#0d6c3d";
 const MONDAY_CUP_AD_SRC = "/assets/branding/mondaycup_co_uk.png";
+const MONDAY_CUP_PITCH_BADGE_SRC = "/assets/branding/monday-cup.png";
+const CHAMPION_PITCH_BADGE_SRC = "/assets/badges/mc-champs2.png";
+const RUNNER_UP_PITCH_BADGE_SRC = "/assets/badges/mc-runner-up.png";
+const THIRD_PLACE_PITCH_BADGE_SRC = "/assets/badges/mc-third-place.png";
 
 const DEFAULT_DESIGN = {
   scoreboardHeight: 34,
@@ -93,56 +97,87 @@ function cleanText(value, fallback = "") {
   return String(value || fallback).replace(/\s+/g, " ").trim().toUpperCase();
 }
 
-function imageSourceVariants(src) {
+function normaliseAssetUrl(src) {
   const raw = String(src || "").trim();
-  if (!raw) return [];
-  const variants = [raw];
-
+  if (!raw) return "";
   try {
-    if (typeof window !== "undefined" && window.location?.origin && raw.startsWith("/")) {
-      variants.push(new URL(raw, window.location.origin).href);
+    if (typeof window !== "undefined" && window.location?.origin) {
+      return new URL(raw, window.location.origin).href;
     }
   } catch {
-    // Ignore URL normalisation failures; the raw source is still tried.
+    // Keep the raw path as a final fallback.
   }
-
-  return Array.from(new Set(variants));
+  return raw;
 }
 
-function shouldUseAnonymousCors(src) {
+function isSameOriginAsset(src) {
   try {
-    if (!src || String(src).startsWith("data:") || String(src).startsWith("blob:")) return false;
-    if (typeof window === "undefined" || !window.location?.origin) return true;
-    return new URL(src, window.location.origin).origin !== window.location.origin;
+    if (typeof window === "undefined" || !window.location?.origin) return false;
+    return new URL(src, window.location.origin).origin === window.location.origin;
   } catch {
-    return true;
+    return false;
   }
 }
 
-function loadCanvasImage(src) {
-  const variants = imageSourceVariants(src);
-
+function imageFromUrl(src, { anonymous = false } = {}) {
   return new Promise((resolve) => {
-    if (!variants.length) return resolve(null);
+    if (!src) return resolve(null);
+    const image = new Image();
+    image.decoding = "async";
+    if (anonymous) image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = src;
+  });
+}
 
-    let index = 0;
-    const tryNext = () => {
-      const currentSrc = variants[index];
-      if (!currentSrc) return resolve(null);
+async function imageFromFetchedBlob(src) {
+  if (!src || typeof fetch !== "function" || !isSameOriginAsset(src)) return null;
+  let objectUrl = "";
+  try {
+    const response = await fetch(src, { cache: "force-cache", credentials: "same-origin" });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    objectUrl = URL.createObjectURL(blob);
+    const image = await imageFromUrl(objectUrl);
+    if (image) {
+      // Keep the blob URL alive until the export canvas has been drawn.
+      image.__matchShareObjectUrl = objectUrl;
+      objectUrl = "";
+      return image;
+    }
+    return null;
+  } catch {
+    return null;
+  } finally {
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+  }
+}
 
-      const image = new Image();
-      image.decoding = "async";
-      if (shouldUseAnonymousCors(currentSrc)) image.crossOrigin = "anonymous";
-      image.onload = () => resolve(image);
-      image.onerror = () => {
-        index += 1;
-        if (index < variants.length) tryNext();
-        else resolve(null);
-      };
-      image.src = currentSrc;
-    };
+async function loadCanvasImage(src) {
+  const url = normaliseAssetUrl(src);
+  if (!url) return null;
 
-    tryNext();
+  // Same-origin public assets are fetched to blob first. This is the safest path
+  // for iOS/Safari canvas exports and avoids CORS/decode gaps for pitch badges
+  // and the mondaycup.co.uk ad-board logo.
+  const fetched = await imageFromFetchedBlob(url);
+  if (fetched) return fetched;
+
+  const direct = await imageFromUrl(url, { anonymous: !isSameOriginAsset(url) });
+  if (direct) return direct;
+
+  // One last fallback for relative public paths.
+  if (url !== src) return imageFromUrl(src, { anonymous: false });
+  return null;
+}
+
+function releaseLoadedAssets(assets = {}) {
+  Object.values(assets).forEach((image) => {
+    if (image?.__matchShareObjectUrl) {
+      URL.revokeObjectURL(image.__matchShareObjectUrl);
+      image.__matchShareObjectUrl = "";
+    }
   });
 }
 
@@ -1104,10 +1139,10 @@ async function loadAssets(userTeam, opponentTeam) {
     loadCanvasImage(userTeam.flag),
     loadCanvasImage(opponentTeam.flag),
     loadCanvasImage(MONDAY_CUP_AD_SRC),
-    loadCanvasImage(ASSETS.branding.mondayLogo),
-    loadCanvasImage(ASSETS.badges.champion),
-    loadCanvasImage(ASSETS.badges.runnerUp),
-    loadCanvasImage(ASSETS.badges.third),
+    loadCanvasImage(MONDAY_CUP_PITCH_BADGE_SRC),
+    loadCanvasImage(CHAMPION_PITCH_BADGE_SRC),
+    loadCanvasImage(RUNNER_UP_PITCH_BADGE_SRC),
+    loadCanvasImage(THIRD_PLACE_PITCH_BADGE_SRC),
     loadCanvasImage(ASSETS.game.goalkeeper),
     loadCanvasImage(ASSETS.game.ball),
   ]);
@@ -1161,5 +1196,9 @@ export async function createMatchShareBlob(props = {}, options = {}) {
     ctx.restore();
   }
 
-  return canvasToBlob(canvas);
+  try {
+    return await canvasToBlob(canvas);
+  } finally {
+    releaseLoadedAssets(assets);
+  }
 }
