@@ -12,6 +12,7 @@ import {
   PITCH_MOW_BACKGROUND_STYLE,
 } from "./shareConstants.js";
 import {
+  TeamFlag,
   MarkerDots,
   clampNumber,
   editorTransform,
@@ -111,28 +112,6 @@ function DotMatrixLabelText({ children }) {
   );
 }
 
-function PreviewScoreboardFlag({ team, style = null }) {
-  if (!team?.flag) return null;
-  return (
-    <span
-      className="relative block h-[14px] w-[20px] overflow-hidden rounded-[4px] border border-[#F7D117]/82 bg-[#F5F1E8] shadow-none drop-shadow-none outline outline-1 outline-[#F7D117]/85 outline-offset-0"
-      style={{
-        boxShadow: "0 0 1.5px rgba(247,209,23,0.10), inset 0 0 0 0.7px rgba(3,27,18,0.24)",
-        ...(style || {}),
-      }}
-    >
-      <img
-        src={team.flag}
-        alt={`${team.name} flag`}
-        className="absolute inset-0 h-full w-full object-cover"
-        style={{ transform: "scale(1)", transformOrigin: "center center" }}
-        draggable={false}
-        crossOrigin="anonymous"
-      />
-    </span>
-  );
-}
-
 function ShareScoreboard({
   userTeam,
   opponentTeam,
@@ -168,9 +147,9 @@ function ShareScoreboard({
     flagBY: 0,
     showTeamCodes: true,
     teamScale: 1,
-    teamAX: -18,
+    teamAX: 0,
     teamAY: 0,
-    teamBX: 18,
+    teamBX: 0,
     teamBY: 0,
     showScore: true,
     scoreDisplayMode: "score",
@@ -200,9 +179,7 @@ function ShareScoreboard({
     color: d.textColour,
     fontFamily: fontFamilyFor(d.fontType),
     WebkitTextStroke: textStroke(d.outlineWeight, d.outlineColour),
-    textShadow: "0 0 0.25px rgba(247,209,23,0.20), 0 0 2px rgba(247,209,23,0.10)",
-    WebkitFontSmoothing: "antialiased",
-    filter: "none",
+    textShadow: "0 0 0.35px rgba(247,209,23,0.10)",
   };
   const scoreTextStyle = {
     ...boardTextStyle,
@@ -226,17 +203,6 @@ function ShareScoreboard({
     const markerY = Number(side === "A" ? d.markerAY : d.markerBY) || 0;
     return editorTransform({ x: teamX + markerX, y: markerY, scale: d.markerScale });
   };
-  const previewFlagScale = (Number(d.flagScale) || 1) * 0.9;
-  const previewFlagTransformFor = (side) => {
-    const baseX = Number(side === "A" ? d.flagAX : d.flagBX) || 0;
-    const y = Number(side === "A" ? d.flagAY : d.flagBY) || 0;
-    const frameToTeamMidpointNudge = 12;
-    return editorTransform({
-      x: baseX + (side === "A" ? -frameToTeamMidpointNudge : frameToTeamMidpointNudge),
-      y,
-      scale: previewFlagScale,
-    });
-  };
   const flashCopy = String(flashText || "SHARE YOUR RESULT").replace(/\s+/g, " ").trim();
   const flashFontSize = "16px";
 
@@ -250,20 +216,20 @@ function ShareScoreboard({
         <div
           className="pointer-events-none absolute left-[2px] right-[2px] top-[2px] bottom-[2px] opacity-50"
           style={{
-            backgroundImage: "radial-gradient(circle at center, rgba(247,209,23,0.14) 0.72px, transparent 1.44px)",
+            backgroundImage: "radial-gradient(circle at center, rgba(247,209,23,0.24) 0.72px, transparent 1.44px)",
             backgroundSize: "6px calc(100% / 12)",
             backgroundPosition: "center top",
             backgroundRepeat: "repeat",
           }}
         />
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(11,95,53,0.035),rgba(11,95,53,0.10))]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(11,95,53,0.10),rgba(247,209,23,0.035),rgba(11,95,53,0.10))]" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.18))]" />
 
-        <div className="relative z-[1] flex h-full items-center px-[clamp(10px,4.2%,22px)] py-0">
+        <div className="relative z-[1] flex h-full items-center px-0 py-0">
           <div
             className="grid h-[88%] w-full items-center justify-items-center"
             style={{
-              gridTemplateColumns: "34px minmax(0,1fr) clamp(34px,10cqw,48px) clamp(34px,9cqw,46px) clamp(34px,10cqw,48px) minmax(0,1fr) 34px",
+              gridTemplateColumns: "10% minmax(0,27%) 10.5% 5% 10.5% minmax(0,27%) 10%",
               gridTemplateRows: "30% 45% 25%",
             }}
           >
@@ -277,15 +243,15 @@ function ShareScoreboard({
               </div>
             )}
 
-            <div className="col-start-1 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
-              {d.showFlags && <PreviewScoreboardFlag team={userTeam} style={{ transform: previewFlagTransformFor("A") }} />}
+            <div data-share-export-flag="A" className="col-start-1 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
+              {d.showFlags && <TeamFlag team={userTeam} className="h-[17px] w-[25px] border border-[#F7D117]/88 bg-[#F5F1E8] shadow-none drop-shadow-none" style={{ transform: editorTransform({ x: Number(d.flagAX || 0) + 7, y: d.flagAY, scale: d.flagScale }) }} />}
             </div>
             <div className="col-start-2 row-start-2 row-end-4 grid h-full min-w-0 overflow-visible px-0" style={{ gridTemplateRows: "45fr 25fr" }}>
               <div className="row-start-1 flex h-full min-w-0 items-center justify-center overflow-visible">
                 {d.showTeamCodes && <div data-share-team-code="A" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-black leading-none" style={codeTextStyle("A")}>{userTeam.code}</div>}
               </div>
               {showMarkers && (
-                <div className="relative z-[1] row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible">
+                <div className="relative z-[1] row-start-2 flex h-full min-w-0 items-center justify-center overflow-hidden">
                   <div className={markerShell} style={{ transform: markerTransformFor("A") }}>
                     <span className="flex min-h-[16px] items-center justify-center leading-none"><MarkerDots markers={teamAMarkers} totalSlots={totalMarkerSlots} /></span>
                   </div>
@@ -314,15 +280,15 @@ function ShareScoreboard({
                 {d.showTeamCodes && <div data-share-team-code="B" className="led-text-glow font-led flex h-full w-full items-center justify-center overflow-visible whitespace-nowrap text-center font-black leading-none" style={codeTextStyle("B")}>{opponentTeam.code}</div>}
               </div>
               {showMarkers && (
-                <div className="relative z-[1] row-start-2 flex h-full min-w-0 items-center justify-center overflow-visible">
+                <div className="relative z-[1] row-start-2 flex h-full min-w-0 items-center justify-center overflow-hidden">
                   <div className={markerShell} style={{ transform: markerTransformFor("B") }}>
                     <span className="flex min-h-[16px] items-center justify-center leading-none"><MarkerDots markers={teamBMarkers} totalSlots={totalMarkerSlots} /></span>
                   </div>
                 </div>
               )}
             </div>
-            <div className="col-start-7 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
-              {d.showFlags && <PreviewScoreboardFlag team={opponentTeam} style={{ transform: previewFlagTransformFor("B") }} />}
+            <div data-share-export-flag="B" className="col-start-7 row-start-2 flex h-full w-full items-center justify-center overflow-visible">
+              {d.showFlags && <TeamFlag team={opponentTeam} className="h-[17px] w-[25px] border border-[#F7D117]/88 bg-[#F5F1E8] shadow-none drop-shadow-none" style={{ transform: editorTransform({ x: Number(d.flagBX || 0) - 7, y: d.flagBY, scale: d.flagScale }) }} />}
             </div>
 
             {showMarkers ? (

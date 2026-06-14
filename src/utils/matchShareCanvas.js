@@ -5,7 +5,6 @@ import { getMondayCupShieldVisuals } from "../logic/matchVisuals.js";
 import { EXPORT_PITCH_CROP_RATIO, MATCH_RESULT_EXPORT_VISUALS, resolveFallbackExportVisuals } from "../logic/exportVisuals.js";
 
 export const MATCH_SHARE_EXPORT_SIZE = 1600;
-const EXPORT_PEN_MARKER_CAP = 11;
 
 const LED_YELLOW = "#F7D117";
 const IVORY = "#F5F1E8";
@@ -94,15 +93,56 @@ function cleanText(value, fallback = "") {
   return String(value || fallback).replace(/\s+/g, " ").trim().toUpperCase();
 }
 
+function imageSourceVariants(src) {
+  const raw = String(src || "").trim();
+  if (!raw) return [];
+  const variants = [raw];
+
+  try {
+    if (typeof window !== "undefined" && window.location?.origin && raw.startsWith("/")) {
+      variants.push(new URL(raw, window.location.origin).href);
+    }
+  } catch {
+    // Ignore URL normalisation failures; the raw source is still tried.
+  }
+
+  return Array.from(new Set(variants));
+}
+
+function shouldUseAnonymousCors(src) {
+  try {
+    if (!src || String(src).startsWith("data:") || String(src).startsWith("blob:")) return false;
+    if (typeof window === "undefined" || !window.location?.origin) return true;
+    return new URL(src, window.location.origin).origin !== window.location.origin;
+  } catch {
+    return true;
+  }
+}
+
 function loadCanvasImage(src) {
+  const variants = imageSourceVariants(src);
+
   return new Promise((resolve) => {
-    if (!src) return resolve(null);
-    const image = new Image();
-    image.decoding = "async";
-    image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
-    image.onerror = () => resolve(null);
-    image.src = src;
+    if (!variants.length) return resolve(null);
+
+    let index = 0;
+    const tryNext = () => {
+      const currentSrc = variants[index];
+      if (!currentSrc) return resolve(null);
+
+      const image = new Image();
+      image.decoding = "async";
+      if (shouldUseAnonymousCors(currentSrc)) image.crossOrigin = "anonymous";
+      image.onload = () => resolve(image);
+      image.onerror = () => {
+        index += 1;
+        if (index < variants.length) tryNext();
+        else resolve(null);
+      };
+      image.src = currentSrc;
+    };
+
+    tryNext();
   });
 }
 
@@ -256,7 +296,7 @@ function drawCenteredText(ctx, text, x, y, options = {}) {
 function drawDotMatrix(ctx, x, y, width, height) {
   ctx.save();
   ctx.globalAlpha = 0.5;
-  ctx.fillStyle = "rgba(247,209,23,0.14)";
+  ctx.fillStyle = "rgba(247,209,23,0.24)";
   const spacingX = width / 58;
   const spacingY = height / 17;
   const radius = Math.max(1.4, width * 0.0019);
@@ -283,41 +323,42 @@ function transformedBox(baseX, baseY, width, height, { x = 0, y = 0, scale = 1 }
 }
 
 function drawFlag(ctx, image, x, y, width, height, options = {}) {
-  const radius = Math.max(3, width * 0.075);
+  const radius = Math.max(4, width * 0.105);
   const outerStroke = Math.max(1.4, width * 0.026);
+  const innerStroke = Math.max(0.7, width * 0.012);
   ctx.save();
 
-  // The DOM flag is removed before scoreboard capture, so the export only needs
-  // one clean canvas flag layer. Draw the artwork at the true flag footprint and
-  // then draw the yellow outline on top. No backing plate and no overscan.
+  // Draw the actual flag full-bleed inside the rounded clip, then outline only.
+  // No ivory backing is drawn here: the DOM flag is hidden before capture, so any
+  // extra fill behind the canvas flag appears as a detached white box on export.
   ctx.save();
   drawRoundRect(ctx, x, y, width, height, radius);
   ctx.clip();
-  if (image) drawImageCover(ctx, image, x, y, width, height);
+  if (image) {
+    drawImageCover(ctx, image, x, y, width, height);
+  } else {
+    ctx.fillStyle = "#0B5F35";
+    ctx.fillRect(x, y, width, height);
+  }
   ctx.restore();
 
   const outline = options.outline || LED_YELLOW;
   ctx.save();
-  ctx.shadowColor = options.glow || "rgba(247,209,23,0.10)";
-  ctx.shadowBlur = options.glowBlur ?? Math.max(0.75, width * 0.018);
+  ctx.shadowColor = options.glow || "rgba(247,209,23,0.16)";
+  ctx.shadowBlur = options.glowBlur ?? Math.max(1.5, width * 0.035);
   strokeRoundRect(ctx, x + outerStroke / 2, y + outerStroke / 2, width - outerStroke, height - outerStroke, radius, outline, outerStroke);
   ctx.restore();
-  ctx.restore();
-}
 
-function eraseCapturedFlagPlate(ctx, x, y, width, height, boardWidth, boardHeight) {
-  // Safety clean-up for any DOM-captured flag residue. The DOM flag is hidden
-  // before capture, but this clears the small area where older captures or
-  // browser artefacts can leave the previous outline/background visible.
-  const bleedX = Math.max(5, width * 0.25);
-  const bleedY = Math.max(7, height * 0.45);
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(x - bleedX, y - bleedY, width + bleedX * 2, height + bleedY * 2);
-  ctx.clip();
-  ctx.fillStyle = "#050505";
-  ctx.fillRect(x - bleedX, y - bleedY, width + bleedX * 2, height + bleedY * 2);
-  drawDotMatrix(ctx, 0, 0, boardWidth, boardHeight);
+  strokeRoundRect(
+    ctx,
+    x + outerStroke + innerStroke / 2,
+    y + outerStroke + innerStroke / 2,
+    width - outerStroke * 2 - innerStroke,
+    height - outerStroke * 2 - innerStroke,
+    Math.max(2, radius - outerStroke),
+    "rgba(3,27,18,0.26)",
+    innerStroke,
+  );
   ctx.restore();
 }
 
@@ -329,43 +370,34 @@ function drawCapturedScoreboardFlagOverlays(ctx, props, assets, size, yOffset = 
   const row1 = mainH * 0.30;
   const row2 = mainH * 0.45;
   const r2Y = row1 + row2 / 2 + yOffset;
+  const fractions = [0.72, 1.1, 0.75, 0.3, 0.75, 1.1, 0.72];
+  const total = fractions.reduce((sum, value) => sum + value, 0);
+  const widths = fractions.map((value) => (value / total) * size);
+  const centers = widths.map((width, index) => widths.slice(0, index).reduce((sum, value) => sum + value, 0) + width / 2);
+  const teamACenterX = centers[1];
+  const teamBCenterX = centers[5];
   const unit = size / 400;
-  const sidePadding = size * 0.042;
-  const flagColW = 34 * unit;
-  const scoreColW = 40 * unit;
-  const dashColW = 36 * unit;
-  const teamColW = Math.max(0, (size - sidePadding * 2 - flagColW * 2 - scoreColW * 2 - dashColW) / 2);
-  const gridStart = sidePadding;
-  const flagACenterX = gridStart + flagColW / 2;
-  const teamACenterX = gridStart + flagColW + teamColW / 2;
-  const flagBCenterX = size - sidePadding - flagColW / 2;
-  const teamBCenterX = size - sidePadding - flagColW - teamColW / 2;
-  const previewFlagScale = (Number(d.flagScale) || 1) * 0.9;
-  const flagW = 20 * unit * previewFlagScale;
-  const flagH = 14 * unit * previewFlagScale;
-  const frameToTeamMidpointNudge = 12 * unit;
-  const leftX = flagACenterX - flagW / 2 + ((Number(d.flagAX) || 0) * unit) - frameToTeamMidpointNudge;
-  const rightX = flagBCenterX - flagW / 2 + ((Number(d.flagBX) || 0) * unit) + frameToTeamMidpointNudge;
+  const flagW = 25 * unit * (Number(d.flagScale) || 1);
+  const flagH = 17 * unit * (Number(d.flagScale) || 1);
+  const leftX = centers[0] - flagW / 2 + ((Number(d.flagAX) || 0) + 7) * unit;
+  const rightX = centers[6] - flagW / 2 + ((Number(d.flagBX) || 0) - 7) * unit;
   const y = r2Y - flagH / 2;
 
   ctx.save();
-  const leftY = y + (Number(d.flagAY) || 0) * unit;
-  const rightY = y + (Number(d.flagBY) || 0) * unit;
   // The captured DOM flags are hidden before capture. Draw only the clean export
-  // flag objects here, directly over the live scoreboard background. No filled
-  // backing plate or clean-up rectangle is used.
-  drawFlag(ctx, assets.flagA, leftX, leftY, flagW, flagH, { outline: LED_YELLOW });
-  drawFlag(ctx, assets.flagB, rightX, rightY, flagW, flagH, { outline: LED_YELLOW });
+  // flag objects here, directly over the live scoreboard background. No cover
+  // texture panel is used, which keeps the dot-matrix grid continuous.
+  drawFlag(ctx, assets.flagA, leftX, y + (Number(d.flagAY) || 0) * unit, flagW, flagH, { outline: LED_YELLOW });
+  drawFlag(ctx, assets.flagB, rightX, y + (Number(d.flagBY) || 0) * unit, flagW, flagH, { outline: LED_YELLOW });
   ctx.restore();
 }
 
 function drawMarkers(ctx, markers = [], totalSlots = 5, x, y, scale = 1) {
+  const MAX_VISIBLE_MARKERS = 10;
+  const displaySlots = Math.min(totalSlots, MAX_VISIBLE_MARKERS);
   const sourceMarkers = Array.isArray(markers) ? markers : [];
-  const displaySlots = Math.min(
-    EXPORT_PEN_MARKER_CAP,
-    Math.max(totalSlots, sourceMarkers.length, GAME.regulationPens),
-  );
-  const slicedMarkers = sourceMarkers.slice(-displaySlots);
+  const startIndex = totalSlots > MAX_VISIBLE_MARKERS ? Math.max(0, sourceMarkers.length - MAX_VISIBLE_MARKERS) : 0;
+  const slicedMarkers = sourceMarkers.slice(startIndex, startIndex + displaySlots);
   const visible = Array.from({ length: displaySlots }).map((_, index) => slicedMarkers[index] || "");
   const dot = 13 * scale;
   const gap = 7 * scale;
@@ -460,28 +492,19 @@ function drawScoreboard(ctx, props, assets, size) {
     });
   }
 
+  const fractions = [0.72, 1.1, 0.75, 0.3, 0.75, 1.1, 0.72];
+  const total = fractions.reduce((sum, value) => sum + value, 0);
+  const widths = fractions.map((value) => (value / total) * size);
+  const centers = widths.map((width, index) => widths.slice(0, index).reduce((sum, value) => sum + value, 0) + width / 2);
+  const teamACenterX = centers[1];
+  const teamBCenterX = centers[5];
   const unit = size / 400;
-  const sidePadding = size * 0.042;
-  const flagColW = 34 * unit;
-  const scoreColW = 40 * unit;
-  const dashColW = 36 * unit;
-  const teamColW = Math.max(0, (size - sidePadding * 2 - flagColW * 2 - scoreColW * 2 - dashColW) / 2);
-  const gridStart = sidePadding;
-  const flagACenterX = gridStart + flagColW / 2;
-  const teamACenterX = gridStart + flagColW + teamColW / 2;
-  const scoreACenterX = gridStart + flagColW + teamColW + scoreColW / 2;
-  const dashCenterX = gridStart + flagColW + teamColW + scoreColW + dashColW / 2;
-  const scoreBCenterX = gridStart + flagColW + teamColW + scoreColW + dashColW + scoreColW / 2;
-  const teamBCenterX = size - sidePadding - flagColW - teamColW / 2;
-  const flagBCenterX = size - sidePadding - flagColW / 2;
 
   if (d.showFlags) {
-    const previewFlagScale = (Number(d.flagScale) || 1) * 0.9;
-    const flagW = 20 * unit * previewFlagScale;
-    const flagH = 14 * unit * previewFlagScale;
-    const frameToTeamMidpointNudge = 12 * unit;
-    drawFlag(ctx, assets.flagA, flagACenterX - flagW / 2 + ((Number(d.flagAX) || 0) * unit) - frameToTeamMidpointNudge, r2Y - flagH / 2 + (Number(d.flagAY) || 0) * unit, flagW, flagH);
-    drawFlag(ctx, assets.flagB, flagBCenterX - flagW / 2 + ((Number(d.flagBX) || 0) * unit) + frameToTeamMidpointNudge, r2Y - flagH / 2 + (Number(d.flagBY) || 0) * unit, flagW, flagH);
+    const flagW = 25 * unit * (Number(d.flagScale) || 1);
+    const flagH = 17 * unit * (Number(d.flagScale) || 1);
+    drawFlag(ctx, assets.flagA, centers[0] - flagW / 2 + ((Number(d.flagAX) || 0) + 7) * unit, r2Y - flagH / 2 + (Number(d.flagAY) || 0) * unit, flagW, flagH);
+    drawFlag(ctx, assets.flagB, centers[6] - flagW / 2 + ((Number(d.flagBX) || 0) - 7) * unit, r2Y - flagH / 2 + (Number(d.flagBY) || 0) * unit, flagW, flagH);
   }
 
   const codeSize = size * 0.079 * (Number(d.teamScale) || 1);
@@ -491,7 +514,7 @@ function drawScoreboard(ctx, props, assets, size) {
       size: codeSize,
       weight: 900,
       colour: textColour,
-      maxWidth: teamColW * 0.92,
+      maxWidth: widths[1] * 0.92,
       strokeColour,
       strokeWidth,
       shadowColour: "rgba(247,209,23,0.18)",
@@ -502,7 +525,7 @@ function drawScoreboard(ctx, props, assets, size) {
       size: codeSize,
       weight: 900,
       colour: textColour,
-      maxWidth: teamColW * 0.92,
+      maxWidth: widths[5] * 0.92,
       strokeColour,
       strokeWidth,
       shadowColour: "rgba(247,209,23,0.18)",
@@ -513,12 +536,12 @@ function drawScoreboard(ctx, props, assets, size) {
   if (d.showScore) {
     const scoreSize = size * 0.079 * (Number(d.scoreScale) || 1);
     if (d.scoreDisplayMode === "vs") {
-      drawCenteredText(ctx, "VS", (scoreACenterX + scoreBCenterX) / 2 + (Number(d.scoreX) || 0) * unit, r2Y + (Number(d.scoreY) || 0) * unit, {
+      drawCenteredText(ctx, "VS", (centers[2] + centers[4]) / 2 + (Number(d.scoreX) || 0) * unit, r2Y + (Number(d.scoreY) || 0) * unit, {
         family,
         size: scoreSize,
         weight: 900,
         colour: textColour,
-        maxWidth: scoreColW * 2 + dashColW,
+        maxWidth: widths[2] + widths[3] + widths[4],
         strokeColour,
         strokeWidth,
         shadowColour: "rgba(247,209,23,0.18)",
@@ -527,9 +550,9 @@ function drawScoreboard(ctx, props, assets, size) {
     } else {
       const sy = r2Y + (Number(d.scoreY) || 0) * unit;
       const sx = (Number(d.scoreX) || 0) * unit;
-      drawCenteredText(ctx, score?.user ?? 0, scoreACenterX + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: scoreColW, strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
-      drawCenteredText(ctx, "-", dashCenterX + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: dashColW, strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
-      drawCenteredText(ctx, score?.opponent ?? 0, scoreBCenterX + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: scoreColW, strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
+      drawCenteredText(ctx, score?.user ?? 0, centers[2] + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: widths[2], strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
+      drawCenteredText(ctx, "-", centers[3] + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: widths[3], strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
+      drawCenteredText(ctx, score?.opponent ?? 0, centers[4] + sx, sy, { family, size: scoreSize, weight: 900, colour: textColour, maxWidth: widths[4], strokeColour, strokeWidth, shadowColour: "rgba(247,209,23,0.18)", shadowBlur: size * 0.004 });
     }
   }
 
@@ -784,19 +807,36 @@ function drawAdvertisingBoard(ctx, image, x, y, width, height, visuals = MATCH_R
   ctx.moveTo(x, y + height - 1);
   ctx.lineTo(x + width, y + height - 1);
   ctx.stroke();
-  if (image) {
-    const adBoard = visuals?.adBoard || {};
-    const logoW = width * (adBoard.logoWidthRatio ?? 0.671);
-    const logoH = height * (adBoard.logoHeightRatio ?? 0.759);
-    const cx = x + width / 2;
-    const cy = y + height / 2;
+  const adBoard = visuals?.adBoard || {};
+  const logoW = width * (adBoard.logoWidthRatio ?? 0.671);
+  const logoH = height * (adBoard.logoHeightRatio ?? 0.759);
+  const cx = x + width / 2;
+  const cy = y + height / 2;
 
+  if (image) {
     ctx.save();
     ctx.globalAlpha = adBoard.logoOpacity ?? 0.84;
     ctx.filter = adBoard.logoFilter || "brightness(0.94)";
     ctx.shadowColor = adBoard.shadowColor || "rgba(245,241,232,0.20)";
     ctx.shadowBlur = adBoard.shadowBlur ?? 9;
     drawImageContain(ctx, image, cx, cy, logoW, logoH);
+    ctx.restore();
+  } else {
+    // Last-resort canvas fallback for mobile/Safari image decode misses.
+    ctx.save();
+    ctx.globalAlpha = 0.42;
+    ctx.shadowColor = "rgba(245,241,232,0.18)";
+    ctx.shadowBlur = Math.max(7, width * 0.008);
+    drawCenteredText(ctx, "MONDAYCUP.CO.UK", cx, cy, {
+      family: fontFamilyFor("bold"),
+      size: Math.max(22, height * 0.34),
+      weight: 900,
+      colour: "rgba(245,241,232,0.74)",
+      maxWidth: width * 0.70,
+      letterSpacing: width * 0.001,
+      strokeColour: "rgba(3,27,18,0.42)",
+      strokeWidth: Math.max(1.5, width * 0.0016),
+    });
     ctx.restore();
   }
   ctx.restore();
@@ -952,51 +992,20 @@ async function captureScoreboardImageFromDom(sourceElement, exportSize) {
   if (document?.fonts?.ready) await document.fonts.ready.catch(() => null);
   await preloadImagesInElement(scoreboard);
 
-  const captureFlagNodes = Array.from(
-    scoreboard.querySelectorAll?.('[data-share-flag="true"], img[alt$=" flag"], img[alt*=" flag"]') || []
-  );
-  const captureFlagStyles = captureFlagNodes.map((node) => ({
+  const explicitFlagNodes = Array.from(scoreboard.querySelectorAll?.('[data-share-export-flag]') || []);
+  const legacyFlagImageNodes = Array.from(scoreboard.querySelectorAll?.('img[alt$=" flag"], img[alt*=" flag"]') || []);
+  const hiddenFlagNodes = Array.from(new Set([
+    ...explicitFlagNodes,
+    ...legacyFlagImageNodes.map((node) => node.closest?.("span") || node),
+  ])).filter(Boolean);
+  const hiddenFlagStyles = hiddenFlagNodes.map((node) => ({
     node,
-    border: node.style.border,
-    outline: node.style.outline,
-    background: node.style.background,
-    backgroundColor: node.style.backgroundColor,
-    boxShadow: node.style.boxShadow,
-    filter: node.style.filter,
+    opacity: node.style.opacity,
+    visibility: node.style.visibility,
   }));
-  captureFlagNodes.forEach((node) => {
-    // Keep the real flag image visible in the preview capture, but strip the
-    // decorative frame/backing so the export uses the correct flag artwork only.
-    node.style.border = "none";
-    node.style.outline = "none";
-    node.style.background = "transparent";
-    node.style.backgroundColor = "transparent";
-    node.style.boxShadow = "none";
-    node.style.filter = "none";
-  });
-
-  const markerGroups = Array.from(new Set(
-    Array.from(scoreboard.querySelectorAll?.('[data-share-marker-dot="true"]') || [])
-      .map((node) => node.parentElement)
-      .filter(Boolean)
-  ));
-  const hiddenMarkerStyles = [];
-  markerGroups.forEach((group) => {
-    const dots = Array.from(group.querySelectorAll?.('[data-share-marker-dot="true"]') || []);
-    if (dots.length <= EXPORT_PEN_MARKER_CAP) return;
-    dots.slice(0, dots.length - EXPORT_PEN_MARKER_CAP).forEach((node) => {
-      hiddenMarkerStyles.push({
-        node,
-        display: node.style.display,
-        ignore: node.dataset.shareExportIgnore,
-      });
-      node.style.display = "none";
-      node.dataset.shareExportIgnore = "true";
-    });
-  });
-  await new Promise((resolve) => {
-    if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => resolve());
-    else setTimeout(resolve, 0);
+  hiddenFlagNodes.forEach((node) => {
+    node.style.opacity = "0";
+    node.style.visibility = "hidden";
   });
 
   const glowNodes = Array.from(scoreboard.querySelectorAll?.(".led-text-glow") || []);
@@ -1011,18 +1020,9 @@ async function captureScoreboardImageFromDom(sourceElement, exportSize) {
   });
 
   const restoreCaptureStyles = () => {
-    captureFlagStyles.forEach(({ node, border, outline, background, backgroundColor, boxShadow, filter }) => {
-      node.style.border = border;
-      node.style.outline = outline;
-      node.style.background = background;
-      node.style.backgroundColor = backgroundColor;
-      node.style.boxShadow = boxShadow;
-      node.style.filter = filter;
-    });
-    hiddenMarkerStyles.forEach(({ node, display, ignore }) => {
-      node.style.display = display;
-      if (ignore === undefined) delete node.dataset.shareExportIgnore;
-      else node.dataset.shareExportIgnore = ignore;
+    hiddenFlagStyles.forEach(({ node, opacity, visibility }) => {
+      node.style.opacity = opacity;
+      node.style.visibility = visibility;
     });
     glowStyles.forEach(({ node, textShadow, filter }) => {
       node.style.textShadow = textShadow;
@@ -1143,16 +1143,15 @@ export async function createMatchShareBlob(props = {}, options = {}) {
     ctx.filter = `blur(${Math.max(2.4, size * 0.0032)}px)`;
     ctx.drawImage(capturedScoreboard.image, 0, -scoreboardUpShift, size, capturedScoreboard.height);
     ctx.restore();
-    // Use the cleaned DOM-captured flags directly; do not redraw canvas flag overlays.
+    drawCapturedScoreboardFlagOverlays(ctx, normalisedProps, assets, size, -scoreboardUpShift);
   } else {
     boardH = drawScoreboard(ctx, normalisedProps, assets, size);
   }
-  const capturedPitch = await capturePitchImageFromDom(options.sourceElement, size, size - boardH);
-  if (capturedPitch?.image) {
-    ctx.drawImage(capturedPitch.image, 0, boardH, size, size - boardH);
-  } else {
-    drawPitchArea(ctx, normalisedProps, assets, boardH, size, size - boardH);
-  }
+  // Mobile Safari/html-to-image can report a successful pitch capture while dropping
+  // nested image assets inside the pitch layer (badge/logo/ad-board). The scoreboard
+  // still uses DOM capture for pixel-perfect text, but the pitch is rendered directly
+  // to canvas so the badge and mondaycup.co.uk board are always present in exports.
+  drawPitchArea(ctx, normalisedProps, assets, boardH, size, size - boardH);
 
   if (props.borderEnabled) {
     ctx.save();
