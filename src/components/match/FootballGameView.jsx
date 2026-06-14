@@ -198,16 +198,16 @@ export function Pitch({ ballPoint, keeperPoint, shot, shotActive, activeTeam, de
     <section className={`relative h-full flex-1 shrink overflow-hidden ${pitchMowVariant === "none" ? "bg-transparent" : "bg-[#0d6c3d]"}`}>
       <style>{`
         @keyframes mcKeeperSaveResult {
-          0% { transform: translate3d(0,0,0) scale(1); }
-          42% { transform: translate3d(0,-1.5px,0) scale(1.08); }
-          78% { transform: translate3d(0,-0.5px,0) scale(1.025); }
-          100% { transform: translate3d(0,0,0) scale(1); }
+          0% { transform: translate3d(0,0,0); }
+          42% { transform: translate3d(0,-1.5px,0); }
+          78% { transform: translate3d(0,-0.5px,0); }
+          100% { transform: translate3d(0,0,0); }
         }
         @keyframes mcKeeperDiveResult {
-          0% { transform: translate3d(0,0,0) scale(1); }
-          46% { transform: translate3d(0,-1.5px,0) scale(1.065); }
-          80% { transform: translate3d(0,-0.5px,0) scale(1.018); }
-          100% { transform: translate3d(0,0,0) scale(1); }
+          0% { transform: translate3d(0,0,0); }
+          46% { transform: translate3d(0,-1.5px,0); }
+          80% { transform: translate3d(0,-0.5px,0); }
+          100% { transform: translate3d(0,0,0); }
         }
         @keyframes mcBallGoalResult {
           0% { transform: translate3d(0,0,0) rotate(0deg) scale(1); opacity: 1; }
