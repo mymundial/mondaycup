@@ -11,7 +11,7 @@ import { buildPlayerAchievementPages, playerCareerStars, playerCareerTitle } fro
 const ALL_NATIONS = Object.values(GROUPS).flat();
 const ACHIEVEMENTS_PER_PAGE = 6;
 const ACHIEVEMENT_PAGE_COUNT = 3;
-const ACHIEVEMENT_UNLOCKED_SRC = "/assets/badges/gold_shield.png";
+const ACHIEVEMENT_UNLOCKED_SRC = "/assets/badges/gold_shield.webp";
 
 const EXISTING_ACHIEVEMENT_KEYS = [
   "ourTime",
@@ -50,24 +50,24 @@ const PODIUM_BADGES = [
   {
     key: "thirdPlaceFinish",
     title: "Third Place",
-    assetSrc: "/assets/badges/mc-third-place.png",
-    placeholderSrc: "/assets/badges/bronze_shield.png",
+    assetSrc: "/assets/badges/mc-third-place.webp",
+    placeholderSrc: "/assets/badges/bronze_shield.webp",
     accent: "#D9822B",
     podiumClass: "border-[#D9822B]/82 bg-[#D9822B] text-[#072D1D] ring-[#D9822B]/28",
   },
   {
     key: "runnerUpFinish",
     title: "Runner-Up",
-    assetSrc: "/assets/badges/mc-runner-up.png",
-    placeholderSrc: "/assets/badges/silver_shield.png",
+    assetSrc: "/assets/badges/mc-runner-up.webp",
+    placeholderSrc: "/assets/badges/silver_shield.webp",
     accent: "#C8C8C8",
     podiumClass: "border-[#C8C8C8]/82 bg-[#C8C8C8] text-[#072D1D] ring-[#F5F1E8]/28",
   },
   {
     key: "championFinish",
     title: "Champion",
-    assetSrc: "/assets/badges/mc-champs2.png",
-    placeholderSrc: "/assets/badges/gold_shield.png",
+    assetSrc: "/assets/badges/mc-champs2.webp",
+    placeholderSrc: "/assets/badges/gold_shield.webp",
     accent: "#D8B62F",
     podiumClass: "border-[#D8B62F]/82 bg-[#D8B62F] text-[#072D1D] ring-[#F7D117]/28",
   },
@@ -152,9 +152,9 @@ function stickerProgressLabel(record = {}, stickerKey) {
 }
 
 const STICKER_ROLES = [
-  { key: "stopper", label: "SAFE HANDS", iconSrc: "/assets/stickers/stopper2.png" },
-  { key: "talisman", label: "TALISMANIC LEADER", iconSrc: "/assets/stickers/talisman1.png" },
-  { key: "striker", label: "SUPER STRIKER", iconSrc: "/assets/stickers/striker1.png" },
+  { key: "stopper", label: "SAFE HANDS", iconSrc: "/assets/stickers/stopper2.webp" },
+  { key: "talisman", label: "TALISMANIC LEADER", iconSrc: "/assets/stickers/talisman1.webp" },
+  { key: "striker", label: "SUPER STRIKER", iconSrc: "/assets/stickers/striker1.webp" },
 ];
 
 const TEAM_STICKER_KEYS = ["kit", "flag", "champions", "stopper", "talisman", "striker"];
@@ -905,7 +905,7 @@ function StickerShirtBack({ team, name, number, footerLabel }) {
       }}
     >
       <div className="absolute left-1/2 top-[6.5%] z-[2] h-[16%] w-[23%] -translate-x-1/2">
-        <img src="/assets/branding/monday-cup.png" alt="" className="h-full w-full object-contain" draggable={false} />
+        <img src="/assets/branding/monday-cup.webp" alt="" className="h-full w-full object-contain" draggable={false} />
       </div>
       <div
         className="absolute left-1/2 top-[29%] z-[2] w-[88%] -translate-x-1/2 truncate text-center home-copy-bold text-[9px] uppercase leading-none tracking-[0.08em]"
@@ -934,7 +934,7 @@ function StickerShirtBack({ team, name, number, footerLabel }) {
 function StickerTopLogo() {
   return (
     <div className="pointer-events-none absolute left-1/2 top-[11.8%] z-[5] h-[11.5%] w-[19.5%] -translate-x-1/2">
-      <img src="/assets/branding/monday-cup.png" alt="" className="h-full w-full object-contain" draggable={false} />
+      <img src="/assets/branding/monday-cup.webp" alt="" className="h-full w-full object-contain" draggable={false} />
     </div>
   );
 }
@@ -986,7 +986,7 @@ function ChampionsSticker() {
   return (
     <StickerIconStage>
       <img
-        src="/assets/stickers/mc-trophy.png"
+        src="/assets/stickers/mc-trophy.webp"
         alt=""
         className="h-full w-full object-contain"
         draggable={false}
@@ -1012,7 +1012,7 @@ function KitSticker() {
   return (
     <StickerIconStage>
       <img
-        src="/assets/stickers/kit1.png"
+        src="/assets/stickers/kit1.webp"
         alt=""
         className="h-full w-full object-contain"
         draggable={false}

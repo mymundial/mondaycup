@@ -607,7 +607,7 @@ function AllTeamsUnlockButton({
     >
       <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-[#F5F1E8]/12 bg-[#072D1D]/92">
         <img
-          src="/assets/branding/monday-cup.png"
+          src="/assets/branding/monday-cup.webp"
           alt=""
           className="h-10 w-10 object-contain drop-shadow-[0_5px_8px_rgba(0,0,0,0.22)]"
           draggable={false}
@@ -645,7 +645,7 @@ function GoldenKitbagBundleCard({ onOpenShop, active = false, inactive = false }
     >
       <span className="grid h-[74px] w-[74px] shrink-0 place-items-center rounded-full border border-[#F5F1E8]/12 bg-[#031B12]/54 shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
         <img
-          src="/assets/game/golden-kitbag.png"
+          src="/assets/game/golden-kitbag.webp"
           alt=""
           className="h-16 w-16 object-contain drop-shadow-[0_8px_10px_rgba(0,0,0,0.28)]"
           draggable={false}
@@ -663,11 +663,11 @@ function GoldenKitbagBundleCard({ onOpenShop, active = false, inactive = false }
         </span>
         <span className="mt-1.5 flex items-center justify-center gap-1.5">
           {[
-            "/assets/branding/monday-cup.png",
-            "/assets/game/golden-boot.png",
-            "/assets/game/golden-ball.png",
-            "/assets/game/golden-glove.png",
-            "/assets/game/golden-ticket.png",
+            "/assets/branding/monday-cup.webp",
+            "/assets/game/golden-boot.webp",
+            "/assets/game/golden-ball.webp",
+            "/assets/game/golden-glove.webp",
+            "/assets/game/golden-ticket.webp",
           ].map((src) => (
             <span
               key={src}
@@ -719,7 +719,7 @@ function TicketOfficeModal({ open, quantity = 0, onUse, onBuyMore, onClose }) {
             <div className="flex h-[74px] w-[74px] items-center justify-center">
               <div className="relative h-[74px] w-[74px] overflow-hidden rounded-[1rem] border border-[#F7D117]/44 bg-[#031B12]/72 shadow-[0_0_18px_rgba(247,209,23,0.18),inset_0_1px_0_rgba(245,241,232,0.08)]">
                 <img
-                  src="/assets/game/golden-ticket.png"
+                  src="/assets/game/golden-ticket.webp"
                   alt=""
                   className="absolute left-1/2 top-1/2 h-16 w-16 max-w-none -translate-x-1/2 -translate-y-1/2 object-contain object-center drop-shadow-[0_8px_12px_rgba(0,0,0,0.34)]"
                   draggable={false}
@@ -1256,7 +1256,7 @@ export function ClubhouseScreen({
                   title="Golden Boot"
                   subtitle="+10% SHOT POWER"
                   price="£1"
-                  assetSrc="/assets/game/golden-boot.png"
+                  assetSrc="/assets/game/golden-boot.webp"
                   active={
                     isGuest
                       ? false
@@ -1283,7 +1283,7 @@ export function ClubhouseScreen({
                   title="Golden Ball"
                   subtitle="+10% SHOT ACCURACY"
                   price="£1"
-                  assetSrc="/assets/game/golden-ball.png"
+                  assetSrc="/assets/game/golden-ball.webp"
                   active={
                     isGuest
                       ? false
@@ -1309,7 +1309,7 @@ export function ClubhouseScreen({
                   title="Golden Glove"
                   subtitle="INCREASED GK SAVE"
                   price="£1"
-                  assetSrc="/assets/game/golden-glove.png"
+                  assetSrc="/assets/game/golden-glove.webp"
                   active={
                     isGuest
                       ? false
@@ -1335,7 +1335,7 @@ export function ClubhouseScreen({
                   title="Golden Ticket"
                   subtitle="1x ADVANCE TO FINAL"
                   price="£1"
-                  assetSrc="/assets/game/golden-ticket.png"
+                  assetSrc="/assets/game/golden-ticket.webp"
                   active={
                     isGuest ? false : Number(ownedItems?.goldenTicketQty || 0) > 0
                   }

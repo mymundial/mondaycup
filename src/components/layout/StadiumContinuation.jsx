@@ -105,7 +105,7 @@ function StadiumPitch({ includeCrowd = false, belowScoreboard = false }) {
         <div className="absolute inset-x-0 z-[2] overflow-hidden border-t border-[#05150E] bg-[#072D1D] shadow-[0_-8px_24px_rgba(0,0,0,0.42)]" style={{ top: `${AD_BOARD_TOP}%`, height: `${AD_BOARD_HEIGHT}%` }}>
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(0,0,0,0.22))]" />
           <div className="relative mx-auto flex h-full max-w-[61%] items-center justify-center">
-            <img src="/assets/branding/mondaycup_co_uk.png" alt="" className="relative z-[1] h-[69%] w-full object-contain opacity-[0.84]" draggable={false} />
+            <img src="/assets/branding/mondaycup_co_uk.webp" alt="" className="relative z-[1] h-[69%] w-full object-contain opacity-[0.84]" draggable={false} />
           </div>
         </div>
       ) : null}

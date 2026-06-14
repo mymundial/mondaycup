@@ -1,25 +1,25 @@
 import goalMp3 from "../assets/goal.mp3";
 import missMp3 from "../assets/miss.mp3";
 const branding = {
-  mondayLogo: "/assets/branding/monday-cup.png",
-  mondayCupAd: "/assets/branding/mc-ad-board.png",
-  mondayFlat: "/assets/branding/mc-flat.png",
-  logo2: "/assets/branding/LOGO2.png",
-  myMundialLogo: "/assets/branding/brothers.png",
-  brothersDark: "/assets/branding/brothers2.png",
-  trophyAd: "/assets/branding/trophy-ad.png",
-  trophyPixel: "/assets/branding/trophy_pixel.png",
+  mondayLogo: "/assets/branding/monday-cup.webp",
+  mondayCupAd: "/assets/branding/mc-ad-board.webp",
+  mondayFlat: "/assets/branding/mc-flat.webp",
+  logo2: "/assets/branding/mmLOGO.webp",
+  myMundialLogo: "/assets/branding/brothers.webp",
+  brothersDark: "/assets/branding/brothers2.webp",
+  trophyAd: "/assets/branding/monday-cup-ad.webp",
+  trophyPixel: "/assets/stickers/mc-trophy.webp",
 };
 
 const badges = {
-  champion: "/assets/badges/mc-champs2.png",
-  runnerUp: "/assets/badges/mc-runner-up.png",
-  third: "/assets/badges/mc-third-place.png",
+  champion: "/assets/badges/mc-champs2.webp",
+  runnerUp: "/assets/badges/mc-runner-up.webp",
+  third: "/assets/badges/mc-third-place.webp",
 };
 
 const game = {
-  ball: "/assets/game/ball1.png",
-  goalkeeper: "/assets/game/gk1.png",
+  ball: "/assets/game/ball1.webp",
+  goalkeeper: "/assets/game/gk1.webp",
 };
 
 const sounds = {

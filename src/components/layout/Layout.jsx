@@ -50,7 +50,7 @@ function RepeatingAdBoard({ style }) {
           <div key={index} className="relative flex h-full shrink-0 items-center justify-center" style={{ width: tileWidth }}>
             <div className="pointer-events-none absolute left-1/2 top-1/2 h-[70%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5F1E8]/16 blur-xl" aria-hidden="true" />
             <div className="pointer-events-none absolute left-1/2 top-1/2 h-[48%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/12 blur-lg" aria-hidden="true" />
-            <img src="/assets/branding/mondaycup_co_uk.png" alt="" className="relative z-[1] h-[69%] w-[61%] object-contain opacity-[0.84]" draggable={false} />
+            <img src="/assets/branding/mondaycup_co_uk.webp" alt="" className="relative z-[1] h-[69%] w-[61%] object-contain opacity-[0.84]" draggable={false} />
           </div>
         ))}
       </div>

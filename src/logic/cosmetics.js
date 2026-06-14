@@ -1,8 +1,8 @@
 export const COSMETICS_KEY = "mondayCup.clubhouseCosmetics";
-export const GOLDEN_BOOT_SRC = "/assets/game/golden-boot.png";
-export const GOLDEN_BALL_SRC = "/assets/game/golden-ball.png";
-export const GOLDEN_GLOVE_SRC = "/assets/game/golden-glove.png";
-export const GOLDEN_TICKET_SRC = "/assets/game/golden-ticket.png";
+export const GOLDEN_BOOT_SRC = "/assets/game/golden-boot.webp";
+export const GOLDEN_BALL_SRC = "/assets/game/golden-ball.webp";
+export const GOLDEN_GLOVE_SRC = "/assets/game/golden-glove.webp";
+export const GOLDEN_TICKET_SRC = "/assets/game/golden-ticket.webp";
 
 export const DEFAULT_COSMETICS = {
   goldenBoot: false,

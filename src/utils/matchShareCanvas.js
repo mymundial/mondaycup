@@ -10,11 +10,11 @@ const LED_YELLOW = "#F7D117";
 const IVORY = "#F5F1E8";
 const DARK_GREEN = "#072D1D";
 const PITCH_GREEN = "#0d6c3d";
-const MONDAY_CUP_AD_SRC = "/assets/branding/mondaycup_co_uk.png";
-const MONDAY_CUP_PITCH_BADGE_SRC = "/assets/branding/monday-cup.png";
-const CHAMPION_PITCH_BADGE_SRC = "/assets/badges/mc-champs2.png";
-const RUNNER_UP_PITCH_BADGE_SRC = "/assets/badges/mc-runner-up.png";
-const THIRD_PLACE_PITCH_BADGE_SRC = "/assets/badges/mc-third-place.png";
+const MONDAY_CUP_AD_SRC = "/assets/branding/mondaycup_co_uk.webp";
+const MONDAY_CUP_PITCH_BADGE_SRC = "/assets/branding/monday-cup.webp";
+const CHAMPION_PITCH_BADGE_SRC = "/assets/badges/mc-champs2.webp";
+const RUNNER_UP_PITCH_BADGE_SRC = "/assets/badges/mc-runner-up.webp";
+const THIRD_PLACE_PITCH_BADGE_SRC = "/assets/badges/mc-third-place.webp";
 
 const DEFAULT_DESIGN = {
   scoreboardHeight: 34,

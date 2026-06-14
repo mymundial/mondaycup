@@ -29,7 +29,7 @@ export const STORE_ITEMS = {
     type: "permanent_unlock",
     equipMode: "always_on",
     maxQuantity: 1,
-    assetSrc: "/assets/branding/monday-cup.png",
+    assetSrc: "/assets/branding/monday-cup.webp",
     effect: { unlockAllTeams: true },
   },
   goldenBall: {
@@ -43,7 +43,7 @@ export const STORE_ITEMS = {
     type: "equippable_boost",
     equipMode: "optional",
     maxQuantity: 1,
-    assetSrc: "/assets/game/golden-ball.png",
+    assetSrc: "/assets/game/golden-ball.webp",
     effect: { accuracyBonus: 0.1 },
   },
   goldenBoot: {
@@ -57,7 +57,7 @@ export const STORE_ITEMS = {
     type: "equippable_boost",
     equipMode: "optional",
     maxQuantity: 1,
-    assetSrc: "/assets/game/golden-boot.png",
+    assetSrc: "/assets/game/golden-boot.webp",
     effect: { powerBonus: 0.1 },
   },
   goldenGlove: {
@@ -71,7 +71,7 @@ export const STORE_ITEMS = {
     type: "equippable_boost",
     equipMode: "optional",
     maxQuantity: 1,
-    assetSrc: "/assets/game/golden-glove.png",
+    assetSrc: "/assets/game/golden-glove.webp",
     effect: { goalkeeperBonus: 0.1 },
   },
   goldenTicket: {
@@ -85,7 +85,7 @@ export const STORE_ITEMS = {
     type: "consumable",
     equipMode: "none",
     maxQuantity: MAX_GOLDEN_TICKETS,
-    assetSrc: "/assets/game/golden-ticket.png",
+    assetSrc: "/assets/game/golden-ticket.webp",
     effect: { advanceToFinal: true },
   },
 };
@@ -99,7 +99,7 @@ export const STORE_BUNDLES = {
     unitAmountPence: 499,
     stripePriceId: envPrice("VITE_STRIPE_PRICE_FULL_BUNDLE"),
     type: "bundle",
-    assetSrc: "/assets/game/golden-kitbag.png",
+    assetSrc: "/assets/game/golden-kitbag.webp",
     grants: {
       allTeams: true,
       goldenBall: true,

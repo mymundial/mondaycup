@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { mcExtendedPitchMowBackground } from "../../styles/theme.js";
 
-const MONDAY_CUP_SHIELD_SRC = "/assets/branding/monday-cup.png";
+const MONDAY_CUP_SHIELD_SRC = "/assets/branding/monday-cup.webp";
 
 function CloseIcon({ className = "h-7 w-7" }) {
   return (

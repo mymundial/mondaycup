@@ -27,7 +27,7 @@ const MATCH_SCOREBOARD_RATIO = MC_SELECTION_LAYOUT.scoreboardRatio;
 const SHARED_AD_BOARD_HEIGHT_PERCENT = MC_SELECTION_LAYOUT.adBoardHeightPercent;
 
 
-const MONDAY_CUP_AD_SRC = "/assets/branding/mondaycup_co_uk.png";
+const MONDAY_CUP_AD_SRC = "/assets/branding/mondaycup_co_uk.webp";
 const FLOATING_HOME_LOGO_SRC = ASSETS.branding.mondayLogo;
 const SCOREBOARD_STAGE_TEXT = "font-led text-[clamp(9px,1.35vh,16px)] font-black uppercase leading-none tracking-[0.14em] text-[#F7D117]";
 const SCOREBOARD_MAIN_TEXT = "font-led text-[clamp(17px,3.05vh,34px)] font-black uppercase leading-none tracking-normal text-[#F7D117]";

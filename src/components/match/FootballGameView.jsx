@@ -17,7 +17,7 @@ import { resolveRenderedExportVisuals } from "../../logic/exportVisuals.js";
 import { PODIUM_BADGE_MODE } from "../../logic/resultStatus.js";
 import SharedCrowdBackdrop from "../crowd/SharedCrowdBackdrop.jsx";
 
-const MONDAY_CUP_AD_SRC = "/assets/branding/mondaycup_co_uk.png";
+const MONDAY_CUP_AD_SRC = "/assets/branding/mondaycup_co_uk.webp";
 
 function PowerChargeMeter({ value, ideal = GAME.powerIdeal, charging = false, fillRef = null }) {
   const left = `${ideal[0]}%`;

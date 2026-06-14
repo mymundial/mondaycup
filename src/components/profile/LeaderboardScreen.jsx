@@ -190,9 +190,9 @@ function leaderboardDisplayForm(row = {}) {
 }
 
 const LEADERBOARD_PODIUM_SHIELDS = {
-  champion: "/assets/badges/mc-champs2.png",
-  runnerUp: "/assets/badges/mc-runner-up.png",
-  thirdPlace: "/assets/badges/mc-third-place.png",
+  champion: "/assets/badges/mc-champs2.webp",
+  runnerUp: "/assets/badges/mc-runner-up.webp",
+  thirdPlace: "/assets/badges/mc-third-place.webp",
 };
 
 function LeaderboardPodiumBadge({ row, isUser = false }) {
@@ -248,8 +248,8 @@ function LeaderboardFilterSlider({ cleanOnly, onToggle }) {
       size="icon"
       className="mb-1.5"
       options={[
-        { value: "clean", label: "Clean", ariaLabel: "Scores without golden upgrades", iconSrc: "/assets/game/ball1.png" },
-        { value: "golden", label: "Golden", ariaLabel: "Scores with golden upgrades", iconSrc: "/assets/game/golden-ball.png" },
+        { value: "clean", label: "Clean", ariaLabel: "Scores without golden upgrades", iconSrc: "/assets/game/ball1.webp" },
+        { value: "golden", label: "Golden", ariaLabel: "Scores with golden upgrades", iconSrc: "/assets/game/golden-ball.webp" },
       ]}
     />
   );
