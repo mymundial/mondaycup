@@ -19,7 +19,7 @@ const badges = {
 
 const game = {
   ball: "/assets/game/ball1.webp",
-  goalkeeper: "/assets/game/gk1.webp",
+  goalkeeper: "/assets/game/gk1.png",
 };
 
 const sounds = {
