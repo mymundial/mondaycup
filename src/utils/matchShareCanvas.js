@@ -18,6 +18,56 @@ const CHAMPION_PITCH_BADGE_SRC = "/assets/badges/mc-champs2.webp";
 const RUNNER_UP_PITCH_BADGE_SRC = "/assets/badges/mc-runner-up.webp";
 const THIRD_PLACE_PITCH_BADGE_SRC = "/assets/badges/mc-third-place.webp";
 
+const MATCH_SHARE_FONT_FACES = [
+  { family: "IntoDotMatrix", source: "/fonts/intodotmatrix/intodotmatrix-webfont.woff2", weight: "400" },
+  { family: "SportsDINRegular", source: "/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-regular-webfont.woff2", weight: "400" },
+  { family: "SportsDINBold", source: "/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-bold-webfont.woff2", weight: "700" },
+  { family: "SportsDINLight", source: "/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-light-webfont.woff2", weight: "300" },
+];
+
+let matchShareFontsPromise = null;
+
+async function ensureMatchShareFontsReady() {
+  if (typeof document === "undefined") return;
+  if (!matchShareFontsPromise) {
+    matchShareFontsPromise = (async () => {
+      if (document.fonts?.ready) await document.fonts.ready.catch(() => null);
+
+      if (typeof FontFace !== "undefined" && document.fonts?.add) {
+        await Promise.all(
+          MATCH_SHARE_FONT_FACES.map(async ({ family, source, weight }) => {
+            try {
+              const alreadyLoaded = document.fonts.check(`${weight} 16px "${family}"`);
+              if (alreadyLoaded) return;
+              const face = new FontFace(family, `url(${source})`, {
+                style: "normal",
+                weight,
+                display: "block",
+              });
+              await face.load();
+              document.fonts.add(face);
+            } catch {
+              // Fall back to the app CSS font-face if this browser blocks manual loading.
+            }
+          }),
+        );
+      }
+
+      if (document.fonts?.load) {
+        await Promise.all([
+          document.fonts.load('400 32px "IntoDotMatrix"'),
+          document.fonts.load('400 32px "SportsDINRegular"'),
+          document.fonts.load('700 32px "SportsDINBold"'),
+          document.fonts.load('300 32px "SportsDINLight"'),
+        ].map((fontPromise) => fontPromise.catch(() => null)));
+      }
+
+      if (document.fonts?.ready) await document.fonts.ready.catch(() => null);
+    })().catch(() => null);
+  }
+  await matchShareFontsPromise;
+}
+
 const SCOREBOARD_FLAG_BASE_WIDTH = 22;
 const SCOREBOARD_FLAG_BASE_HEIGHT = 15;
 const SCOREBOARD_FLAG_OUTER_OFFSET = 8;
@@ -1173,7 +1223,7 @@ async function captureScoreboardImageFromDom(sourceElement, exportSize) {
   const root = sourceElement || null;
   const scoreboard = root?.querySelector?.('[data-share-scoreboard="true"]');
   if (!root || !scoreboard) return null;
-  if (document?.fonts?.ready) await document.fonts.ready.catch(() => null);
+  await ensureMatchShareFontsReady();
   await preloadImagesInElement(scoreboard);
 
   const explicitFlagNodes = Array.from(scoreboard.querySelectorAll?.('[data-share-export-flag]') || []);
@@ -1317,7 +1367,7 @@ async function capturePitchImageFromDom(sourceElement, exportSize, exportPitchHe
   const root = sourceElement || null;
   const pitch = root?.querySelector?.('[data-share-pitch-frame="true"]') || root?.querySelector?.('[data-share-export-pitch="true"]');
   if (!root || !pitch) return null;
-  if (document?.fonts?.ready) await document.fonts.ready.catch(() => null);
+  await ensureMatchShareFontsReady();
   await preloadImagesInElement(pitch);
 
   const pitchRect = pitch.getBoundingClientRect?.();
@@ -1368,7 +1418,7 @@ export async function createMatchShareBlob(props = {}, options = {}) {
   const userTeam = safeTeam(props.userTeam, "TEAM A");
   const opponentTeam = safeTeam(props.opponentTeam, "TEAM B");
 
-  if (document?.fonts?.ready) await document.fonts.ready.catch(() => null);
+  await ensureMatchShareFontsReady();
   const assets = await loadAssets(userTeam, opponentTeam);
   const canvas = document.createElement("canvas");
   canvas.width = size;

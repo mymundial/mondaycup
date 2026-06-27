@@ -10,9 +10,60 @@ function loadHtml2Canvas() {
   return html2canvasLoader;
 }
 
+const SHARE_EXPORT_FONT_FACES = [
+  { family: "IntoDotMatrix", source: "/fonts/intodotmatrix/intodotmatrix-webfont.woff2", weight: "400" },
+  { family: "SportsDINRegular", source: "/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-regular-webfont.woff2", weight: "400" },
+  { family: "SportsDINBold", source: "/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-bold-webfont.woff2", weight: "700" },
+  { family: "SportsDINLight", source: "/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-light-webfont.woff2", weight: "300" },
+];
+
+const NATIVE_SHARE_SAFE_MARGIN_RATIO = 0.035;
+
+let shareExportFontsPromise = null;
+
+async function ensureShareExportFontsReady() {
+  if (typeof document === "undefined") return;
+  if (!shareExportFontsPromise) {
+    shareExportFontsPromise = (async () => {
+      if (document.fonts?.ready) await document.fonts.ready.catch(() => null);
+
+      if (typeof FontFace !== "undefined" && document.fonts?.add) {
+        await Promise.all(
+          SHARE_EXPORT_FONT_FACES.map(async ({ family, source, weight }) => {
+            try {
+              const alreadyLoaded = document.fonts.check(`${weight} 16px "${family}"`);
+              if (alreadyLoaded) return;
+              const face = new FontFace(family, `url(${source})`, {
+                style: "normal",
+                weight,
+                display: "block",
+              });
+              await face.load();
+              document.fonts.add(face);
+            } catch {
+              // Fall back to the app CSS font-face if this browser blocks manual loading.
+            }
+          }),
+        );
+      }
+
+      if (document.fonts?.load) {
+        await Promise.all([
+          document.fonts.load('400 32px "IntoDotMatrix"'),
+          document.fonts.load('400 32px "SportsDINRegular"'),
+          document.fonts.load('700 32px "SportsDINBold"'),
+          document.fonts.load('300 32px "SportsDINLight"'),
+        ].map((fontPromise) => fontPromise.catch(() => null)));
+      }
+
+      if (document.fonts?.ready) await document.fonts.ready.catch(() => null);
+    })().catch(() => null);
+  }
+  await shareExportFontsPromise;
+}
+
 export function warmShareExportRenderer() {
-  const fontReady = document?.fonts?.ready?.catch?.(() => null) || Promise.resolve();
-  return Promise.all([fontReady, loadHtml2Canvas()]).catch(() => null);
+  return Promise.all([ensureShareExportFontsReady(), loadHtml2Canvas()]).catch(() => null);
 }
 
 export function normaliseThirdPlaceCopy(value) {
@@ -275,6 +326,39 @@ function getCanvasBlob(canvas) {
   });
 }
 
+async function createNativeShareFileBlob(blob) {
+  if (!blob) throw new Error("No image blob was provided");
+  await ensureShareExportFontsReady();
+
+  try {
+    const image = await imageFromBlob(blob);
+    const sourceWidth = Math.max(1, image.naturalWidth || image.width || SHARE_EXPORT_SIZE);
+    const sourceHeight = Math.max(1, image.naturalHeight || image.height || SHARE_EXPORT_SIZE);
+    const outputSize = Math.max(sourceWidth, sourceHeight, SHARE_EXPORT_SIZE);
+    const margin = Math.round(outputSize * NATIVE_SHARE_SAFE_MARGIN_RATIO);
+    const available = Math.max(1, outputSize - margin * 2);
+    const scale = Math.min(available / sourceWidth, available / sourceHeight);
+    const drawWidth = Math.round(sourceWidth * scale);
+    const drawHeight = Math.round(sourceHeight * scale);
+    const dx = Math.round((outputSize - drawWidth) / 2);
+    const dy = Math.round((outputSize - drawHeight) / 2);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = outputSize;
+    canvas.height = outputSize;
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.fillStyle = "#072D1D";
+    ctx.fillRect(0, 0, outputSize, outputSize);
+    ctx.drawImage(image, dx, dy, drawWidth, drawHeight);
+    return await getCanvasBlob(canvas);
+  } catch (error) {
+    console.warn("Native share safe-frame normalisation failed; using original blob", error);
+    return blob;
+  }
+}
+
 async function renderElementToCanvasWithHtml2Canvas(shareElement) {
   const html2canvas = await loadHtml2Canvas();
   const rect = shareElement.getBoundingClientRect();
@@ -408,7 +492,7 @@ export async function captureShareElementBlob(
   badgeMode = null,
 ) {
   if (!shareElement) throw new Error("Share capture area was not found");
-  if (document?.fonts?.ready) await document.fonts.ready.catch(() => null);
+  await ensureShareExportFontsReady();
   await preloadImagesInElement(shareElement);
 
   const errors = [];
@@ -498,8 +582,9 @@ export async function shareNativeImage(
   if (!navigator.share)
     throw new Error("Native sharing is not available in this browser");
 
-  const file = new File([blob], filename, {
-    type: blob.type || "image/png",
+  const shareBlob = await createNativeShareFileBlob(blob);
+  const file = new File([shareBlob], filename, {
+    type: shareBlob.type || "image/png",
     lastModified: Date.now(),
   });
   const fileOnlyShare = { files: [file] };
@@ -517,17 +602,20 @@ export async function shareNativeImage(
     }
     if (!canShareFile && !canShareFull)
       throw new Error("This browser cannot share image files");
-    await navigator.share(canShareFull ? fullShare : fileOnlyShare);
+
+    // Prefer the image-only payload. Instagram and some mobile share targets are
+    // less reliable when title/text are bundled with the image file.
+    await navigator.share(canShareFile ? fileOnlyShare : fullShare);
     return;
   }
 
   // Some browsers support navigator.share() without navigator.canShare(). Use
   // the file-only payload as the most compatible Web Share API request.
   try {
-    await navigator.share(fullShare);
+    await navigator.share(fileOnlyShare);
   } catch (error) {
     if (error?.name === "AbortError") throw error;
-    await navigator.share(fileOnlyShare);
+    await navigator.share(fullShare);
   }
 }
 
