@@ -19,7 +19,6 @@ import {
   classifyPower,
   resolvePenalty,
   buildAiPenaltyAttempt,
-  keeperReadDirection,
   applyGoldenGloveSecondRead,
   playSound,
   decideMatchState,
@@ -35,6 +34,7 @@ import {
   POWER_SWEEP_MS,
   accuracyOutcomeForValue,
   accuracySpeedForPower,
+  accuracyKeeperReadChanceForValue,
   displayedMeterValue,
   directionLabel,
   getAccuracyTargetZone,
@@ -45,6 +45,7 @@ import {
 } from "../../logic/shotMeter.js";
 import { getPodiumBadgeVisuals } from "../../logic/matchVisuals.js";
 import { PODIUM_BADGE_MODE } from "../../logic/resultStatus.js";
+import { playerCareerStarRating } from "../../logic/playerCareer.js";
 
 import { ControlOverlay, Pitch, TemporaryMatchButtons } from "./FootballGameView.jsx";
 export { MatchPitchPreview } from "./FootballGameView.jsx";
@@ -56,13 +57,18 @@ const FINAL_SHOT_OUTCOME_HOLD_MS = 900;
 const USER_TO_OPPONENT_DELAY_MS = 500;
 const MATCH_COMPLETE_MODAL_DELAY_MS = 1100;
 
-export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction, showChampionsBadge = false, podiumBadgeMode = null, activeCosmetics: activeCosmeticsProp = null, username = "", twoPlayerMode = false, stageLabelOverride = null, activeMatchSnapshot = null, onActiveMatchSnapshot = null, onFlashStyleChange = null }) {
+export default function FootballGame({ userTeam, opponentTeam, fixture, assets = {}, onMatchComplete, completedResult = null, endActionLabel = "MATCH COMPLETE", endActionEnabled = false, onEndAction, showChampionsBadge = false, podiumBadgeMode = null, activeCosmetics: activeCosmeticsProp = null, username = "", twoPlayerMode = false, stageLabelOverride = null, activeMatchSnapshot = null, onActiveMatchSnapshot = null, onFlashStyleChange = null, playerCareerStats = null, campaignAssistStars = null }) {
   const user = useMemo(() => normaliseTeam(userTeam, "Team A"), [userTeam]);
   const opponent = useMemo(() => normaliseTeam(opponentTeam, "Team B"), [opponentTeam]);
+  const livePlayerCareerStars = useMemo(() => (playerCareerStats ? playerCareerStarRating(playerCareerStats) : null), [playerCareerStats]);
+  const playerCareerStars = useMemo(() => {
+    const lockedStars = Number(campaignAssistStars);
+    return Number.isFinite(lockedStars) ? lockedStars : livePlayerCareerStars;
+  }, [campaignAssistStars, livePlayerCareerStars]);
   const storedActiveCosmetics = useMemo(() => readActiveCosmetics(), [fixture?.id, completedResult?.fixtureId, completedResult?.matchNo]);
   const activeCosmetics = activeCosmeticsProp || storedActiveCosmetics || {};
-  const powerTargetZone = useMemo(() => getPowerTargetZone(activeCosmetics), [activeCosmetics]);
-  const accuracyTargetZone = useMemo(() => getAccuracyTargetZone(activeCosmetics), [activeCosmetics]);
+  const powerTargetZone = useMemo(() => getPowerTargetZone(activeCosmetics, playerCareerStars), [activeCosmetics, playerCareerStars]);
+  const accuracyTargetZone = useMemo(() => getAccuracyTargetZone(activeCosmetics, playerCareerStars), [activeCosmetics, playerCareerStars]);
   const mergedAssets = useMemo(() => ({
     ...DEFAULT_ASSETS,
     ...assets,
@@ -359,7 +365,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         aiRestoreTimeoutRef.current = window.setTimeout(() => {
           aiRestoreTimeoutRef.current = null;
           const aiDirection = randomDirection();
-          const aiAttempt = buildAiPenaltyAttempt({ team: opponent, direction: aiDirection });
+          const aiAttempt = buildAiPenaltyAttempt({ team: opponent, direction: aiDirection, playerCareerStars });
           const keeperDirection = activeCosmetics?.goldenGlove
             ? applyGoldenGloveSecondRead({ targetDirection: aiDirection, firstKeeperDirection: aiAttempt.keeperDirection })
             : aiAttempt.keeperDirection;
@@ -418,7 +424,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       aiTurnTimeoutRef.current = window.setTimeout(() => {
         aiTurnTimeoutRef.current = null;
         const aiDirection = randomDirection();
-        const aiAttempt = buildAiPenaltyAttempt({ team: opponent, direction: aiDirection });
+        const aiAttempt = buildAiPenaltyAttempt({ team: opponent, direction: aiDirection, playerCareerStars });
         const keeperDirection = activeCosmetics?.goldenGlove
           ? applyGoldenGloveSecondRead({ targetDirection: aiDirection, firstKeeperDirection: aiAttempt.keeperDirection })
           : aiAttempt.keeperDirection;
@@ -454,13 +460,21 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       playSound(mergedAssets.sounds.opponentShot, 0.82);
     }
 
-    let keeperDirection = plannedKeeperDirection || ((side === "user" || twoPlayerMode) ? keeperReadDirection(direction, Math.random) : randomDirection());
+    const shotNumber = currentAttempts[side].length + 1;
+    const safePower = clamp(Number(power) || 0, 0, 100);
+    const safeAccuracy = accuracy === null || accuracy === undefined ? null : clamp(Number(accuracy) || 0, 0, 100);
+    const humanShot = side === "user" || twoPlayerMode;
+    const keeperReadChance = humanShot && safeAccuracy !== null && accuracyOutcome === "onTarget"
+      ? accuracyKeeperReadChanceForValue(safeAccuracy, activeCosmetics, playerCareerStars)
+      : null;
+    const keeperDirection = plannedKeeperDirection || (humanShot ? null : randomDirection());
     const resolved = resolvePenalty({
       direction,
       power,
       keeperDirection,
       middleBypass: false,
       accuracyOutcome,
+      keeperReadChance,
     });
 
     window.setTimeout(() => {
@@ -469,9 +483,6 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
         USER_SHOT_RESULT_VOLUME
       );
     }, USER_SHOT_RESULT_DELAY_MS);
-    const shotNumber = currentAttempts[side].length + 1;
-    const safePower = clamp(Number(power) || 0, 0, 100);
-    const safeAccuracy = accuracy === null || accuracy === undefined ? null : clamp(Number(accuracy) || 0, 0, 100);
     const shotDirectionId = direction?.id || null;
     const resolvedKeeperId = resolved.keeperDirection?.id || keeperDirection?.id || null;
     const savedByKeeper = Boolean(!resolved.goal && resolved.code === shotDirectionId && resolvedKeeperId === shotDirectionId);
@@ -487,9 +498,10 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       accuracy: safeAccuracy,
       accuracyValue: safeAccuracy,
       accuracyPoints: side === "user" ? meterPoints(safeAccuracy, 50) : 0,
-      targetZone: isPowerInTargetZone(safePower, activeCosmetics),
-      accuracyTargetZone: safeAccuracy !== null && isAccuracyInTargetZone(safeAccuracy, activeCosmetics),
+      targetZone: isPowerInTargetZone(safePower, activeCosmetics, playerCareerStars),
+      accuracyTargetZone: safeAccuracy !== null && isAccuracyInTargetZone(safeAccuracy, activeCosmetics, playerCareerStars),
       accuracyOutcome,
+      keeperReadChance: keeperReadChance === null ? null : keeperReadChance,
       directionSelected: directionLabel(direction),
       directionId: shotDirectionId,
       row: direction?.row,
@@ -666,7 +678,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     powerValueRef.current = finalPower;
     setPowerValue(finalPower);
 
-    const nextAccuracySpeed = accuracySpeedForPower(finalPower, activeCosmetics);
+    const nextAccuracySpeed = accuracySpeedForPower(finalPower, activeCosmetics, playerCareerStars);
     setLockedPower(finalPower);
     setAccuracySweepMs(nextAccuracySpeed);
     accuracySweepMsRef.current = nextAccuracySpeed;
@@ -692,7 +704,7 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
     setAccuracyValue(finalAccuracy);
 
     const finalPower = clamp(lockedPower ?? powerValueRef.current, 0, 100);
-    const accuracyOutcome = accuracyOutcomeForValue(finalAccuracy, lockedDirection, activeCosmetics);
+    const accuracyOutcome = accuracyOutcomeForValue(finalAccuracy, lockedDirection, activeCosmetics, playerCareerStars);
     commitShot(twoPlayerMode ? shootingSide : "user", lockedDirection, finalPower, score, attempts, null, finalAccuracy, accuracyOutcome);
   }
 
@@ -748,8 +760,8 @@ export default function FootballGame({ userTeam, opponentTeam, fixture, assets =
       accuracy,
       accuracyValue: accuracy,
       accuracyPoints: side === "user" ? meterPoints(accuracy, 50) : 0,
-      targetZone: side === "user" ? isPowerInTargetZone(power, activeCosmetics) : false,
-      accuracyTargetZone: side === "user" ? isAccuracyInTargetZone(accuracy, activeCosmetics) : false,
+      targetZone: side === "user" ? isPowerInTargetZone(power, activeCosmetics, playerCareerStars) : false,
+      accuracyTargetZone: side === "user" ? isAccuracyInTargetZone(accuracy, activeCosmetics, playerCareerStars) : false,
       accuracyOutcome: perfect ? "onTarget" : null,
       directionSelected: directionLabel(direction),
       directionId: direction?.id,

@@ -109,6 +109,7 @@ import {
   getUnopenedNationStickerNoticeKey,
   hasUnopenedNationSticker,
 } from "./app/stickerNotices.js";
+import { playerCareerStarRating } from "./logic/playerCareer.js";
 
 runSelfTests();
 
@@ -237,6 +238,7 @@ export default function App() {
   const [allTimeMatchesLost, setAllTimeMatchesLost] = useState(() =>
     safeReadNumber(ALL_TIME_MATCHES_LOST_KEY, 0),
   );
+  const [campaignAssistStars, setCampaignAssistStars] = useState(null);
   const [achievements, setAchievements] = useState(() =>
     safeReadJson(ACHIEVEMENTS_KEY, {}),
   );
@@ -595,6 +597,8 @@ export default function App() {
                 guestSnapshot.scoringState?.campaignPoints ||
                 0,
             ),
+            campaignAssistStars: guestSnapshot.campaignAssistStars ?? guestSnapshot.assistStarsAtCampaignStart ?? campaignAssistStars ?? null,
+            assistStarsAtCampaignStart: guestSnapshot.assistStarsAtCampaignStart ?? guestSnapshot.campaignAssistStars ?? campaignAssistStars ?? null,
             cupRun: userForm || guestSnapshot.userForm || [],
             score: Array.isArray(score) ? score : guestSnapshot.score || [0, 0],
             matchResult: matchResult
@@ -1153,6 +1157,13 @@ export default function App() {
     });
   };
 
+  const calculateCurrentCareerStars = () =>
+    playerCareerStarRating({
+      matchesPlayed: allTimeMatchesPlayed,
+      matchesWon: allTimeMatchesWon,
+      goalsScored: allTimeGoals,
+    });
+
   const buildGameSnapshot = () => {
     if (isCampaignSaveBlocked()) return null;
 
@@ -1179,6 +1190,8 @@ export default function App() {
       modalDismissed,
       activeCosmetics,
       campaignCosmeticsUsed,
+      campaignAssistStars,
+      assistStarsAtCampaignStart: campaignAssistStars,
       usedGoldenUpgrade: Boolean(campaignCosmeticsUsed?.goldenBoot || campaignCosmeticsUsed?.goldenBall || campaignCosmeticsUsed?.goldenGlove || campaignCosmeticsUsed?.goldenTicket || campaignCosmeticsUsed?.goldenTicketUsed),
       usedGoldenTicket: Boolean(campaignCosmeticsUsed?.goldenTicket || campaignCosmeticsUsed?.goldenTicketUsed),
       achievements,
@@ -1201,6 +1214,11 @@ export default function App() {
     setMatchStage(snapshot.matchStage || "GROUP STAGE");
     setUserForm(Array.isArray(snapshot.userForm) ? snapshot.userForm : []);
     setScoringState(snapshot.scoringState || createScoringState());
+    setCampaignAssistStars(
+      Number.isFinite(Number(snapshot.campaignAssistStars ?? snapshot.assistStarsAtCampaignStart))
+        ? Number(snapshot.campaignAssistStars ?? snapshot.assistStarsAtCampaignStart)
+        : calculateCurrentCareerStars(),
+    );
     setFixtureView(snapshot.fixtureView || "group");
     setStandingsView(snapshot.standingsView || "group");
     setTable(snapshot.table || blankTable());
@@ -1324,6 +1342,8 @@ export default function App() {
               opponent: opponent || null,
               phase: currentRoundLabel || matchStage || "No Campaign",
               gameScore: Number(scoringState.campaignPoints || 0),
+              campaignAssistStars,
+              assistStarsAtCampaignStart: campaignAssistStars,
               cupRun: userForm || [],
               usedGoldenUpgrade: Boolean(campaignCosmeticsApplied()?.goldenBoot || campaignCosmeticsApplied()?.goldenBall || campaignCosmeticsApplied()?.goldenGlove || campaignCosmeticsApplied()?.goldenTicket || campaignCosmeticsApplied()?.goldenTicketUsed),
               usedGoldenTicket: Boolean(campaignCosmeticsApplied()?.goldenTicket || campaignCosmeticsApplied()?.goldenTicketUsed),
@@ -1420,6 +1440,7 @@ export default function App() {
   }, [
     activeCosmetics,
     activeMatchSnapshot,
+    campaignAssistStars,
     campaignCosmeticsUsed,
     allTeamsUnlocked,
     allTimeCampaignsCompleted,
@@ -1727,6 +1748,7 @@ export default function App() {
       cosmeticGloveEquipped: false,
       goldenTicketUsed: false,
     });
+    setCampaignAssistStars(null);
     setPendingFeedbackCheck(true);
     if (shouldClearCloudCampaign) {
       const uid = currentUser.uid;
@@ -2298,6 +2320,7 @@ export default function App() {
     setFixtureView("group");
     setStandingsView("group");
     setMatchStage("GROUP STAGE");
+    setCampaignAssistStars(null);
     setScreen("home");
   };
 
@@ -2317,6 +2340,7 @@ export default function App() {
     setTwoPlayerMode(false);
     setTwoPlayerSetup(null);
     setSelectedGroup(semiRun.selectedGroup || randomGroup);
+    setCampaignAssistStars(calculateCurrentCareerStars());
     setTeam(randomTeam);
     setOpponent(semiRun.opponent || getFixtureOpponent(randomTeam, semiFixture));
     setSchedule(semiRun.schedule || buildSchedule());
@@ -2370,6 +2394,8 @@ export default function App() {
     const canUseGoldenTicket = hasGoldenTicketEntitlement && ticketQuantity > 0;
     const useGoldenTicket = canUseGoldenTicket && pendingGoldenTicketIntent;
 
+    const nextCampaignAssistStars = calculateCurrentCareerStars();
+
     if (HOST_TEAMS.has(name)) unlockAchievements(["ourTime"]);
 
     if (useGoldenTicket) {
@@ -2377,6 +2403,7 @@ export default function App() {
       const ticketRun = simulateGoldenTicketFinalRun(name, groupOverride);
       if (ticketRun?.currentFinalFixture) {
         setSelectedGroup(ticketRun.selectedGroup || groupOverride);
+        setCampaignAssistStars(nextCampaignAssistStars);
         setTeam(name);
         setOpponent(
           ticketRun.opponent ||
@@ -2431,6 +2458,7 @@ export default function App() {
           (item.home === name || item.away === name),
       );
     setSelectedGroup(groupOverride);
+    setCampaignAssistStars(nextCampaignAssistStars);
     setTeam(name);
     setOpponent(
       fixture?.home === name ? fixture.away : fixture?.home || "Opponent",
@@ -3218,6 +3246,12 @@ export default function App() {
       twoPlayerMode={twoPlayerMode}
       activeMatchSnapshot={activeMatchSnapshot}
       onActiveMatchSnapshot={updateActiveMatchSnapshot}
+      playerCareerStats={{
+        matchesPlayed: allTimeMatchesPlayed,
+        matchesWon: allTimeMatchesWon,
+        goalsScored: allTimeGoals,
+      }}
+      campaignAssistStars={isCampaignSaveBlocked() ? null : campaignAssistStars}
     />
   );
 

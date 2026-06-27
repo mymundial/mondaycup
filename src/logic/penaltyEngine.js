@@ -182,9 +182,16 @@ export function isOverhitPower(power) {
 
 export function keeperReadDirection(targetDirection, rng = Math.random, options = {}) {
   // MVP keeper AI: fair, visual and deterministic once the square is chosen.
-  // goalAssist lowers the keeper read chance for temporary Golden Ball testing.
+  // readChance lets high-quality user accuracy reduce keeper reads without
+  // changing AI penalties or the visible target zones. goalAssist is retained
+  // for backwards compatibility with older callers.
+  const rawReadChance = options.readChance;
+  const numericReadChance = Number(rawReadChance);
+  const baseReadChance = rawReadChance === null || rawReadChance === undefined || !Number.isFinite(numericReadChance)
+    ? 0.28
+    : numericReadChance;
   const goalAssist = clamp(Number(options.goalAssist || 0), 0, 0.25);
-  const readChance = clamp(0.28 - goalAssist, 0.05, 0.9);
+  const readChance = clamp(baseReadChance - goalAssist, 0.05, 0.9);
   if (rng() < readChance) return targetDirection;
   return randomDifferentDirection(targetDirection, rng);
 }
@@ -215,6 +222,28 @@ export function getAiGoalProbability(team) {
   return 0.50;
 }
 
+export const AI_CAREER_ASSIST_MULTIPLIERS = {
+  debutant: 0.85,
+  excitingProspect: 0.90,
+  establishedPro: 1,
+};
+
+export function getAiCareerAssistMultiplier(playerCareerStars = null) {
+  if (playerCareerStars === null || playerCareerStars === undefined) {
+    return AI_CAREER_ASSIST_MULTIPLIERS.establishedPro;
+  }
+
+  const stars = Number(playerCareerStars);
+  if (!Number.isFinite(stars)) return AI_CAREER_ASSIST_MULTIPLIERS.establishedPro;
+  if (stars <= 0) return AI_CAREER_ASSIST_MULTIPLIERS.debutant;
+  if (stars === 1) return AI_CAREER_ASSIST_MULTIPLIERS.excitingProspect;
+  return AI_CAREER_ASSIST_MULTIPLIERS.establishedPro;
+}
+
+export function getCareerAdjustedAiGoalProbability(team, playerCareerStars = null) {
+  return clamp(getAiGoalProbability(team) * getAiCareerAssistMultiplier(playerCareerStars), 0, 1);
+}
+
 export function randomDifferentDirection(direction, rng = Math.random) {
   const alternatives = DIRECTIONS.filter((candidate) => candidate.id !== direction.id);
   return alternatives[Math.floor(rng() * alternatives.length)] ?? getDirection("CM");
@@ -239,9 +268,9 @@ function randomOverhitPower(rank, rng) {
   return Math.round(base + rng() * 15);
 }
 
-export function buildAiPenaltyAttempt({ team, direction, rng = Math.random }) {
+export function buildAiPenaltyAttempt({ team, direction, rng = Math.random, playerCareerStars = null }) {
   const rank = getTeamRank(team);
-  const goalChance = getAiGoalProbability(team);
+  const goalChance = getCareerAdjustedAiGoalProbability(team, playerCareerStars);
   const scores = rng() < goalChance;
 
   if (scores) {
@@ -343,7 +372,7 @@ function missCodeForAccuracyOutcome(direction, accuracyOutcome) {
   }
 }
 
-export function resolvePenalty({ direction, power, keeperDirection, rng = Math.random, middleBypass = false, accuracyOutcome = null }) {
+export function resolvePenalty({ direction, power, keeperDirection, rng = Math.random, middleBypass = false, accuracyOutcome = null, keeperReadChance = null }) {
   const powerState = classifyPower(power);
 
   // User-controlled 3-step shot logic:
@@ -352,7 +381,7 @@ export function resolvePenalty({ direction, power, keeperDirection, rng = Math.r
   // 3) Accuracy decides on-target / post-bar / miss.
   // 4) If on target, keeper same square = save; keeper different square = goal.
   if (accuracyOutcome) {
-    const resolvedKeeper = keeperDirection || keeperReadDirection(direction, rng);
+    const resolvedKeeper = keeperDirection || keeperReadDirection(direction, rng, { readChance: keeperReadChance });
 
     if (accuracyOutcome !== "onTarget") {
       const missCode = missCodeForAccuracyOutcome(direction, accuracyOutcome);
@@ -429,7 +458,7 @@ export function resolvePenalty({ direction, power, keeperDirection, rng = Math.r
 
   // Good/on-target shots obey the visual square rule:
   // keeper same square = save, keeper different square = goal.
-  const resolvedKeeper = keeperDirection || keeperReadDirection(direction, rng);
+  const resolvedKeeper = keeperDirection || keeperReadDirection(direction, rng, { readChance: keeperReadChance });
   const middleBypassActive = Boolean(middleBypass) && direction.col === 1;
   const saved = !middleBypassActive && resolvedKeeper.id === direction.id;
   const goal = !saved;

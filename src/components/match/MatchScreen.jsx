@@ -52,6 +52,8 @@ export function MatchScreen({
   activeMatchSnapshot = null,
   onActiveMatchSnapshot = null,
   matchResetKey = 0,
+  playerCareerStats = null,
+  campaignAssistStars = null,
 }) {
   const [matchBusy, setMatchBusy] = useState(false);
   const shareCaptureRef = useRef(null);
@@ -93,6 +95,8 @@ export function MatchScreen({
             stageLabelOverride={twoPlayerMode ? stageLabel : null}
             activeMatchSnapshot={activeMatchSnapshot}
             onActiveMatchSnapshot={onActiveMatchSnapshot}
+            playerCareerStats={playerCareerStats}
+            campaignAssistStars={campaignAssistStars}
           />
         </div>
 
