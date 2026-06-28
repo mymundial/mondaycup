@@ -17,7 +17,9 @@ const SHARE_EXPORT_FONT_FACES = [
   { family: "SportsDINLight", source: "/fonts/sumpfdeutschensportschriftsdin/sumpfdeutschensportschriftsdin-light-webfont.woff2", weight: "300" },
 ];
 
-const NATIVE_SHARE_SAFE_MARGIN_RATIO = 0.035;
+const INSTAGRAM_STORY_WIDTH = 1080;
+const INSTAGRAM_STORY_HEIGHT = 1920;
+const MATCH_STORY_CARD_Y_RATIO = 0.065;
 
 let shareExportFontsPromise = null;
 
@@ -326,38 +328,81 @@ function getCanvasBlob(canvas) {
   });
 }
 
-async function createNativeShareFileBlob(blob) {
+function drawImageCover(ctx, image, x, y, width, height) {
+  const sourceWidth = image.naturalWidth || image.width || 1;
+  const sourceHeight = image.naturalHeight || image.height || 1;
+  const scale = Math.max(width / sourceWidth, height / sourceHeight);
+  const cropW = width / scale;
+  const cropH = height / scale;
+  const cropX = (sourceWidth - cropW) / 2;
+  const cropY = (sourceHeight - cropH) / 2;
+  ctx.drawImage(image, cropX, cropY, cropW, cropH, x, y, width, height);
+}
+
+function drawImageContain(ctx, image, x, y, width, height) {
+  const sourceWidth = image.naturalWidth || image.width || 1;
+  const sourceHeight = image.naturalHeight || image.height || 1;
+  const scale = Math.min(width / sourceWidth, height / sourceHeight);
+  const drawW = sourceWidth * scale;
+  const drawH = sourceHeight * scale;
+  ctx.drawImage(image, x + (width - drawW) / 2, y + (height - drawH) / 2, drawW, drawH);
+}
+
+async function createMatchStoryShareBlob(blob) {
+  const image = await imageFromBlob(blob);
+  const canvas = document.createElement("canvas");
+  canvas.width = INSTAGRAM_STORY_WIDTH;
+  canvas.height = INSTAGRAM_STORY_HEIGHT;
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+
+  ctx.fillStyle = "#072D1D";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.save();
+  ctx.globalAlpha = 0.42;
+  ctx.filter = "blur(18px)";
+  drawImageCover(
+    ctx,
+    image,
+    -Math.round(canvas.width * 0.035),
+    -Math.round(canvas.height * 0.035),
+    Math.round(canvas.width * 1.07),
+    Math.round(canvas.height * 1.07),
+  );
+  ctx.restore();
+
+  ctx.save();
+  ctx.fillStyle = "rgba(3,27,18,0.56)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+
+  const cardY = Math.round(canvas.height * MATCH_STORY_CARD_Y_RATIO);
+  drawImageContain(ctx, image, 0, cardY, canvas.width, canvas.width);
+
+  return await getCanvasBlob(canvas);
+}
+
+async function createNativeShareFileBlob(blob, { nativeFrame = "standard" } = {}) {
   if (!blob) throw new Error("No image blob was provided");
   await ensureShareExportFontsReady();
 
-  try {
-    const image = await imageFromBlob(blob);
-    const sourceWidth = Math.max(1, image.naturalWidth || image.width || SHARE_EXPORT_SIZE);
-    const sourceHeight = Math.max(1, image.naturalHeight || image.height || SHARE_EXPORT_SIZE);
-    const outputSize = Math.max(sourceWidth, sourceHeight, SHARE_EXPORT_SIZE);
-    const margin = Math.round(outputSize * NATIVE_SHARE_SAFE_MARGIN_RATIO);
-    const available = Math.max(1, outputSize - margin * 2);
-    const scale = Math.min(available / sourceWidth, available / sourceHeight);
-    const drawWidth = Math.round(sourceWidth * scale);
-    const drawHeight = Math.round(sourceHeight * scale);
-    const dx = Math.round((outputSize - drawWidth) / 2);
-    const dy = Math.round((outputSize - drawHeight) / 2);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = outputSize;
-    canvas.height = outputSize;
-    const ctx = canvas.getContext("2d");
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.fillStyle = "#072D1D";
-    ctx.fillRect(0, 0, outputSize, outputSize);
-    ctx.drawImage(image, dx, dy, drawWidth, drawHeight);
-    return await getCanvasBlob(canvas);
-  } catch (error) {
-    console.warn("Native share safe-frame normalisation failed; using original blob", error);
-    return blob;
+  if (nativeFrame === "match-story") {
+    try {
+      return await createMatchStoryShareBlob(blob);
+    } catch (error) {
+      console.warn("Match story share framing failed; using original blob", error);
+      return blob;
+    }
   }
+
+  // Standard/native shirt exports should be shared exactly as generated. Do not
+  // add a generic green guard margin here: that leaked into mobile Save Image,
+  // message share and Instagram share as visible top/bottom borders.
+  return blob;
 }
+
 
 async function renderElementToCanvasWithHtml2Canvas(shareElement) {
   const html2canvas = await loadHtml2Canvas();
@@ -576,13 +621,13 @@ export function downloadBlobFile(blob, filename = SHARE_CANVAS_NAME) {
 export async function shareNativeImage(
   blob,
   filename = SHARE_CANVAS_NAME,
-  { title = "Monday Cup", text = "My Monday Cup shirt" } = {},
+  { title = "Monday Cup", text = "My Monday Cup shirt", nativeFrame = "standard" } = {},
 ) {
   if (!blob) throw new Error("No image blob was provided");
   if (!navigator.share)
     throw new Error("Native sharing is not available in this browser");
 
-  const shareBlob = await createNativeShareFileBlob(blob);
+  const shareBlob = await createNativeShareFileBlob(blob, { nativeFrame });
   const file = new File([shareBlob], filename, {
     type: shareBlob.type || "image/png",
     lastModified: Date.now(),
@@ -690,12 +735,13 @@ export async function shareOrDownloadResult({
   previewWindow = null,
   shareTitle = "Monday Cup Result",
   shareText = "🏆 I just played Monday Cup!\n\nCan you beat my score?\n\n⚽ mondaycup.co.uk",
+  nativeFrame = "standard",
 }) {
   const finalBlob = blob || (await buildBlob?.());
   if (!finalBlob) throw new Error("No share image could be created");
 
   try {
-    await shareNativeImage(finalBlob, filename, { title: shareTitle, text: shareText });
+    await shareNativeImage(finalBlob, filename, { title: shareTitle, text: shareText, nativeFrame });
     if (previewWindow && !previewWindow.closed) previewWindow.close();
     return;
   } catch (error) {

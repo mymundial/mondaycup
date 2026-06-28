@@ -1026,6 +1026,7 @@ function EndMatchModal({ result, fixture, onNext, onChangeTeams, onDismiss, onOp
         await shareNativeImage(blob, "monday-cup-result.png", {
           title: MATCH_RESULT_SHARE_TITLE,
           text: MATCH_RESULT_SHARE_TEXT,
+          nativeFrame: "match-story",
         });
       } catch (nativeError) {
         if (nativeError?.name === "AbortError") return;
@@ -1035,6 +1036,7 @@ function EndMatchModal({ result, fixture, onNext, onChangeTeams, onDismiss, onOp
           filename: "monday-cup-result.png",
           shareTitle: MATCH_RESULT_SHARE_TITLE,
           shareText: MATCH_RESULT_SHARE_TEXT,
+          nativeFrame: "match-story",
         });
       }
     } catch (error) {

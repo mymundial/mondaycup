@@ -515,11 +515,17 @@ export function ShareScreen({
           fontType: shirtFontType,
           patternMode: shirtPatternMode,
           patternColour: shirtPatternColour,
+          storyFrame: true,
         })
         : activeState.id === "match"
           ? await createMatchShareBlob(currentMatchExportPayload(), { sourceElement: frameRef.current })
           : await captureShareElementBlob(frameRef.current, teamA);
-      await shareOrDownloadResult({ blob, filename: `monday-cup-${activeState.id}-share.png`, previewWindow });
+      await shareOrDownloadResult({
+        blob,
+        filename: `monday-cup-${activeState.id}-share.png`,
+        previewWindow,
+        nativeFrame: activeState.id === "match" ? "match-story" : "standard",
+      });
     } catch (error) {
       if (previewWindow && !previewWindow.closed) previewWindow.close();
       console.error("Share page export failed", error);

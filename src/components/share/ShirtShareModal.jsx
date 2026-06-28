@@ -17,6 +17,9 @@ const PITCH_MOW_BACKGROUND_STYLE = {
   backgroundSize: "100% 100%",
 };
 const SHIRT_LAYOUT_VERSION = 6;
+const SHIRT_STORY_WIDTH = 1080;
+const SHIRT_STORY_HEIGHT = 1920;
+const SHIRT_EXPORT_SIZE = 2000;
 
 function colourChannels(value) {
   const raw = String(value || "").trim();
@@ -128,66 +131,73 @@ function canvasShirtFabricTheme(team, fallbackBackground, fallbackText, fallback
   return result;
 }
 
-function drawShirtFabric(ctx, { size, fabricTheme }) {
+function drawShirtFabric(ctx, { size, width = size, height = size, fabricTheme }) {
+  const w = Math.max(1, Number(width) || Number(size) || SHIRT_EXPORT_SIZE);
+  const h = Math.max(1, Number(height) || Number(size) || SHIRT_EXPORT_SIZE);
+
   ctx.fillStyle = fabricTheme?.background || SHIRT_BG;
-  ctx.fillRect(0, 0, size, size);
+  ctx.fillRect(0, 0, w, h);
 
   const patternColour = fabricTheme?.patternColour || "#FFFFFF";
 
   if (fabricTheme?.pattern === "argentina-stripes") {
     const colours = ["#75AADB", "#FFFFFF", "#75AADB", "#FFFFFF", "#75AADB"];
-    const stripeWidth = size / colours.length;
+    const stripeWidth = w / colours.length;
     colours.forEach((colour, index) => {
       ctx.fillStyle = colour;
-      ctx.fillRect(index * stripeWidth, 0, stripeWidth + 1, size);
+      ctx.fillRect(index * stripeWidth, 0, stripeWidth + 1, h);
     });
   }
 
   if (fabricTheme?.pattern === "croatia-checker") {
-    const cell = size / 5;
+    const cellW = w / 5;
+    const cellH = h / 5;
     for (let row = 0; row < 5; row += 1) {
       for (let col = 0; col < 5; col += 1) {
         ctx.fillStyle = (row + col) % 2 === 1 ? "#C7222A" : "#FFFFFF";
-        ctx.fillRect(col * cell, row * cell, cell + 1, cell + 1);
+        ctx.fillRect(col * cellW, row * cellH, cellW + 1, cellH + 1);
       }
     }
   }
 
   if (fabricTheme?.pattern === "stripes") {
-    const stripeWidth = size / 5;
+    const stripeWidth = w / 5;
     ctx.fillStyle = patternColour;
-    [1, 3].forEach((index) => ctx.fillRect(index * stripeWidth, 0, stripeWidth + 1, size));
+    [1, 3].forEach((index) => ctx.fillRect(index * stripeWidth, 0, stripeWidth + 1, h));
   }
 
   if (fabricTheme?.pattern === "hoops") {
-    const hoopHeight = size / 5;
+    const hoopHeight = h / 5;
     ctx.fillStyle = patternColour;
-    [1, 3].forEach((index) => ctx.fillRect(0, index * hoopHeight, size, hoopHeight + 1));
+    [1, 3].forEach((index) => ctx.fillRect(0, index * hoopHeight, w, hoopHeight + 1));
   }
 
   if (fabricTheme?.pattern === "checkerboard") {
-    const cell = size / 5;
+    const cellW = w / 5;
+    const cellH = h / 5;
     ctx.fillStyle = patternColour;
     for (let row = 0; row < 5; row += 1) {
       for (let col = 0; col < 5; col += 1) {
-        if ((row + col) % 2 === 1) ctx.fillRect(col * cell, row * cell, cell + 1, cell + 1);
+        if ((row + col) % 2 === 1) ctx.fillRect(col * cellW, row * cellH, cellW + 1, cellH + 1);
       }
     }
   }
 
-  const glow = ctx.createRadialGradient(size * 0.5, size * 0.14, 0, size * 0.5, size * 0.14, size * 0.58);
+  const glowRadius = Math.max(w, h) * 0.58;
+  const glow = ctx.createRadialGradient(w * 0.5, h * 0.14, 0, w * 0.5, h * 0.14, glowRadius);
   glow.addColorStop(0, "rgba(255,255,255,0.14)");
   glow.addColorStop(0.58, "rgba(255,255,255,0.03)");
   glow.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, size, size);
+  ctx.fillRect(0, 0, w, h);
 
-  const shade = ctx.createLinearGradient(0, 0, 0, size);
+  const shade = ctx.createLinearGradient(0, 0, 0, h);
   shade.addColorStop(0, "rgba(255,255,255,0.07)");
   shade.addColorStop(1, "rgba(0,0,0,0.065)");
   ctx.fillStyle = shade;
-  ctx.fillRect(0, 0, size, size);
+  ctx.fillRect(0, 0, w, h);
 }
+
 
 function drawCenteredCanvasText(ctx, text, x, y, options = {}) {
   const {
@@ -258,11 +268,18 @@ export async function createShirtPosterBlob({
   fontType = "bold",
   patternMode = "team",
   patternColour = LED_YELLOW,
+  storyFrame = false,
 }) {
-  const size = 2000;
+  const isStoryFrame = Boolean(storyFrame);
+  const canvasWidth = isStoryFrame ? SHIRT_STORY_WIDTH : SHIRT_EXPORT_SIZE;
+  const canvasHeight = isStoryFrame ? SHIRT_STORY_HEIGHT : SHIRT_EXPORT_SIZE;
+  const squareSize = isStoryFrame ? canvasWidth : SHIRT_EXPORT_SIZE;
+  const squareX = Math.round((canvasWidth - squareSize) / 2);
+  const squareY = isStoryFrame ? Math.round((canvasHeight - squareSize) / 2) : 0;
+
   const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
   const ctx = canvas.getContext("2d");
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
@@ -272,7 +289,7 @@ export async function createShirtPosterBlob({
     patternColour,
     outlineColour,
   });
-  drawShirtFabric(ctx, { size, fabricTheme });
+  drawShirtFabric(ctx, { width: canvasWidth, height: canvasHeight, fabricTheme });
 
   const [mondayLogo, brothersLogo, brothersDarkLogo] = await Promise.all([
     loadCanvasImage(ASSETS.branding.mondayLogo),
@@ -281,7 +298,7 @@ export async function createShirtPosterBlob({
   ]);
 
   const safeComposition = { ...DEFAULT_COMPOSITION, ...(composition || {}) };
-  const scale = size / 318;
+  const scale = squareSize / 318;
   const shirtFontFamily = fontType === "light" ? "SportsDIN, Arial Black, sans-serif" : fontType === "regular" ? "SportsDIN, Arial Black, sans-serif" : "SportsDINBold, Arial Black, sans-serif";
   if (showMondayLogo) {
     const mondayHeight = Math.max(24, Math.min(64, 38 * Number(safeComposition.mondayScale || 1))) * scale;
@@ -289,8 +306,8 @@ export async function createShirtPosterBlob({
     drawImageContain(
       ctx,
       mondayLogo,
-      size * 0.5 + Number(safeComposition.mondayX || 0) * scale,
-      size * 0.10 + Number(safeComposition.mondayY || 0) * scale,
+      squareX + squareSize * 0.5 + Number(safeComposition.mondayX || 0) * scale,
+      squareY + squareSize * 0.10 + Number(safeComposition.mondayY || 0) * scale,
       mondayWidth,
       mondayHeight,
     );
@@ -305,13 +322,13 @@ export async function createShirtPosterBlob({
     drawCenteredCanvasText(
       ctx,
       displayName,
-      size * 0.5 + Number(safeComposition.nameX || 0) * scale,
-      size * 0.30 + Number(safeComposition.nameY || 0) * scale,
+      squareX + squareSize * 0.5 + Number(safeComposition.nameX || 0) * scale,
+      squareY + squareSize * 0.30 + Number(safeComposition.nameY || 0) * scale,
       {
         fontSize: nameFontSize,
         colour: fabricTheme.textColour,
         family: shirtFontFamily,
-        maxWidth: size * 0.88,
+        maxWidth: squareSize * 0.88,
         strokeColour: textOutlineEnabled ? outlineColour : null,
         strokeWidth: textOutlineEnabled ? Math.max(0, Number(outlineWeight || 0)) * scale : 0,
       },
@@ -320,20 +337,20 @@ export async function createShirtPosterBlob({
 
   const displayNumber = cleanNumber(number, "11");
   const rawNumberFont = Math.max(280, Math.min(760, 430 * DEFAULT_COMPOSITION.numberScale));
-  const viewBoxScale = (size * 0.94) / 1000;
+  const viewBoxScale = (squareSize * 0.94) / 1000;
   const numberFontSize = rawNumberFont * viewBoxScale;
   const numberOpticalX = displayNumber === "4" ? -10 * scale : 0;
   if (showNumber) {
     drawCenteredCanvasText(
       ctx,
       displayNumber,
-      size * 0.5 + Number(safeComposition.numberX || 0) * scale + numberOpticalX,
-      size * 0.60 + Number(safeComposition.numberY || 0) * scale,
+      squareX + squareSize * 0.5 + Number(safeComposition.numberX || 0) * scale + numberOpticalX,
+      squareY + squareSize * 0.60 + Number(safeComposition.numberY || 0) * scale,
       {
         fontSize: numberFontSize,
         colour: fabricTheme.numberColour,
         family: shirtFontFamily,
-        maxWidth: size * 0.94,
+        maxWidth: squareSize * 0.94,
         strokeColour: fabricTheme.numberOutlineEnabled ? fabricTheme.numberOutlineColour : (numberOutlineEnabled ? outlineColour : null),
         // Match the SVG preview: outline width lives in the 1000px number viewBox,
         // not the 318px poster composition scale.
@@ -352,10 +369,10 @@ export async function createShirtPosterBlob({
     drawImageContain(
       ctx,
       brothersImage,
-      size * 0.5 + Number(safeComposition.brothersX || 0) * scale,
-      size * 0.90 + Number(safeComposition.brothersY || 0) * scale,
-      size * (brothersWidthPct / 100),
-      size * 0.09,
+      squareX + squareSize * 0.5 + Number(safeComposition.brothersX || 0) * scale,
+      squareY + squareSize * 0.90 + Number(safeComposition.brothersY || 0) * scale,
+      squareSize * (brothersWidthPct / 100),
+      squareSize * 0.09,
     );
   }
 
@@ -618,7 +635,7 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
     updatedAt: Date.now(),
   });
 
-  const makeBlob = async () => {
+  const makeBlob = async ({ storyFrame = false } = {}) => {
     if (!frameRef.current) throw new Error("Shirt preview not found");
     try {
       if (document?.fonts?.ready) await document.fonts.ready.catch(() => null);
@@ -637,6 +654,7 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
         numberOutlineWeight: safeNumberOutlineWidth,
         patternMode,
         patternColour,
+        storyFrame,
       });
     } catch (error) {
       console.warn("Dedicated shirt export failed, falling back to DOM capture", error);
@@ -663,7 +681,7 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
   });
 
   const handleShare = () => withBusy("sharing", async () => {
-    const blob = await makeBlob();
+    const blob = await makeBlob({ storyFrame: true });
     try {
       await shareNativeImage(blob, "monday-cup-shirt.png", { title: "Monday Cup Shirt", text: "👕 Designed my Monday Cup shirt.\n\nNow it\'s time to wear it on the pitch.\n\n⚽ mondaycup.co.uk" });
     } catch (error) {
