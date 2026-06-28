@@ -110,6 +110,18 @@ function drawImageContain(ctx, image, centerX, centerY, boxW, boxH) {
   ctx.drawImage(image, centerX - width / 2, centerY - height / 2, width, height);
 }
 
+function drawImageCover(ctx, image, x, y, width, height) {
+  if (!image?.naturalWidth || !image?.naturalHeight) return;
+  const sourceWidth = image.naturalWidth;
+  const sourceHeight = image.naturalHeight;
+  const scale = Math.max(width / sourceWidth, height / sourceHeight);
+  const cropW = width / scale;
+  const cropH = height / scale;
+  const cropX = (sourceWidth - cropW) / 2;
+  const cropY = (sourceHeight - cropH) / 2;
+  ctx.drawImage(image, cropX, cropY, cropW, cropH, x, y, width, height);
+}
+
 function canvasShirtFabricTheme(team, fallbackBackground, fallbackText, fallbackNumber, patternOptions = {}) {
   const result = {
     background: fallbackBackground || SHIRT_BG,
@@ -289,7 +301,19 @@ export async function createShirtPosterBlob({
     patternColour,
     outlineColour,
   });
-  drawShirtFabric(ctx, { width: canvasWidth, height: canvasHeight, fabricTheme });
+
+  if (isStoryFrame) {
+    const fabricCanvas = document.createElement("canvas");
+    fabricCanvas.width = SHIRT_EXPORT_SIZE;
+    fabricCanvas.height = SHIRT_EXPORT_SIZE;
+    const fabricCtx = fabricCanvas.getContext("2d");
+    fabricCtx.imageSmoothingEnabled = true;
+    fabricCtx.imageSmoothingQuality = "high";
+    drawShirtFabric(fabricCtx, { width: SHIRT_EXPORT_SIZE, height: SHIRT_EXPORT_SIZE, fabricTheme });
+    drawImageCover(ctx, fabricCanvas, 0, 0, canvasWidth, canvasHeight);
+  } else {
+    drawShirtFabric(ctx, { width: canvasWidth, height: canvasHeight, fabricTheme });
+  }
 
   const [mondayLogo, brothersLogo, brothersDarkLogo] = await Promise.all([
     loadCanvasImage(ASSETS.branding.mondayLogo),
