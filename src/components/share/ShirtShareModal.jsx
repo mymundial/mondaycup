@@ -705,7 +705,7 @@ export default function ShirtShareModal({ open, onClose, currentUser = null, ini
   });
 
   const handleShare = () => withBusy("sharing", async () => {
-    const blob = await makeBlob({ storyFrame: true });
+    const blob = await makeBlob({ storyFrame: false });
     try {
       await shareNativeImage(blob, "monday-cup-shirt.png", { title: "Monday Cup Shirt", text: "👕 Designed my Monday Cup shirt.\n\nNow it\'s time to wear it on the pitch.\n\n⚽ mondaycup.co.uk" });
     } catch (error) {

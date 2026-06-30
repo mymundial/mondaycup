@@ -11,6 +11,7 @@ import SharedCrowdBackdrop from "../crowd/SharedCrowdBackdrop.jsx";
 import { AuthEmailCommsCheckbox, AuthForgotPasswordButton, AuthPrimaryButton, AuthTabs, AuthTextInput, PasswordVisibilityButton } from "../auth/AuthFormParts.jsx";
 import { MC_SELECTION_LAYOUT, mcSoftPanelStyle } from "../../styles/theme.js";
 import "./FlashTeamTicker.css";
+import WeeklyChallengeMatchScreen from "../challenge/WeeklyChallengeMatchScreen.jsx";
 
 const GAME = {
   goal: {
@@ -29,6 +30,9 @@ const SHARED_AD_BOARD_HEIGHT_PERCENT = MC_SELECTION_LAYOUT.adBoardHeightPercent;
 
 const MONDAY_CUP_AD_SRC = "/assets/branding/mondaycup_co_uk.webp";
 const FLOATING_HOME_LOGO_SRC = ASSETS.branding.mondayLogo;
+const WEEKLY_CHALLENGE_HOME_BADGE_SRC = "/assets/challenges/weekly_challenge_beat_cape_verde_badge.webp";
+const WEEKLY_CHALLENGE_TEAM_SELECT_BADGE_SRC = "/assets/challenges/weekly_challenge_beat_cape_verde_badge_clean.webp";
+const WEEKLY_CHALLENGE_HOME_BADGE_ACTIVE = true;
 const SCOREBOARD_STAGE_TEXT = "font-led text-[clamp(9px,1.35vh,16px)] font-black uppercase leading-none tracking-[0.14em] text-[#F7D117]";
 const SCOREBOARD_MAIN_TEXT = "font-led text-[clamp(17px,3.05vh,34px)] font-black uppercase leading-none tracking-normal text-[#F7D117]";
 const SCOREBOARD_MARKER_TEXT = "font-led text-[clamp(6px,0.95vh,10px)] font-black uppercase leading-none tracking-[0.12em] text-[#F7D117]";
@@ -382,7 +386,7 @@ function SelectionBottomBrand() {
   );
 }
 
-function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {}, staticRightLogo = false, onOpenFeedback = null }) {
+function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {}, staticRightLogo = false, onOpenFeedback = null, showWeeklyChallengeBadge = false, onWeeklyChallengeBadgeClick = null, weeklyChallengeBadgeVariant = "entry" }) {
   return (
     <Shell>
       <FullPitchExtensionBackground />
@@ -390,7 +394,7 @@ function HomeLayout({ children, allTeamsUnlocked = false, menuProps = {}, static
         <ScoreboardPlaceholder allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo={staticRightLogo} />
         <main className="relative min-h-0 flex-1 overflow-hidden">
           <HomePitchBackdrop />
-          <FloatingHomeLogo />
+          <FloatingHomeLogo showWeeklyChallengeBadge={showWeeklyChallengeBadge} weeklyChallengeBadgeVariant={weeklyChallengeBadgeVariant} onClick={onWeeklyChallengeBadgeClick} />
           <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col px-5 pb-0" style={{ top: HOME_MENU_TOP_OFFSET }}>
             <div className="min-h-0 flex-1 overflow-y-auto pb-[calc(70px+env(safe-area-inset-bottom))] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="flex min-h-full flex-col justify-start">
@@ -460,22 +464,113 @@ function HomeMenuShell({ children, className = "", onBack }) {
   );
 }
 
-function FloatingHomeLogo() {
+function FloatingHomeLogo({ showWeeklyChallengeBadge = false, weeklyChallengeBadgeVariant = "entry", onClick = null }) {
+  const useWeeklyChallengeBadge = Boolean(showWeeklyChallengeBadge && WEEKLY_CHALLENGE_HOME_BADGE_ACTIVE);
+  const useCleanChallengeBadge = useWeeklyChallengeBadge && weeklyChallengeBadgeVariant === "clean";
+  const badgeSrc = useWeeklyChallengeBadge ? (useCleanChallengeBadge ? WEEKLY_CHALLENGE_TEAM_SELECT_BADGE_SRC : WEEKLY_CHALLENGE_HOME_BADGE_SRC) : FLOATING_HOME_LOGO_SRC;
+  const badgeAlt = useWeeklyChallengeBadge ? "Weekly Challenge: Beat Cape Verde" : "Monday Cup";
+  const isWeeklyBadgeInteractive = useWeeklyChallengeBadge && typeof onClick === "function";
+  const shouldPulseBadge = useWeeklyChallengeBadge && !useCleanChallengeBadge;
+
+  const badgeStyle = {
+    filter: "drop-shadow(0 10px 24px rgba(0,0,0,0.33))",
+    transform: `scale(${HOME_PITCH_BADGE_SCALE})`,
+    animation: shouldPulseBadge ? "weeklyChallengeHomeBadgePulse 1.85s ease-in-out infinite" : undefined,
+  };
+
   return (
     <div
       className="pointer-events-none absolute left-1/2 z-[20] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
       style={{ top: HOME_LOGO_CENTER_Y, width: "99.825%", height: "74.415%" }}
-      aria-hidden="true"
+      aria-hidden={isWeeklyBadgeInteractive ? undefined : "true"}
     >
-      <div className="absolute left-1/2 top-[54%] h-[56%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/[0.118125] blur-3xl" />
-      <div className="absolute left-1/2 top-[54%] h-[38%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5F1E8]/[0.10125] blur-2xl" />
-      <img
-        src={FLOATING_HOME_LOGO_SRC}
-        alt="Monday Cup"
-        className="relative z-10 h-full w-full object-contain"
-        style={{ filter: "drop-shadow(0 10px 24px rgba(0,0,0,0.33))", transform: `scale(${HOME_PITCH_BADGE_SCALE})` }}
-        draggable={false}
+      {useWeeklyChallengeBadge && (
+        <style>{`
+          @keyframes weeklyChallengeHomeBadgePulse {
+            0%, 100% { transform: scale(${HOME_PITCH_BADGE_SCALE}); }
+            50% { transform: scale(${HOME_PITCH_BADGE_SCALE * 1.045}); }
+          }
+          @keyframes weeklyChallengeHomeGlowPulse {
+            0%, 100% { opacity: 0.86; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+          }
+        `}</style>
+      )}
+      <div
+        className="absolute left-1/2 top-[54%] h-[56%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F7D117]/[0.118125] blur-3xl"
+        style={shouldPulseBadge ? { animation: "weeklyChallengeHomeGlowPulse 1.85s ease-in-out infinite" } : undefined}
       />
+      <div
+        className="absolute left-1/2 top-[54%] h-[38%] w-[54%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F5F1E8]/[0.10125] blur-2xl"
+        style={shouldPulseBadge ? { animation: "weeklyChallengeHomeGlowPulse 1.85s ease-in-out infinite", animationDelay: "0.12s" } : undefined}
+      />
+      {isWeeklyBadgeInteractive ? (
+        <button
+          type="button"
+          onClick={onClick}
+          className="pointer-events-auto relative z-10 h-full w-full cursor-pointer border-0 bg-transparent p-0 active:scale-[0.99]"
+          style={badgeStyle}
+          aria-label="Open Weekly Challenge"
+        >
+          <img
+            src={badgeSrc}
+            alt={badgeAlt}
+            className="h-full w-full object-contain"
+            draggable={false}
+          />
+        </button>
+      ) : (
+        <img
+          src={badgeSrc}
+          alt={badgeAlt}
+          className="relative z-10 h-full w-full object-contain"
+          style={badgeStyle}
+          draggable={false}
+        />
+      )}
+    </div>
+  );
+}
+
+function WeeklyChallengeIntroModal({ onClose, onPlay }) {
+  return (
+    <div className="fixed inset-0 z-[2147483640] flex items-center justify-center bg-black/72 px-5 py-8 text-[#F5F1E8]" role="dialog" aria-modal="true" aria-labelledby="weekly-challenge-title">
+      <button type="button" className="absolute inset-0 cursor-default" aria-label="Close Weekly Challenge intro" onClick={onClose} />
+      <div
+        className="relative z-[1] w-full max-w-[360px] overflow-hidden rounded-[1.65rem] border border-[#F7D117]/46 p-5 text-center shadow-[0_18px_48px_rgba(0,0,0,0.42),0_0_24px_rgba(247,209,23,0.16),inset_0_1px_0_rgba(245,241,232,0.08)]"
+        style={{
+          backgroundColor: "#0B5F35",
+          backgroundImage: "linear-gradient(90deg, rgba(255,255,255,0.045) 0 12.5%, rgba(0,0,0,0.075) 12.5% 25%, rgba(255,255,255,0.035) 25% 37.5%, rgba(0,0,0,0.055) 37.5% 50%, rgba(255,255,255,0.04) 50% 62.5%, rgba(0,0,0,0.06) 62.5% 75%, rgba(255,255,255,0.03) 75% 87.5%, rgba(0,0,0,0.075) 87.5% 100%)",
+          backgroundSize: "100% 100%",
+        }}
+      >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(247,209,23,0.10),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.035),rgba(0,0,0,0.09))]" aria-hidden="true" />
+        <div className="relative z-[1]">
+          <div className="home-copy-bold mx-auto mb-2 inline-flex min-h-[26px] items-center justify-center rounded-full border border-[#F7D117]/55 bg-[#041A11]/78 px-4 text-[11px] uppercase leading-none tracking-[0.16em] text-[#F7D117] shadow-[0_0_11px_rgba(247,209,23,0.16)]">
+            WEEKLY CHALLENGE
+          </div>
+          <h2 id="weekly-challenge-title" className="home-copy-bold text-[32px] uppercase leading-[0.95] tracking-[0.045em] text-[#F5F1E8] drop-shadow-[0_3px_9px_rgba(0,0,0,0.34)]">
+            BEAT THE GOALIE
+          </h2>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <span className="flex h-6 w-9 items-center justify-center overflow-hidden rounded-[0.24rem] border border-[#F7D117]/65 bg-[#F5F1E8]/92 shadow-[0_2px_6px_rgba(0,0,0,0.24)]">
+              <Flag team="Cape Verde" className="h-full w-full object-contain" />
+            </span>
+            <span className="home-copy-bold text-[13px] uppercase leading-none tracking-[0.13em] text-[#F7D117]">CAPE VERDE</span>
+          </div>
+          <div className="mt-4 rounded-[1.1rem] border border-[#F5F1E8]/16 bg-[#041A11]/52 px-4 py-4 text-left shadow-[inset_0_1px_0_rgba(245,241,232,0.06)]">
+            <p className="home-copy-bold text-center text-[12px] uppercase leading-[1.45] tracking-[0.075em] text-[#F5F1E8]/92">
+              Choose your team.<br />
+              Score as many penalties as you can.<br />
+              One miss ends the run.
+            </p>
+          </div>
+          <div className="mt-5 grid gap-3">
+            <ActionButton onClick={onPlay} variant="yellow" size="journey">PLAY</ActionButton>
+            <ActionButton onClick={onClose} variant="green" size="journey">CLOSE</ActionButton>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -853,6 +948,51 @@ function getTeamGroup(teamName) {
   return GROUP_LETTERS.find((letter) => GROUPS[letter].includes(teamName)) || "A";
 }
 
+
+function WeeklyChallengeLocalScreen({ run, onExit }) {
+  const teamName = run?.teamName || "Canada";
+  const group = run?.group || getTeamGroup(teamName);
+  const opponentName = run?.opponentName || "Cape Verde";
+  const opponentCode = run?.opponentCode || "CPV";
+  const teamTheme = getTeamTheme(teamName);
+  const opponentTheme = getTeamTheme(opponentName);
+
+  return (
+    <HomeMenuShell onBack={onExit}>
+      <div className={`mb-2 flex min-h-[28px] items-center justify-center text-center ${MENU_TITLE_CLASS}`}>WEEKLY CHALLENGE</div>
+      <div className="overflow-hidden rounded-[1.25rem] border border-[#F7D117]/38 bg-[#041A11]/58 p-4 text-center text-[#F5F1E8] shadow-[inset_0_1px_0_rgba(245,241,232,0.08)]">
+        <div className="home-copy-bold text-[10px] uppercase leading-none tracking-[0.18em] text-[#F7D117]/88">Beat Cape Verde</div>
+        <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
+          <div className="min-w-0 rounded-[0.9rem] border border-[#F5F1E8]/16 px-2 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" style={{ backgroundColor: teamTheme.bg, color: teamTheme.text }}>
+            <div className="mx-auto mb-2 flex h-6 w-9 items-center justify-center overflow-hidden rounded-[0.22rem] border border-[#F5F1E8]/30 bg-[#F5F1E8]/92 shadow-[0_2px_5px_rgba(0,0,0,0.18)]">
+              <Flag team={teamName} className="h-full w-full object-contain" />
+            </div>
+            <div className="home-copy-bold truncate text-[20px] uppercase leading-none tracking-[0.06em]">{teamName}</div>
+            <div className="home-copy-bold mt-1 text-[8px] uppercase leading-none tracking-[0.14em] opacity-70">Group {group}</div>
+          </div>
+          <div className="home-copy-bold text-[28px] uppercase leading-none tracking-[0.06em] text-[#F7D117] drop-shadow-[0_0_8px_rgba(247,209,23,0.22)]">0 - X</div>
+          <div className="min-w-0 rounded-[0.9rem] border border-[#F5F1E8]/16 px-2 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" style={{ backgroundColor: opponentTheme.bg, color: opponentTheme.text }}>
+            <div className="mx-auto mb-2 flex h-6 w-9 items-center justify-center overflow-hidden rounded-[0.22rem] border border-[#F5F1E8]/30 bg-[#F5F1E8]/92 shadow-[0_2px_5px_rgba(0,0,0,0.18)]">
+              <Flag team={opponentName} className="h-full w-full object-contain" />
+            </div>
+            <div className="home-copy-bold truncate text-[20px] uppercase leading-none tracking-[0.06em]">{opponentCode}</div>
+            <div className="home-copy-bold mt-1 text-[8px] uppercase leading-none tracking-[0.14em] opacity-70">Keeper</div>
+          </div>
+        </div>
+        <div className="mt-4 rounded-[0.95rem] border border-[#F5F1E8]/12 bg-[#052D1D]/64 px-3 py-3">
+          <div className="home-copy-bold text-[11px] uppercase leading-[1.35] tracking-[0.09em] text-[#F5F1E8]/86">
+            Challenge shell loaded.<br />Shot rules come next.
+          </div>
+        </div>
+        <div className="mt-4 grid gap-2">
+          <ActionButton disabled variant="yellow" size="journey">TAKE SHOT</ActionButton>
+          <ActionButton onClick={onExit} variant="green" size="journey">EXIT</ActionButton>
+        </div>
+      </div>
+    </HomeMenuShell>
+  );
+}
+
 function HostPanel({ onSelectGroup, onSelectTeam, onBack, currentUser = null, onAuthComplete, allTeamsUnlocked = false, onUnlockAllTeams, title = "CHOOSE YOUR TEAM", disabledTeam = null }) {
   const hostLabels = { Canada: "CAN", Mexico: "MEX", "United States": "USA" };
   const [authMode, setAuthMode] = useState(null);
@@ -944,10 +1084,53 @@ function TeamPanel({ group, onSelectGroup, onSelectTeam, onBack, title = "CHOOSE
   </HomeMenuShell>;
 }
 
-export function HomeScreen({ onSelectGroup, onSelectTeam, onTwoPlayer, onUnlockAllTeams, allTeamsUnlocked = false, currentUser = null, onOpenClubhouse, onOpenAuthPanel, onAuthComplete, onResumeCampaign, hasResumeCampaign = false, menuProps = {}, onOpenFeedback = null }) {
+export function HomeScreen({ onSelectGroup, onSelectTeam, onTwoPlayer, onUnlockAllTeams, allTeamsUnlocked = false, currentUser = null, onOpenClubhouse, onOpenAuthPanel, onAuthComplete, onResumeCampaign, hasResumeCampaign = false, menuProps = {}, onOpenFeedback = null, onSelectWeeklyChallengeTeam = null }) {
   const [homeMode, setHomeMode] = useState("landing");
+  const [weeklyChallengeIntroOpen, setWeeklyChallengeIntroOpen] = useState(false);
+  const [weeklyChallengeRun, setWeeklyChallengeRun] = useState(null);
+
+  const closeWeeklyChallengeIntro = () => setWeeklyChallengeIntroOpen(false);
+  const handleWeeklyChallengePlay = () => {
+    setWeeklyChallengeIntroOpen(false);
+    setHomeMode("weeklyChallengeHosts");
+  };
+  const handleWeeklyChallengeGroupSelect = (group) => {
+    setHomeMode(`weeklyChallengeGroup:${group || "A"}`);
+  };
+  const handleWeeklyChallengeTeamSelect = (teamName, group = getTeamGroup(teamName)) => {
+    const safeGroup = group || getTeamGroup(teamName);
+    setWeeklyChallengeIntroOpen(false);
+    setWeeklyChallengeRun({
+      teamName,
+      group: safeGroup,
+      opponentName: "Cape Verde",
+      opponentCode: "CPV",
+      score: 0,
+    });
+    if (typeof onSelectWeeklyChallengeTeam === "function") {
+      onSelectWeeklyChallengeTeam(teamName, safeGroup, { mode: "weeklyChallenge", team: teamName, group: safeGroup });
+    }
+  };
+  const handleWeeklyChallengeExit = () => {
+    setWeeklyChallengeRun(null);
+    setHomeMode("landing");
+  };
+  const handleWeeklyChallengeChangeTeams = () => {
+    setWeeklyChallengeRun(null);
+    setHomeMode("weeklyChallengeHosts");
+  };
+  const weeklyChallengeGroup = homeMode.startsWith("weeklyChallengeGroup:") ? homeMode.split(":")[1] || "A" : null;
+
+  if (weeklyChallengeRun) return <WeeklyChallengeMatchScreen run={weeklyChallengeRun} onExit={handleWeeklyChallengeExit} onChangeTeams={handleWeeklyChallengeChangeTeams} />;
   if (homeMode === "hosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} onOpenFeedback={onOpenFeedback}><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} currentUser={currentUser} onAuthComplete={onAuthComplete} allTeamsUnlocked={allTeamsUnlocked} onUnlockAllTeams={onUnlockAllTeams} /></HomeLayout>;
-  return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo onOpenFeedback={onOpenFeedback}><LandingPanel currentUser={currentUser} onOpenClubhouse={onOpenClubhouse} onOpenAuthPanel={onOpenAuthPanel} onAuthComplete={onAuthComplete} onResumeCampaign={onResumeCampaign} hasResumeCampaign={hasResumeCampaign} onPlayGuest={() => setHomeMode("hosts")} onTwoPlayer={onTwoPlayer} /></HomeLayout>;
+  if (homeMode === "weeklyChallengeHosts") return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} onOpenFeedback={onOpenFeedback} showWeeklyChallengeBadge weeklyChallengeBadgeVariant="clean"><HostPanel onBack={() => setHomeMode("landing")} onSelectGroup={handleWeeklyChallengeGroupSelect} onSelectTeam={handleWeeklyChallengeTeamSelect} currentUser={currentUser} onAuthComplete={onAuthComplete} allTeamsUnlocked={allTeamsUnlocked} onUnlockAllTeams={onUnlockAllTeams} title="CHOOSE YOUR TEAM" /></HomeLayout>;
+  if (weeklyChallengeGroup) return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} onOpenFeedback={onOpenFeedback} showWeeklyChallengeBadge weeklyChallengeBadgeVariant="clean"><TeamPanel group={weeklyChallengeGroup} onBack={() => setHomeMode("weeklyChallengeHosts")} onSelectGroup={handleWeeklyChallengeGroupSelect} onSelectTeam={(teamName) => handleWeeklyChallengeTeamSelect(teamName, weeklyChallengeGroup)} title="CHOOSE YOUR TEAM" /></HomeLayout>;
+  return (
+    <>
+      <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} staticRightLogo onOpenFeedback={onOpenFeedback} showWeeklyChallengeBadge onWeeklyChallengeBadgeClick={() => setWeeklyChallengeIntroOpen(true)}><LandingPanel currentUser={currentUser} onOpenClubhouse={onOpenClubhouse} onOpenAuthPanel={onOpenAuthPanel} onAuthComplete={onAuthComplete} onResumeCampaign={onResumeCampaign} hasResumeCampaign={hasResumeCampaign} onPlayGuest={() => setHomeMode("hosts")} onTwoPlayer={onTwoPlayer} /></HomeLayout>
+      {weeklyChallengeIntroOpen && <WeeklyChallengeIntroModal onClose={closeWeeklyChallengeIntro} onPlay={handleWeeklyChallengePlay} />}
+    </>
+  );
 }
 export function HostSelectScreen(props) { return <HomeLayout allTeamsUnlocked={props.allTeamsUnlocked} menuProps={props.menuProps || {}} onOpenFeedback={props.onOpenFeedback}><HostPanel {...props} /></HomeLayout>; }
 export function TeamSelectScreen({ selectedGroup, onSelectGroup, onSelectTeam, onBack, allTeamsUnlocked = false, menuProps = {}, title = "CHOOSE YOUR TEAM", disabledTeam = null, onOpenFeedback = null }) { return <HomeLayout allTeamsUnlocked={allTeamsUnlocked} menuProps={menuProps} onOpenFeedback={onOpenFeedback}><TeamPanel group={selectedGroup} onBack={onBack} onSelectGroup={onSelectGroup} onSelectTeam={onSelectTeam} title={title} disabledTeam={disabledTeam} /></HomeLayout>; }

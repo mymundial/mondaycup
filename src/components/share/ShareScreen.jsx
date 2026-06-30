@@ -515,7 +515,7 @@ export function ShareScreen({
           fontType: shirtFontType,
           patternMode: shirtPatternMode,
           patternColour: shirtPatternColour,
-          storyFrame: true,
+          storyFrame: false,
         })
         : activeState.id === "match"
           ? await createMatchShareBlob(currentMatchExportPayload(), { sourceElement: frameRef.current })
@@ -524,7 +524,7 @@ export function ShareScreen({
         blob,
         filename: `monday-cup-${activeState.id}-share.png`,
         previewWindow,
-        nativeFrame: activeState.id === "match" ? "match-story" : "standard",
+        nativeFrame: "standard",
       });
     } catch (error) {
       if (previewWindow && !previewWindow.closed) previewWindow.close();

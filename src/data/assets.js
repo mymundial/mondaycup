@@ -22,6 +22,10 @@ const game = {
   goalkeeper: "/assets/game/gk1.png",
 };
 
+const challenges = {
+  weeklyChallengeCapeVerdeBadge: "/assets/challenges/weekly_challenge_beat_cape_verde_badge.webp",
+};
+
 const sounds = {
   goalSound: goalMp3,
   missSound: missMp3,
@@ -34,6 +38,7 @@ export const ASSETS = {
   badges,
   game,
   sounds,
+  challenges,
 
   // Backwards-compatible aliases for existing components during migration.
   mondayLogo: branding.mondayLogo,
@@ -46,6 +51,7 @@ export const ASSETS = {
   trophyPixel: branding.trophyPixel,
   ball: game.ball,
   goalkeeper: game.goalkeeper,
+  weeklyChallengeCapeVerdeBadge: challenges.weeklyChallengeCapeVerdeBadge,
   championBadge: badges.champion,
   runnerUpBadge: badges.runnerUp,
   thirdPlaceBadge: badges.third,
