@@ -1,6 +1,8 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
     function signedIn() {
       return request.auth != null;
     }
@@ -9,112 +11,206 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == userId;
     }
 
-    function changedUserKeys() {
-      return request.resource.data.diff(resource.data).affectedKeys();
+    function protectedUserKeys() {
+      return [
+        'upgradesPurchased',
+        'unlocks',
+        'storeEntitlements',
+        'allTeamsUnlocked',
+        'consumables',
+        'lastPurchase',
+        'payments'
+      ];
     }
 
-    function paidUpgradeFlagsAreNotGranted(data) {
-      return (data.upgradesPurchased == null || (
-          data.upgradesPurchased.allTeams != true
-          && data.upgradesPurchased.goldenBoot != true
-          && data.upgradesPurchased.goldenBall != true
-          && data.upgradesPurchased.goldenGlove != true
-          && data.upgradesPurchased.goldenKitbag != true
-          && data.upgradesPurchased.fullBundle != true
-        ))
-        && (data.unlocks == null || data.unlocks.allTeams != true)
-        && data.allTeamsUnlocked != true
-        && data.allTeamsEquipped != true;
+    function protectedUserKeysExceptConsumables() {
+      return [
+        'upgradesPurchased',
+        'unlocks',
+        'storeEntitlements',
+        'allTeamsUnlocked',
+        'lastPurchase',
+        'payments'
+      ];
     }
 
-    function ticketQuantityIsEmptyOnCreate(data) {
-      return data.consumables == null
-        || data.consumables.goldenTicket == null
+    function safeInitialUpgrades() {
+      return !request.resource.data.keys().hasAny(['upgradesPurchased'])
         || (
-          (data.consumables.goldenTicket.quantity == null || data.consumables.goldenTicket.quantity == 0)
-          && (data.consumables.goldenTicket.totalPurchased == null || data.consumables.goldenTicket.totalPurchased == 0)
-          && (data.consumables.goldenTicket.totalUsed == null || data.consumables.goldenTicket.totalUsed == 0)
+          request.resource.data.upgradesPurchased is map
+          && (!request.resource.data.upgradesPurchased.keys().hasAny(['allTeams'])
+            || request.resource.data.upgradesPurchased.allTeams == false)
+          && (!request.resource.data.upgradesPurchased.keys().hasAny(['goldenBall'])
+            || request.resource.data.upgradesPurchased.goldenBall == false)
+          && (!request.resource.data.upgradesPurchased.keys().hasAny(['goldenBoot'])
+            || request.resource.data.upgradesPurchased.goldenBoot == false)
+          && (!request.resource.data.upgradesPurchased.keys().hasAny(['goldenGlove'])
+            || request.resource.data.upgradesPurchased.goldenGlove == false)
+          && (!request.resource.data.upgradesPurchased.keys().hasAny(['goldenKitbag'])
+            || request.resource.data.upgradesPurchased.goldenKitbag == false)
+          && (!request.resource.data.upgradesPurchased.keys().hasAny(['fullBundle'])
+            || request.resource.data.upgradesPurchased.fullBundle == false)
         );
     }
 
-    function legacyPaidCosmeticFieldsAreNotGranted(data) {
-      return (data.cosmetics == null || (
-          data.cosmetics.goldenTicketQuantity == null
-          || data.cosmetics.goldenTicketQuantity == 0
-        ))
-        && (data.cosmeticsActive == null || (
-          data.cosmeticsActive.goldenTicketQuantity == null
-          || data.cosmeticsActive.goldenTicketQuantity == 0
-        ));
-    }
-
-    function purchaseAuditFieldsAbsentOnCreate(data) {
-      return !data.keys().hasAny([
-        "lastPurchase",
-        "payments",
-        "stripe",
-        "lastCheckoutStarted"
-      ]);
+    function safeInitialConsumables() {
+      return !request.resource.data.keys().hasAny(['consumables'])
+        || (
+          request.resource.data.consumables is map
+          && (
+            !request.resource.data.consumables.keys().hasAny(['goldenTicket'])
+            || (
+              request.resource.data.consumables.goldenTicket is map
+              && (!request.resource.data.consumables.goldenTicket.keys().hasAny(['quantity'])
+                || request.resource.data.consumables.goldenTicket.quantity == 0)
+              && (!request.resource.data.consumables.goldenTicket.keys().hasAny(['totalPurchased'])
+                || request.resource.data.consumables.goldenTicket.totalPurchased == 0)
+              && (!request.resource.data.consumables.goldenTicket.keys().hasAny(['totalUsed'])
+                || request.resource.data.consumables.goldenTicket.totalUsed == 0)
+            )
+          )
+        );
     }
 
     function safeUserCreate() {
-      return paidUpgradeFlagsAreNotGranted(request.resource.data)
-        && ticketQuantityIsEmptyOnCreate(request.resource.data)
-        && legacyPaidCosmeticFieldsAreNotGranted(request.resource.data)
-        && purchaseAuditFieldsAbsentOnCreate(request.resource.data);
+      return !request.resource.data.keys().hasAny([
+          'unlocks',
+          'storeEntitlements',
+          'allTeamsUnlocked',
+          'lastPurchase',
+          'payments'
+        ])
+        && safeInitialUpgrades()
+        && safeInitialConsumables();
     }
 
-    function noProtectedPurchaseFieldsChanged() {
-      return !changedUserKeys().hasAny([
-        "upgradesPurchased",
-        "unlocks",
-        "consumables",
-        "lastPurchase",
-        "payments",
-        "stripe",
-        "lastCheckoutStarted",
-        "allTeamsUnlocked",
-        "allTeamsEquipped",
-        "cosmetics",
-        "cosmeticsActive"
-      ]);
+    function goldenTicketQuantityBefore() {
+      return resource.data.consumables.goldenTicket.quantity;
     }
 
-    function validGoldenTicketConsumption() {
-      return changedUserKeys().hasOnly(["consumables", "cosmeticsEquipped", "updatedAt"])
-        && resource.data.consumables.goldenTicket.quantity is int
-        && request.resource.data.consumables.goldenTicket.quantity is int
-        && request.resource.data.consumables.goldenTicket.quantity == resource.data.consumables.goldenTicket.quantity - 1
-        && request.resource.data.consumables.goldenTicket.quantity >= 0
-        && request.resource.data.consumables.goldenTicket.totalPurchased == resource.data.consumables.goldenTicket.totalPurchased
-        && request.resource.data.consumables.goldenTicket.totalUsed == resource.data.consumables.goldenTicket.totalUsed + 1
-        && request.resource.data.cosmeticsEquipped.goldenTicket == (request.resource.data.consumables.goldenTicket.quantity > 0);
+    function goldenTicketQuantityAfter() {
+      return request.resource.data.consumables.goldenTicket.quantity;
+    }
+
+    function safeGoldenTicketUse() {
+      return resource.data.keys().hasAny(['consumables'])
+        && request.resource.data.keys().hasAny(['consumables'])
+        && resource.data.consumables is map
+        && request.resource.data.consumables is map
+        && resource.data.consumables.keys().hasAny(['goldenTicket'])
+        && request.resource.data.consumables.keys().hasAny(['goldenTicket'])
+        && resource.data.consumables.goldenTicket is map
+        && request.resource.data.consumables.goldenTicket is map
+        && resource.data.consumables.goldenTicket.keys().hasAny(['quantity'])
+        && request.resource.data.consumables.goldenTicket.keys().hasAny(['quantity'])
+        && goldenTicketQuantityBefore() is int
+        && goldenTicketQuantityAfter() is int
+        && goldenTicketQuantityAfter() == goldenTicketQuantityBefore() - 1
+        && goldenTicketQuantityAfter() >= 0
+        && (
+          !request.resource.data.consumables.goldenTicket.keys().hasAny(['totalPurchased'])
+          || !resource.data.consumables.goldenTicket.keys().hasAny(['totalPurchased'])
+          || request.resource.data.consumables.goldenTicket.totalPurchased == resource.data.consumables.goldenTicket.totalPurchased
+        )
+        && (
+          !request.resource.data.consumables.goldenTicket.keys().hasAny(['totalUsed'])
+          || !resource.data.consumables.goldenTicket.keys().hasAny(['totalUsed'])
+          || request.resource.data.consumables.goldenTicket.totalUsed == resource.data.consumables.goldenTicket.totalUsed + 1
+          || request.resource.data.consumables.goldenTicket.totalUsed == resource.data.consumables.goldenTicket.totalUsed
+        );
+    }
+
+    function safeUserUpdate() {
+      return (
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(protectedUserKeysExceptConsumables())
+      )
+      && (
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['consumables'])
+        || safeGoldenTicketUse()
+      );
+    }
+
+    function validUsernameId(username) {
+      return username.matches('^[a-z0-9]{1,10}$');
+    }
+
+    function validUsernameDocument(username) {
+      return validUsernameId(username)
+        && request.resource.data.keys().hasOnly(['uid', 'username', 'createdAt', 'updatedAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.username is string
+        && request.resource.data.username.matches('^[A-Z0-9]{1,10}$');
     }
 
     match /leaderboard/{userId} {
       allow read: if true;
+
       allow create, update: if ownsDoc(userId)
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.localOnly != true;
+        && (!request.resource.data.keys().hasAny(['localOnly'])
+          || request.resource.data.localOnly != true);
+
       allow delete: if false;
+    }
+
+    match /challengeLeaderboards/{challengeId} {
+      allow read: if true;
+      allow write: if false;
+
+      match /scores/{userId} {
+        allow read: if true;
+
+        allow create: if ownsDoc(userId)
+          && request.resource.data.challengeId == challengeId
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.score is int
+          && request.resource.data.score >= 0
+          && (!request.resource.data.keys().hasAny(['localOnly'])
+            || request.resource.data.localOnly != true);
+
+        allow update: if ownsDoc(userId)
+          && request.resource.data.challengeId == challengeId
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.score is int
+          && request.resource.data.score >= resource.data.score
+          && request.resource.data.score >= 0
+          && (!request.resource.data.keys().hasAny(['localOnly'])
+            || request.resource.data.localOnly != true);
+
+        allow delete: if false;
+      }
     }
 
     match /users/{userId} {
       allow read: if ownsDoc(userId);
-      allow create: if ownsDoc(userId) && safeUserCreate();
+
+      allow create: if ownsDoc(userId)
+        && safeUserCreate();
+
       allow update: if ownsDoc(userId)
-        && (noProtectedPurchaseFieldsChanged() || validGoldenTicketConsumption());
+        && safeUserUpdate();
+
       allow delete: if false;
+    }
+
+    match /users/{userId}/stripeEvents/{eventId} {
+      allow read: if ownsDoc(userId);
+      allow create, update, delete: if false;
     }
 
     match /usernames/{username} {
       allow read: if true;
+
       allow create: if signedIn()
-        && request.resource.data.uid == request.auth.uid
+        && validUsernameDocument(username)
         && !exists(/databases/$(database)/documents/usernames/$(username));
+
       allow update: if signedIn()
+        && validUsernameId(username)
         && resource.data.uid == request.auth.uid
-        && request.resource.data.uid == request.auth.uid;
+        && request.resource.data.uid == resource.data.uid
+        && validUsernameDocument(username);
+
       allow delete: if false;
     }
 
